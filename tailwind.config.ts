@@ -59,6 +59,7 @@ export default {
           highlight: "#9b87f5",
         },
       },
+
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -80,6 +81,11 @@ export default {
           "0%, 100%": { opacity: "1", transform: "scale(1)" },
           "50%": { opacity: "0.5", transform: "scale(0.95)" },
         },
+        "attack-particle": {
+          "0%": { transform: "scale(0)", opacity: "0" },
+          "50%": { transform: "scale(1)", opacity: "1" },
+          "100%": { transform: "scale(0)", opacity: "0" }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -87,6 +93,7 @@ export default {
         "health-decrease": "health-decrease 2s ease-in-out",
         "character-idle": "character-idle 1s ease-in-out infinite",
         "vs-pulse": "vs-pulse 1.5s ease-in-out infinite",
+        "attack-particle": "attack-particle 0.5s ease-out forwards",
       },
     },
   },
