@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { StatusBar } from "./HealthBar";
 import { Character } from "./Character";
 import { AttackParticle } from "./AttackParticle";
+import { Button } from "./ui/button";
+import { Rocket, Zap } from "lucide-react";
 
 export const BattleScene = () => {
   const [leftHealth, setLeftHealth] = useState(100);
@@ -55,6 +57,7 @@ export const BattleScene = () => {
         <div className="space-y-2">
           <div className="flex justify-between items-center gap-4">
             <div className="flex-1 space-y-2">
+              <div className="text-white font-bold mb-1">User</div>
               <StatusBar current={leftHealth} max={100} isLeft={true} type="health" />
               <StatusBar current={leftSpecial} max={100} isLeft={true} type="special" />
               <StatusBar current={leftHack} max={100} isLeft={true} type="hack" />
@@ -63,6 +66,7 @@ export const BattleScene = () => {
               <span className="text-white font-bold text-sm">VS</span>
             </div>
             <div className="flex-1 space-y-2">
+              <div className="text-white font-bold mb-1">CPU</div>
               <StatusBar current={rightHealth} max={100} isLeft={false} type="health" />
               <StatusBar current={rightSpecial} max={100} isLeft={false} type="special" />
               <StatusBar current={rightHack} max={100} isLeft={false} type="hack" />
@@ -71,8 +75,24 @@ export const BattleScene = () => {
         </div>
 
         <div className="flex-1 flex justify-between items-center px-8">
-          <div className="relative">
+          <div className="relative flex flex-col items-center gap-2">
             <Character isLeft={true} isDamaged={leftIsDamaged} />
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                className="bg-yellow-500 hover:bg-yellow-600 text-white border-none"
+                size="sm"
+              >
+                <Rocket className="w-4 h-4" /> Hype Up
+              </Button>
+              <Button 
+                variant="outline"
+                className="bg-red-500 hover:bg-red-600 text-white border-none"
+                size="sm"
+              >
+                <Zap className="w-4 h-4" /> Hack
+              </Button>
+            </div>
             {rightIsAttacking && <AttackParticle isLeft={false} />}
           </div>
           <div className="relative">
