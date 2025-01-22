@@ -57,7 +57,6 @@ export const BattleScene = () => {
         <div className="space-y-2">
           <div className="flex justify-between items-center gap-4">
             <div className="flex-1 space-y-2">
-              <div className="text-white font-bold mb-1">User</div>
               <StatusBar current={leftHealth} max={100} isLeft={true} type="health" />
               <StatusBar current={leftSpecial} max={100} isLeft={true} type="special" />
               <StatusBar current={leftHack} max={100} isLeft={true} type="hack" />
@@ -66,7 +65,6 @@ export const BattleScene = () => {
               <span className="text-white font-bold text-sm">VS</span>
             </div>
             <div className="flex-1 space-y-2">
-              <div className="text-white font-bold mb-1">CPU</div>
               <StatusBar current={rightHealth} max={100} isLeft={false} type="health" />
               <StatusBar current={rightSpecial} max={100} isLeft={false} type="special" />
               <StatusBar current={rightHack} max={100} isLeft={false} type="hack" />
