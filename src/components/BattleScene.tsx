@@ -17,7 +17,6 @@ export const BattleScene = () => {
   const [leftIsDamaged, setLeftIsDamaged] = useState(false);
   const [rightIsDamaged, setRightIsDamaged] = useState(false);
 
-  // Simulate battle progress with attack animations
   useEffect(() => {
     const interval = setInterval(() => {
       const attacker = Math.random() > 0.5;
@@ -91,11 +90,11 @@ export const BattleScene = () => {
                 <Zap className="w-4 h-4" /> Hack
               </Button>
             </div>
-            {rightIsAttacking && <AttackParticle isLeft={false} />}
-          </div>
-          <div className="relative">
-            <Character isLeft={false} isDamaged={rightIsDamaged} />
             {leftIsAttacking && <AttackParticle isLeft={true} />}
+          </div>
+          <div className="relative flex items-center">
+            <Character isLeft={false} isDamaged={rightIsDamaged} />
+            {rightIsAttacking && <AttackParticle isLeft={false} />}
           </div>
         </div>
       </div>
