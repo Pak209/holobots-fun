@@ -10,9 +10,11 @@ interface HolobotCardProps {
 export const HolobotCard = ({ stats, variant = "blue" }: HolobotCardProps) => {
   return (
     <div className={`w-64 h-96 rounded-lg border-4 ${variant === "blue" ? "border-blue-500 bg-blue-900/20" : "border-red-500 bg-red-900/20"} p-4 flex flex-col`}>
-      <div className="text-xl font-bold italic text-left mb-2">HOLOBOTS</div>
-      <div className={`text-right text-lg font-semibold ${variant === "blue" ? "text-blue-400" : "text-red-400"}`}>
-        {stats.name}
+      <div className="flex justify-between items-center mb-2">
+        <div className="text-xl font-bold italic">HOLOBOTS</div>
+        <div className={`text-lg font-semibold ${variant === "blue" ? "text-blue-400" : "text-red-400"}`}>
+          {stats.name}
+        </div>
       </div>
       
       <div className="flex-1 bg-gray-800 rounded-lg my-2 flex items-center justify-center">
