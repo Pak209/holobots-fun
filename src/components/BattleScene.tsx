@@ -4,6 +4,9 @@ import { Character } from "./Character";
 import { AttackParticle } from "./AttackParticle";
 import { Button } from "./ui/button";
 import { Rocket, Zap } from "lucide-react";
+import { HolobotCard } from "./HolobotCard";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { HOLOBOT_STATS } from "@/types/holobot";
 
 export const BattleScene = () => {
   const [leftHealth, setLeftHealth] = useState(100);
@@ -16,6 +19,8 @@ export const BattleScene = () => {
   const [rightIsAttacking, setRightIsAttacking] = useState(false);
   const [leftIsDamaged, setLeftIsDamaged] = useState(false);
   const [rightIsDamaged, setRightIsDamaged] = useState(false);
+  const [selectedLeftHolobot, setSelectedLeftHolobot] = useState("ace");
+  const [selectedRightHolobot, setSelectedRightHolobot] = useState("kuma");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,21 +55,56 @@ export const BattleScene = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-2 justify-start">
-        <Button 
-          variant="outline"
-          className="bg-yellow-500 hover:bg-yellow-600 text-white border-none"
-          size="sm"
-        >
-          <Rocket className="w-4 h-4" /> Hype Up
-        </Button>
-        <Button 
-          variant="outline"
-          className="bg-red-500 hover:bg-red-600 text-white border-none"
-          size="sm"
-        >
-          <Zap className="w-4 h-4" /> Hack
-        </Button>
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            className="bg-yellow-500 hover:bg-yellow-600 text-white border-none"
+            size="sm"
+          >
+            <Rocket className="w-4 h-4" /> Hype Up
+          </Button>
+          <Button 
+            variant="outline"
+            className="bg-red-500 hover:bg-red-600 text-white border-none"
+            size="sm"
+          >
+            <Zap className="w-4 h-4" /> Hack
+          </Button>
+        </div>
+        
+        <div className="flex gap-4">
+          <Select value={selectedLeftHolobot} onValueChange={setSelectedLeftHolobot}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Choose Holobot" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
+                <SelectItem key={key} value={key}>
+                  {stats.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={selectedRightHolobot} onValueChange={setSelectedRightHolobot}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Choose Enemy" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
+                <SelectItem key={key} value={key}>
+                  {stats.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex justify-between mb-4">
+        <HolobotCard stats={HOLOBOT_STATS[selectedLeftHolobot]} variant="blue" />
+        <HolobotCard stats={HOLOBOT_STATS[selectedRightHolobot]} variant="red" />
       </div>
       
       <div className="relative w-full max-w-3xl mx-auto h-48 bg-retro-background rounded-lg overflow-hidden border-2 border-retro-accent/30">
