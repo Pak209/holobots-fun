@@ -96,6 +96,18 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-retro-background text-white font-mono;
+  }
+
+  @font-face {
+    font-family: 'RetroPixel';
+    src: url('/fonts/PressStart2P-Regular.ttf') format('truetype');
+  }
+}
+
+@layer utilities {
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
   }
 }

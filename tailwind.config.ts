@@ -57,6 +57,10 @@ export default {
           accent: "#F97316",
           health: "#FF719A",
           highlight: "#9b87f5",
+          card: {
+            blue: "#0066CC",
+            red: "#CC0000",
+          }
         },
       },
 
