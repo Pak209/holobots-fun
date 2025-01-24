@@ -55,9 +55,16 @@ export const BattleScene = () => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex justify-between items-center mb-2">
+    <div className="flex flex-col gap-1.5">
+      <div className="flex justify-between items-center mb-1.5">
         <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            className="bg-purple-600 hover:bg-purple-700 text-white border-none text-xs"
+            size="sm"
+          >
+            Start Battle
+          </Button>
           <Button 
             variant="outline"
             className="bg-yellow-500 hover:bg-yellow-600 text-white border-none text-xs"
@@ -140,18 +147,18 @@ export const BattleScene = () => {
         </div>
       </div>
 
-      <div className="flex justify-between gap-4 mb-4">
+      <div className="flex justify-between gap-4 mb-2">
         <HolobotCard stats={HOLOBOT_STATS[selectedLeftHolobot]} variant="blue" />
         <HolobotCard stats={HOLOBOT_STATS[selectedRightHolobot]} variant="red" />
       </div>
       
-      <div className="relative w-full max-w-3xl mx-auto h-36 md:h-48 bg-retro-background rounded-lg overflow-hidden border-2 border-retro-accent/30">
+      <div className="relative w-full max-w-3xl mx-auto h-28 md:h-40 bg-retro-background rounded-lg overflow-hidden border-2 border-retro-accent/30">
         <div className="absolute inset-0 bg-gradient-to-t from-retro-background to-retro-accent/20" />
         
         <div className="relative z-10 w-full h-full p-2 md:p-4 flex flex-col">
-          <div className="space-y-1 md:space-y-2">
+          <div className="space-y-0.5 md:space-y-1">
             <div className="flex justify-between items-center gap-2 md:gap-4">
-              <div className="flex-1 space-y-1 md:space-y-2">
+              <div className="flex-1 space-y-0.5 md:space-y-1">
                 <StatusBar current={leftHealth} max={100} isLeft={true} type="health" />
                 <StatusBar current={leftSpecial} max={100} isLeft={true} type="special" />
                 <StatusBar current={leftHack} max={100} isLeft={true} type="hack" />
@@ -159,7 +166,7 @@ export const BattleScene = () => {
               <div className="px-2 py-1 bg-black/50 rounded-lg animate-vs-pulse">
                 <span className="text-white font-bold text-xs md:text-sm">VS</span>
               </div>
-              <div className="flex-1 space-y-1 md:space-y-2">
+              <div className="flex-1 space-y-0.5 md:space-y-1">
                 <StatusBar current={rightHealth} max={100} isLeft={false} type="health" />
                 <StatusBar current={rightSpecial} max={100} isLeft={false} type="special" />
                 <StatusBar current={rightHack} max={100} isLeft={false} type="hack" />
@@ -180,10 +187,12 @@ export const BattleScene = () => {
         </div>
       </div>
 
-      <div className="w-full p-2 bg-black/30 rounded-lg border border-white/20 mt-2">
-        <p className="text-xs md:text-sm text-white font-mono">
-          Battle Events will appear here...
-        </p>
+      <div className="w-full p-2 bg-black/30 rounded-lg border border-white/20 mt-1">
+        <div className="h-16 overflow-y-auto text-xs md:text-sm text-white font-mono space-y-1">
+          <p>Battle Events will appear here...</p>
+          <p>Ready to start the battle!</p>
+          <p>Choose your moves wisely...</p>
+        </div>
       </div>
     </div>
   );
