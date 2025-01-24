@@ -3,10 +3,11 @@ import { StatusBar } from "./HealthBar";
 import { Character } from "./Character";
 import { AttackParticle } from "./AttackParticle";
 import { Button } from "./ui/button";
-import { Rocket, Zap } from "lucide-react";
+import { Rocket, Zap, Menu } from "lucide-react";
 import { HolobotCard } from "./HolobotCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { HOLOBOT_STATS } from "@/types/holobot";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 
 export const BattleScene = () => {
   const [leftHealth, setLeftHealth] = useState(100);
@@ -54,28 +55,65 @@ export const BattleScene = () => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex justify-between items-start mb-4">
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-between items-center mb-2">
         <div className="flex gap-2">
           <Button 
             variant="outline"
-            className="bg-yellow-500 hover:bg-yellow-600 text-white border-none"
+            className="bg-yellow-500 hover:bg-yellow-600 text-white border-none text-xs"
             size="sm"
           >
-            <Rocket className="w-4 h-4" /> Hype Up
+            <Rocket className="w-3 h-3 md:w-4 md:h-4" /> Hype
           </Button>
           <Button 
             variant="outline"
-            className="bg-red-500 hover:bg-red-600 text-white border-none"
+            className="bg-red-500 hover:bg-red-600 text-white border-none text-xs"
             size="sm"
           >
-            <Zap className="w-4 h-4" /> Hack
+            <Zap className="w-3 h-3 md:w-4 md:h-4" /> Hack
           </Button>
         </div>
         
-        <div className="flex gap-4">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="md:hidden">
+              <Menu className="h-4 w-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent>
+            <div className="flex flex-col gap-4 pt-4">
+              <Select value={selectedLeftHolobot} onValueChange={setSelectedLeftHolobot}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose Holobot" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
+                    <SelectItem key={key} value={key}>
+                      {stats.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedRightHolobot} onValueChange={setSelectedRightHolobot}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose Enemy" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
+                    <SelectItem key={key} value={key}>
+                      {stats.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </SheetContent>
+        </Sheet>
+        
+        <div className="hidden md:flex gap-4">
           <Select value={selectedLeftHolobot} onValueChange={setSelectedLeftHolobot}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-32">
               <SelectValue placeholder="Choose Holobot" />
             </SelectTrigger>
             <SelectContent>
@@ -88,7 +126,7 @@ export const BattleScene = () => {
           </Select>
           
           <Select value={selectedRightHolobot} onValueChange={setSelectedRightHolobot}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-32">
               <SelectValue placeholder="Choose Enemy" />
             </SelectTrigger>
             <SelectContent>
@@ -102,26 +140,26 @@ export const BattleScene = () => {
         </div>
       </div>
 
-      <div className="flex justify-between mb-4">
+      <div className="flex justify-between gap-4 mb-4">
         <HolobotCard stats={HOLOBOT_STATS[selectedLeftHolobot]} variant="blue" />
         <HolobotCard stats={HOLOBOT_STATS[selectedRightHolobot]} variant="red" />
       </div>
       
-      <div className="relative w-full max-w-3xl mx-auto h-48 bg-retro-background rounded-lg overflow-hidden border-2 border-retro-accent/30">
+      <div className="relative w-full max-w-3xl mx-auto h-36 md:h-48 bg-retro-background rounded-lg overflow-hidden border-2 border-retro-accent/30">
         <div className="absolute inset-0 bg-gradient-to-t from-retro-background to-retro-accent/20" />
         
-        <div className="relative z-10 w-full h-full p-4 flex flex-col">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center gap-4">
-              <div className="flex-1 space-y-2">
+        <div className="relative z-10 w-full h-full p-2 md:p-4 flex flex-col">
+          <div className="space-y-1 md:space-y-2">
+            <div className="flex justify-between items-center gap-2 md:gap-4">
+              <div className="flex-1 space-y-1 md:space-y-2">
                 <StatusBar current={leftHealth} max={100} isLeft={true} type="health" />
                 <StatusBar current={leftSpecial} max={100} isLeft={true} type="special" />
                 <StatusBar current={leftHack} max={100} isLeft={true} type="hack" />
               </div>
-              <div className="px-4 py-1 bg-black/50 rounded-lg animate-vs-pulse">
-                <span className="text-white font-bold text-sm">VS</span>
+              <div className="px-2 py-1 bg-black/50 rounded-lg animate-vs-pulse">
+                <span className="text-white font-bold text-xs md:text-sm">VS</span>
               </div>
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-1 md:space-y-2">
                 <StatusBar current={rightHealth} max={100} isLeft={false} type="health" />
                 <StatusBar current={rightSpecial} max={100} isLeft={false} type="special" />
                 <StatusBar current={rightHack} max={100} isLeft={false} type="hack" />
@@ -129,7 +167,7 @@ export const BattleScene = () => {
             </div>
           </div>
 
-          <div className="flex-1 flex justify-between items-center px-8">
+          <div className="flex-1 flex justify-between items-center px-4 md:px-8">
             <div className="relative flex flex-col items-center gap-2">
               <Character isLeft={true} isDamaged={leftIsDamaged} />
               {leftIsAttacking && <AttackParticle isLeft={true} />}
@@ -140,6 +178,12 @@ export const BattleScene = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="w-full p-2 bg-black/30 rounded-lg border border-white/20 mt-2">
+        <p className="text-xs md:text-sm text-white font-mono">
+          Battle Events will appear here...
+        </p>
       </div>
     </div>
   );
