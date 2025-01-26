@@ -22,8 +22,11 @@ export const BattleScene = () => {
   const [rightIsDamaged, setRightIsDamaged] = useState(false);
   const [selectedLeftHolobot, setSelectedLeftHolobot] = useState("ace");
   const [selectedRightHolobot, setSelectedRightHolobot] = useState("kuma");
+  const [isBattleStarted, setIsBattleStarted] = useState(false);
 
   useEffect(() => {
+    if (!isBattleStarted) return;
+
     const interval = setInterval(() => {
       const attacker = Math.random() > 0.5;
       const damage = Math.random() * 5;
@@ -52,16 +55,28 @@ export const BattleScene = () => {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isBattleStarted]);
+
+  const handleStartBattle = () => {
+    setIsBattleStarted(true);
+    setLeftHealth(100);
+    setRightHealth(100);
+    setLeftSpecial(100);
+    setRightSpecial(100);
+    setLeftHack(100);
+    setRightHack(100);
+  };
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex justify-between items-center mb-1.5">
-        <div className="flex gap-2">
+    <div className="flex flex-col gap-1">
+      <div className="flex justify-between items-center mb-1">
+        <div className="flex gap-1.5">
           <Button 
             variant="outline"
             className="bg-purple-600 hover:bg-purple-700 text-white border-none text-xs"
             size="sm"
+            onClick={handleStartBattle}
+            disabled={isBattleStarted}
           >
             Start Battle
           </Button>
@@ -90,7 +105,7 @@ export const BattleScene = () => {
           <SheetContent>
             <div className="flex flex-col gap-4 pt-4">
               <Select value={selectedLeftHolobot} onValueChange={setSelectedLeftHolobot}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white/10 text-white border-white/20">
                   <SelectValue placeholder="Choose Holobot" />
                 </SelectTrigger>
                 <SelectContent>
@@ -103,7 +118,7 @@ export const BattleScene = () => {
               </Select>
               
               <Select value={selectedRightHolobot} onValueChange={setSelectedRightHolobot}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white/10 text-white border-white/20">
                   <SelectValue placeholder="Choose Enemy" />
                 </SelectTrigger>
                 <SelectContent>
@@ -120,7 +135,7 @@ export const BattleScene = () => {
         
         <div className="hidden md:flex gap-4">
           <Select value={selectedLeftHolobot} onValueChange={setSelectedLeftHolobot}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-32 bg-white/10 text-white border-white/20">
               <SelectValue placeholder="Choose Holobot" />
             </SelectTrigger>
             <SelectContent>
@@ -133,7 +148,7 @@ export const BattleScene = () => {
           </Select>
           
           <Select value={selectedRightHolobot} onValueChange={setSelectedRightHolobot}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-32 bg-white/10 text-white border-white/20">
               <SelectValue placeholder="Choose Enemy" />
             </SelectTrigger>
             <SelectContent>
@@ -147,12 +162,12 @@ export const BattleScene = () => {
         </div>
       </div>
 
-      <div className="flex justify-between gap-4 mb-2">
+      <div className="flex justify-center gap-2 mb-2">
         <HolobotCard stats={HOLOBOT_STATS[selectedLeftHolobot]} variant="blue" />
         <HolobotCard stats={HOLOBOT_STATS[selectedRightHolobot]} variant="red" />
       </div>
       
-      <div className="relative w-full max-w-3xl mx-auto h-28 md:h-40 bg-retro-background rounded-lg overflow-hidden border-2 border-retro-accent/30">
+      <div className="relative w-full max-w-3xl mx-auto h-24 md:h-32 bg-retro-background rounded-lg overflow-hidden border-2 border-retro-accent/30">
         <div className="absolute inset-0 bg-gradient-to-t from-retro-background to-retro-accent/20" />
         
         <div className="relative z-10 w-full h-full p-2 md:p-4 flex flex-col">
@@ -188,10 +203,16 @@ export const BattleScene = () => {
       </div>
 
       <div className="w-full p-2 bg-black/30 rounded-lg border border-white/20 mt-1">
-        <div className="h-16 overflow-y-auto text-xs md:text-sm text-white font-mono space-y-1">
+        <div className="h-20 overflow-y-auto text-xs md:text-sm text-white font-mono space-y-1">
           <p>Battle Events will appear here...</p>
-          <p>Ready to start the battle!</p>
-          <p>Choose your moves wisely...</p>
+          {isBattleStarted ? (
+            <>
+              <p>Battle in progress!</p>
+              <p>Choose your moves wisely...</p>
+            </>
+          ) : (
+            <p>Press Start Battle to begin!</p>
+          )}
         </div>
       </div>
     </div>
