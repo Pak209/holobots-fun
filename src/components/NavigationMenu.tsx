@@ -11,17 +11,23 @@ export const NavigationMenu = () => {
           <Menu className="h-6 w-6" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[200px] bg-retro-background border-retro-accent">
+      <SheetContent side="right" className="w-[250px] bg-retro-background border-retro-accent">
         <nav className="flex flex-col gap-4 mt-8">
           <Link 
+            to="/" 
+            className="text-white hover:text-retro-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-retro-accent/50"
+          >
+            Battle
+          </Link>
+          <Link 
             to="/quests" 
-            className="text-white hover:text-retro-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10"
+            className="text-white hover:text-retro-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-retro-accent/50"
           >
             Quests
           </Link>
           <Link 
             to="/training" 
-            className="text-white hover:text-retro-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10"
+            className="text-white hover:text-retro-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-retro-accent/50"
           >
             Training
           </Link>
