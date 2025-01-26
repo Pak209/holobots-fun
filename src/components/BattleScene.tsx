@@ -12,10 +12,10 @@ import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 export const BattleScene = () => {
   const [leftHealth, setLeftHealth] = useState(100);
   const [rightHealth, setRightHealth] = useState(100);
-  const [leftSpecial, setLeftSpecial] = useState(100);
-  const [rightSpecial, setRightSpecial] = useState(100);
-  const [leftHack, setLeftHack] = useState(100);
-  const [rightHack, setRightHack] = useState(100);
+  const [leftSpecial, setLeftSpecial] = useState(0);
+  const [rightSpecial, setRightSpecial] = useState(0);
+  const [leftHack, setLeftHack] = useState(0);
+  const [rightHack, setRightHack] = useState(0);
   const [leftIsAttacking, setLeftIsAttacking] = useState(false);
   const [rightIsAttacking, setRightIsAttacking] = useState(false);
   const [leftIsDamaged, setLeftIsDamaged] = useState(false);
@@ -23,19 +23,44 @@ export const BattleScene = () => {
   const [selectedLeftHolobot, setSelectedLeftHolobot] = useState("ace");
   const [selectedRightHolobot, setSelectedRightHolobot] = useState("kuma");
   const [isBattleStarted, setIsBattleStarted] = useState(false);
+  const [battleLog, setBattleLog] = useState<string[]>([]);
+
+  const addToBattleLog = (message: string) => {
+    setBattleLog(prev => [...prev, message]);
+  };
+
+  const calculateDamage = (attacker: string, defender: string) => {
+    const attackerStats = HOLOBOT_STATS[attacker];
+    const defenderStats = HOLOBOT_STATS[defender];
+    let damage = Math.max(0, attackerStats.attack - defenderStats.defense);
+    
+    // Speed affects miss chance
+    if (defenderStats.speed > attackerStats.speed && Math.random() > 0.8) {
+      addToBattleLog(`${attackerStats.name}'s attack missed!`);
+      return 0;
+    }
+    
+    return damage;
+  };
 
   useEffect(() => {
     if (!isBattleStarted) return;
 
     const interval = setInterval(() => {
       const attacker = Math.random() > 0.5;
-      const damage = Math.random() * 5;
-
+      
       if (attacker) {
         setLeftIsAttacking(true);
+        const damage = calculateDamage(selectedLeftHolobot, selectedRightHolobot);
+        
         setTimeout(() => {
           setRightIsDamaged(true);
           setRightHealth(prev => Math.max(0, prev - damage));
+          setLeftSpecial(prev => Math.min(100, prev + 10));
+          setLeftHack(prev => Math.min(100, prev + 5));
+          
+          addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} attacks for ${damage} damage!`);
+          
           setTimeout(() => {
             setRightIsDamaged(false);
             setLeftIsAttacking(false);
@@ -43,9 +68,16 @@ export const BattleScene = () => {
         }, 500);
       } else {
         setRightIsAttacking(true);
+        const damage = calculateDamage(selectedRightHolobot, selectedLeftHolobot);
+        
         setTimeout(() => {
           setLeftIsDamaged(true);
           setLeftHealth(prev => Math.max(0, prev - damage));
+          setRightSpecial(prev => Math.min(100, prev + 10));
+          setRightHack(prev => Math.min(100, prev + 5));
+          
+          addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} attacks for ${damage} damage!`);
+          
           setTimeout(() => {
             setLeftIsDamaged(false);
             setRightIsAttacking(false);
@@ -55,16 +87,17 @@ export const BattleScene = () => {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isBattleStarted]);
+  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot]);
 
   const handleStartBattle = () => {
     setIsBattleStarted(true);
     setLeftHealth(100);
     setRightHealth(100);
-    setLeftSpecial(100);
-    setRightSpecial(100);
-    setLeftHack(100);
-    setRightHack(100);
+    setLeftSpecial(0);
+    setRightSpecial(0);
+    setLeftHack(0);
+    setRightHack(0);
+    setBattleLog(["Battle started!"]);
   };
 
   return (
@@ -98,11 +131,11 @@ export const BattleScene = () => {
         
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="md:hidden">
+            <Button variant="outline" size="icon" className="block md:hidden">
               <Menu className="h-4 w-4" />
             </Button>
           </SheetTrigger>
-          <SheetContent>
+          <SheetContent side="right">
             <div className="flex flex-col gap-4 pt-4">
               <Select value={selectedLeftHolobot} onValueChange={setSelectedLeftHolobot}>
                 <SelectTrigger className="bg-white/10 text-white border-white/20">
@@ -204,15 +237,9 @@ export const BattleScene = () => {
 
       <div className="w-full p-2 bg-black/30 rounded-lg border border-white/20 mt-1">
         <div className="h-20 overflow-y-auto text-xs md:text-sm text-white font-mono space-y-1">
-          <p>Battle Events will appear here...</p>
-          {isBattleStarted ? (
-            <>
-              <p>Battle in progress!</p>
-              <p>Choose your moves wisely...</p>
-            </>
-          ) : (
-            <p>Press Start Battle to begin!</p>
-          )}
+          {battleLog.map((log, index) => (
+            <p key={index}>{log}</p>
+          ))}
         </div>
       </div>
     </div>
