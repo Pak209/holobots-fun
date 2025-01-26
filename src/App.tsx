@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Training from "./pages/Training";
 import Quests from "./pages/Quests";
+import HolobotsInfo from "./pages/HolobotsInfo";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/training" element={<Training />} />
           <Route path="/quests" element={<Quests />} />
+          <Route path="/holobots-info" element={<HolobotsInfo />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

@@ -31,6 +31,12 @@ export const NavigationMenu = () => {
           >
             Training
           </Link>
+          <Link 
+            to="/holobots-info" 
+            className="text-white hover:text-retro-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-retro-accent/50"
+          >
+            Holobots Info
+          </Link>
         </nav>
       </SheetContent>
     </Sheet>
