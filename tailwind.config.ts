@@ -62,42 +62,43 @@ export default {
             red: "#CC0000",
           }
         },
-      },
-
-      keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
-        "health-decrease": {
-          "0%": { transform: "scaleX(1)" },
-          "100%": { transform: "scaleX(0)" },
-        },
-        "character-idle": {
-          "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-2px)" },
-        },
-        "vs-pulse": {
-          "0%, 100%": { opacity: "1", transform: "scale(1)" },
-          "50%": { opacity: "0.5", transform: "scale(0.95)" },
-        },
-        "attack-particle": {
-          "0%": { transform: "scale(0)", opacity: "0" },
-          "50%": { transform: "scale(1)", opacity: "1" },
-          "100%": { transform: "scale(0)", opacity: "0" }
+        cyberpunk: {
+          primary: "#FF00FF", // Neon pink
+          secondary: "#00FFFF", // Cyan
+          accent: "#FFD700", // Gold
+          dark: "#1A1A2E", // Dark blue background
+          light: "#E5E5E5", // Light gray
+          success: "#00FF00", // Neon green
+          warning: "#FFA500", // Orange
+          danger: "#FF0000", // Red
+          info: "#00BFFF", // Deep sky blue
+          background: "#0D0D1A", // Darker background
+          card: "#1A1A2E", // Slightly lighter background for cards
+          border: "#FF00FF40", // Semi-transparent neon pink
         },
       },
+      
+      boxShadow: {
+        'neon': '0 0 5px theme(colors.cyberpunk.primary), 0 0 20px theme(colors.cyberpunk.primary)',
+        'neon-cyan': '0 0 5px theme(colors.cyberpunk.secondary), 0 0 20px theme(colors.cyberpunk.secondary)',
+        'neon-gold': '0 0 5px theme(colors.cyberpunk.accent), 0 0 20px theme(colors.cyberpunk.accent)',
+      },
+      
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        "health-decrease": "health-decrease 2s ease-in-out",
-        "character-idle": "character-idle 1s ease-in-out infinite",
-        "vs-pulse": "vs-pulse 1.5s ease-in-out infinite",
-        "attack-particle": "attack-particle 0.5s ease-out forwards",
+        'neon-pulse': 'neon-pulse 2s ease-in-out infinite',
+        'glitch': 'glitch 1s ease-in-out infinite',
+      },
+      
+      keyframes: {
+        'neon-pulse': {
+          '0%, 100%': { opacity: '1', boxShadow: '0 0 5px theme(colors.cyberpunk.primary), 0 0 20px theme(colors.cyberpunk.primary)' },
+          '50%': { opacity: '0.5', boxShadow: '0 0 2px theme(colors.cyberpunk.primary), 0 0 10px theme(colors.cyberpunk.primary)' },
+        },
+        'glitch': {
+          '0%, 100%': { transform: 'translate(0)' },
+          '33%': { transform: 'translate(-2px, 2px)' },
+          '66%': { transform: 'translate(2px, -2px)' },
+        },
       },
     },
   },
