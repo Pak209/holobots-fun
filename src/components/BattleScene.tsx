@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import { StatusBar } from "./HealthBar";
 import { Character } from "./Character";
 import { AttackParticle } from "./AttackParticle";
-import { Button } from "./ui/button";
-import { Rocket, Zap, Menu } from "lucide-react";
 import { HolobotCard } from "./HolobotCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Menu } from "lucide-react";
+import { Button } from "./ui/button";
+import { BattleControls } from "./BattleControls";
+import { BattleLog } from "./BattleLog";
+import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost } from "@/utils/battleUtils";
 
 export const BattleScene = () => {
   const [leftHealth, setLeftHealth] = useState(100);
@@ -24,70 +27,30 @@ export const BattleScene = () => {
   const [selectedRightHolobot, setSelectedRightHolobot] = useState("kuma");
   const [isBattleStarted, setIsBattleStarted] = useState(false);
   const [battleLog, setBattleLog] = useState<string[]>([]);
+  const [leftXp, setLeftXp] = useState(0);
+  const [rightXp, setRightXp] = useState(0);
+  const [leftLevel, setLeftLevel] = useState(1);
+  const [rightLevel, setRightLevel] = useState(1);
 
   const addToBattleLog = (message: string) => {
     setBattleLog(prev => [...prev, message]);
   };
 
-  const calculateDamage = (attacker: string, defender: string) => {
-    const attackerStats = HOLOBOT_STATS[attacker];
-    const defenderStats = HOLOBOT_STATS[defender];
-    let damage = Math.max(0, attackerStats.attack - defenderStats.defense);
-    
-    // Speed affects miss chance
-    if (defenderStats.speed > attackerStats.speed && Math.random() > 0.8) {
-      addToBattleLog(`${attackerStats.name}'s attack missed!`);
-      return 0;
+  const handleHypeUp = () => {
+    if (isBattleStarted) {
+      setLeftSpecial(prev => Math.min(100, prev + 20));
+      addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} is getting hyped up!`);
     }
-    
-    return damage;
   };
 
-  useEffect(() => {
-    if (!isBattleStarted) return;
-
-    const interval = setInterval(() => {
-      const attacker = Math.random() > 0.5;
-      
-      if (attacker) {
-        setLeftIsAttacking(true);
-        const damage = calculateDamage(selectedLeftHolobot, selectedRightHolobot);
-        
-        setTimeout(() => {
-          setRightIsDamaged(true);
-          setRightHealth(prev => Math.max(0, prev - damage));
-          setLeftSpecial(prev => Math.min(100, prev + 10));
-          setLeftHack(prev => Math.min(100, prev + 5));
-          
-          addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} attacks for ${damage} damage!`);
-          
-          setTimeout(() => {
-            setRightIsDamaged(false);
-            setLeftIsAttacking(false);
-          }, 200);
-        }, 500);
-      } else {
-        setRightIsAttacking(true);
-        const damage = calculateDamage(selectedRightHolobot, selectedLeftHolobot);
-        
-        setTimeout(() => {
-          setLeftIsDamaged(true);
-          setLeftHealth(prev => Math.max(0, prev - damage));
-          setRightSpecial(prev => Math.min(100, prev + 10));
-          setRightHack(prev => Math.min(100, prev + 5));
-          
-          addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} attacks for ${damage} damage!`);
-          
-          setTimeout(() => {
-            setLeftIsDamaged(false);
-            setRightIsAttacking(false);
-          }, 200);
-        }, 500);
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot]);
+  const handleHack = (type: 'attack' | 'speed' | 'heal') => {
+    if (leftHack >= 100) {
+      const updatedStats = applyHackBoost(HOLOBOT_STATS[selectedLeftHolobot], type);
+      HOLOBOT_STATS[selectedLeftHolobot] = updatedStats;
+      setLeftHack(0);
+      addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} used hack: ${type}!`);
+    }
+  };
 
   const handleStartBattle = () => {
     setIsBattleStarted(true);
@@ -100,34 +63,80 @@ export const BattleScene = () => {
     setBattleLog(["Battle started!"]);
   };
 
+  useEffect(() => {
+    if (!isBattleStarted) return;
+
+    const interval = setInterval(() => {
+      const attacker = Math.random() > 0.5;
+      
+      if (attacker) {
+        setLeftIsAttacking(true);
+        const damage = calculateDamage(HOLOBOT_STATS[selectedLeftHolobot], HOLOBOT_STATS[selectedRightHolobot]);
+        
+        setTimeout(() => {
+          setRightIsDamaged(true);
+          setRightHealth(prev => Math.max(0, prev - damage));
+          setLeftSpecial(prev => Math.min(100, prev + 10));
+          setLeftHack(prev => Math.min(100, prev + 5));
+          setLeftXp(prev => {
+            const newXp = prev + Math.floor(damage * 2);
+            const newLevel = getNewLevel(newXp, leftLevel);
+            if (newLevel > leftLevel) {
+              setLeftLevel(newLevel);
+              addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} reached level ${newLevel}!`);
+            }
+            return newXp;
+          });
+          
+          addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} attacks for ${damage} damage!`);
+          
+          setTimeout(() => {
+            setRightIsDamaged(false);
+            setLeftIsAttacking(false);
+          }, 200);
+        }, 500);
+      } else {
+        setRightIsAttacking(true);
+        const damage = calculateDamage(HOLOBOT_STATS[selectedRightHolobot], HOLOBOT_STATS[selectedLeftHolobot]);
+        
+        setTimeout(() => {
+          setLeftIsDamaged(true);
+          setLeftHealth(prev => Math.max(0, prev - damage));
+          setRightSpecial(prev => Math.min(100, prev + 10));
+          setRightHack(prev => Math.min(100, prev + 5));
+          setRightXp(prev => {
+            const newXp = prev + Math.floor(damage * 2);
+            const newLevel = getNewLevel(newXp, rightLevel);
+            if (newLevel > rightLevel) {
+              setRightLevel(newLevel);
+              addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} reached level ${newLevel}!`);
+            }
+            return newXp;
+          });
+          
+          addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} attacks for ${damage} damage!`);
+          
+          setTimeout(() => {
+            setLeftIsDamaged(false);
+            setRightIsAttacking(false);
+          }, 200);
+        }, 500);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel]);
+
   return (
     <div className="flex flex-col gap-1">
       <div className="flex justify-between items-center mb-1">
-        <div className="flex gap-1.5">
-          <Button 
-            variant="outline"
-            className="bg-purple-600 hover:bg-purple-700 text-white border-none text-xs"
-            size="sm"
-            onClick={handleStartBattle}
-            disabled={isBattleStarted}
-          >
-            Start Battle
-          </Button>
-          <Button 
-            variant="outline"
-            className="bg-yellow-500 hover:bg-yellow-600 text-white border-none text-xs"
-            size="sm"
-          >
-            <Rocket className="w-3 h-3 md:w-4 md:h-4" /> Hype
-          </Button>
-          <Button 
-            variant="outline"
-            className="bg-red-500 hover:bg-red-600 text-white border-none text-xs"
-            size="sm"
-          >
-            <Zap className="w-3 h-3 md:w-4 md:h-4" /> Hack
-          </Button>
-        </div>
+        <BattleControls
+          onStartBattle={handleStartBattle}
+          onHypeUp={handleHypeUp}
+          onHack={handleHack}
+          isBattleStarted={isBattleStarted}
+          hackGauge={leftHack}
+        />
         
         <Sheet>
           <SheetTrigger asChild>
@@ -196,8 +205,8 @@ export const BattleScene = () => {
       </div>
 
       <div className="flex justify-center gap-2 mb-2">
-        <HolobotCard stats={HOLOBOT_STATS[selectedLeftHolobot]} variant="blue" />
-        <HolobotCard stats={HOLOBOT_STATS[selectedRightHolobot]} variant="red" />
+        <HolobotCard stats={{...HOLOBOT_STATS[selectedLeftHolobot], level: leftLevel}} variant="blue" />
+        <HolobotCard stats={{...HOLOBOT_STATS[selectedRightHolobot], level: rightLevel}} variant="red" />
       </div>
       
       <div className="relative w-full max-w-3xl mx-auto h-24 md:h-32 bg-retro-background rounded-lg overflow-hidden border-2 border-retro-accent/30">
@@ -235,13 +244,7 @@ export const BattleScene = () => {
         </div>
       </div>
 
-      <div className="w-full p-2 bg-black/30 rounded-lg border border-white/20 mt-1">
-        <div className="h-20 overflow-y-auto text-xs md:text-sm text-white font-mono space-y-1">
-          {battleLog.map((log, index) => (
-            <p key={index}>{log}</p>
-          ))}
-        </div>
-      </div>
+      <BattleLog logs={battleLog} />
     </div>
   );
 };
