@@ -17,17 +17,21 @@ export const HolobotCard = ({ stats, variant = "blue" }: HolobotCardProps) => {
       "WAKE": "/lovable-uploads/3166d0da-114f-4b4b-8c65-79fc3f4e4789.png",
       "ERA": "/lovable-uploads/c4359243-8486-4c66-9a1b-ee1f00a53fc6.png",
       "GAMA": "/lovable-uploads/d857f1e4-00a9-45f6-8015-6aecbaed2359.png",
+      "KEN": "/lovable-uploads/d4c4d244-e62c-49bc-a241-60ed9a2c303e.png",
+      "KURAI": "/lovable-uploads/kurai.png",
+      "TSUIN": "/lovable-uploads/tsuin.png",
+      "WOLF": "/lovable-uploads/wolf.png"
     };
     return images[name] || "/placeholder.svg";
   };
 
   return (
-    <div className={`w-[120px] md:w-[150px] h-auto rounded-lg ${
+    <div className={`w-[100px] md:w-[130px] h-auto rounded-lg ${
       variant === "blue" 
         ? "bg-retro-card-blue border-blue-300" 
         : "bg-retro-card-red border-red-300"
-    } border-2 p-1 flex flex-col font-mono text-[8px] md:text-[10px]`}>
-      <div className="flex items-center justify-between mb-1 bg-black/20 px-1.5 py-0.5 rounded-md">
+    } border-2 p-1 flex flex-col font-mono text-[6px] md:text-[8px]`}>
+      <div className="flex items-center justify-between mb-0.5 bg-black/20 px-1 py-0.5 rounded-md">
         <span className="font-bold italic text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
           HOLOBOTS
         </span>
@@ -38,25 +42,25 @@ export const HolobotCard = ({ stats, variant = "blue" }: HolobotCardProps) => {
         </span>
       </div>
       
-      <div className="aspect-square bg-black/30 rounded-lg mb-1 flex items-center justify-center border border-white/20">
+      <div className="aspect-square bg-black/30 rounded-lg mb-0.5 flex items-center justify-center border border-white/20">
         <img 
           src={getHolobotImage(stats.name)} 
           alt={stats.name} 
-          className="w-14 h-14 md:w-16 md:h-16 pixelated object-contain"
+          className="w-10 h-10 md:w-12 md:h-12 pixelated object-contain"
         />
       </div>
       
-      <div className="bg-black/30 rounded-lg p-1 mb-1 border border-white/20 flex-1">
-        <div className="font-bold text-white mb-0.5 text-[8px]">
+      <div className="bg-black/30 rounded-lg p-0.5 mb-0.5 border border-white/20 flex-1">
+        <div className="font-bold text-white mb-0.5 text-[6px]">
           Ability: {stats.specialMove}
         </div>
-        <div className="text-[6px] md:text-[8px] text-gray-300">
+        <div className="text-[5px] md:text-[6px] text-gray-300">
           Uses its speed to strike first and deal bonus damage.
         </div>
       </div>
       
-      <div className="bg-black/30 rounded-lg p-1 mb-1 border border-white/20">
-        <div className="grid grid-cols-4 gap-1 text-white text-[6px] md:text-[8px]">
+      <div className="bg-black/30 rounded-lg p-0.5 mb-0.5 border border-white/20">
+        <div className="grid grid-cols-4 gap-0.5 text-white text-[5px] md:text-[6px]">
           <div>HP:{stats.maxHealth}</div>
           <div>A:{stats.attack}</div>
           <div>D:{stats.defense}</div>
@@ -64,7 +68,7 @@ export const HolobotCard = ({ stats, variant = "blue" }: HolobotCardProps) => {
         </div>
       </div>
       
-      <div className="flex justify-between text-[6px] md:text-[8px]">
+      <div className="flex justify-between text-[5px] md:text-[6px]">
         <div className="text-white font-bold">LV.{stats.level}</div>
         <div className="text-yellow-300 font-bold">Rank:{getRank(stats.level)}</div>
       </div>
