@@ -10,15 +10,15 @@ export const HolobotCard = ({ stats, variant = "blue" }: HolobotCardProps) => {
   const getHolobotImage = (name: string) => {
     // Create a mapping with lowercase keys for case-insensitive matching
     const images: Record<string, string> = {
-      "ace": "/lovable-uploads/68aa5731-00c2-4136-b181-06313cd864dd.png",
-      "kuma": "/lovable-uploads/32d16b0c-0a96-4d6c-aedc-88354599edd8.png",
-      "shadow": "/lovable-uploads/7d5945ea-d44a-4028-8455-8f5f017fa601.png",
-      "hare": "/lovable-uploads/92cbe29b-a693-4e46-aa5d-e205dd333db1.png",
-      "tora": "/lovable-uploads/859536c7-8d38-41d4-be59-07c12cc8a523.png",
-      "wake": "/lovable-uploads/3166d0da-114f-4b4b-8c65-79fc3f4e4789.png",
-      "era": "/lovable-uploads/c4359243-8486-4c66-9a1b-ee1f00a53fc6.png",
-      "gama": "/lovable-uploads/d857f1e4-00a9-45f6-8015-6aecbaed2359.png",
-      "ken": "/lovable-uploads/d4c4d244-e62c-49bc-a241-60ed9a2c303e.png",
+      "ace": "/lovable-uploads/ace.png",
+      "kuma": "/lovable-uploads/kuma.png",
+      "shadow": "/lovable-uploads/shadow.png",
+      "hare": "/lovable-uploads/hare.png",
+      "tora": "/lovable-uploads/tora.png",
+      "wake": "/lovable-uploads/wake.png",
+      "era": "/lovable-uploads/era.png",
+      "gama": "/lovable-uploads/gama.png",
+      "ken": "/lovable-uploads/ken.PNG",
       "kurai": "/lovable-uploads/kurai.png",
       "tsuin": "/lovable-uploads/tsuin.png",
       "wolf": "/lovable-uploads/wolf.png"
@@ -50,7 +50,7 @@ export const HolobotCard = ({ stats, variant = "blue" }: HolobotCardProps) => {
         <img 
           src={getHolobotImage(stats.name)} 
           alt={stats.name} 
-          className="w-10 h-10 md:w-12 md:h-12 pixelated object-contain"
+          className="w-16 h-16 md:w-20 md:h-20 pixelated object-contain" // Increased image size
         />
       </div>
       
