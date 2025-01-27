@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Training from "./pages/Training";
 import Quests from "./pages/Quests";
 import HolobotsInfo from "./pages/HolobotsInfo";
+import HolosFarm from "./pages/HolosFarm";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/training" element={<Training />} />
           <Route path="/quests" element={<Quests />} />
           <Route path="/holobots-info" element={<HolobotsInfo />} />
+          <Route path="/holos-farm" element={<HolosFarm />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
