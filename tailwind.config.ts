@@ -52,32 +52,15 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        retro: {
-          background: "#1A1F2C",
-          accent: "#F97316",
-          health: "#FF719A",
-          highlight: "#9b87f5",
-          card: {
-            blue: "#0066CC",
-            red: "#CC0000",
-          }
-        },
-        cyberpunk: {
-          primary: "#FF00FF", // Neon pink
-          secondary: "#00FFFF", // Cyan
-          accent: "#FFD700", // Gold
-          dark: "#1A1A2E", // Dark blue background
-          light: "#E5E5E5", // Light gray
-          success: "#00FF00", // Neon green
-          warning: "#FFA500", // Orange
-          danger: "#FF0000", // Red
-          info: "#00BFFF", // Deep sky blue
-          background: "#0D0D1A", // Darker background
-          card: "#1A1A2E", // Slightly lighter background for cards
-          border: "#FF00FF40", // Semi-transparent neon pink
-        },
+        holobots: {
+          background: "#F1F1F1", // Light grey background from logo
+          accent: "#33C3F0",    // Bright blue from logo
+          text: "#555555",      // Dark grey for text
+          card: "#FFFFFF",      // White for cards
+          border: "#D3E4FD",    // Light blue for borders
+          hover: "#0FA0CE",     // Darker blue for hover states
+        }
       },
-      
       boxShadow: {
         'neon': '0 0 5px theme(colors.cyberpunk.primary), 0 0 20px theme(colors.cyberpunk.primary)',
         'neon-cyan': '0 0 5px theme(colors.cyberpunk.secondary), 0 0 20px theme(colors.cyberpunk.secondary)',
