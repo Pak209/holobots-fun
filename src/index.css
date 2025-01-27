@@ -99,11 +99,6 @@
 }
 
 @layer utilities {
-  .neon-text {
-    text-shadow: 0 0 5px theme(colors.holobots.accent),
-                 0 0 20px theme(colors.holobots.accent);
-  }
-
   .pixelated {
     image-rendering: pixelated;
     image-rendering: crisp-edges;
