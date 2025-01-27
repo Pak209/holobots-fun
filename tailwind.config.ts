@@ -53,18 +53,18 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         holobots: {
-          background: "#F1F1F1", // Light grey background from logo
-          accent: "#33C3F0",    // Bright blue from logo
-          text: "#555555",      // Dark grey for text
-          card: "#FFFFFF",      // White for cards
-          border: "#D3E4FD",    // Light blue for borders
-          hover: "#0FA0CE",     // Darker blue for hover states
+          background: "#F1F1F1",
+          accent: "#33C3F0",    
+          text: "#555555",      
+          card: "#FFFFFF",      
+          border: "#D3E4FD",    
+          hover: "#0FA0CE",     
         }
       },
       boxShadow: {
-        'neon': '0 0 5px theme(colors.cyberpunk.primary), 0 0 20px theme(colors.cyberpunk.primary)',
-        'neon-cyan': '0 0 5px theme(colors.cyberpunk.secondary), 0 0 20px theme(colors.cyberpunk.secondary)',
-        'neon-gold': '0 0 5px theme(colors.cyberpunk.accent), 0 0 20px theme(colors.cyberpunk.accent)',
+        'neon-blue': '0 0 5px theme(colors.holobots.accent), 0 0 20px theme(colors.holobots.accent)',
+        'neon-white': '0 0 5px theme(colors.holobots.card), 0 0 20px theme(colors.holobots.card)',
+        'neon-border': '0 0 5px theme(colors.holobots.border), 0 0 20px theme(colors.holobots.border)',
       },
       
       animation: {
@@ -74,8 +74,8 @@ export default {
       
       keyframes: {
         'neon-pulse': {
-          '0%, 100%': { opacity: '1', boxShadow: '0 0 5px theme(colors.cyberpunk.primary), 0 0 20px theme(colors.cyberpunk.primary)' },
-          '50%': { opacity: '0.5', boxShadow: '0 0 2px theme(colors.cyberpunk.primary), 0 0 10px theme(colors.cyberpunk.primary)' },
+          '0%, 100%': { opacity: '1', boxShadow: '0 0 5px theme(colors.holobots.accent), 0 0 20px theme(colors.holobots.accent)' },
+          '50%': { opacity: '0.5', boxShadow: '0 0 2px theme(colors.holobots.accent), 0 0 10px theme(colors.holobots.accent)' },
         },
         'glitch': {
           '0%, 100%': { transform: 'translate(0)' },
