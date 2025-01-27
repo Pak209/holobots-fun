@@ -96,7 +96,7 @@
   }
 
   body {
-    @apply bg-retro-background text-white font-mono;
+    @apply bg-holobots-background text-holobots-text font-mono;
   }
 
   @font-face {
