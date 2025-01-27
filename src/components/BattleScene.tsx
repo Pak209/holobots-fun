@@ -129,7 +129,7 @@ export const BattleScene = () => {
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex justify-between items-center mb-1 bg-cyberpunk-dark p-4 rounded-lg border border-cyberpunk-border shadow-neon">
+      <div className="flex justify-between items-center mb-1 bg-holobots-card p-4 rounded-lg border border-holobots-border shadow-neon-blue">
         <BattleControls
           onStartBattle={handleStartBattle}
           onHypeUp={handleHypeUp}
@@ -143,20 +143,20 @@ export const BattleScene = () => {
             <Button 
               variant="outline" 
               size="icon" 
-              className="block md:hidden bg-cyberpunk-card border-cyberpunk-border text-cyberpunk-primary hover:bg-cyberpunk-dark hover:text-cyberpunk-secondary"
+              className="block md:hidden bg-holobots-card border-holobots-border text-holobots-text hover:bg-holobots-hover"
             >
               <Menu className="h-4 w-4" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="bg-cyberpunk-background border-cyberpunk-border">
+          <SheetContent side="right" className="bg-holobots-background border-holobots-border">
             <div className="flex flex-col gap-4 pt-4">
               <Select value={selectedLeftHolobot} onValueChange={setSelectedLeftHolobot}>
-                <SelectTrigger className="bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
+                <SelectTrigger className="bg-holobots-card text-holobots-text border-holobots-border">
                   <SelectValue placeholder="Choose Holobot" />
                 </SelectTrigger>
-                <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
+                <SelectContent className="bg-holobots-card border-holobots-border">
                   {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                    <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
+                    <SelectItem key={key} value={key} className="text-holobots-text hover:bg-holobots-hover">
                       {stats.name}
                     </SelectItem>
                   ))}
@@ -164,12 +164,12 @@ export const BattleScene = () => {
               </Select>
               
               <Select value={selectedRightHolobot} onValueChange={setSelectedRightHolobot}>
-                <SelectTrigger className="bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
+                <SelectTrigger className="bg-holobots-card text-holobots-text border-holobots-border">
                   <SelectValue placeholder="Choose Enemy" />
                 </SelectTrigger>
-                <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
+                <SelectContent className="bg-holobots-card border-holobots-border">
                   {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                    <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
+                    <SelectItem key={key} value={key} className="text-holobots-text hover:bg-holobots-hover">
                       {stats.name}
                     </SelectItem>
                   ))}
@@ -181,12 +181,12 @@ export const BattleScene = () => {
         
         <div className="hidden md:flex gap-4">
           <Select value={selectedLeftHolobot} onValueChange={setSelectedLeftHolobot}>
-            <SelectTrigger className="w-32 bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
+            <SelectTrigger className="w-32 bg-holobots-card text-holobots-text border-holobots-border">
               <SelectValue placeholder="Choose Holobot" />
             </SelectTrigger>
-            <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
+            <SelectContent className="bg-holobots-card border-holobots-border">
               {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
+                <SelectItem key={key} value={key} className="text-holobots-text hover:bg-holobots-hover">
                   {stats.name}
                 </SelectItem>
               ))}
@@ -194,12 +194,12 @@ export const BattleScene = () => {
           </Select>
           
           <Select value={selectedRightHolobot} onValueChange={setSelectedRightHolobot}>
-            <SelectTrigger className="w-32 bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
+            <SelectTrigger className="w-32 bg-holobots-card text-holobots-text border-holobots-border">
               <SelectValue placeholder="Choose Enemy" />
             </SelectTrigger>
-            <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
+            <SelectContent className="bg-holobots-card border-holobots-border">
               {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
+                <SelectItem key={key} value={key} className="text-holobots-text hover:bg-holobots-hover">
                   {stats.name}
                 </SelectItem>
               ))}
@@ -208,16 +208,8 @@ export const BattleScene = () => {
         </div>
       </div>
 
-      <div className="flex justify-center gap-2 mb-2">
-        <HolobotCard stats={{...HOLOBOT_STATS[selectedLeftHolobot], level: leftLevel}} variant="blue" />
-        <div className="flex items-center">
-          <span className="text-cyberpunk-primary font-bold text-xl animate-neon-pulse">VS</span>
-        </div>
-        <HolobotCard stats={{...HOLOBOT_STATS[selectedRightHolobot], level: rightLevel}} variant="red" />
-      </div>
-      
-      <div className="relative w-full max-w-3xl mx-auto h-24 md:h-32 bg-cyberpunk-background rounded-lg overflow-hidden border-2 border-cyberpunk-border shadow-neon">
-        <div className="absolute inset-0 bg-gradient-to-t from-cyberpunk-background to-cyberpunk-primary/5" />
+      <div className="relative w-full max-w-3xl mx-auto h-24 md:h-32 bg-holobots-background rounded-lg overflow-hidden border-2 border-holobots-border shadow-neon">
+        <div className="absolute inset-0 bg-gradient-to-t from-holobots-background to-holobots-accent/5" />
         
         <div className="relative z-10 w-full h-full p-2 md:p-4 flex flex-col">
           <div className="space-y-0.5 md:space-y-1">
