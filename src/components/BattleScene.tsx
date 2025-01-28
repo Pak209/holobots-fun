@@ -1,17 +1,12 @@
 import { useState, useEffect } from "react";
-import { StatusBar } from "./HealthBar";
-import { Character } from "./Character";
-import { AttackParticle } from "./AttackParticle";
-import { HolobotCard } from "./HolobotCard";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { HOLOBOT_STATS } from "@/types/holobot";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
-import { Menu } from "lucide-react";
-import { Button } from "./ui/button";
 import { BattleControls } from "./BattleControls";
 import { BattleLog } from "./BattleLog";
-import { ExperienceBar } from "./ExperienceBar";
-import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost, getExperienceProgress, applySpecialAttack } from "@/utils/battleUtils";
+import { BattleMeters } from "./battle/BattleMeters";
+import { BattleCharacters } from "./battle/BattleCharacters";
+import { BattleSelectors } from "./battle/BattleSelectors";
+import { BattleCards } from "./battle/BattleCards";
+import { HOLOBOT_STATS } from "@/types/holobot";
+import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost } from "@/utils/battleUtils";
 
 export const BattleScene = () => {
   const [leftHealth, setLeftHealth] = useState(100);
@@ -57,7 +52,6 @@ export const BattleScene = () => {
 
   const handleStartBattle = () => {
     if (isBattleStarted) {
-      // Reset all states to start a new battle
       setIsBattleStarted(false);
       setLeftHealth(100);
       setRightHealth(100);
@@ -83,7 +77,6 @@ export const BattleScene = () => {
     if (!isBattleStarted) return;
 
     const interval = setInterval(() => {
-      // Check if battle should end
       if (leftHealth <= 0 || rightHealth <= 0) {
         setIsBattleStarted(false);
         const winner = leftHealth > 0 ? HOLOBOT_STATS[selectedLeftHolobot].name : HOLOBOT_STATS[selectedRightHolobot].name;
@@ -108,7 +101,6 @@ export const BattleScene = () => {
             setLeftSpecial(prev => Math.min(100, prev + 10));
             setLeftHack(prev => Math.min(100, prev + 5));
             
-            // Apply special attack if gauge is full
             if (leftSpecial >= 100) {
               const boostedStats = applySpecialAttack(HOLOBOT_STATS[selectedLeftHolobot]);
               HOLOBOT_STATS[selectedLeftHolobot] = boostedStats;
@@ -131,7 +123,6 @@ export const BattleScene = () => {
             addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} evaded the attack!`);
           }
           
-          // Increase fatigue every 3 rounds
           setLeftFatigue(prev => prev + (prev > 2 ? 1 : 0));
           
           setTimeout(() => {
@@ -153,7 +144,6 @@ export const BattleScene = () => {
             setRightSpecial(prev => Math.min(100, prev + 10));
             setRightHack(prev => Math.min(100, prev + 5));
             
-            // Apply special attack if gauge is full
             if (rightSpecial >= 100) {
               const boostedStats = applySpecialAttack(HOLOBOT_STATS[selectedRightHolobot]);
               HOLOBOT_STATS[selectedRightHolobot] = boostedStats;
@@ -176,7 +166,6 @@ export const BattleScene = () => {
             addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} evaded the attack!`);
           }
           
-          // Increase fatigue every 3 rounds
           setRightFatigue(prev => prev + (prev > 2 ? 1 : 0));
           
           setTimeout(() => {
@@ -201,124 +190,42 @@ export const BattleScene = () => {
           hackGauge={leftHack}
         />
         
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="block md:hidden bg-cyberpunk-card border-cyberpunk-border text-cyberpunk-primary hover:bg-cyberpunk-dark hover:text-cyberpunk-secondary"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="bg-cyberpunk-background border-cyberpunk-border">
-            <div className="flex flex-col gap-4 pt-4">
-              <Select value={selectedLeftHolobot} onValueChange={setSelectedLeftHolobot}>
-                <SelectTrigger className="bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
-                  <SelectValue placeholder="Choose Holobot" />
-                </SelectTrigger>
-                <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
-                  {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                    <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
-                      {stats.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Select value={selectedRightHolobot} onValueChange={setSelectedRightHolobot}>
-                <SelectTrigger className="bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
-                  <SelectValue placeholder="Choose Enemy" />
-                </SelectTrigger>
-                <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
-                  {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                    <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
-                      {stats.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </SheetContent>
-        </Sheet>
-        
-        <div className="hidden md:flex gap-4">
-          <Select value={selectedLeftHolobot} onValueChange={setSelectedLeftHolobot}>
-            <SelectTrigger className="w-32 bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
-              <SelectValue placeholder="Choose Holobot" />
-            </SelectTrigger>
-            <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
-              {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
-                  {stats.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Select value={selectedRightHolobot} onValueChange={setSelectedRightHolobot}>
-            <SelectTrigger className="w-32 bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
-              <SelectValue placeholder="Choose Enemy" />
-            </SelectTrigger>
-            <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
-              {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
-                  {stats.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <BattleSelectors
+          selectedLeftHolobot={selectedLeftHolobot}
+          selectedRightHolobot={selectedRightHolobot}
+          onLeftSelect={setSelectedLeftHolobot}
+          onRightSelect={setSelectedRightHolobot}
+        />
       </div>
 
-      <div className="flex justify-center gap-2 mb-2">
-        <div className="flex flex-col">
-          <HolobotCard stats={{...HOLOBOT_STATS[selectedLeftHolobot], level: leftLevel}} variant="blue" />
-          <ExperienceBar 
-            {...getExperienceProgress(leftXp, leftLevel)}
-            level={leftLevel}
-          />
-        </div>
-        <div className="flex items-center">
-          <span className="text-holobots-accent font-bold text-xl animate-neon-pulse">VS</span>
-        </div>
-        <div className="flex flex-col">
-          <HolobotCard stats={{...HOLOBOT_STATS[selectedRightHolobot], level: rightLevel}} variant="red" />
-        </div>
-      </div>
+      <BattleCards
+        selectedLeftHolobot={selectedLeftHolobot}
+        selectedRightHolobot={selectedRightHolobot}
+        leftLevel={leftLevel}
+        rightLevel={rightLevel}
+        leftXp={leftXp}
+        rightXp={rightXp}
+      />
       
       <div className="relative w-full max-w-3xl mx-auto h-24 md:h-32 bg-cyberpunk-background rounded-lg overflow-hidden border-2 border-cyberpunk-border shadow-neon">
         <div className="absolute inset-0 bg-gradient-to-t from-cyberpunk-background to-cyberpunk-primary/5" />
         
         <div className="relative z-10 w-full h-full p-2 md:p-4 flex flex-col">
-          <div className="space-y-0.5 md:space-y-1">
-            <div className="flex justify-between items-center gap-2 md:gap-4">
-              <div className="flex-1 space-y-0.5 md:space-y-1">
-                <StatusBar current={leftHealth} max={100} isLeft={true} type="health" />
-                <StatusBar current={leftSpecial} max={100} isLeft={true} type="special" />
-                <StatusBar current={leftHack} max={100} isLeft={true} type="hack" />
-              </div>
-              <div className="px-2 py-1 bg-black/50 rounded-lg animate-vs-pulse">
-                <span className="text-white font-bold text-xs md:text-sm">VS</span>
-              </div>
-              <div className="flex-1 space-y-0.5 md:space-y-1">
-                <StatusBar current={rightHealth} max={100} isLeft={false} type="health" />
-                <StatusBar current={rightSpecial} max={100} isLeft={false} type="special" />
-                <StatusBar current={rightHack} max={100} isLeft={false} type="hack" />
-              </div>
-            </div>
-          </div>
+          <BattleMeters
+            leftHealth={leftHealth}
+            rightHealth={rightHealth}
+            leftSpecial={leftSpecial}
+            rightSpecial={rightSpecial}
+            leftHack={leftHack}
+            rightHack={rightHack}
+          />
 
-          <div className="flex-1 flex justify-between items-center px-4 md:px-8">
-            <div className="relative flex flex-col items-center gap-2">
-              <Character isLeft={true} isDamaged={leftIsDamaged} />
-              {leftIsAttacking && <AttackParticle isLeft={true} />}
-            </div>
-            <div className="relative flex items-center">
-              <Character isLeft={false} isDamaged={rightIsDamaged} />
-              {rightIsAttacking && <AttackParticle isLeft={false} />}
-            </div>
-          </div>
+          <BattleCharacters
+            leftIsDamaged={leftIsDamaged}
+            rightIsDamaged={rightIsDamaged}
+            leftIsAttacking={leftIsAttacking}
+            rightIsAttacking={rightIsAttacking}
+          />
         </div>
       </div>
 
