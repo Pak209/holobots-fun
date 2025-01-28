@@ -12,7 +12,7 @@ export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) 
 };
 
 export const calculateExperience = (level: number) => {
-  return Math.floor(100 * (1 + level * 0.1));
+  return Math.floor(100 * Math.pow(1.2, level - 1));
 };
 
 export const getNewLevel = (currentXp: number, currentLevel: number) => {
@@ -37,4 +37,13 @@ export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | '
       break;
   }
   return newStats;
+};
+
+export const getExperienceProgress = (currentXp: number, level: number) => {
+  const requiredXp = calculateExperience(level);
+  return {
+    currentXp,
+    requiredXp,
+    progress: (currentXp / requiredXp) * 100
+  };
 };

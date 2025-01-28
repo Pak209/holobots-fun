@@ -10,7 +10,8 @@ import { Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import { BattleControls } from "./BattleControls";
 import { BattleLog } from "./BattleLog";
-import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost } from "@/utils/battleUtils";
+import { ExperienceBar } from "./ExperienceBar";
+import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost, getExperienceProgress } from "@/utils/battleUtils";
 
 export const BattleScene = () => {
   const [leftHealth, setLeftHealth] = useState(100);
@@ -129,7 +130,7 @@ export const BattleScene = () => {
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex justify-between items-center mb-1 bg-cyberpunk-dark p-4 rounded-lg border border-cyberpunk-border shadow-neon">
+      <div className="flex justify-between items-center mb-1 bg-holobots-card p-4 rounded-lg border border-holobots-border shadow-neon">
         <BattleControls
           onStartBattle={handleStartBattle}
           onHypeUp={handleHypeUp}
@@ -209,11 +210,23 @@ export const BattleScene = () => {
       </div>
 
       <div className="flex justify-center gap-2 mb-2">
-        <HolobotCard stats={{...HOLOBOT_STATS[selectedLeftHolobot], level: leftLevel}} variant="blue" />
-        <div className="flex items-center">
-          <span className="text-cyberpunk-primary font-bold text-xl animate-neon-pulse">VS</span>
+        <div className="flex flex-col">
+          <HolobotCard stats={{...HOLOBOT_STATS[selectedLeftHolobot], level: leftLevel}} variant="blue" />
+          <ExperienceBar 
+            {...getExperienceProgress(leftXp, leftLevel)}
+            level={leftLevel}
+          />
         </div>
-        <HolobotCard stats={{...HOLOBOT_STATS[selectedRightHolobot], level: rightLevel}} variant="red" />
+        <div className="flex items-center">
+          <span className="text-holobots-accent font-bold text-xl animate-neon-pulse">VS</span>
+        </div>
+        <div className="flex flex-col">
+          <HolobotCard stats={{...HOLOBOT_STATS[selectedRightHolobot], level: rightLevel}} variant="red" />
+          <ExperienceBar 
+            {...getExperienceProgress(rightXp, rightLevel)}
+            level={rightLevel}
+          />
+        </div>
       </div>
       
       <div className="relative w-full max-w-3xl mx-auto h-24 md:h-32 bg-cyberpunk-background rounded-lg overflow-hidden border-2 border-cyberpunk-border shadow-neon">
