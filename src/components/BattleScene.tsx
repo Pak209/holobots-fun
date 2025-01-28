@@ -222,10 +222,6 @@ export const BattleScene = () => {
         </div>
         <div className="flex flex-col">
           <HolobotCard stats={{...HOLOBOT_STATS[selectedRightHolobot], level: rightLevel}} variant="red" />
-          <ExperienceBar 
-            {...getExperienceProgress(rightXp, rightLevel)}
-            level={rightLevel}
-          />
         </div>
       </div>
       
