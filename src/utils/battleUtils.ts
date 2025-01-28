@@ -1,11 +1,14 @@
 import { HolobotStats } from "@/types/holobot";
 
 export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) => {
-  const damage = Math.max(0, attacker.attack - defender.defense);
+  const baseDamage = Math.max(1, attacker.attack - defender.defense);
+  const criticalHit = Math.random() < 0.2;
+  const damage = criticalHit ? baseDamage * 1.5 : baseDamage;
+  
   if (defender.speed > attacker.speed && Math.random() > 0.8) {
     return 0;
   }
-  return damage;
+  return Math.floor(damage);
 };
 
 export const calculateExperience = (level: number) => {
@@ -24,13 +27,13 @@ export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | '
   const newStats = { ...stats };
   switch (type) {
     case 'attack':
-      newStats.attack += 5;
+      newStats.attack += Math.floor(newStats.attack * 0.2);
       break;
     case 'speed':
-      newStats.speed += 3;
+      newStats.speed += Math.floor(newStats.speed * 0.2);
       break;
     case 'heal':
-      newStats.maxHealth = Math.min(newStats.maxHealth + 25, 100);
+      newStats.maxHealth = Math.min(100, newStats.maxHealth + 30);
       break;
   }
   return newStats;

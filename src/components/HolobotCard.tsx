@@ -8,7 +8,6 @@ interface HolobotCardProps {
 
 export const HolobotCard = ({ stats, variant = "blue" }: HolobotCardProps) => {
   const getHolobotImage = (name: string) => {
-    // Create a mapping with lowercase keys for case-insensitive matching
     const images: Record<string, string> = {
       "ace": "/lovable-uploads/ace.png",
       "kuma": "/lovable-uploads/kuma.png",
@@ -24,7 +23,6 @@ export const HolobotCard = ({ stats, variant = "blue" }: HolobotCardProps) => {
       "wolf": "/lovable-uploads/wolf.png"
     };
     
-    // Convert the input name to lowercase for case-insensitive matching
     const normalizedName = name.toLowerCase();
     return images[normalizedName] || "/placeholder.svg";
   };
@@ -32,9 +30,9 @@ export const HolobotCard = ({ stats, variant = "blue" }: HolobotCardProps) => {
   return (
     <div className={`w-[100px] md:w-[130px] h-auto rounded-lg ${
       variant === "blue" 
-        ? "bg-retro-card-blue border-blue-300" 
-        : "bg-retro-card-red border-red-300"
-    } border-2 p-1 flex flex-col font-mono text-[6px] md:text-[8px]`}>
+        ? "bg-holobots-card border-blue-300 shadow-neon-blue" 
+        : "bg-red-100 border-red-300 shadow-neon-border"
+    } border-2 p-1 flex flex-col font-mono text-[6px] md:text-[8px] transition-all duration-300 hover:scale-105`}>
       <div className="flex items-center justify-between mb-0.5 bg-black/20 px-1 py-0.5 rounded-md">
         <span className="font-bold italic text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
           HOLOBOTS
@@ -46,15 +44,15 @@ export const HolobotCard = ({ stats, variant = "blue" }: HolobotCardProps) => {
         </span>
       </div>
       
-      <div className="aspect-square bg-black/30 rounded-lg mb-0.5 flex items-center justify-center border border-white/20">
+      <div className="aspect-square bg-black/30 rounded-lg mb-0.5 flex items-center justify-center border border-white/20 hover:border-holobots-accent transition-colors duration-300">
         <img 
           src={getHolobotImage(stats.name)} 
           alt={stats.name} 
-          className="w-16 h-16 md:w-20 md:h-20 pixelated object-contain" // Increased image size
+          className="w-16 h-16 md:w-20 md:h-20 pixelated object-contain hover:animate-pulse" 
         />
       </div>
       
-      <div className="bg-black/30 rounded-lg p-0.5 mb-0.5 border border-white/20 flex-1">
+      <div className="bg-black/30 rounded-lg p-0.5 mb-0.5 border border-white/20">
         <div className="font-bold text-white mb-0.5 text-[6px]">
           Ability: {stats.specialMove}
         </div>
