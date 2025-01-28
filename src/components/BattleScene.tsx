@@ -56,6 +56,19 @@ export const BattleScene = () => {
   };
 
   const handleStartBattle = () => {
+    if (isBattleStarted) {
+      // Reset all states to start a new battle
+      setIsBattleStarted(false);
+      setLeftHealth(100);
+      setRightHealth(100);
+      setLeftSpecial(0);
+      setRightSpecial(0);
+      setLeftHack(0);
+      setRightHack(0);
+      setBattleLog(["Ready for a new battle!"]);
+      return;
+    }
+    
     setIsBattleStarted(true);
     setLeftHealth(100);
     setRightHealth(100);
@@ -70,6 +83,15 @@ export const BattleScene = () => {
     if (!isBattleStarted) return;
 
     const interval = setInterval(() => {
+      // Check if battle should end
+      if (leftHealth <= 0 || rightHealth <= 0) {
+        setIsBattleStarted(false);
+        const winner = leftHealth > 0 ? HOLOBOT_STATS[selectedLeftHolobot].name : HOLOBOT_STATS[selectedRightHolobot].name;
+        addToBattleLog(`Battle ended! ${winner} is victorious!`);
+        clearInterval(interval);
+        return;
+      }
+
       const attacker = Math.random() > 0.5;
       
       if (attacker) {
@@ -166,7 +188,7 @@ export const BattleScene = () => {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue]);
+  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth]);
 
   return (
     <div className="flex flex-col gap-1">

@@ -24,9 +24,8 @@ export const BattleControls = ({
         className="bg-holobots-accent hover:bg-holobots-hover text-white border-none text-xs shadow-neon-blue animate-pulse"
         size="sm"
         onClick={onStartBattle}
-        disabled={isBattleStarted}
       >
-        Start Battle
+        {isBattleStarted ? 'End Battle' : 'Start Battle'}
       </Button>
       <Button 
         variant="outline"
