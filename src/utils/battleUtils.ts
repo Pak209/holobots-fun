@@ -1,23 +1,17 @@
 import { HolobotStats } from "@/types/holobot";
 
 export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) => {
-  // Calculate damage with fatigue reduction
-  const attackWithFatigue = Math.max(1, attacker.attack - (attacker.fatigue || 0));
-  const damage = Math.max(0, attackWithFatigue - defender.defense);
-  
-  // Evasion check based on speed comparison
-  const evasionChance = defender.speed / (defender.speed + attacker.speed);
-  if (Math.random() < evasionChance) {
+  // Reduce evasion chance significantly
+  const evasionChance = (defender.speed - attacker.speed) * 0.05; // 5% per speed difference
+  const willEvade = Math.random() < Math.max(0, Math.min(0.25, evasionChance)); // Cap at 25% max
+
+  if (willEvade) {
     return 0;
   }
-  
-  // Increment special attack gauge on successful hit
-  if (damage > 0 && attacker.specialAttackGauge !== undefined) {
-    attacker.specialAttackGauge = Math.min(
-      (attacker.specialAttackThreshold || 5),
-      attacker.specialAttackGauge + 1
-    );
-  }
+
+  // Calculate base damage
+  const attackWithFatigue = Math.max(1, attacker.attack - (attacker.fatigue || 0));
+  const damage = Math.max(1, attackWithFatigue - (defender.defense * 0.5));
   
   return Math.floor(damage);
 };
