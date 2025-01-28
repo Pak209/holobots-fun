@@ -6,6 +6,12 @@ export interface HolobotStats {
   speed: number;
   specialMove: string;
   level: number;
+  fatigue?: number;
+  gasTokens?: number;
+  hackUsed?: boolean;
+  specialAttackGauge?: number;
+  specialAttackThreshold?: number;
+  syncPoints?: number;
 }
 
 export const HOLOBOT_STATS: Record<string, HolobotStats> = {

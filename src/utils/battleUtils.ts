@@ -11,6 +11,14 @@ export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) 
     return 0;
   }
   
+  // Increment special attack gauge on successful hit
+  if (damage > 0 && attacker.specialAttackGauge !== undefined) {
+    attacker.specialAttackGauge = Math.min(
+      (attacker.specialAttackThreshold || 5),
+      attacker.specialAttackGauge + 1
+    );
+  }
+  
   return Math.floor(damage);
 };
 
@@ -27,19 +35,25 @@ export const getNewLevel = (currentXp: number, currentLevel: number) => {
 };
 
 export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | 'heal') => {
-  const newStats = { ...stats };
-  switch (type) {
-    case 'attack':
-      newStats.attack += Math.floor(newStats.attack * 0.2);
-      break;
-    case 'speed':
-      newStats.speed += Math.floor(newStats.speed * 0.2);
-      break;
-    case 'heal':
-      newStats.maxHealth = Math.min(100, newStats.maxHealth + 30);
-      break;
+  if (stats.gasTokens && stats.gasTokens >= 5 && !stats.hackUsed) {
+    const newStats = { ...stats };
+    newStats.gasTokens -= 5;
+    newStats.hackUsed = true;
+    
+    switch (type) {
+      case 'attack':
+        newStats.attack += Math.floor(newStats.attack * 0.2);
+        break;
+      case 'speed':
+        newStats.speed += Math.floor(newStats.speed * 0.2);
+        break;
+      case 'heal':
+        newStats.maxHealth = Math.min(100, newStats.maxHealth + 30);
+        break;
+    }
+    return newStats;
   }
-  return newStats;
+  return stats;
 };
 
 export const getExperienceProgress = (currentXp: number, level: number) => {
@@ -52,20 +66,36 @@ export const getExperienceProgress = (currentXp: number, level: number) => {
 };
 
 export const applySpecialAttack = (stats: HolobotStats) => {
-  const newStats = { ...stats };
-  
-  switch (stats.specialMove) {
-    case "1st Strike":
-      newStats.attack += 10;
-      newStats.speed += 5;
-      break;
-    case "Sharp Claws":
-      newStats.attack += 15;
-      break;
-    default:
-      newStats.attack += 10;
-      newStats.defense += 5;
+  if (stats.specialAttackGauge && stats.specialAttackGauge >= (stats.specialAttackThreshold || 5)) {
+    const newStats = { ...stats };
+    
+    switch (stats.specialMove) {
+      case "1st Strike":
+        newStats.attack += 10;
+        newStats.speed += 5;
+        break;
+      case "Sharp Claws":
+        newStats.attack += 15;
+        break;
+      default:
+        newStats.attack += 10;
+        newStats.defense += 5;
+    }
+    
+    newStats.specialAttackGauge = 0;
+    return newStats;
   }
-  
-  return newStats;
+  return stats;
+};
+
+export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
+  return {
+    ...stats,
+    fatigue: 0,
+    gasTokens: 0,
+    hackUsed: false,
+    specialAttackGauge: 0,
+    specialAttackThreshold: 5,
+    syncPoints: 0
+  };
 };
