@@ -1,38 +1,50 @@
 export interface HolobotStats {
-  name: string;
-  maxHealth: number;
-  attack: number;
-  defense: number;
-  speed: number;
-  specialMove: string;
-  level: number;
-  fatigue?: number;
-  gasTokens?: number;
-  hackUsed?: boolean;
-  specialAttackGauge?: number;
-  specialAttackThreshold?: number;
-  syncPoints?: number;
+    name: string;
+    maxHealth: number;
+    attack: number;
+    defense: number;
+    speed: number;
+    specialMove: string;
+    level: number;
+    experience?: number;
+    nextLevelExp?: number;
+    abilityDescription?: string;
+    abilityStats?: string;
+    fatigue?: number;
+    gasTokens?: number;
+    hackUsed?: boolean;
+    specialAttackGauge?: number;
+    specialAttackThreshold?: number;
+    syncPoints?: number;
 }
 
 export const HOLOBOT_STATS: Record<string, HolobotStats> = {
-  ace: {
-    name: "ACE",
-    maxHealth: 150,
-    attack: 8,
-    defense: 6,
-    speed: 7,
-    specialMove: "1st Strike",
-    level: 1
-  },
-  kuma: {
-    name: "KUMA",
-    maxHealth: 200,
-    attack: 7,
-    defense: 5,
-    speed: 3,
-    specialMove: "Sharp Claws",
-    level: 1
-  },
+    ace: {
+        name: "ACE",
+        maxHealth: 150,
+        attack: 8,
+        defense: 6,
+        speed: 7,
+        specialMove: "1st Strike",
+        level: 1,
+        experience: 0,
+        nextLevelExp: 100,
+        abilityDescription: "uses its speed to evade attacks and gets in pos to land the cr.hit",
+        abilityStats: "+3 atk | +4 spd"
+    },
+    kuma: {
+        name: "KUMA",
+        maxHealth: 200,
+        attack: 7,
+        defense: 5,
+        speed: 3,
+        specialMove: "Sharp Claws",
+        level: 1,
+        experience: 0,
+        nextLevelExp: 100,
+        abilityDescription: "unleashes a powerful slash with razor-sharp claws",
+        abilityStats: "+5 atk"
+    },
   shadow: {
     name: "Shadow",
     maxHealth: 170,
@@ -126,10 +138,10 @@ export const HOLOBOT_STATS: Record<string, HolobotStats> = {
 };
 
 export function getRank(level: number): string {
-  if (level >= 41) return "Legendary";
-  if (level >= 31) return "Elite";
-  if (level >= 21) return "Rare";
-  if (level >= 11) return "Champion";
-  if (level >= 2) return "Starter";
-  return "Rookie";
+    if (level >= 41) return "Legendary";
+    if (level >= 31) return "Elite";
+    if (level >= 21) return "Rare";
+    if (level >= 11) return "Champion";
+    if (level >= 2) return "Starter";
+    return "Rookie";
 }
