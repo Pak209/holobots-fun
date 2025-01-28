@@ -6,7 +6,7 @@ import { BattleCharacters } from "./battle/BattleCharacters";
 import { BattleSelectors } from "./battle/BattleSelectors";
 import { BattleCards } from "./battle/BattleCards";
 import { HOLOBOT_STATS } from "@/types/holobot";
-import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost } from "@/utils/battleUtils";
+import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost, applySpecialAttack } from "@/utils/battleUtils";
 
 export const BattleScene = () => {
   const [leftHealth, setLeftHealth] = useState(100);
@@ -233,3 +233,4 @@ export const BattleScene = () => {
     </div>
   );
 };
+

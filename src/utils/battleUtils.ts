@@ -50,6 +50,25 @@ export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | '
   return stats;
 };
 
+export const applySpecialAttack = (stats: HolobotStats): HolobotStats => {
+  const newStats = { ...stats };
+  
+  switch (stats.specialMove) {
+    case "1st Strike":
+      newStats.attack += 3;
+      newStats.speed += 4;
+      break;
+    case "Sharp Claws":
+      newStats.attack += 5;
+      break;
+    default:
+      newStats.attack += 2;
+      newStats.defense += 2;
+  }
+  
+  return newStats;
+};
+
 export const getExperienceProgress = (currentXp: number, level: number) => {
   const requiredXp = calculateExperience(level);
   return {
@@ -57,29 +76,6 @@ export const getExperienceProgress = (currentXp: number, level: number) => {
     requiredXp,
     progress: (currentXp / requiredXp) * 100
   };
-};
-
-export const applySpecialAttack = (stats: HolobotStats) => {
-  if (stats.specialAttackGauge && stats.specialAttackGauge >= (stats.specialAttackThreshold || 5)) {
-    const newStats = { ...stats };
-    
-    switch (stats.specialMove) {
-      case "1st Strike":
-        newStats.attack += 10;
-        newStats.speed += 5;
-        break;
-      case "Sharp Claws":
-        newStats.attack += 15;
-        break;
-      default:
-        newStats.attack += 10;
-        newStats.defense += 5;
-    }
-    
-    newStats.specialAttackGauge = 0;
-    return newStats;
-  }
-  return stats;
 };
 
 export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
