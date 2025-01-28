@@ -1,13 +1,16 @@
 import { HolobotStats } from "@/types/holobot";
 
 export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) => {
-  const baseDamage = Math.max(1, attacker.attack - defender.defense);
-  const criticalHit = Math.random() < 0.2;
-  const damage = criticalHit ? baseDamage * 1.5 : baseDamage;
+  // Calculate damage with fatigue reduction
+  const attackWithFatigue = Math.max(1, attacker.attack - (attacker.fatigue || 0));
+  const damage = Math.max(0, attackWithFatigue - defender.defense);
   
-  if (defender.speed > attacker.speed && Math.random() > 0.8) {
+  // Evasion check based on speed comparison
+  const evasionChance = defender.speed / (defender.speed + attacker.speed);
+  if (Math.random() < evasionChance) {
     return 0;
   }
+  
   return Math.floor(damage);
 };
 
@@ -46,4 +49,23 @@ export const getExperienceProgress = (currentXp: number, level: number) => {
     requiredXp,
     progress: (currentXp / requiredXp) * 100
   };
+};
+
+export const applySpecialAttack = (stats: HolobotStats) => {
+  const newStats = { ...stats };
+  
+  switch (stats.specialMove) {
+    case "1st Strike":
+      newStats.attack += 10;
+      newStats.speed += 5;
+      break;
+    case "Sharp Claws":
+      newStats.attack += 15;
+      break;
+    default:
+      newStats.attack += 10;
+      newStats.defense += 5;
+  }
+  
+  return newStats;
 };

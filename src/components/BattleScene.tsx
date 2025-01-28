@@ -11,7 +11,7 @@ import { Button } from "./ui/button";
 import { BattleControls } from "./BattleControls";
 import { BattleLog } from "./BattleLog";
 import { ExperienceBar } from "./ExperienceBar";
-import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost, getExperienceProgress } from "@/utils/battleUtils";
+import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost, getExperienceProgress, applySpecialAttack } from "@/utils/battleUtils";
 
 export const BattleScene = () => {
   const [leftHealth, setLeftHealth] = useState(100);
@@ -32,6 +32,8 @@ export const BattleScene = () => {
   const [rightXp, setRightXp] = useState(0);
   const [leftLevel, setLeftLevel] = useState(1);
   const [rightLevel, setRightLevel] = useState(1);
+  const [leftFatigue, setLeftFatigue] = useState(0);
+  const [rightFatigue, setRightFatigue] = useState(0);
 
   const addToBattleLog = (message: string) => {
     setBattleLog(prev => [...prev, message]);
@@ -72,24 +74,43 @@ export const BattleScene = () => {
       
       if (attacker) {
         setLeftIsAttacking(true);
-        const damage = calculateDamage(HOLOBOT_STATS[selectedLeftHolobot], HOLOBOT_STATS[selectedRightHolobot]);
+        const damage = calculateDamage(
+          { ...HOLOBOT_STATS[selectedLeftHolobot], fatigue: leftFatigue },
+          HOLOBOT_STATS[selectedRightHolobot]
+        );
         
         setTimeout(() => {
-          setRightIsDamaged(true);
-          setRightHealth(prev => Math.max(0, prev - damage));
-          setLeftSpecial(prev => Math.min(100, prev + 10));
-          setLeftHack(prev => Math.min(100, prev + 5));
-          setLeftXp(prev => {
-            const newXp = prev + Math.floor(damage * 2);
-            const newLevel = getNewLevel(newXp, leftLevel);
-            if (newLevel > leftLevel) {
-              setLeftLevel(newLevel);
-              addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} reached level ${newLevel}!`);
+          if (damage > 0) {
+            setRightIsDamaged(true);
+            setRightHealth(prev => Math.max(0, prev - damage));
+            setLeftSpecial(prev => Math.min(100, prev + 10));
+            setLeftHack(prev => Math.min(100, prev + 5));
+            
+            // Apply special attack if gauge is full
+            if (leftSpecial >= 100) {
+              const boostedStats = applySpecialAttack(HOLOBOT_STATS[selectedLeftHolobot]);
+              HOLOBOT_STATS[selectedLeftHolobot] = boostedStats;
+              setLeftSpecial(0);
+              addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} used their special move!`);
             }
-            return newXp;
-          });
+            
+            setLeftXp(prev => {
+              const newXp = prev + Math.floor(damage * 2);
+              const newLevel = getNewLevel(newXp, leftLevel);
+              if (newLevel > leftLevel) {
+                setLeftLevel(newLevel);
+                addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} reached level ${newLevel}!`);
+              }
+              return newXp;
+            });
+            
+            addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} attacks for ${damage} damage!`);
+          } else {
+            addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} evaded the attack!`);
+          }
           
-          addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} attacks for ${damage} damage!`);
+          // Increase fatigue every 3 rounds
+          setLeftFatigue(prev => prev + (prev > 2 ? 1 : 0));
           
           setTimeout(() => {
             setRightIsDamaged(false);
@@ -98,24 +119,43 @@ export const BattleScene = () => {
         }, 500);
       } else {
         setRightIsAttacking(true);
-        const damage = calculateDamage(HOLOBOT_STATS[selectedRightHolobot], HOLOBOT_STATS[selectedLeftHolobot]);
+        const damage = calculateDamage(
+          { ...HOLOBOT_STATS[selectedRightHolobot], fatigue: rightFatigue },
+          HOLOBOT_STATS[selectedLeftHolobot]
+        );
         
         setTimeout(() => {
-          setLeftIsDamaged(true);
-          setLeftHealth(prev => Math.max(0, prev - damage));
-          setRightSpecial(prev => Math.min(100, prev + 10));
-          setRightHack(prev => Math.min(100, prev + 5));
-          setRightXp(prev => {
-            const newXp = prev + Math.floor(damage * 2);
-            const newLevel = getNewLevel(newXp, rightLevel);
-            if (newLevel > rightLevel) {
-              setRightLevel(newLevel);
-              addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} reached level ${newLevel}!`);
+          if (damage > 0) {
+            setLeftIsDamaged(true);
+            setLeftHealth(prev => Math.max(0, prev - damage));
+            setRightSpecial(prev => Math.min(100, prev + 10));
+            setRightHack(prev => Math.min(100, prev + 5));
+            
+            // Apply special attack if gauge is full
+            if (rightSpecial >= 100) {
+              const boostedStats = applySpecialAttack(HOLOBOT_STATS[selectedRightHolobot]);
+              HOLOBOT_STATS[selectedRightHolobot] = boostedStats;
+              setRightSpecial(0);
+              addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} used their special move!`);
             }
-            return newXp;
-          });
+            
+            setRightXp(prev => {
+              const newXp = prev + Math.floor(damage * 2);
+              const newLevel = getNewLevel(newXp, rightLevel);
+              if (newLevel > rightLevel) {
+                setRightLevel(newLevel);
+                addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} reached level ${newLevel}!`);
+              }
+              return newXp;
+            });
+            
+            addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} attacks for ${damage} damage!`);
+          } else {
+            addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} evaded the attack!`);
+          }
           
-          addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} attacks for ${damage} damage!`);
+          // Increase fatigue every 3 rounds
+          setRightFatigue(prev => prev + (prev > 2 ? 1 : 0));
           
           setTimeout(() => {
             setLeftIsDamaged(false);
@@ -126,7 +166,7 @@ export const BattleScene = () => {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel]);
+  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue]);
 
   return (
     <div className="flex flex-col gap-1">
