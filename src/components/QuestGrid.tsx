@@ -1,6 +1,7 @@
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { HOLOBOT_STATS } from "@/types/holobot";
 
 export const QuestGrid = () => {
   return (
@@ -31,9 +32,11 @@ export const QuestGrid = () => {
                 <SelectValue placeholder="Choose your Holobot" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ace">ACE</SelectItem>
-                <SelectItem value="kuma">KUMA</SelectItem>
-                <SelectItem value="shadow">SHADOW</SelectItem>
+                {Object.entries(HOLOBOT_STATS).map(([key, holobot]) => (
+                  <SelectItem key={key} value={key.toLowerCase()}>
+                    {holobot.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Button className="w-full bg-retro-accent hover:bg-retro-accent/80">
@@ -52,9 +55,11 @@ export const QuestGrid = () => {
                 <SelectValue placeholder="Choose your Holobot" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ace">ACE</SelectItem>
-                <SelectItem value="kuma">KUMA</SelectItem>
-                <SelectItem value="shadow">SHADOW</SelectItem>
+                {Object.entries(HOLOBOT_STATS).map(([key, holobot]) => (
+                  <SelectItem key={key} value={key.toLowerCase()}>
+                    {holobot.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Button className="w-full bg-retro-accent hover:bg-retro-accent/80">

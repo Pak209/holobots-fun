@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { toast } from "./ui/use-toast";
+import { HOLOBOT_STATS } from "@/types/holobot";
 
 const TRAINING_TYPES = {
   light: { cost: 5, boost: 1 },
@@ -43,9 +44,11 @@ export const TrainingGrid = () => {
               <SelectValue placeholder="Select Holobot" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ace">ACE</SelectItem>
-              <SelectItem value="kuma">KUMA</SelectItem>
-              <SelectItem value="shadow">SHADOW</SelectItem>
+              {Object.entries(HOLOBOT_STATS).map(([key, holobot]) => (
+                <SelectItem key={key} value={key.toLowerCase()}>
+                  {holobot.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
