@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { AuthState, UserProfile } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
+import { useWeb3React } from "@web3-react/core";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -20,6 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     error: null,
   });
 
+  const { account: evmAccount } = useWeb3React();
+  const { publicKey: solanaPublicKey } = useWallet();
+
   useEffect(() => {
     // Check localStorage first
     const storedUser = localStorage.getItem(STORAGE_KEY);
@@ -29,6 +34,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: JSON.parse(storedUser),
         loading: false
       }));
+    }
+
+    // Handle Web3 wallet connections
+    if (evmAccount) {
+      const mockUser: UserProfile = {
+        id: evmAccount,
+        username: `user_${evmAccount.slice(0, 6)}`,
+        holobots: [],
+        dailyEnergy: 100,
+        maxDailyEnergy: 100,
+        holosTokens: 1000,
+        stats: {
+          wins: 0,
+          losses: 0
+        },
+        lastEnergyRefresh: new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
+      setState({ user: mockUser, loading: false, error: null });
+    }
+
+    if (solanaPublicKey) {
+      const mockUser: UserProfile = {
+        id: solanaPublicKey.toString(),
+        username: `user_${solanaPublicKey.toString().slice(0, 6)}`,
+        holobots: [],
+        dailyEnergy: 100,
+        maxDailyEnergy: 100,
+        holosTokens: 1000,
+        stats: {
+          wins: 0,
+          losses: 0
+        },
+        lastEnergyRefresh: new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
+      setState({ user: mockUser, loading: false, error: null });
     }
 
     // This will be used when we switch to Supabase
@@ -50,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [evmAccount, solanaPublicKey]);
 
   const login = async (email: string, password: string) => {
     try {

@@ -5,6 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { useToast } from "@/components/ui/use-toast";
+import { Wallet } from "lucide-react";
+import { useWeb3React } from "@web3-react/core";
+import { InjectedConnector } from "@web3-react/injected-connector";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { useWallet } from "@solana/wallet-adapter-react";
+
+const injected = new InjectedConnector({
+  supportedChainIds: [8453], // Base network
+});
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -14,6 +23,10 @@ export default function Auth() {
   const { login, signup, loading, error } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Web3 hooks
+  const { activate: activateEVM } = useWeb3React();
+  const { connect: connectSolana, wallet: solanaWallet } = useWallet();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +53,42 @@ export default function Auth() {
     }
   };
 
+  const connectEVMWallet = async () => {
+    try {
+      await activateEVM(injected);
+      toast({
+        title: "Wallet Connected",
+        description: "EVM wallet connected successfully!",
+      });
+      navigate("/");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to connect EVM wallet",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const connectSolanaWallet = async () => {
+    try {
+      if (!solanaWallet) {
+        await connectSolana();
+      }
+      toast({
+        title: "Wallet Connected",
+        description: "Solana wallet connected successfully!",
+      });
+      navigate("/");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to connect Solana wallet",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
       <NavigationMenu />
@@ -50,6 +99,37 @@ export default function Auth() {
             <h1 className="text-2xl font-bold mb-6 text-holobots-text dark:text-holobots-dark-text">
               {isLogin ? "Login" : "Create Account"}
             </h1>
+            
+            <div className="space-y-4 mb-6">
+              <Button 
+                onClick={connectEVMWallet}
+                className="w-full flex items-center justify-center gap-2"
+                variant="outline"
+              >
+                <Wallet className="w-5 h-5" />
+                Connect Base EVM Wallet
+              </Button>
+              
+              <Button 
+                onClick={connectSolanaWallet}
+                className="w-full flex items-center justify-center gap-2"
+                variant="outline"
+              >
+                <Wallet className="w-5 h-5" />
+                Connect Solana Wallet
+              </Button>
+            </div>
+            
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-holobots-border dark:border-holobots-dark-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-holobots-card dark:bg-holobots-dark-card px-2 text-holobots-text dark:text-holobots-dark-text">
+                  Or continue with email
+                </span>
+              </div>
+            </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
