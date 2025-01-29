@@ -5,7 +5,7 @@ import { useWeb3React } from "@web3-react/core";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Wallet } from "lucide-react";
 
 export const Web3Login = () => {
@@ -36,12 +36,18 @@ export const Web3Login = () => {
       const nonce = `Sign in to Holobots Dapp at ${new Date().toISOString()}`;
       const signature = await signer.signMessage(nonce);
 
-      // Verify signature
+      // Verify signature and create session
       const { data, error } = await supabase.functions.invoke('verify-wallet', {
         body: { address, nonce, signature, type: 'evm' }
       });
 
       if (error) throw error;
+
+      // Set the session in Supabase
+      if (data?.session) {
+        const { data: { session }, error: sessionError } = await supabase.auth.setSession(data.session);
+        if (sessionError) throw sessionError;
+      }
 
       toast({
         title: "Success",
@@ -85,12 +91,18 @@ export const Web3Login = () => {
       
       const signedMessage = await provider.signMessage!(encodedMessage);
 
-      // Verify signature
+      // Verify signature and create session
       const { data, error } = await supabase.functions.invoke('verify-wallet', {
         body: { address, nonce, signedMessage, type: 'solana' }
       });
 
       if (error) throw error;
+
+      // Set the session in Supabase
+      if (data?.session) {
+        const { data: { session }, error: sessionError } = await supabase.auth.setSession(data.session);
+        if (sessionError) throw sessionError;
+      }
 
       toast({
         title: "Success",

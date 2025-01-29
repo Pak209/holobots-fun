@@ -46,24 +46,36 @@ serve(async (req) => {
     }
 
     // Initialize Supabase client
-    const supabaseClient = createClient(
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     // Create or update web3_users record
-    const { data, error } = await supabaseClient
+    const { data: userData, error: userError } = await supabaseAdmin
       .from('web3_users')
       .upsert({ wallet_address: address })
       .select()
       .single()
 
-    if (error) throw error
+    if (userError) throw userError
+
+    // Create a new session using Supabase Auth
+    const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
+      user_id: userData.id,
+      properties: {
+        wallet_address: address,
+        provider: type
+      }
+    })
+
+    if (sessionError) throw sessionError
 
     return new Response(
       JSON.stringify({ 
         message: 'Wallet verified successfully',
-        user: data
+        session: sessionData,
+        user: userData
       }),
       { 
         headers: { 
