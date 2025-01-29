@@ -1,11 +1,31 @@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, Moon, Sun } from "lucide-react";
+import { Menu, Moon, Sun, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
 
 export const NavigationMenu = () => {
   const { theme, setTheme } = useTheme();
+  const { logout } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error logging out",
+        description: "An error occurred while logging out.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <>
@@ -70,6 +90,14 @@ export const NavigationMenu = () => {
             >
               My Items
             </Link>
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2 text-holobots-text dark:text-holobots-dark-text hover:text-holobots-accent dark:hover:text-holobots-dark-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-holobots-border dark:border-holobots-dark-border"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </Button>
           </nav>
         </SheetContent>
       </Sheet>

@@ -1,7 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "@/pages/Index";
 import Training from "@/pages/Training";
 import Quests from "@/pages/Quests";
@@ -12,20 +12,34 @@ import UserItems from "@/pages/UserItems";
 import Auth from "@/pages/Auth";
 import "./App.css";
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!user) {
+    return <Navigate to="/auth" />;
+  }
+  
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <ThemeProvider defaultTheme="system" enableSystem>
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/training" element={<Training />} />
-            <Route path="/quests" element={<Quests />} />
-            <Route path="/holos-farm" element={<HolosFarm />} />
-            <Route path="/holobots-info" element={<HolobotsInfo />} />
-            <Route path="/gacha" element={<Gacha />} />
-            <Route path="/user-items" element={<UserItems />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/training" element={<ProtectedRoute><Training /></ProtectedRoute>} />
+            <Route path="/quests" element={<ProtectedRoute><Quests /></ProtectedRoute>} />
+            <Route path="/holos-farm" element={<ProtectedRoute><HolosFarm /></ProtectedRoute>} />
+            <Route path="/holobots-info" element={<ProtectedRoute><HolobotsInfo /></ProtectedRoute>} />
+            <Route path="/gacha" element={<ProtectedRoute><Gacha /></ProtectedRoute>} />
+            <Route path="/user-items" element={<ProtectedRoute><UserItems /></ProtectedRoute>} />
           </Routes>
         </Router>
         <Toaster />
