@@ -74,20 +74,29 @@ export default {
         'neon-white': '0 0 5px theme(colors.holobots.card), 0 0 20px theme(colors.holobots.card)',
         'neon-border': '0 0 5px theme(colors.holobots.border), 0 0 20px theme(colors.holobots.border)',
       },
-      animation: {
-        'neon-pulse': 'neon-pulse 2s ease-in-out infinite',
-        'glitch': 'glitch 1s ease-in-out infinite',
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
         'neon-pulse': {
           '0%, 100%': { opacity: '1', boxShadow: '0 0 5px theme(colors.holobots.accent), 0 0 20px theme(colors.holobots.accent)' },
           '50%': { opacity: '0.5', boxShadow: '0 0 2px theme(colors.holobots.accent), 0 0 10px theme(colors.holobots.accent)' },
         },
-        'glitch': {
-          '0%, 100%': { transform: 'translate(0)' },
-          '33%': { transform: 'translate(-2px, 2px)' },
-          '66%': { transform: 'translate(2px, -2px)' },
-        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        'neon-pulse': 'neon-pulse 2s ease-in-out infinite',
       },
     },
   },
