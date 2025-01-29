@@ -79,11 +79,11 @@ export const Web3Login = () => {
       const encodedMessage = new TextEncoder().encode(nonce);
       
       // Check if signMessage is available
-      if (!provider.signMessage) {
+      if (!('signMessage' in provider)) {
         throw new Error("Wallet does not support message signing");
       }
       
-      const signedMessage = await provider.signMessage(encodedMessage);
+      const signedMessage = await provider.signMessage!(encodedMessage);
 
       // Verify signature
       const { data, error } = await supabase.functions.invoke('verify-wallet', {
