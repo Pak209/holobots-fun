@@ -1,15 +1,13 @@
 import { HolobotStats } from "@/types/holobot";
 
 export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) => {
-  // Reduce evasion chance significantly
-  const evasionChance = (defender.speed - attacker.speed) * 0.05; // 5% per speed difference
-  const willEvade = Math.random() < Math.max(0, Math.min(0.25, evasionChance)); // Cap at 25% max
+  const evasionChance = (defender.speed - attacker.speed) * 0.05;
+  const willEvade = Math.random() < Math.max(0, Math.min(0.25, evasionChance));
 
   if (willEvade) {
     return 0;
   }
 
-  // Calculate base damage
   const attackWithFatigue = Math.max(1, attacker.attack - (attacker.fatigue || 0));
   const damage = Math.max(1, attackWithFatigue - (defender.defense * 0.5));
   
@@ -28,26 +26,22 @@ export const getNewLevel = (currentXp: number, currentLevel: number) => {
   return currentLevel;
 };
 
-export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | 'heal') => {
-  if (stats.gasTokens && stats.gasTokens >= 5 && !stats.hackUsed) {
-    const newStats = { ...stats };
-    newStats.gasTokens -= 5;
-    newStats.hackUsed = true;
-    
-    switch (type) {
-      case 'attack':
-        newStats.attack += Math.floor(newStats.attack * 0.2);
-        break;
-      case 'speed':
-        newStats.speed += Math.floor(newStats.speed * 0.2);
-        break;
-      case 'heal':
-        newStats.maxHealth = Math.min(100, newStats.maxHealth + 30);
-        break;
-    }
-    return newStats;
+export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | 'heal'): HolobotStats => {
+  const newStats = { ...stats };
+  
+  switch (type) {
+    case 'attack':
+      newStats.attack += Math.floor(newStats.attack * 0.2);
+      break;
+    case 'speed':
+      newStats.speed += Math.floor(newStats.speed * 0.2);
+      break;
+    case 'heal':
+      newStats.maxHealth = Math.min(100, newStats.maxHealth + 30);
+      break;
   }
-  return stats;
+  
+  return newStats;
 };
 
 export const applySpecialAttack = (stats: HolobotStats): HolobotStats => {
