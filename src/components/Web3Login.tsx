@@ -28,7 +28,7 @@ export const Web3Login = () => {
       }
 
       await evmConnector.activate();
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
       const signer = await provider.getSigner();
       const address = await signer.getAddress();
 
