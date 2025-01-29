@@ -58,6 +58,12 @@ export const NavigationMenu = () => {
             >
               Holos Farm
             </Link>
+            <Link 
+              to="/gacha" 
+              className="text-holobots-text dark:text-holobots-dark-text hover:text-holobots-accent dark:hover:text-holobots-dark-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-holobots-border dark:border-holobots-dark-border"
+            >
+              Gacha
+            </Link>
           </nav>
         </SheetContent>
       </Sheet>

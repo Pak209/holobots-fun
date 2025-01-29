@@ -9,6 +9,7 @@ import Training from "./pages/Training";
 import Quests from "./pages/Quests";
 import HolobotsInfo from "./pages/HolobotsInfo";
 import HolosFarm from "./pages/HolosFarm";
+import Gacha from "./pages/Gacha";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/quests" element={<Quests />} />
             <Route path="/holobots-info" element={<HolobotsInfo />} />
             <Route path="/holos-farm" element={<HolosFarm />} />
+            <Route path="/gacha" element={<Gacha />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
