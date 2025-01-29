@@ -1,37 +1,29 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
-import Training from "./pages/Training";
 import Quests from "./pages/Quests";
+import Training from "./pages/Training";
 import HolobotsInfo from "./pages/HolobotsInfo";
 import HolosFarm from "./pages/HolosFarm";
 import Gacha from "./pages/Gacha";
+import UserItems from "./pages/UserItems";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+function App() {
+  return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/training" element={<Training />} />
-            <Route path="/quests" element={<Quests />} />
-            <Route path="/holobots-info" element={<HolobotsInfo />} />
-            <Route path="/holos-farm" element={<HolosFarm />} />
-            <Route path="/gacha" element={<Gacha />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/quests" element={<Quests />} />
+          <Route path="/training" element={<Training />} />
+          <Route path="/holobots-info" element={<HolobotsInfo />} />
+          <Route path="/holos-farm" element={<HolosFarm />} />
+          <Route path="/gacha" element={<Gacha />} />
+          <Route path="/user-items" element={<UserItems />} />
+        </Routes>
+      </Router>
     </ThemeProvider>
-  </QueryClientProvider>
-);
+  );
+}
 
 export default App;

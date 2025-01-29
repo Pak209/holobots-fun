@@ -64,6 +64,12 @@ export const NavigationMenu = () => {
             >
               Gacha
             </Link>
+            <Link 
+              to="/user-items" 
+              className="text-holobots-text dark:text-holobots-dark-text hover:text-holobots-accent dark:hover:text-holobots-dark-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-holobots-border dark:border-holobots-dark-border"
+            >
+              My Items
+            </Link>
           </nav>
         </SheetContent>
       </Sheet>
