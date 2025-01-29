@@ -128,8 +128,8 @@ export const BattleScene = () => {
           setTimeout(() => {
             setRightIsDamaged(false);
             setLeftIsAttacking(false);
-          }, 200);
-        }, 500);
+          }, 100); // Reduced from 200ms
+        }, 250); // Reduced from 500ms
       } else {
         setRightIsAttacking(true);
         const damage = calculateDamage(
@@ -171,10 +171,10 @@ export const BattleScene = () => {
           setTimeout(() => {
             setLeftIsDamaged(false);
             setRightIsAttacking(false);
-          }, 200);
-        }, 500);
+          }, 100); // Reduced from 200ms
+        }, 250); // Reduced from 500ms
       }
-    }, 2000);
+    }, 1000); // Reduced from 2000ms
 
     return () => clearInterval(interval);
   }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth]);
