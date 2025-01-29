@@ -1,50 +1,66 @@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, Moon, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTheme } from "next-themes";
 
 export const NavigationMenu = () => {
+  const { theme, setTheme } = useTheme();
+
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden fixed top-4 right-4 z-50">
-          <Menu className="h-6 w-6" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-[250px] bg-retro-background border-retro-accent">
-        <nav className="flex flex-col gap-4 mt-8">
-          <Link 
-            to="/" 
-            className="text-white hover:text-retro-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-retro-accent/50"
-          >
-            Battle
-          </Link>
-          <Link 
-            to="/quests" 
-            className="text-white hover:text-retro-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-retro-accent/50"
-          >
-            Quests
-          </Link>
-          <Link 
-            to="/training" 
-            className="text-white hover:text-retro-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-retro-accent/50"
-          >
-            Training
-          </Link>
-          <Link 
-            to="/holobots-info" 
-            className="text-white hover:text-retro-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-retro-accent/50"
-          >
-            Holobots Info
-          </Link>
-          <Link 
-            to="/holos-farm" 
-            className="text-white hover:text-retro-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-retro-accent/50"
-          >
-            Holos Farm
-          </Link>
-        </nav>
-      </SheetContent>
-    </Sheet>
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+        className="fixed top-4 left-4 z-50"
+      >
+        <Sun className="h-6 w-6 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-6 w-6 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+      
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="md:hidden fixed top-4 right-4 z-50">
+            <Menu className="h-6 w-6" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-[250px] bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border">
+          <nav className="flex flex-col gap-4 mt-8">
+            <Link 
+              to="/" 
+              className="text-holobots-text dark:text-holobots-dark-text hover:text-holobots-accent dark:hover:text-holobots-dark-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-holobots-border dark:border-holobots-dark-border"
+            >
+              Battle
+            </Link>
+            <Link 
+              to="/quests" 
+              className="text-holobots-text dark:text-holobots-dark-text hover:text-holobots-accent dark:hover:text-holobots-dark-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-holobots-border dark:border-holobots-dark-border"
+            >
+              Quests
+            </Link>
+            <Link 
+              to="/training" 
+              className="text-holobots-text dark:text-holobots-dark-text hover:text-holobots-accent dark:hover:text-holobots-dark-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-holobots-border dark:border-holobots-dark-border"
+            >
+              Training
+            </Link>
+            <Link 
+              to="/holobots-info" 
+              className="text-holobots-text dark:text-holobots-dark-text hover:text-holobots-accent dark:hover:text-holobots-dark-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-holobots-border dark:border-holobots-dark-border"
+            >
+              Holobots Info
+            </Link>
+            <Link 
+              to="/holos-farm" 
+              className="text-holobots-text dark:text-holobots-dark-text hover:text-holobots-accent dark:hover:text-holobots-dark-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-holobots-border dark:border-holobots-dark-border"
+            >
+              Holos Farm
+            </Link>
+          </nav>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };

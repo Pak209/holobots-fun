@@ -58,7 +58,15 @@ export default {
           text: "#555555",      
           card: "#FFFFFF",      
           border: "#D3E4FD",    
-          hover: "#0FA0CE",     
+          hover: "#0FA0CE",
+          dark: {
+            background: "#1A1A1A",
+            accent: "#33C3F0",
+            text: "#E0E0E0",
+            card: "#2A2A2A",
+            border: "#3A3A3A",
+            hover: "#0FA0CE"
+          }     
         }
       },
       boxShadow: {
@@ -66,12 +74,10 @@ export default {
         'neon-white': '0 0 5px theme(colors.holobots.card), 0 0 20px theme(colors.holobots.card)',
         'neon-border': '0 0 5px theme(colors.holobots.border), 0 0 20px theme(colors.holobots.border)',
       },
-      
       animation: {
         'neon-pulse': 'neon-pulse 2s ease-in-out infinite',
         'glitch': 'glitch 1s ease-in-out infinite',
       },
-      
       keyframes: {
         'neon-pulse': {
           '0%, 100%': { opacity: '1', boxShadow: '0 0 5px theme(colors.holobots.accent), 0 0 20px theme(colors.holobots.accent)' },
