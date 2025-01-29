@@ -5,10 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { useToast } from "@/components/ui/use-toast";
-import { Wallet } from "lucide-react";
-import { useWeb3React } from "@web3-react/core";
-import { MetaMask } from "@web3-react/metamask";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { Web3Login } from "@/components/Web3Login";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,10 +15,6 @@ export default function Auth() {
   const { login, signup, loading, error } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Web3 hooks
-  const { connector } = useWeb3React();
-  const { connect: connectSolana, wallet: solanaWallet } = useWallet();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,44 +41,6 @@ export default function Auth() {
     }
   };
 
-  const connectEVMWallet = async () => {
-    try {
-      if (connector instanceof MetaMask) {
-        await connector.activate();
-        toast({
-          title: "Wallet Connected",
-          description: "EVM wallet connected successfully!",
-        });
-        navigate("/");
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to connect EVM wallet",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const connectSolanaWallet = async () => {
-    try {
-      if (!solanaWallet) {
-        await connectSolana();
-      }
-      toast({
-        title: "Wallet Connected",
-        description: "Solana wallet connected successfully!",
-      });
-      navigate("/");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to connect Solana wallet",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
       <NavigationMenu />
@@ -97,25 +52,7 @@ export default function Auth() {
               {isLogin ? "Login" : "Create Account"}
             </h1>
             
-            <div className="space-y-4 mb-6">
-              <Button 
-                onClick={connectEVMWallet}
-                className="w-full flex items-center justify-center gap-2"
-                variant="outline"
-              >
-                <Wallet className="w-5 h-5" />
-                Connect Base EVM Wallet
-              </Button>
-              
-              <Button 
-                onClick={connectSolanaWallet}
-                className="w-full flex items-center justify-center gap-2"
-                variant="outline"
-              >
-                <Wallet className="w-5 h-5" />
-                Connect Solana Wallet
-              </Button>
-            </div>
+            <Web3Login />
             
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
