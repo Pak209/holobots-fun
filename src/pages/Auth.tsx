@@ -7,13 +7,8 @@ import { NavigationMenu } from "@/components/NavigationMenu";
 import { useToast } from "@/components/ui/use-toast";
 import { Wallet } from "lucide-react";
 import { useWeb3React } from "@web3-react/core";
-import { InjectedConnector } from "@web3-react/injected-connector";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { MetaMask } from "@web3-react/metamask";
 import { useWallet } from "@solana/wallet-adapter-react";
-
-const injected = new InjectedConnector({
-  supportedChainIds: [8453], // Base network
-});
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -25,7 +20,7 @@ export default function Auth() {
   const { toast } = useToast();
   
   // Web3 hooks
-  const { activate: activateEVM } = useWeb3React();
+  const { connector } = useWeb3React();
   const { connect: connectSolana, wallet: solanaWallet } = useWallet();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,12 +50,14 @@ export default function Auth() {
 
   const connectEVMWallet = async () => {
     try {
-      await activateEVM(injected);
-      toast({
-        title: "Wallet Connected",
-        description: "EVM wallet connected successfully!",
-      });
-      navigate("/");
+      if (connector instanceof MetaMask) {
+        await connector.activate();
+        toast({
+          title: "Wallet Connected",
+          description: "EVM wallet connected successfully!",
+        });
+        navigate("/");
+      }
     } catch (error) {
       toast({
         title: "Error",

@@ -2,8 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { Web3ReactProvider } from "@web3-react/core";
-import { Web3Provider } from "@ethersproject/providers";
+import { Web3ReactProvider, initializeConnector } from "@web3-react/core";
+import { MetaMask } from "@web3-react/metamask";
 import {
   ConnectionProvider,
   WalletProvider
@@ -22,9 +22,9 @@ import Gacha from "@/pages/Gacha";
 import UserItems from "@/pages/UserItems";
 import Auth from "@/pages/Auth";
 
-function getLibrary(provider: any) {
-  return new Web3Provider(provider);
-}
+const [metaMask, hooks] = initializeConnector<MetaMask>(
+  (actions) => new MetaMask({ actions })
+);
 
 const network = WalletAdapterNetwork.Mainnet;
 const wallets = [
@@ -48,7 +48,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Web3ReactProvider getLibrary={getLibrary}>
+    <Web3ReactProvider connectors={[[metaMask, hooks]]}>
       <ConnectionProvider endpoint="https://api.mainnet-beta.solana.com">
         <WalletProvider wallets={wallets} autoConnect>
           <ThemeProvider defaultTheme="system" enableSystem>
