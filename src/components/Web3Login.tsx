@@ -77,7 +77,13 @@ export const Web3Login = () => {
       const address = provider.publicKey.toBase58();
       const nonce = `Sign in to Holobots Dapp at ${new Date().toISOString()}`;
       const encodedMessage = new TextEncoder().encode(nonce);
-      const signedMessage = await provider.signMessage(encodedMessage, "utf8");
+      
+      // Check if signMessage is available
+      if (!provider.signMessage) {
+        throw new Error("Wallet does not support message signing");
+      }
+      
+      const signedMessage = await provider.signMessage(encodedMessage);
 
       // Verify signature
       const { data, error } = await supabase.functions.invoke('verify-wallet', {

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { ethers } from "npm:ethers@^6.13.5";
 import * as ed25519 from "https://deno.land/x/ed25519@1.6.0/mod.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,7 +30,7 @@ serve(async (req) => {
     } else if (type === 'solana') {
       // Verify Solana signature
       const message = new TextEncoder().encode(nonce);
-      const signatureUint8 = new Uint8Array(signedMessage.data);
+      const signatureUint8 = new Uint8Array(signedMessage);
       const publicKeyUint8 = new Uint8Array(Buffer.from(address, 'base58'));
       
       isValid = ed25519.verify(signatureUint8, message, publicKeyUint8);
@@ -41,8 +42,14 @@ serve(async (req) => {
       throw new Error('Invalid signature');
     }
 
+    // Create Supabase client
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     // Create or update web3_users record
-    const { data: user, error: upsertError } = await supabase
+    const { data: user, error: upsertError } = await supabaseAdmin
       .from('web3_users')
       .upsert({ wallet_address: address })
       .select()
@@ -55,6 +62,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
+    console.error('Verification error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
