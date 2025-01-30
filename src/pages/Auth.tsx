@@ -56,11 +56,15 @@ export default function Auth() {
       // Show success message
       toast({
         title: isLogin ? "Welcome back!" : "Account created successfully!",
-        description: "You are now logged in.",
+        description: isLogin ? 
+          "You are now logged in." : 
+          "Please check your email for confirmation instructions.",
       });
       
-      // Navigate after successful auth
-      navigate("/", { replace: true });
+      // Only navigate after login, not after signup since email confirmation might be required
+      if (isLogin) {
+        navigate("/", { replace: true });
+      }
       
     } catch (err) {
       console.error("Auth error:", err);
@@ -68,9 +72,12 @@ export default function Auth() {
       // More descriptive error messages
       let errorMessage = "An error occurred during authentication";
       if (err instanceof Error) {
-        if (err.message.includes("invalid_credentials")) {
+        const errorString = err.message.toLowerCase();
+        if (errorString.includes("email_not_confirmed")) {
+          errorMessage = "Please check your email and confirm your account before logging in";
+        } else if (errorString.includes("invalid_credentials")) {
           errorMessage = "Invalid email or password";
-        } else if (err.message.includes("already exists")) {
+        } else if (errorString.includes("already exists")) {
           errorMessage = "This email is already registered";
         }
       }
