@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { useToast } from "@/hooks/use-toast";
-import { Web3Login } from "@/components/Web3Login";
+import { EVMWalletLogin } from "@/components/auth/EVMWalletLogin";
+import { SolanaWalletLogin } from "@/components/auth/SolanaWalletLogin";
+import { Web3ModalLogin } from "@/components/auth/Web3ModalLogin";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,8 +18,8 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Add effect to handle navigation when user is authenticated
   useEffect(() => {
+    // If user is already authenticated, redirect to home
     if (user) {
       navigate("/");
     }
@@ -33,19 +35,30 @@ export default function Auth() {
         await signup(email, password, username);
       }
       
+      // Show success message
       toast({
         title: isLogin ? "Welcome back!" : "Account created successfully!",
         description: "You are now logged in.",
       });
       
     } catch (err) {
+      console.error("Auth error:", err);
       toast({
         title: "Error",
-        description: error || "An error occurred",
+        description: error || "An error occurred during authentication",
         variant: "destructive",
       });
     }
   };
+
+  // If loading, show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center">
+        <div className="text-holobots-text dark:text-holobots-dark-text">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
@@ -58,7 +71,11 @@ export default function Auth() {
               {isLogin ? "Login" : "Create Account"}
             </h1>
             
-            <Web3Login />
+            <div className="space-y-4">
+              <EVMWalletLogin isLoading={loading} />
+              <SolanaWalletLogin isLoading={loading} />
+              <Web3ModalLogin isLoading={loading} />
+            </div>
             
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
