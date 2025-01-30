@@ -9,6 +9,117 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      game_progress: {
+        Row: {
+          created_at: string | null
+          id: string
+          losses: number | null
+          quests_completed: number | null
+          training_sessions: number | null
+          updated_at: string | null
+          user_id: string
+          wins: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          losses?: number | null
+          quests_completed?: number | null
+          training_sessions?: number | null
+          updated_at?: string | null
+          user_id: string
+          wins?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          losses?: number | null
+          quests_completed?: number | null
+          training_sessions?: number | null
+          updated_at?: string | null
+          user_id?: string
+          wins?: number | null
+        }
+        Relationships: []
+      }
+      holobots: {
+        Row: {
+          attack: number | null
+          created_at: string | null
+          defense: number | null
+          experience: number | null
+          health: number | null
+          id: string
+          level: number | null
+          name: string
+          next_level_exp: number | null
+          owner_id: string
+          speed: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          attack?: number | null
+          created_at?: string | null
+          defense?: number | null
+          experience?: number | null
+          health?: number | null
+          id?: string
+          level?: number | null
+          name: string
+          next_level_exp?: number | null
+          owner_id: string
+          speed?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          attack?: number | null
+          created_at?: string | null
+          defense?: number | null
+          experience?: number | null
+          health?: number | null
+          id?: string
+          level?: number | null
+          name?: string
+          next_level_exp?: number | null
+          owner_id?: string
+          speed?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          daily_energy: number | null
+          holos_tokens: number | null
+          id: string
+          last_energy_refresh: string | null
+          max_daily_energy: number | null
+          updated_at: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          daily_energy?: number | null
+          holos_tokens?: number | null
+          id: string
+          last_energy_refresh?: string | null
+          max_daily_energy?: number | null
+          updated_at?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          daily_energy?: number | null
+          holos_tokens?: number | null
+          id?: string
+          last_energy_refresh?: string | null
+          max_daily_energy?: number | null
+          updated_at?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
       "User Table": {
         Row: {
           created_at: string
@@ -39,6 +150,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       web3_users: {
         Row: {
           created_at: string | null
@@ -62,10 +194,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          user_id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user" | "nft_holder"
     }
     CompositeTypes: {
       [_ in never]: never
