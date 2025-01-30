@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { EVMWalletLogin } from "./auth/EVMWalletLogin";
+import { Web3ModalLogin } from "./auth/Web3ModalLogin";
 import { SolanaWalletLogin } from "./auth/SolanaWalletLogin";
 
 export const Web3Login = () => {
@@ -7,7 +7,7 @@ export const Web3Login = () => {
 
   return (
     <div className="space-y-4">
-      <EVMWalletLogin isLoading={isLoading} />
+      <Web3ModalLogin isLoading={isLoading} />
       <SolanaWalletLogin isLoading={isLoading} />
     </div>
   );

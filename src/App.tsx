@@ -2,8 +2,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { Web3ReactProvider, initializeConnector } from "@web3-react/core";
-import { MetaMask } from "@web3-react/metamask";
+import { Web3Modal } from '@web3modal/react';
+import { WagmiConfig } from 'wagmi';
+import { wagmiConfig, ethereumClient } from '@/lib/web3Config';
 import {
   ConnectionProvider,
   WalletProvider
@@ -21,10 +22,6 @@ import HolobotsInfo from "@/pages/HolobotsInfo";
 import Gacha from "@/pages/Gacha";
 import UserItems from "@/pages/UserItems";
 import Auth from "@/pages/Auth";
-
-const [metaMask, hooks] = initializeConnector<MetaMask>(
-  (actions) => new MetaMask({ actions })
-);
 
 const network = WalletAdapterNetwork.Mainnet;
 const wallets = [
@@ -48,7 +45,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Web3ReactProvider connectors={[[metaMask, hooks]]}>
+    <WagmiConfig config={wagmiConfig}>
       <ConnectionProvider endpoint="https://api.mainnet-beta.solana.com">
         <WalletProvider wallets={wallets} autoConnect>
           <ThemeProvider defaultTheme="system" enableSystem>
@@ -70,7 +67,8 @@ function App() {
           </ThemeProvider>
         </WalletProvider>
       </ConnectionProvider>
-    </Web3ReactProvider>
+      <Web3Modal projectId="YOUR_WALLETCONNECT_PROJECT_ID" ethereumClient={ethereumClient} />
+    </WagmiConfig>
   );
 }
 
