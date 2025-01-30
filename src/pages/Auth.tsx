@@ -18,20 +18,24 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Check authentication status and redirect if already logged in
   useEffect(() => {
-    // If user is already authenticated, redirect to home
-    if (user) {
+    console.log("Auth state:", { user, loading });
+    if (user && !loading) {
+      console.log("User authenticated, redirecting to /");
       navigate("/");
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       if (isLogin) {
+        console.log("Attempting login...");
         await login(email, password);
       } else {
+        console.log("Attempting signup...");
         await signup(email, password, username);
       }
       
@@ -40,6 +44,9 @@ export default function Auth() {
         title: isLogin ? "Welcome back!" : "Account created successfully!",
         description: "You are now logged in.",
       });
+      
+      // Navigate after successful auth
+      navigate("/");
       
     } catch (err) {
       console.error("Auth error:", err);
@@ -58,6 +65,11 @@ export default function Auth() {
         <div className="text-holobots-text dark:text-holobots-dark-text">Loading...</div>
       </div>
     );
+  }
+
+  // If already authenticated, don't render the form
+  if (user) {
+    return null;
   }
 
   return (
