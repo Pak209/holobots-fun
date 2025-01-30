@@ -11,8 +11,13 @@
 
   <body>
     <div id="root"></div>
-    <!-- Ensure GPT Engineer script loads before main application script -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <!-- Initialize GPT Engineer script with proper attributes -->
+    <script 
+      src="https://cdn.gpteng.co/gptengineer.js" 
+      type="module" 
+      crossorigin="anonymous"
+      async
+    ></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
