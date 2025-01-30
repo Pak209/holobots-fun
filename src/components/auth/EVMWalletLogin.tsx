@@ -19,15 +19,34 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
       
       if (!window.ethereum) {
         toast({
-          title: "Error",
-          description: "MetaMask is not installed!",
+          title: "MetaMask Not Found",
+          description: "Please install MetaMask to continue",
           variant: "destructive",
         });
         return;
       }
 
+      console.log("Activating Web3React connector...");
       // Activate Web3React connector
-      await evmConnector.activate();
+      try {
+        await evmConnector.activate();
+      } catch (error) {
+        if (error.code === 4001) {
+          toast({
+            title: "Connection Rejected",
+            description: "You rejected the connection request. Please try again and approve the connection in MetaMask.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Connection Error",
+            description: "Failed to connect to your wallet. Please try again.",
+            variant: "destructive",
+          });
+        }
+        console.error("Connector activation error:", error);
+        return;
+      }
       
       // Wait for account to be available
       if (!account) {
@@ -43,8 +62,27 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
       
       // Request signature
       console.log("Requesting signature for address:", address);
-      const signature = await signer.signMessage(nonce);
-      console.log("Obtained signature:", signature);
+      let signature;
+      try {
+        signature = await signer.signMessage(nonce);
+        console.log("Obtained signature:", signature);
+      } catch (error) {
+        if (error.code === 4001) {
+          toast({
+            title: "Signature Rejected",
+            description: "You rejected the signature request. Please try again and approve the signature in MetaMask.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Signature Error",
+            description: "Failed to sign the message. Please try again.",
+            variant: "destructive",
+          });
+        }
+        console.error("Signature error:", error);
+        return;
+      }
 
       // Verify signature and create session
       const { data, error } = await supabase.functions.invoke('verify-wallet', {
@@ -59,7 +97,12 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
 
       if (error) {
         console.error("Verification error:", error);
-        throw error;
+        toast({
+          title: "Verification Failed",
+          description: "Failed to verify your wallet. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
       console.log("Verification response:", data);
@@ -67,21 +110,29 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
       // Set the session in Supabase
       if (data?.session) {
         const { data: { session }, error: sessionError } = await supabase.auth.setSession(data.session);
-        if (sessionError) throw sessionError;
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          toast({
+            title: "Session Error",
+            description: "Failed to establish session. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
         
         console.log("Session set successfully:", session);
+        
+        toast({
+          title: "Success",
+          description: "Successfully authenticated with EVM wallet",
+        });
+        
+        navigate("/");
       }
-
-      toast({
-        title: "Success",
-        description: "Successfully authenticated with EVM wallet",
-      });
-      
-      navigate("/");
     } catch (error) {
       console.error("EVM auth error:", error);
       toast({
-        title: "Error",
+        title: "Authentication Error",
         description: error instanceof Error ? error.message : "Failed to authenticate with EVM wallet",
         variant: "destructive",
       });
