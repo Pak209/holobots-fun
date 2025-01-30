@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EVMWalletLogin } from "@/components/auth/EVMWalletLogin";
 import { SolanaWalletLogin } from "@/components/auth/SolanaWalletLogin";
 import { Web3ModalLogin } from "@/components/auth/Web3ModalLogin";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -21,6 +22,20 @@ export default function Auth() {
   // Check authentication status and redirect if already logged in
   useEffect(() => {
     console.log("Auth state:", { user, loading });
+    
+    // Check if there's an active session
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Current session:", session);
+      
+      if (session) {
+        console.log("Active session found, redirecting to /");
+        navigate("/");
+      }
+    };
+    
+    checkSession();
+    
     if (user && !loading) {
       console.log("User authenticated, redirecting to /");
       navigate("/");
@@ -32,10 +47,10 @@ export default function Auth() {
     
     try {
       if (isLogin) {
-        console.log("Attempting login...");
+        console.log("Attempting login with:", { email });
         await login(email, password);
       } else {
-        console.log("Attempting signup...");
+        console.log("Attempting signup with:", { email, username });
         await signup(email, password, username);
       }
       
@@ -50,9 +65,20 @@ export default function Auth() {
       
     } catch (err) {
       console.error("Auth error:", err);
+      
+      // More descriptive error messages
+      let errorMessage = "An error occurred during authentication";
+      if (err instanceof Error) {
+        if (err.message.includes("invalid_credentials")) {
+          errorMessage = "Invalid email or password";
+        } else if (err.message.includes("already exists")) {
+          errorMessage = "This email is already registered";
+        }
+      }
+      
       toast({
         title: "Error",
-        description: error || "An error occurred during authentication",
+        description: errorMessage,
         variant: "destructive",
       });
     }
