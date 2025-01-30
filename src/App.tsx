@@ -5,7 +5,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { Web3Modal } from '@web3modal/react';
 import { WagmiConfig } from 'wagmi';
 import { Web3ReactProvider } from '@web3-react/core';
-import { wagmiConfig, ethereumClient } from '@/lib/web3Config';
+import { wagmiConfig, ethereumClient, web3Connectors } from '@/lib/web3Config';
 import {
   ConnectionProvider,
   WalletProvider
@@ -47,7 +47,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Web3ReactProvider>
+    <Web3ReactProvider connectors={web3Connectors}>
       <WagmiConfig config={wagmiConfig}>
         <ConnectionProvider endpoint="https://api.mainnet-beta.solana.com">
           <WalletProvider wallets={wallets} autoConnect>

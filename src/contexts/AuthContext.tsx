@@ -3,6 +3,7 @@ import { AuthState, UserProfile } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { useWeb3React } from "@web3-react/core";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -13,8 +14,6 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = "holobots_user";
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -24,103 +23,91 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const { account: evmAccount } = useWeb3React();
   const { publicKey: solanaPublicKey } = useWallet();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Check localStorage first
-    const storedUser = localStorage.getItem(STORAGE_KEY);
-    if (storedUser) {
-      setState(prev => ({
-        ...prev,
-        user: JSON.parse(storedUser),
-        loading: false
-      }));
-    }
-
-    // Handle Web3 wallet connections
-    if (evmAccount) {
-      const mockUser: UserProfile = {
-        id: evmAccount,
-        username: `user_${evmAccount.slice(0, 6)}`,
-        holobots: [],
-        dailyEnergy: 100,
-        maxDailyEnergy: 100,
-        holosTokens: 1000,
-        stats: {
-          wins: 0,
-          losses: 0
-        },
-        lastEnergyRefresh: new Date().toISOString()
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
-      setState({ user: mockUser, loading: false, error: null });
-    }
-
-    if (solanaPublicKey) {
-      const mockUser: UserProfile = {
-        id: solanaPublicKey.toString(),
-        username: `user_${solanaPublicKey.toString().slice(0, 6)}`,
-        holobots: [],
-        dailyEnergy: 100,
-        maxDailyEnergy: 100,
-        holosTokens: 1000,
-        stats: {
-          wins: 0,
-          losses: 0
-        },
-        lastEnergyRefresh: new Date().toISOString()
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
-      setState({ user: mockUser, loading: false, error: null });
-    }
-
-    // This will be used when we switch to Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "SIGNED_IN" && session?.user) {
-          // We'll implement this when we integrate with Supabase
-          // For now, we're using localStorage
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+
+            if (error) throw error;
+
+            setState({
+              user: profile,
+              loading: false,
+              error: null
+            });
+          } catch (error) {
+            console.error('Error fetching user profile:', error);
+            setState(prev => ({
+              ...prev,
+              error: 'Error loading user profile',
+              loading: false
+            }));
+          }
         }
         if (event === "SIGNED_OUT") {
           setState({ user: null, loading: false, error: null });
-          localStorage.removeItem(STORAGE_KEY);
         }
       }
     );
 
-    setState(prev => ({ ...prev, loading: false }));
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile, error }) => {
+            if (error) {
+              setState({ user: null, loading: false, error: error.message });
+            } else {
+              setState({ user: profile, loading: false, error: null });
+            }
+          });
+      } else {
+        setState(prev => ({ ...prev, loading: false }));
+      }
+    });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [evmAccount, solanaPublicKey]);
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      // For now, create a mock user. This will be replaced with Supabase auth
-      const mockUser: UserProfile = {
-        id: Math.random().toString(36).substring(7),
-        username: email.split('@')[0],
-        holobots: [],
-        dailyEnergy: 100,
-        maxDailyEnergy: 100,
-        holosTokens: 1000,
-        stats: {
-          wins: 0,
-          losses: 0
-        },
-        lastEnergyRefresh: new Date().toISOString()
-      };
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
-      setState({ user: mockUser, loading: false, error: null });
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Successfully logged in",
+      });
     } catch (error) {
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : "An error occurred",
         loading: false
       }));
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to log in",
+        variant: "destructive",
+      });
     }
   };
 
@@ -128,43 +115,79 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
-      // This will be replaced with Supabase auth
-      const mockUser: UserProfile = {
-        id: Math.random().toString(36).substring(7),
-        username,
-        holobots: [],
-        dailyEnergy: 100,
-        maxDailyEnergy: 100,
-        holosTokens: 1000,
-        stats: {
-          wins: 0,
-          losses: 0
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+          },
         },
-        lastEnergyRefresh: new Date().toISOString()
-      };
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
-      setState({ user: mockUser, loading: false, error: null });
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Account created successfully",
+      });
     } catch (error) {
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : "An error occurred",
         loading: false
       }));
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create account",
+        variant: "destructive",
+      });
     }
   };
 
   const logout = async () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setState({ user: null, loading: false, error: null });
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Successfully logged out",
+      });
+    }
   };
 
   const updateUser = async (updates: Partial<UserProfile>) => {
     if (!state.user) return;
 
-    const updatedUser = { ...state.user, ...updates };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser));
-    setState(prev => ({ ...prev, user: updatedUser }));
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', state.user.id);
+
+      if (error) throw error;
+
+      setState(prev => ({
+        ...prev,
+        user: prev.user ? { ...prev.user, ...updates } : null
+      }));
+
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update profile",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
