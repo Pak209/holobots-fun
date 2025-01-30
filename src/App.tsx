@@ -47,7 +47,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Web3ReactProvider connectors={web3Connectors}>
+    <Web3ReactProvider connectors={web3Connectors as any}>
       <WagmiConfig config={wagmiConfig}>
         <ConnectionProvider endpoint="https://api.mainnet-beta.solana.com">
           <WalletProvider wallets={wallets} autoConnect>

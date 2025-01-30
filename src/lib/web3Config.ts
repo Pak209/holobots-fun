@@ -1,9 +1,9 @@
 import { configureChains, createConfig } from 'wagmi';
 import { mainnet, polygon } from 'wagmi/chains';
-import { EthereumClient, w3mConnector, w3mProvider } from '@web3modal/ethereum';
+import { EthereumClient, w3mConnectors } from '@web3modal/ethereum';
 import { Web3ReactHooks, initializeConnector } from '@web3-react/core';
 import { MetaMask } from '@web3-react/metamask';
-import { WalletConnect as WalletConnectV2 } from '@web3-react/walletconnect-v2';
+import { WalletConnect } from '@web3-react/walletconnect-v2';
 
 const projectId = 'YOUR_WALLETCONNECT_PROJECT_ID';
 
@@ -14,7 +14,11 @@ const { chains, publicClient, webSocketPublicClient } = configureChains(
 
 export const wagmiConfig = createConfig({
   autoConnect: true,
-  connectors: [w3mConnector({ projectId, chains })],
+  connectors: w3mConnectors({ 
+    projectId,
+    chains,
+    version: 2 
+  }),
   publicClient,
   webSocketPublicClient,
 });
@@ -27,8 +31,8 @@ const [metaMask, metaMaskHooks] = initializeConnector<MetaMask>(
 );
 
 // Initialize WalletConnect connector
-const [walletConnect, walletConnectHooks] = initializeConnector<WalletConnectV2>(
-  (actions) => new WalletConnectV2({
+const [walletConnect, walletConnectHooks] = initializeConnector<WalletConnect>(
+  (actions) => new WalletConnect({
     actions,
     options: {
       projectId,
@@ -38,7 +42,7 @@ const [walletConnect, walletConnectHooks] = initializeConnector<WalletConnectV2>
   })
 );
 
-export const web3Connectors = [
+export const web3Connectors: [MetaMask | WalletConnect, Web3ReactHooks][] = [
   [metaMask, metaMaskHooks],
   [walletConnect, walletConnectHooks],
-] as const;
+];

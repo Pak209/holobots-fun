@@ -38,8 +38,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (error) throw error;
 
+            const userProfile: UserProfile = {
+              id: profile.id,
+              username: profile.username,
+              holobots: [],
+              dailyEnergy: profile.daily_energy,
+              maxDailyEnergy: profile.max_daily_energy,
+              holosTokens: profile.holos_tokens,
+              stats: {
+                wins: 0,
+                losses: 0
+              },
+              lastEnergyRefresh: profile.last_energy_refresh
+            };
+
             setState({
-              user: profile,
+              user: userProfile,
               loading: false,
               error: null
             });
@@ -70,7 +84,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (error) {
               setState({ user: null, loading: false, error: error.message });
             } else {
-              setState({ user: profile, loading: false, error: null });
+              const userProfile: UserProfile = {
+                id: profile.id,
+                username: profile.username,
+                holobots: [],
+                dailyEnergy: profile.daily_energy,
+                maxDailyEnergy: profile.max_daily_energy,
+                holosTokens: profile.holos_tokens,
+                stats: {
+                  wins: 0,
+                  losses: 0
+                },
+                lastEnergyRefresh: profile.last_energy_refresh
+              };
+              setState({ user: userProfile, loading: false, error: null });
             }
           });
       } else {
