@@ -21,25 +21,24 @@ export default function Auth() {
 
   // Check authentication status and redirect if already logged in
   useEffect(() => {
-    console.log("Auth state:", { user, loading });
-    
-    // Check if there's an active session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log("Current session:", session);
-      
-      if (session) {
-        console.log("Active session found, redirecting to /");
-        navigate("/");
+    const checkAuthAndRedirect = async () => {
+      try {
+        console.log("Checking auth state:", { user, loading });
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Current session:", session);
+        
+        if (session || user) {
+          console.log("User is authenticated, redirecting to /");
+          navigate("/", { replace: true });
+          return;
+        }
+      } catch (err) {
+        console.error("Error checking auth state:", err);
       }
     };
-    
-    checkSession();
-    
-    if (user && !loading) {
-      console.log("User authenticated, redirecting to /");
-      navigate("/");
-    }
+
+    checkAuthAndRedirect();
   }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +60,7 @@ export default function Auth() {
       });
       
       // Navigate after successful auth
-      navigate("/");
+      navigate("/", { replace: true });
       
     } catch (err) {
       console.error("Auth error:", err);
@@ -88,7 +87,9 @@ export default function Auth() {
   if (loading) {
     return (
       <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center">
-        <div className="text-holobots-text dark:text-holobots-dark-text">Loading...</div>
+        <div className="text-holobots-text dark:text-holobots-dark-text animate-pulse">
+          Loading...
+        </div>
       </div>
     );
   }
