@@ -18,7 +18,7 @@ serve(async (req) => {
     const { address, nonce, signature, type, provider } = await req.json();
     console.log('Verifying wallet:', { address, type, provider });
 
-    if (!address || !nonce || (!signature) || !type) {
+    if (!address || !nonce || !signature || !type) {
       throw new Error('Missing required fields');
     }
 
@@ -65,7 +65,10 @@ serve(async (req) => {
       .select()
       .single();
 
-    if (userError) throw userError;
+    if (userError) {
+      console.error('Error upserting web3_user:', userError);
+      throw userError;
+    }
 
     // Create a new session
     const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
@@ -75,7 +78,10 @@ serve(async (req) => {
       }
     });
 
-    if (sessionError) throw sessionError;
+    if (sessionError) {
+      console.error('Error creating session:', sessionError);
+      throw sessionError;
+    }
 
     return new Response(
       JSON.stringify({ 
