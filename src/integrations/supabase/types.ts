@@ -9,6 +9,81 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      "Attributes Table": {
+        Row: {
+          attribute_type: string
+          current_value: number | null
+          holobot_id: string
+          id: string
+          max_value: number | null
+        }
+        Insert: {
+          attribute_type: string
+          current_value?: number | null
+          holobot_id?: string
+          id?: string
+          max_value?: number | null
+        }
+        Update: {
+          attribute_type?: string
+          current_value?: number | null
+          holobot_id?: string
+          id?: string
+          max_value?: number | null
+        }
+        Relationships: []
+      }
+      "Battles Table": {
+        Row: {
+          created_at: string | null
+          holobot_id: string
+          id: string
+          opponent: string | null
+          result: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          holobot_id?: string
+          id?: string
+          opponent?: string | null
+          result?: string | null
+          user_id?: string
+        }
+        Update: {
+          created_at?: string | null
+          holobot_id?: string
+          id?: string
+          opponent?: string | null
+          result?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      "Blueprints Table": {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          required_parts: Json
+          required_tokens: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          required_parts: Json
+          required_tokens: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          required_parts?: Json
+          required_tokens?: number
+        }
+        Relationships: []
+      }
       game_progress: {
         Row: {
           created_at: string | null
@@ -87,6 +162,33 @@ export type Database = {
         }
         Relationships: []
       }
+      "Marketplace Table": {
+        Row: {
+          created_at: string
+          holobot_id: string
+          id: string
+          price: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at: string
+          holobot_id?: string
+          id?: string
+          price: number
+          status: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          holobot_id?: string
+          id?: string
+          price?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -117,6 +219,33 @@ export type Database = {
           max_daily_energy?: number | null
           updated_at?: string | null
           username?: string
+        }
+        Relationships: []
+      }
+      "Tokens Table": {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          purpose: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          purpose: string
+          type: string
+          user_id?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          purpose?: string
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }

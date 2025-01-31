@@ -27,10 +27,9 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
       }
 
       console.log("Activating Web3React connector...");
-      // Activate Web3React connector
       try {
         await evmConnector.activate();
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 4001) {
           toast({
             title: "Connection Rejected",
@@ -45,15 +44,11 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
           });
         }
         console.error("Connector activation error:", error);
+        setIsAuthenticating(false);
         return;
       }
-      
-      // Wait for account to be available
-      if (!account) {
-        throw new Error("No account available after connection");
-      }
 
-      const provider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
+      const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const address = await signer.getAddress();
 
@@ -66,7 +61,7 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
       try {
         signature = await signer.signMessage(nonce);
         console.log("Obtained signature:", signature);
-      } catch (error) {
+      } catch (error: any) {
         if (error.code === 4001) {
           toast({
             title: "Signature Rejected",
@@ -81,6 +76,7 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
           });
         }
         console.error("Signature error:", error);
+        setIsAuthenticating(false);
         return;
       }
 
@@ -102,6 +98,7 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
           description: "Failed to verify your wallet. Please try again.",
           variant: "destructive",
         });
+        setIsAuthenticating(false);
         return;
       }
 
@@ -109,7 +106,7 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
 
       // Set the session in Supabase
       if (data?.session) {
-        const { data: { session }, error: sessionError } = await supabase.auth.setSession(data.session);
+        const { error: sessionError } = await supabase.auth.setSession(data.session);
         if (sessionError) {
           console.error("Session error:", sessionError);
           toast({
@@ -117,10 +114,11 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
             description: "Failed to establish session. Please try again.",
             variant: "destructive",
           });
+          setIsAuthenticating(false);
           return;
         }
         
-        console.log("Session set successfully:", session);
+        console.log("Session set successfully:", data.session);
         
         toast({
           title: "Success",

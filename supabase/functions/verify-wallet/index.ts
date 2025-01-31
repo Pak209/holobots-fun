@@ -26,7 +26,6 @@ serve(async (req) => {
 
     if (type === 'evm') {
       try {
-        // Verify EVM signature
         const recoveredAddress = ethers.verifyMessage(nonce, signature);
         isValid = recoveredAddress.toLowerCase() === address.toLowerCase();
         console.log('EVM verification result:', { isValid, recoveredAddress });
@@ -35,12 +34,17 @@ serve(async (req) => {
         throw new Error('Invalid EVM signature');
       }
     } else if (type === 'solana') {
-      const message = new TextEncoder().encode(nonce);
-      const signatureUint8 = new Uint8Array(Buffer.from(signature, 'base58'));
-      const publicKeyUint8 = new Uint8Array(Buffer.from(address, 'base58'));
-      
-      isValid = ed25519.verify(signatureUint8, message, publicKeyUint8);
-      console.log('Solana verification result:', { isValid });
+      try {
+        const message = new TextEncoder().encode(nonce);
+        const signatureUint8 = new Uint8Array(Buffer.from(signature, 'base58'));
+        const publicKeyUint8 = new Uint8Array(Buffer.from(address, 'base58'));
+        
+        isValid = ed25519.verify(signatureUint8, message, publicKeyUint8);
+        console.log('Solana verification result:', { isValid });
+      } catch (error) {
+        console.error('Solana signature verification error:', error);
+        throw new Error('Invalid Solana signature');
+      }
     } else {
       throw new Error('Invalid wallet type');
     }
@@ -49,10 +53,16 @@ serve(async (req) => {
       throw new Error('Invalid signature');
     }
 
-    // Initialize Supabase client
+    // Initialize Supabase client with admin privileges
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
     // Create or update web3_users record
@@ -71,11 +81,23 @@ serve(async (req) => {
     }
 
     // Create a new session
-    const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
-      properties: {
+    const { data: { user }, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
+      email: `${address.toLowerCase()}@web3.user`,
+      password: crypto.randomUUID(),
+      email_confirm: true,
+      user_metadata: {
         wallet_address: address,
-        provider: type
+        provider: type,
       }
+    });
+
+    if (signUpError) {
+      console.error('Error creating user:', signUpError);
+      throw signUpError;
+    }
+
+    const { data: session, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
+      user_id: user.id
     });
 
     if (sessionError) {
@@ -86,7 +108,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         message: 'Wallet verified successfully',
-        session: sessionData,
+        session,
         user: userData
       }),
       { 
