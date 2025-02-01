@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      "Attribute Boosts Table": {
+        Row: {
+          attack: string
+          Boost_value: number
+          defense: string
+          holobot_id: string
+          hp: string
+          id: string
+          speed: string
+        }
+        Insert: {
+          attack: string
+          Boost_value: number
+          defense: string
+          holobot_id?: string
+          hp: string
+          id?: string
+          speed: string
+        }
+        Update: {
+          attack?: string
+          Boost_value?: number
+          defense?: string
+          holobot_id?: string
+          hp?: string
+          id?: string
+          speed?: string
+        }
+        Relationships: []
+      }
       "Attributes Table": {
         Row: {
           attribute_type: string
@@ -30,6 +60,33 @@ export type Database = {
           holobot_id?: string
           id?: string
           max_value?: number | null
+        }
+        Relationships: []
+      }
+      "Base Stats Table": {
+        Row: {
+          attack: string
+          defense: string
+          holobot_id: string
+          hp: string
+          id: string
+          speed: string
+        }
+        Insert: {
+          attack: string
+          defense: string
+          holobot_id?: string
+          hp: string
+          id?: string
+          speed: string
+        }
+        Update: {
+          attack?: string
+          defense?: string
+          holobot_id?: string
+          hp?: string
+          id?: string
+          speed?: string
         }
         Relationships: []
       }

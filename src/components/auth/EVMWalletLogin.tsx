@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Wallet } from "lucide-react";
 
+declare global {
+  interface Window {
+    ethereum?: ethers.Eip1193Provider & ethers.BrowserProvider;
+  }
+}
+
 export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
   const { connector: evmConnector, account } = useWeb3React();
   const { toast } = useToast();
