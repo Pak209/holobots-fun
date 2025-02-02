@@ -15,6 +15,7 @@ import {
   PhantomWalletAdapter,
   SolflareWalletAdapter
 } from "@solana/wallet-adapter-wallets";
+import Landing from "@/pages/Landing";
 import Index from "@/pages/Index";
 import Training from "@/pages/Training";
 import Quests from "@/pages/Quests";
@@ -55,8 +56,9 @@ function App() {
               <AuthProvider>
                 <Router>
                   <Routes>
+                    <Route path="/" element={<Landing />} />
                     <Route path="/auth" element={<Auth />} />
-                    <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                    <Route path="/app" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                     <Route path="/training" element={<ProtectedRoute><Training /></ProtectedRoute>} />
                     <Route path="/quests" element={<ProtectedRoute><Quests /></ProtectedRoute>} />
                     <Route path="/holos-farm" element={<ProtectedRoute><HolosFarm /></ProtectedRoute>} />
