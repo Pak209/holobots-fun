@@ -37,13 +37,21 @@ export default function Auth() {
     try {
       if (isLogin) {
         await login(email, password);
-        navigate("/app", { replace: true });
       } else {
+        if (!username) {
+          toast({
+            title: "Username Required",
+            description: "Please enter a username to create your account.",
+            variant: "destructive",
+          });
+          return;
+        }
         await signup(email, password, username);
         toast({
-          title: "Account created successfully!",
-          description: "Please check your email for confirmation instructions.",
+          title: "Account created!",
+          description: "Please check your email to confirm your account before logging in.",
         });
+        setIsLogin(true); // Switch to login view after successful signup
       }
     } catch (err) {
       console.error("Auth error:", err);
@@ -51,9 +59,7 @@ export default function Auth() {
       let errorMessage = "An error occurred during authentication";
       if (err instanceof Error) {
         const errorString = err.message.toLowerCase();
-        if (errorString.includes("email_not_confirmed")) {
-          errorMessage = "Please check your email and confirm your account before logging in";
-        } else if (errorString.includes("invalid_credentials")) {
+        if (errorString.includes("invalid_credentials")) {
           errorMessage = "Invalid email or password";
         } else if (errorString.includes("already exists")) {
           errorMessage = "This email is already registered";

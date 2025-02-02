@@ -7,9 +7,16 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Wallet } from "lucide-react";
 
+type EthereumProvider = {
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
+  on: (eventName: string, handler: (params: any) => void) => void;
+  removeListener: (eventName: string, handler: (params: any) => void) => void;
+  selectedAddress: string | null;
+};
+
 declare global {
   interface Window {
-    ethereum?: ethers.Eip1193Provider;
+    ethereum?: EthereumProvider;
   }
 }
 
