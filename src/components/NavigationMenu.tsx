@@ -42,7 +42,7 @@ export const NavigationMenu = () => {
       
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden fixed top-4 right-4 z-50">
+          <Button variant="ghost" size="icon" className="fixed top-4 right-4 z-50">
             <Menu className="h-6 w-6" />
           </Button>
         </SheetTrigger>
