@@ -9,7 +9,7 @@ import { Wallet } from "lucide-react";
 
 declare global {
   interface Window {
-    ethereum?: ethers.Eip1193Provider & ethers.BrowserProvider;
+    ethereum?: ethers.Eip1193Provider;
   }
 }
 
@@ -131,7 +131,7 @@ export const EVMWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
           description: "Successfully authenticated with EVM wallet",
         });
         
-        navigate("/");
+        navigate("/app");
       }
     } catch (error) {
       console.error("EVM auth error:", error);
