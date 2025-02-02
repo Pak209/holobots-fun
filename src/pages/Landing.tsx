@@ -14,7 +14,13 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
       <nav className="fixed top-0 w-full p-4 flex justify-between items-center z-50 bg-holobots-background/80 dark:bg-holobots-dark-background/80 backdrop-blur-sm">
-        <div className="text-2xl font-bold text-holobots-text dark:text-holobots-dark-text">Holobots</div>
+        <div className="h-8">
+          <img
+            src="/lovable-uploads/5fcc3119-07a9-4f1e-a1e9-323b53992211.png"
+            alt="Holobots Logo"
+            className="h-full w-auto"
+          />
+        </div>
         <div className="flex gap-4">
           <Button variant="ghost" className="text-holobots-text dark:text-holobots-dark-text">
             About
