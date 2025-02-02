@@ -80,7 +80,7 @@ const Landing = () => {
                 <CarouselItem>
                   <div className="p-1">
                     <img
-                      src="/lovable-uploads/5e5c93d9-761a-469c-b044-66b5edced6dd.png"
+                      src="/lovable-uploads/d9918d37-05ab-49a8-b90d-66d6f89f5295.png"
                       alt="Shadow Holobot"
                       className="w-full h-auto rounded-lg object-contain"
                     />
@@ -89,7 +89,7 @@ const Landing = () => {
                 <CarouselItem>
                   <div className="p-1">
                     <img
-                      src="/lovable-uploads/1cf6d34e-60d0-4cac-ba5d-f10e52ba42e5.png"
+                      src="/lovable-uploads/433db76f-724b-484e-bd07-b01fde68f661.png"
                       alt="Huma Holobot"
                       className="w-full h-auto rounded-lg object-contain"
                     />
@@ -98,7 +98,7 @@ const Landing = () => {
                 <CarouselItem>
                   <div className="p-1">
                     <img
-                      src="/lovable-uploads/4a02fb2a-d16f-40c2-a617-ba70f8ddcb54.png"
+                      src="/lovable-uploads/ae1e648c-596d-49d0-b944-27cdf423a7e1.png"
                       alt="Ace Holobot"
                       className="w-full h-auto rounded-lg object-contain"
                     />
