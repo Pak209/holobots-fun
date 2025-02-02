@@ -21,7 +21,7 @@ export default function Auth() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session || user) {
-          navigate("/", { replace: true });
+          navigate("/app", { replace: true });
         }
       } catch (err) {
         console.error("Error checking auth state:", err);
@@ -37,21 +37,14 @@ export default function Auth() {
     try {
       if (isLogin) {
         await login(email, password);
+        navigate("/app", { replace: true });
       } else {
         await signup(email, password, username);
+        toast({
+          title: "Account created successfully!",
+          description: "Please check your email for confirmation instructions.",
+        });
       }
-      
-      toast({
-        title: isLogin ? "Welcome back!" : "Account created successfully!",
-        description: isLogin ? 
-          "You are now logged in." : 
-          "Please check your email for confirmation instructions.",
-      });
-      
-      if (isLogin) {
-        navigate("/", { replace: true });
-      }
-      
     } catch (err) {
       console.error("Auth error:", err);
       
@@ -83,10 +76,6 @@ export default function Auth() {
         </div>
       </div>
     );
-  }
-
-  if (user) {
-    return null;
   }
 
   return (
