@@ -15,7 +15,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/5">
       <nav className="fixed top-0 w-full p-4 flex justify-between items-center z-50 bg-background/80 backdrop-blur-sm">
-        <div className="text-2xl font-bold italic tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover animate-neon-pulse">
+        <div className="text-2xl font-bold italic tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover">
           HOLOBOTS
         </div>
         <div className="flex gap-4">
@@ -46,7 +46,7 @@ const Landing = () => {
             <h2 className="text-5xl font-bold leading-tight">
               Discover, Collect & {" "}
               <WordCycler 
-                words={["Train", "Battle", "Quest", "🏆"]} 
+                words={["Train", "Battle", "Quest", "Win!"]} 
                 interval={2000}
               />
             </h2>
