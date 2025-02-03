@@ -1,76 +1,73 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BrowserProvider } from "ethers";
+import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { Wallet } from "lucide-react";
-
-interface EthereumProvider {
-  request: (args: { method: string; params?: any[] }) => Promise<any>;
-  on: (eventName: string, handler: (params: any) => void) => void;
-  removeListener: (eventName: string, handler: (params: any) => void) => void;
-  selectedAddress: string | null;
-  isMetaMask?: boolean;
-}
+import { useAuth } from "@/contexts/AuthContext";
 
 declare global {
   interface Window {
-    ethereum?: EthereumProvider;
+    ethereum?: {
+      request: (args: { method: string; params?: any[] }) => Promise<any>;
+      on: (event: string, callback: (accounts: string[]) => void) => void;
+      removeListener: (event: string, callback: (accounts: string[]) => void) => void;
+      isMetaMask?: boolean;
+    };
   }
 }
 
-export const EVMWalletLogin = () => {
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+const EVMWalletLogin = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const connectWallet = async () => {
     if (!window.ethereum) {
       toast({
-        title: "Metamask not found",
-        description: "Please install Metamask to continue",
+        title: "MetaMask not found",
+        description: "Please install MetaMask to continue",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      setIsAuthenticating(true);
-      const provider = new BrowserProvider(window.ethereum);
-      const accounts = await provider.send("eth_requestAccounts", []);
-      
-      if (accounts.length === 0) {
-        throw new Error("No accounts found");
-      }
+      setIsLoading(true);
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
 
-      const signer = await provider.getSigner();
-      const message = "Sign this message to verify your identity";
-      const signature = await signer.signMessage(message);
+      if (accounts[0]) {
+        const message = `Welcome to Holobots!\nPlease sign this message to verify your wallet ownership.\nThis request will not trigger a blockchain transaction or cost any gas fees.\n\nWallet address: ${accounts[0]}\nTimestamp: ${Date.now()}`;
+        
+        const signature = await window.ethereum.request({
+          method: "personal_sign",
+          params: [message, accounts[0]],
+        });
 
-      if (signature) {
-        navigate("/dashboard");
+        await login(accounts[0], signature, message);
+        navigate("/app");
       }
     } catch (error: any) {
       toast({
-        title: "Connection failed",
-        description: error.message || "Failed to connect wallet",
+        title: "Error connecting wallet",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
-      setIsAuthenticating(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <Button
-      variant="outline"
-      size="lg"
-      className="w-full"
       onClick={connectWallet}
-      disabled={isAuthenticating}
+      disabled={isLoading}
+      className="bg-holobots-accent hover:bg-holobots-hover text-white"
     >
-      <Wallet className="mr-2 h-4 w-4" />
-      {isAuthenticating ? "Connecting..." : "Connect EVM Wallet"}
+      {isLoading ? "Connecting..." : "Connect MetaMask"}
     </Button>
   );
 };
+
+export default EVMWalletLogin;

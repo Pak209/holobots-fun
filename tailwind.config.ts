@@ -53,26 +53,16 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         holobots: {
-          background: "#F1F1F1",
+          background: "#1A1A1A",
           accent: "#33C3F0",    
-          text: "#555555",      
-          card: "#FFFFFF",      
-          border: "#D3E4FD",    
-          hover: "#0FA0CE",
-          dark: {
-            background: "#1A1A1A",
-            accent: "#33C3F0",
-            text: "#E0E0E0",
-            card: "#2A2A2A",
-            border: "#3A3A3A",
-            hover: "#0FA0CE"
-          }     
+          text: "#E0E0E0",      
+          card: "#2A2A2A",      
+          border: "#3A3A3A",    
+          hover: "#0FA0CE"      
         }
       },
       boxShadow: {
         'neon-blue': '0 0 5px theme(colors.holobots.accent), 0 0 20px theme(colors.holobots.accent)',
-        'neon-white': '0 0 5px theme(colors.holobots.card), 0 0 20px theme(colors.holobots.card)',
-        'neon-border': '0 0 5px theme(colors.holobots.border), 0 0 20px theme(colors.holobots.border)',
       },
       borderRadius: {
         lg: "var(--radius)",

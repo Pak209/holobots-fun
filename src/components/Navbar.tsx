@@ -20,16 +20,16 @@ export function Navbar() {
   const NavLinks = () => (
     <>
       <Link to="#features">
-        <Button variant="ghost">Features</Button>
+        <Button variant="ghost" className="text-holobots-text hover:text-holobots-accent">Features</Button>
       </Link>
       <Link to="#how-it-works">
-        <Button variant="ghost">How It Works</Button>
+        <Button variant="ghost" className="text-holobots-text hover:text-holobots-accent">How It Works</Button>
       </Link>
       <Link to="#login">
-        <Button variant="outline">Login</Button>
+        <Button variant="outline" className="text-holobots-text hover:text-holobots-accent border-holobots-border">Login</Button>
       </Link>
       <Link to="#signup">
-        <Button>Sign Up</Button>
+        <Button className="bg-holobots-accent hover:bg-holobots-hover text-white">Sign Up</Button>
       </Link>
     </>
   );
@@ -37,12 +37,12 @@ export function Navbar() {
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
       scrolled 
-        ? "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm" 
+        ? "bg-holobots-background/95 backdrop-blur supports-[backdrop-filter]:bg-holobots-background/60 border-b border-holobots-border" 
         : "bg-transparent"
     }`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/">
-          <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-cyan-500">
+          <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover animate-neon-pulse">
             Holobots
           </div>
         </Link>
@@ -56,11 +56,11 @@ export function Navbar() {
         <div className="md:hidden">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="text-holobots-text">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent>
+            <SheetContent className="bg-holobots-background border-holobots-border">
               <div className="flex flex-col gap-4 mt-8">
                 <NavLinks />
               </div>
