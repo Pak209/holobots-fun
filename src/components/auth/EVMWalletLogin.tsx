@@ -12,6 +12,7 @@ type EthereumProvider = {
   on: (eventName: string, handler: (params: any) => void) => void;
   removeListener: (eventName: string, handler: (params: any) => void) => void;
   selectedAddress: string | null;
+  isMetaMask?: boolean;
 };
 
 declare global {
