@@ -81,16 +81,16 @@ const Landing = () => {
             </div>
             <div className="flex gap-12 pt-12">
               <div>
-                <h3 className="text-3xl font-bold">24k+</h3>
-                <p className="text-muted-foreground">Active Stakers</p>
+                <h3 className="text-3xl font-bold">50</h3>
+                <p className="text-muted-foreground">Holobot Collections</p>
               </div>
               <div>
-                <h3 className="text-3xl font-bold">40k+</h3>
-                <p className="text-muted-foreground">NFTs Staked</p>
+                <h3 className="text-3xl font-bold">2k</h3>
+                <p className="text-muted-foreground">Legend Rank per Collection</p>
               </div>
               <div>
-                <h3 className="text-3xl font-bold">1M+</h3>
-                <p className="text-muted-foreground">HOLOS Earned</p>
+                <h3 className="text-3xl font-bold">1.1B</h3>
+                <p className="text-muted-foreground">Holos Total Supply</p>
               </div>
             </div>
           </div>
