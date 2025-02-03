@@ -2,7 +2,11 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { EthereumProvider } from "@web3-react/types";
+
+// Define the correct Ethereum provider type
+interface EthereumProvider {
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
+}
 
 declare global {
   interface Window {
@@ -27,14 +31,19 @@ export const EVMWalletLogin = () => {
 
     try {
       setIsConnecting(true);
-      const accounts = await window.ethereum.send("eth_requestAccounts", []);
+      const accounts = await window.ethereum.request({ 
+        method: "eth_requestAccounts" 
+      });
 
       if (!accounts || accounts.length === 0) {
         throw new Error("No accounts found");
       }
 
       const message = `Login to Holobots\nNonce: ${Date.now()}`;
-      const signature = await window.ethereum.send("personal_sign", [message, accounts[0]]);
+      const signature = await window.ethereum.request({ 
+        method: "personal_sign",
+        params: [message, accounts[0]]
+      });
 
       await login(accounts[0], signature);
 
