@@ -48,14 +48,16 @@ const Landing = () => {
         </div>
 
         {/* Discover/Collect Section */}
-        <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center min-h-[60vh] mb-16 px-4 md:px-0">
+        <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-start min-h-[60vh] mb-16 px-4 md:px-0">
           <div className="space-y-6 md:space-y-8">
-            <h2 className="text-2xl md:text-4xl font-bold leading-tight md:whitespace-nowrap">
-              Discover, Collect & {" "}
-              <WordCycler 
-                words={["Train", "Battle", "Quest", "Win!"]} 
-                interval={2000}
-              />
+            <h2 className="text-2xl md:text-4xl font-bold leading-tight">
+              Discover, Collect &{" "}
+              <span className="block mt-2">
+                <WordCycler 
+                  words={["Train", "Battle", "Quest", "Win!"]} 
+                  interval={2000}
+                />
+              </span>
             </h2>
             <p className="text-base md:text-lg text-muted-foreground">
               Join the next generation of digital asset staking. Earn rewards while holding unique NFTs in the Holobots ecosystem.
@@ -77,7 +79,7 @@ const Landing = () => {
               </div>
             </div>
           </div>
-          <div className="relative mt-8 lg:mt-0">
+          <div className="relative">
             <Carousel 
               opts={{
                 align: "start",
