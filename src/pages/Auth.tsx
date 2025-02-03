@@ -117,13 +117,13 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
+    <div className="min-h-screen bg-holobots-background">
       <NavigationMenu />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto">
-          <div className="bg-holobots-card dark:bg-holobots-dark-card rounded-lg p-6 shadow-neon-border">
-            <h1 className="text-2xl font-bold mb-6 text-holobots-text dark:text-holobots-dark-text">
+          <div className="neo-blur rounded-lg p-8 shadow-lg space-y-6">
+            <h1 className="text-2xl font-bold mb-6 text-gradient">
               {isLogin ? "Login" : "Create Account"}
             </h1>
             
@@ -135,7 +135,7 @@ export default function Auth() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full"
+                  className="w-full bg-black/30 border-holobots-border text-holobots-text placeholder:text-gray-400"
                 />
               </div>
               
@@ -147,7 +147,7 @@ export default function Auth() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
-                    className="w-full"
+                    className="w-full bg-black/30 border-holobots-border text-holobots-text placeholder:text-gray-400"
                   />
                 </div>
               )}
@@ -159,13 +159,13 @@ export default function Auth() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full"
+                  className="w-full bg-black/30 border-holobots-border text-holobots-text placeholder:text-gray-400"
                 />
               </div>
               
               <Button 
                 type="submit" 
-                className="w-full"
+                className="w-full bg-holobots-accent hover:bg-holobots-hover text-white"
                 disabled={authLoading}
               >
                 {authLoading ? "Loading..." : (isLogin ? "Login" : "Sign Up")}
@@ -175,7 +175,7 @@ export default function Auth() {
             <div className="mt-4 text-center">
               <button
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-holobots-accent dark:text-holobots-dark-accent hover:underline"
+                className="text-holobots-accent hover:text-holobots-hover transition-colors"
               >
                 {isLogin ? "Need an account? Sign up" : "Already have an account? Login"}
               </button>
@@ -184,17 +184,17 @@ export default function Auth() {
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-holobots-border dark:border-holobots-dark-border" />
+                  <span className="w-full border-t border-holobots-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-holobots-card dark:bg-holobots-dark-card px-2 text-holobots-text dark:text-holobots-dark-text">
+                  <span className="bg-holobots-card px-2 text-holobots-text">
                     Or continue with
                   </span>
                 </div>
               </div>
 
               <div className="mt-6">
-                <Web3Login />
+                <Web3Login isLoading={authLoading} />
               </div>
             </div>
           </div>
