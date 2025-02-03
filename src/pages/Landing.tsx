@@ -10,8 +10,18 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { useEffect, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 
 const Landing = () => {
+  const [api, setApi] = useState<any>();
+
+  const autoplayOptions = {
+    delay: 3000,
+    rootNode: (emblaRoot: any) => emblaRoot.parentElement,
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/5">
       <nav className="fixed top-0 w-full p-4 flex justify-between items-center z-50 bg-background/80 backdrop-blur-sm">
@@ -43,7 +53,7 @@ const Landing = () => {
         {/* Discover/Collect Section */}
         <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[60vh] mb-16">
           <div className="space-y-8">
-            <h2 className="text-5xl font-bold leading-tight">
+            <h2 className="text-4xl font-bold leading-tight whitespace-nowrap">
               Discover, Collect & {" "}
               <WordCycler 
                 words={["Train", "Battle", "Quest", "Win!"]} 
@@ -85,7 +95,17 @@ const Landing = () => {
             </div>
           </div>
           <div className="relative">
-            <Carousel className="w-full max-w-[300px] mx-auto">
+            <Carousel 
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay(autoplayOptions)
+              ]}
+              setApi={setApi}
+              className="w-full max-w-[300px] mx-auto"
+            >
               <CarouselContent>
                 <CarouselItem>
                   <div className="p-1">
