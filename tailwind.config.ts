@@ -53,11 +53,11 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         holobots: {
-          background: "#1A1A1A",
+          background: "hsl(var(--background))",
           accent: "#33C3F0",    
-          text: "#E0E0E0",      
-          card: "#2A2A2A",      
-          border: "#3A3A3A",    
+          text: "hsl(var(--foreground))",      
+          card: "hsl(var(--card))",      
+          border: "hsl(var(--border))",    
           hover: "#0FA0CE"      
         }
       },

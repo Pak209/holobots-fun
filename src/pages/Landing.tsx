@@ -48,7 +48,7 @@ const Landing = () => {
         </div>
 
         {/* Discover/Collect Section */}
-        <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-start min-h-[60vh] mb-16 px-4 md:px-0">
+        <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-start mb-16 px-4 md:px-0">
           <div className="space-y-6 md:space-y-8">
             <h2 className="text-2xl md:text-4xl font-bold leading-tight">
               Discover, Collect &{" "}
@@ -59,7 +59,7 @@ const Landing = () => {
                 />
               </span>
             </h2>
-            <p className="text-base md:text-lg text-muted-foreground">
+            <p className="text-base md:text-lg text-muted-foreground max-w-xl">
               Join the next generation of digital asset staking. Earn rewards while holding unique NFTs in the Holobots ecosystem.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -79,7 +79,7 @@ const Landing = () => {
               </div>
             </div>
           </div>
-          <div className="relative">
+          <div className="relative lg:mt-0">
             <Carousel 
               opts={{
                 align: "start",
@@ -89,7 +89,7 @@ const Landing = () => {
                 Autoplay(autoplayOptions)
               ]}
               setApi={setApi}
-              className="w-full max-w-[300px] mx-auto"
+              className="w-full max-w-[300px] mx-auto lg:ml-auto"
             >
               <CarouselContent>
                 <CarouselItem>
