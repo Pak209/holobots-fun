@@ -22,24 +22,38 @@ export default function Auth() {
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session || user) {
+        // If user is already authenticated, redirect
+        if (user) {
           navigate("/app");
+          return;
         }
-      } catch (err) {
-        console.error("Error checking auth state:", err);
-        toast({
-          title: "Error",
-          description: "Failed to check authentication status",
-          variant: "destructive",
-        });
+
+        // Try to get session, but don't block if Supabase is unavailable
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            navigate("/app");
+          }
+        } catch (err) {
+          console.error("Supabase auth check failed:", err);
+          // Don't show error toast since Supabase is intentionally disconnected
+        }
       } finally {
+        // Always set isChecking to false to prevent infinite loading
         setIsChecking(false);
       }
     };
 
+    // Set a timeout to ensure we don't get stuck in loading state
+    const timeoutId = setTimeout(() => {
+      setIsChecking(false);
+    }, 3000); // 3 second timeout
+
     checkAuthAndRedirect();
-  }, [user, navigate, toast]);
+
+    // Cleanup timeout
+    return () => clearTimeout(timeoutId);
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
