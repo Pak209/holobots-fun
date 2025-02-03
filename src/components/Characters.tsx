@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Robot, Shield, Zap } from "lucide-react";
+import { Bot, Shield, Zap } from "lucide-react";
 
 type Character = {
   id: number;
@@ -35,7 +35,7 @@ const characters: Character[] = [
     image: "/lovable-uploads/shadow.png",
     description: "A stealth-focused warrior equipped with energy blade technology and advanced cloaking systems.",
     role: "Infiltrator",
-    icon: <Robot className="w-6 h-6" />
+    icon: <Bot className="w-6 h-6" />
   }
 ];
 

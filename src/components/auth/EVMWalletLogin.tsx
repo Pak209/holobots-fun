@@ -7,16 +7,14 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Wallet } from "lucide-react";
 
-// Update the EthereumProvider type to match Eip1193Provider requirements
-type EthereumProvider = {
+interface EthereumProvider {
   request: (args: { method: string; params?: any[] }) => Promise<any>;
   on: (eventName: string, handler: (params: any) => void) => void;
   removeListener: (eventName: string, handler: (params: any) => void) => void;
   selectedAddress: string | null;
   isMetaMask?: boolean;
-};
+}
 
-// Declare window.ethereum type
 declare global {
   interface Window {
     ethereum?: EthereumProvider;
