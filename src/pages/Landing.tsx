@@ -15,7 +15,9 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/5">
       <nav className="fixed top-0 w-full p-4 flex justify-between items-center z-50 bg-background/80 backdrop-blur-sm">
-        <div className="text-2xl font-bold">Holobots</div>
+        <div className="text-2xl font-bold italic tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover animate-neon-pulse">
+          HOLOBOTS
+        </div>
         <div className="flex gap-4">
           <Button variant="ghost">About</Button>
           <Button variant="ghost">Features</Button>

@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
 
 declare global {
   interface Window {
@@ -15,11 +14,10 @@ declare global {
   }
 }
 
-const EVMWalletLogin = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+export const EVMWalletLogin = () => {
+  const [isConnecting, setIsConnecting] = useState(false);
   const { login } = useAuth();
+  const { toast } = useToast();
 
   const connectWallet = async () => {
     if (!window.ethereum) {
@@ -32,42 +30,46 @@ const EVMWalletLogin = () => {
     }
 
     try {
-      setIsLoading(true);
+      setIsConnecting(true);
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
 
-      if (accounts[0]) {
-        const message = `Welcome to Holobots!\nPlease sign this message to verify your wallet ownership.\nThis request will not trigger a blockchain transaction or cost any gas fees.\n\nWallet address: ${accounts[0]}\nTimestamp: ${Date.now()}`;
-        
-        const signature = await window.ethereum.request({
-          method: "personal_sign",
-          params: [message, accounts[0]],
-        });
-
-        await login(accounts[0], signature, message);
-        navigate("/app");
+      if (accounts.length === 0) {
+        throw new Error("No accounts found");
       }
-    } catch (error: any) {
+
+      const message = `Login to Holobots\nNonce: ${Date.now()}`;
+      const signature = await window.ethereum.request({
+        method: "personal_sign",
+        params: [message, accounts[0]],
+      });
+
+      await login(accounts[0], signature, message);
+
       toast({
-        title: "Error connecting wallet",
-        description: error.message,
+        title: "Connected successfully",
+        description: "Your wallet has been connected",
+      });
+    } catch (error) {
+      console.error("Wallet connection error:", error);
+      toast({
+        title: "Connection failed",
+        description: error instanceof Error ? error.message : "Failed to connect wallet",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsConnecting(false);
     }
   };
 
   return (
     <Button
       onClick={connectWallet}
-      disabled={isLoading}
-      className="bg-holobots-accent hover:bg-holobots-hover text-white"
+      disabled={isConnecting}
+      className="w-full bg-holobots-accent hover:bg-holobots-hover text-white"
     >
-      {isLoading ? "Connecting..." : "Connect MetaMask"}
+      {isConnecting ? "Connecting..." : "Connect MetaMask"}
     </Button>
   );
 };
-
-export default EVMWalletLogin;
