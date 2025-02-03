@@ -93,12 +93,12 @@ export function Characters() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ duration: 0.3 }}
-                      className="relative w-full max-w-[300px] aspect-square mx-auto"
+                      className="relative w-full h-[250px] flex items-center justify-center"
                     >
                       <img 
                         src={selectedCharacter.image}
                         alt={selectedCharacter.name}
-                        className="w-full h-full object-contain"
+                        className="max-h-full max-w-full object-contain"
                       />
                     </motion.div>
                   </div>

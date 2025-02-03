@@ -25,9 +25,6 @@ export function Navbar() {
       <Link to="#how-it-works" className="hidden md:block">
         <Button variant="ghost" className="text-holobots-text hover:text-holobots-accent text-sm">How It Works</Button>
       </Link>
-      <Link to="#login">
-        <Button variant="outline" className="text-holobots-text hover:text-holobots-accent border-holobots-border text-sm">Login</Button>
-      </Link>
       <Link to="#signup">
         <Button className="bg-holobots-accent hover:bg-holobots-hover text-white text-sm">Launch App</Button>
       </Link>
@@ -53,7 +50,12 @@ export function Navbar() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden">
+        <div className="md:hidden flex items-center gap-2">
+          <Link to="#signup">
+            <Button size="sm" className="bg-holobots-accent hover:bg-holobots-hover text-white text-sm">
+              Launch App
+            </Button>
+          </Link>
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="text-holobots-text">
@@ -62,7 +64,12 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent className="bg-holobots-background border-holobots-border w-[280px] p-4">
               <div className="flex flex-col gap-3 mt-8">
-                <NavLinks />
+                <Link to="#features">
+                  <Button variant="ghost" className="w-full text-holobots-text hover:text-holobots-accent text-sm">Features</Button>
+                </Link>
+                <Link to="#how-it-works">
+                  <Button variant="ghost" className="w-full text-holobots-text hover:text-holobots-accent text-sm">How It Works</Button>
+                </Link>
               </div>
             </SheetContent>
           </Sheet>
