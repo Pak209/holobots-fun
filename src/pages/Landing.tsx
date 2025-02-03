@@ -45,27 +45,24 @@ const Landing = () => {
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Welcome to Holobots Battle Arena
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Choose your mechanical warrior and master their unique abilities
-          </p>
         </div>
 
         {/* Discover/Collect Section */}
-        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[60vh] mb-16">
-          <div className="space-y-8">
-            <h2 className="text-4xl font-bold leading-tight whitespace-nowrap">
+        <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center min-h-[60vh] mb-16 px-4 md:px-0">
+          <div className="space-y-6 md:space-y-8">
+            <h2 className="text-2xl md:text-4xl font-bold leading-tight md:whitespace-nowrap">
               Discover, Collect & {" "}
               <WordCycler 
                 words={["Train", "Battle", "Quest", "Win!"]} 
                 interval={2000}
               />
             </h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-base md:text-lg text-muted-foreground">
               Join the next generation of digital asset staking. Earn rewards while holding unique NFTs in the Holobots ecosystem.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/auth">
-                <Button className="bg-primary hover:bg-primary/90 px-8 py-6 text-lg w-full sm:w-auto">
+              <Link to="/auth" className="w-full sm:w-auto">
+                <Button className="bg-primary hover:bg-primary/90 px-4 md:px-8 py-4 md:py-6 text-base md:text-lg w-full">
                   Create Account to Mint Holobots
                   <ArrowRight className="ml-2" />
                 </Button>
@@ -79,22 +76,8 @@ const Landing = () => {
                 </Button>
               </div>
             </div>
-            <div className="flex gap-12 pt-12">
-              <div>
-                <h3 className="text-3xl font-bold">50</h3>
-                <p className="text-muted-foreground">Holobot Collections</p>
-              </div>
-              <div>
-                <h3 className="text-3xl font-bold">2k</h3>
-                <p className="text-muted-foreground">Legend Rank per Collection</p>
-              </div>
-              <div>
-                <h3 className="text-3xl font-bold">1.1B</h3>
-                <p className="text-muted-foreground">Holos Total Supply</p>
-              </div>
-            </div>
           </div>
-          <div className="relative">
+          <div className="relative mt-8 lg:mt-0">
             <Carousel 
               opts={{
                 align: "start",
