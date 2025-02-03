@@ -48,8 +48,38 @@ const Landing = () => {
         </div>
 
         {/* Discover/Collect Section */}
-        <div className="grid lg:grid-cols-[250px_1fr] gap-8 md:gap-12 items-start mb-16 px-4 md:px-0">
-          <div className="relative order-2 lg:order-1">
+        <div className="grid lg:grid-cols-[1fr_250px] gap-8 md:gap-12 items-start mb-16 px-4 md:px-0">
+          <div className="space-y-6 md:space-y-8">
+            <h2 className="text-2xl md:text-4xl font-bold leading-tight">
+              Discover, Collect &{" "}
+              <span className="block mt-2">
+                <WordCycler 
+                  words={["Train", "Battle", "Quest", "Win!"]} 
+                  interval={2000}
+                />
+              </span>
+            </h2>
+            <p className="text-base md:text-lg text-muted-foreground max-w-xl">
+              Join the next generation of digital asset staking. Earn rewards while holding unique NFTs in the Holobots ecosystem.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link to="/auth" className="w-full sm:w-auto">
+                <Button className="bg-primary hover:bg-primary/90 px-4 md:px-8 py-4 md:py-6 text-base md:text-lg w-full">
+                  Create Account to Mint Holobots
+                  <ArrowRight className="ml-2" />
+                </Button>
+              </Link>
+              <div className="flex gap-2 justify-center sm:justify-start">
+                <Button variant="outline" size="icon" className="rounded-full">
+                  <Twitter className="h-5 w-5" />
+                </Button>
+                <Button variant="outline" size="icon" className="rounded-full">
+                  <MessageSquare className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="relative">
             <Carousel 
               opts={{
                 align: "start",
@@ -93,36 +123,6 @@ const Landing = () => {
               <CarouselPrevious className="hidden sm:flex" />
               <CarouselNext className="hidden sm:flex" />
             </Carousel>
-          </div>
-          <div className="space-y-6 md:space-y-8 order-1 lg:order-2">
-            <h2 className="text-2xl md:text-4xl font-bold leading-tight">
-              Discover, Collect &{" "}
-              <span className="block mt-2">
-                <WordCycler 
-                  words={["Train", "Battle", "Quest", "Win!"]} 
-                  interval={2000}
-                />
-              </span>
-            </h2>
-            <p className="text-base md:text-lg text-muted-foreground max-w-xl">
-              Join the next generation of digital asset staking. Earn rewards while holding unique NFTs in the Holobots ecosystem.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/auth" className="w-full sm:w-auto">
-                <Button className="bg-primary hover:bg-primary/90 px-4 md:px-8 py-4 md:py-6 text-base md:text-lg w-full">
-                  Create Account to Mint Holobots
-                  <ArrowRight className="ml-2" />
-                </Button>
-              </Link>
-              <div className="flex gap-2 justify-center sm:justify-start">
-                <Button variant="outline" size="icon" className="rounded-full">
-                  <Twitter className="h-5 w-5" />
-                </Button>
-                <Button variant="outline" size="icon" className="rounded-full">
-                  <MessageSquare className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
           </div>
         </div>
 
