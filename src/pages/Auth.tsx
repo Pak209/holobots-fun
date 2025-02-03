@@ -5,14 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { useToast } from "@/hooks/use-toast";
+import { Web3Login } from "@/components/Web3Login";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const { login, signup, loading, error, user } = useAuth();
+  const { login, signup, loading: authLoading, error, user } = useAuth();
+  const [isChecking, setIsChecking] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -21,15 +24,22 @@ export default function Auth() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session || user) {
-          navigate("/app", { replace: true });
+          navigate("/app");
         }
       } catch (err) {
         console.error("Error checking auth state:", err);
+        toast({
+          title: "Error",
+          description: "Failed to check authentication status",
+          variant: "destructive",
+        });
+      } finally {
+        setIsChecking(false);
       }
     };
 
     checkAuthAndRedirect();
-  }, [user, loading, navigate]);
+  }, [user, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +61,7 @@ export default function Auth() {
           title: "Account created!",
           description: "Please check your email to confirm your account before logging in.",
         });
-        setIsLogin(true); // Switch to login view after successful signup
+        setIsLogin(true);
       }
     } catch (err) {
       console.error("Auth error:", err);
@@ -74,11 +84,19 @@ export default function Auth() {
     }
   };
 
-  if (loading) {
+  if (isChecking || authLoading) {
     return (
-      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center">
-        <div className="text-holobots-text dark:text-holobots-dark-text animate-pulse">
-          Loading...
+      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
+        <NavigationMenu />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-md mx-auto">
+            <div className="bg-holobots-card dark:bg-holobots-dark-card rounded-lg p-6 shadow-neon-border space-y-4">
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -134,9 +152,9 @@ export default function Auth() {
               <Button 
                 type="submit" 
                 className="w-full"
-                disabled={loading}
+                disabled={authLoading}
               >
-                {loading ? "Loading..." : (isLogin ? "Login" : "Sign Up")}
+                {authLoading ? "Loading..." : (isLogin ? "Login" : "Sign Up")}
               </Button>
             </form>
             
@@ -147,6 +165,23 @@ export default function Auth() {
               >
                 {isLogin ? "Need an account? Sign up" : "Already have an account? Login"}
               </button>
+            </div>
+
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-holobots-border dark:border-holobots-dark-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-holobots-card dark:bg-holobots-dark-card px-2 text-holobots-text dark:text-holobots-dark-text">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <Web3Login />
+              </div>
             </div>
           </div>
         </div>
