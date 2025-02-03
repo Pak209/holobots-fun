@@ -100,11 +100,11 @@ export default function Auth() {
 
   if (isChecking || authLoading) {
     return (
-      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
+      <div className="min-h-screen bg-holobots-background">
         <NavigationMenu />
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-md mx-auto">
-            <div className="bg-holobots-card dark:bg-holobots-dark-card rounded-lg p-6 shadow-neon-border space-y-4">
+            <div className="neo-blur rounded-lg p-6 space-y-4">
               <Skeleton className="h-8 w-3/4" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
@@ -123,7 +123,7 @@ export default function Auth() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto">
           <div className="neo-blur rounded-lg p-8 shadow-lg space-y-6">
-            <h1 className="text-2xl font-bold mb-6 text-gradient">
+            <h1 className="text-2xl font-bold text-gradient">
               {isLogin ? "Login" : "Create Account"}
             </h1>
             
