@@ -93,7 +93,7 @@ export function Characters() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ duration: 0.3 }}
-                      className="relative w-full aspect-square"
+                      className="relative w-full max-w-[300px] aspect-square mx-auto"
                     >
                       <img 
                         src={selectedCharacter.image}

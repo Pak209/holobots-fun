@@ -19,10 +19,10 @@ export function Navbar() {
 
   const NavLinks = () => (
     <>
-      <Link to="#features">
+      <Link to="#features" className="hidden md:block">
         <Button variant="ghost" className="text-holobots-text hover:text-holobots-accent text-sm">Features</Button>
       </Link>
-      <Link to="#how-it-works">
+      <Link to="#how-it-works" className="hidden md:block">
         <Button variant="ghost" className="text-holobots-text hover:text-holobots-accent text-sm">How It Works</Button>
       </Link>
       <Link to="#login">
