@@ -16,7 +16,7 @@ const characters: Character[] = [
   {
     id: 1,
     name: "Kuma",
-    image: "/lovable-uploads/kuma.png",
+    image: "/lovable-uploads/ec4c76d2-330e-4a83-8252-ff1ff19962e8.png",
     description: "A powerful bear-like robot with enhanced strength and defensive capabilities. Equipped with energy claws for close combat.",
     role: "Tank",
     icon: <Shield className="w-6 h-6" />
@@ -24,7 +24,7 @@ const characters: Character[] = [
   {
     id: 2,
     name: "Ace",
-    image: "/lovable-uploads/ace.png",
+    image: "/lovable-uploads/a8cd74c8-4e2e-4f29-8b1c-913657f0ae03.png",
     description: "An agile combat specialist with advanced aerial capabilities. Features powerful mechanical boxing skills and tactical combat systems.",
     role: "Assault",
     icon: <Zap className="w-6 h-6" />
@@ -32,7 +32,7 @@ const characters: Character[] = [
   {
     id: 3,
     name: "Shadow",
-    image: "/lovable-uploads/shadow.png",
+    image: "/lovable-uploads/60586301-1d5a-471c-92b8-72e2d0f7c311.png",
     description: "A stealth-focused warrior equipped with energy blade technology and advanced cloaking systems.",
     role: "Infiltrator",
     icon: <Bot className="w-6 h-6" />
