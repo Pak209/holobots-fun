@@ -5,6 +5,7 @@ import { BattleMeters } from "./battle/BattleMeters";
 import { BattleCharacters } from "./battle/BattleCharacters";
 import { BattleSelectors } from "./battle/BattleSelectors";
 import { BattleCards } from "./battle/BattleCards";
+import { ModeSlider } from "./battle/ModeSlider";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost, applySpecialAttack } from "@/utils/battleUtils";
 
@@ -29,6 +30,8 @@ export const BattleScene = () => {
   const [rightLevel, setRightLevel] = useState(1);
   const [leftFatigue, setLeftFatigue] = useState(0);
   const [rightFatigue, setRightFatigue] = useState(0);
+  const [isDefenseMode, setIsDefenseMode] = useState(false);
+  const [defenseModeRounds, setDefenseModeRounds] = useState(0);
 
   const addToBattleLog = (message: string) => {
     setBattleLog(prev => [...prev, message]);
@@ -73,6 +76,18 @@ export const BattleScene = () => {
     setBattleLog(["Battle started!"]);
   };
 
+  const handleModeChange = (isDefense: boolean) => {
+    if (isBattleStarted) {
+      setIsDefenseMode(isDefense);
+      if (isDefense) {
+        setDefenseModeRounds(0);
+        addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} switched to Defense Mode!`);
+      } else {
+        addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} switched to Attack Mode!`);
+      }
+    }
+  };
+
   useEffect(() => {
     if (!isBattleStarted) return;
 
@@ -80,19 +95,55 @@ export const BattleScene = () => {
       if (leftHealth <= 0 || rightHealth <= 0) {
         setIsBattleStarted(false);
         const winner = leftHealth > 0 ? HOLOBOT_STATS[selectedLeftHolobot].name : HOLOBOT_STATS[selectedRightHolobot].name;
+        const loser = leftHealth > 0 ? HOLOBOT_STATS[selectedRightHolobot].name : HOLOBOT_STATS[selectedLeftHolobot].name;
+        
+        // Update intelligence based on battle result
+        if (leftHealth > 0) {
+          HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedLeftHolobot].intelligence + 1);
+          HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedRightHolobot].intelligence - 1);
+        } else {
+          HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedLeftHolobot].intelligence - 1);
+          HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedRightHolobot].intelligence + 1);
+        }
+        
         addToBattleLog(`Battle ended! ${winner} is victorious!`);
+        addToBattleLog(`${winner}'s intelligence increased! ${loser}'s intelligence decreased!`);
         clearInterval(interval);
         return;
+      }
+
+      // Handle defense mode duration
+      if (isDefenseMode) {
+        const maxDefenseRounds = HOLOBOT_STATS[selectedLeftHolobot].intelligence >= 7 ? 3 : 2;
+        setDefenseModeRounds(prev => {
+          if (prev >= maxDefenseRounds) {
+            setIsDefenseMode(false);
+            addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} automatically switched to Attack Mode!`);
+            return 0;
+          }
+          return prev + 1;
+        });
       }
 
       const attacker = Math.random() > 0.5;
       
       if (attacker) {
         setLeftIsAttacking(true);
-        const damage = calculateDamage(
+        let damage = calculateDamage(
           { ...HOLOBOT_STATS[selectedLeftHolobot], fatigue: leftFatigue },
           HOLOBOT_STATS[selectedRightHolobot]
         );
+
+        // Apply mode multipliers
+        if (isDefenseMode) {
+          damage *= 0.5; // Reduced damage in defense mode
+          setLeftSpecial(prev => Math.min(100, prev + 15)); // Faster special gauge fill
+          setLeftHack(prev => Math.min(100, prev + 10)); // Faster hack gauge fill
+        } else {
+          // Intelligence affects attack mode multiplier
+          const intMultiplier = 1 + (HOLOBOT_STATS[selectedLeftHolobot].intelligence * 0.1);
+          damage *= intMultiplier;
+        }
         
         setTimeout(() => {
           if (damage > 0) {
@@ -177,18 +228,25 @@ export const BattleScene = () => {
     }, 1000); // Reduced from 2000ms
 
     return () => clearInterval(interval);
-  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth]);
+  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth, isDefenseMode]);
 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex justify-between items-center mb-1 bg-holobots-card p-4 rounded-lg border border-holobots-border shadow-neon">
-        <BattleControls
-          onStartBattle={handleStartBattle}
-          onHypeUp={handleHypeUp}
-          onHack={handleHack}
-          isBattleStarted={isBattleStarted}
-          hackGauge={leftHack}
-        />
+        <div className="flex items-center gap-4">
+          <BattleControls
+            onStartBattle={handleStartBattle}
+            onHypeUp={handleHypeUp}
+            onHack={handleHack}
+            isBattleStarted={isBattleStarted}
+            hackGauge={leftHack}
+          />
+          <ModeSlider 
+            isDefense={isDefenseMode}
+            onModeChange={handleModeChange}
+            disabled={!isBattleStarted}
+          />
+        </div>
         
         <BattleSelectors
           selectedLeftHolobot={selectedLeftHolobot}
@@ -233,4 +291,3 @@ export const BattleScene = () => {
     </div>
   );
 };
-
