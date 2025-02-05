@@ -4,15 +4,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 
-// Define the interface for the Ethereum provider
-type EthereumProvider = {
-  request: (args: { method: string; params?: any[] }) => Promise<any>;
-};
+// Define the Ethereum provider interface
+interface EthereumProvider {
+  request(args: { method: string; params?: any[] }): Promise<any>;
+}
 
-// Extend the Window interface
+// Add ethereum property to the global Window type
 declare global {
   interface Window {
-    ethereum?: EthereumProvider;
+    ethereum: EthereumProvider | undefined;
   }
 }
 
@@ -75,3 +75,4 @@ export const EVMWalletLogin = () => {
     </Button>
   );
 };
+
