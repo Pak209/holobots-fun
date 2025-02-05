@@ -1,18 +1,15 @@
-
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 
-// Define the Ethereum provider interface
 interface EthereumProvider {
-  request(args: { method: string; params?: any[] }): Promise<any>;
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
 }
 
-// Add ethereum property to the global Window type
 declare global {
   interface Window {
-    ethereum: EthereumProvider | undefined;
+    ethereum?: EthereumProvider;
   }
 }
 
@@ -75,4 +72,3 @@ export const EVMWalletLogin = () => {
     </Button>
   );
 };
-

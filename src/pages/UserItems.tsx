@@ -1,4 +1,3 @@
-
 import { NavigationMenu } from "@/components/NavigationMenu";
 
 interface Item {
@@ -52,15 +51,10 @@ export default function UserItems() {
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
-      <nav className="w-full p-4 flex justify-between items-center z-50 bg-background/80 backdrop-blur-sm">
-        <div className="text-2xl font-bold italic tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover">
-          HOLOBOTS
-        </div>
-      </nav>
       <NavigationMenu />
       
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold italic mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover">
+        <h1 className="text-3xl font-bold mb-8 text-holobots-text dark:text-holobots-dark-text">
           Your Items
         </h1>
         
