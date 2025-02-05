@@ -4,10 +4,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 
-interface EthereumProvider {
-  request(args: { method: string; params?: any[] }): Promise<any>;
-}
+// Define the interface for the Ethereum provider
+type EthereumProvider = {
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
+};
 
+// Extend the Window interface
 declare global {
   interface Window {
     ethereum?: EthereumProvider;
