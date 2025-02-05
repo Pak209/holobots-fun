@@ -1,3 +1,4 @@
+
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,10 +17,15 @@ const HolosFarm = () => {
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background text-holobots-text dark:text-holobots-dark-text p-4">
+      <nav className="w-full p-4 flex justify-between items-center z-50 bg-background/80 backdrop-blur-sm">
+        <div className="text-2xl font-bold italic tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover">
+          HOLOBOTS
+        </div>
+      </nav>
       <NavigationMenu />
       
       <div className="max-w-7xl mx-auto pt-16">
-        <h1 className="text-3xl font-bold text-center mb-8 text-holobots-accent">
+        <h1 className="text-3xl font-bold italic text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover">
           HOLOS FARMING
         </h1>
 
