@@ -1,4 +1,4 @@
-```typescript
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, Moon, Sun, LogOut } from "lucide-react";
@@ -106,4 +106,3 @@ export const NavigationMenu = () => {
     </Sheet>
   );
 };
-```
