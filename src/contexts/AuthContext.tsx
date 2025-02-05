@@ -26,17 +26,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log("AuthProvider: Initial mount");
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
+        
         if (event === "SIGNED_IN" && session?.user) {
           try {
+            console.log("Fetching user profile for:", session.user.id);
+            
             const { data: profile, error } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', session.user.id)
               .single();
 
-            if (error) throw error;
+            if (error) {
+              console.error("Error fetching profile:", error);
+              throw error;
+            }
+
+            console.log("Profile fetched successfully:", profile);
 
             const userProfile: UserProfile = {
               id: profile.id,
@@ -67,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
         if (event === "SIGNED_OUT") {
+          console.log("User signed out");
           setState({ user: null, loading: false, error: null });
         }
       }
@@ -74,6 +86,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session?.user?.id);
+      
       if (session?.user) {
         supabase
           .from('profiles')
@@ -82,8 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single()
           .then(({ data: profile, error }) => {
             if (error) {
+              console.error("Error in initial profile fetch:", error);
               setState({ user: null, loading: false, error: error.message });
             } else {
+              console.log("Initial profile loaded:", profile);
               const userProfile: UserProfile = {
                 id: profile.id,
                 username: profile.username,
@@ -101,11 +117,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           });
       } else {
+        console.log("No initial session found");
         setState(prev => ({ ...prev, loading: false }));
       }
     });
 
     return () => {
+      console.log("AuthProvider: Cleanup");
       subscription.unsubscribe();
     };
   }, []);
