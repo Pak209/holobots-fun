@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -34,13 +35,16 @@ export const TrainingGrid = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {Object.entries(TRAINING_TYPES).map(([type, config]) => (
-        <div key={type} className="bg-black/20 p-6 rounded-lg border-2 border-retro-accent">
-          <h2 className="text-xl font-bold text-center mb-4 text-retro-accent capitalize">{type} Training</h2>
+        <div 
+          key={type} 
+          className="glass-morphism p-6 rounded-lg border border-holobots-accent/20 hover:border-holobots-accent/40 transition-all"
+        >
+          <h2 className="text-xl font-bold text-center mb-4 text-holobots-accent capitalize">{type} Training</h2>
           <p className="text-red-400 text-center mb-2">Cost: {config.cost} Energy</p>
           <p className="text-green-400 text-center mb-4">Boost: +{config.boost} Attribute</p>
           
           <Select onValueChange={setSelectedHolobot}>
-            <SelectTrigger className="mb-3">
+            <SelectTrigger className="mb-3 bg-black/20">
               <SelectValue placeholder="Select Holobot" />
             </SelectTrigger>
             <SelectContent>
@@ -53,7 +57,7 @@ export const TrainingGrid = () => {
           </Select>
 
           <Select onValueChange={setAttribute}>
-            <SelectTrigger className="mb-4">
+            <SelectTrigger className="mb-4 bg-black/20">
               <SelectValue placeholder="Select Attribute" />
             </SelectTrigger>
             <SelectContent>
@@ -64,7 +68,7 @@ export const TrainingGrid = () => {
           </Select>
 
           <Button 
-            className="w-full bg-retro-accent hover:bg-retro-accent/80"
+            className="w-full bg-holobots-accent hover:bg-holobots-hover text-white transition-colors"
             onClick={() => handleTrain(type as keyof typeof TRAINING_TYPES)}
           >
             Train
