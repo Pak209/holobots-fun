@@ -78,7 +78,8 @@ const Landing = () => {
               </div>
             </div>
           </div>
-          <div ref={splineContainerRef} className="relative h-[400px] w-full rounded-xl overflow-hidden glass-morphism">
+          <div ref={splineContainerRef} className="relative h-[400px] w-full rounded-xl overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/5 to-background/10 pointer-events-none z-10" />
             <spline-viewer 
               url="https://prod.spline.design/XqqxlVTJ7dVi8Azy/scene.splinecode"
               className="w-full h-full"
