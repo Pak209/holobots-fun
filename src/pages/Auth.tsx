@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -5,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { useToast } from "@/hooks/use-toast";
-import { Web3Login } from "@/components/Web3Login";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,13 +22,11 @@ export default function Auth() {
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
-        // If user is already authenticated, redirect
         if (user) {
           navigate("/app");
           return;
         }
 
-        // Try to get session, but don't block if Supabase is unavailable
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (session) {
@@ -36,22 +34,18 @@ export default function Auth() {
           }
         } catch (err) {
           console.error("Supabase auth check failed:", err);
-          // Don't show error toast since Supabase is intentionally disconnected
         }
       } finally {
-        // Always set isChecking to false to prevent infinite loading
         setIsChecking(false);
       }
     };
 
-    // Set a timeout to ensure we don't get stuck in loading state
     const timeoutId = setTimeout(() => {
       setIsChecking(false);
-    }, 3000); // 3 second timeout
+    }, 3000);
 
     checkAuthAndRedirect();
 
-    // Cleanup timeout
     return () => clearTimeout(timeoutId);
   }, [user, navigate]);
 
@@ -179,23 +173,6 @@ export default function Auth() {
               >
                 {isLogin ? "Need an account? Sign up" : "Already have an account? Login"}
               </button>
-            </div>
-
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-holobots-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-holobots-card px-2 text-holobots-text">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <Web3Login isLoading={authLoading} />
-              </div>
             </div>
           </div>
         </div>
