@@ -1,25 +1,26 @@
-
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Twitter, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import WordCycler from "@/components/WordCycler";
 import { Characters } from "@/components/Characters";
-import { useEffect, useRef } from "react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { useEffect, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 
 const Landing = () => {
-  const splineContainerRef = useRef<HTMLDivElement>(null);
+  const [api, setApi] = useState<any>();
 
-  useEffect(() => {
-    // Ensure Spline viewer is properly initialized
-    const splineScript = document.createElement('script');
-    splineScript.type = 'module';
-    splineScript.src = 'https://unpkg.com/@splinetool/viewer@1.9.65/build/spline-viewer.js';
-    document.head.appendChild(splineScript);
-
-    return () => {
-      document.head.removeChild(splineScript);
-    };
-  }, []);
+  const autoplayOptions = {
+    delay: 3000,
+    rootNode: (emblaRoot: any) => emblaRoot.parentElement,
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/5">
@@ -47,7 +48,7 @@ const Landing = () => {
         </div>
 
         {/* Discover/Collect Section */}
-        <div className="grid lg:grid-cols-[1fr_400px] gap-8 md:gap-12 items-start mb-16 px-4 md:px-0">
+        <div className="grid lg:grid-cols-[1fr_250px] gap-8 md:gap-12 items-start mb-16 px-4 md:px-0">
           <div className="space-y-6 md:space-y-8">
             <h2 className="text-2xl md:text-4xl font-bold leading-tight">
               Discover, Collect &{" "}
@@ -78,12 +79,50 @@ const Landing = () => {
               </div>
             </div>
           </div>
-          <div ref={splineContainerRef} className="relative h-[400px] w-full rounded-xl overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/5 to-background/10 pointer-events-none z-10" />
-            <spline-viewer 
-              url="https://prod.spline.design/XqqxlVTJ7dVi8Azy/scene.splinecode"
-              className="w-full h-full"
-            />
+          <div className="relative">
+            <Carousel 
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay(autoplayOptions)
+              ]}
+              setApi={setApi}
+              className="w-full max-w-[250px]"
+            >
+              <CarouselContent>
+                <CarouselItem>
+                  <div className="p-1">
+                    <img
+                      src="/lovable-uploads/60586301-1d5a-471c-92b8-72e2d0f7c311.png"
+                      alt="Shadow Holobot"
+                      className="w-full h-auto rounded-lg object-contain"
+                    />
+                  </div>
+                </CarouselItem>
+                <CarouselItem>
+                  <div className="p-1">
+                    <img
+                      src="/lovable-uploads/ec4c76d2-330e-4a83-8252-ff1ff19962e8.png"
+                      alt="Kuma Holobot"
+                      className="w-full h-auto rounded-lg object-contain"
+                    />
+                  </div>
+                </CarouselItem>
+                <CarouselItem>
+                  <div className="p-1">
+                    <img
+                      src="/lovable-uploads/a8cd74c8-4e2e-4f29-8b1c-913657f0ae03.png"
+                      alt="Ace Holobot"
+                      className="w-full h-auto rounded-lg object-contain"
+                    />
+                  </div>
+                </CarouselItem>
+              </CarouselContent>
+              <CarouselPrevious className="hidden sm:flex" />
+              <CarouselNext className="hidden sm:flex" />
+            </Carousel>
           </div>
         </div>
 
