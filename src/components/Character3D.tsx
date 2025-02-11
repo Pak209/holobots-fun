@@ -70,9 +70,6 @@ export const Character3D = ({ modelUrl, isLeft = true, isDamaged = false }: Char
     } else {
       console.log('Attempting to load model from:', modelUrl);
       // Load 3D model with enhanced error handling
-      const loader = new GLTFLoader();
-      
-      // Add loading manager for better debugging
       const loadingManager = new THREE.LoadingManager();
       loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
         console.log(`Loading file: ${url}. Loaded ${itemsLoaded}/${itemsTotal} files.`);
@@ -81,7 +78,9 @@ export const Character3D = ({ modelUrl, isLeft = true, isDamaged = false }: Char
         console.error('Error loading file:', url);
       };
       
-      loader.setManager(loadingManager);
+      const loader = new GLTFLoader();
+      loader.manager = loadingManager; // Correctly set the manager property
+      
       loader.load(
         modelUrl,
         (gltf) => {
