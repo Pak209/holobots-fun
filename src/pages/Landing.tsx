@@ -4,8 +4,23 @@ import { ArrowRight, Twitter, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import WordCycler from "@/components/WordCycler";
 import { Characters } from "@/components/Characters";
+import { useEffect, useRef } from "react";
 
 const Landing = () => {
+  const splineContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Ensure Spline viewer is properly initialized
+    const splineScript = document.createElement('script');
+    splineScript.type = 'module';
+    splineScript.src = 'https://unpkg.com/@splinetool/viewer@1.9.65/build/spline-viewer.js';
+    document.head.appendChild(splineScript);
+
+    return () => {
+      document.head.removeChild(splineScript);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/5">
       <nav className="fixed top-0 w-full p-4 flex justify-between items-center z-50 bg-background/80 backdrop-blur-sm">
@@ -63,10 +78,10 @@ const Landing = () => {
               </div>
             </div>
           </div>
-          <div className="relative h-[400px] w-full rounded-xl overflow-hidden glass-morphism">
+          <div ref={splineContainerRef} className="relative h-[400px] w-full rounded-xl overflow-hidden glass-morphism">
             <spline-viewer 
               url="https://prod.spline.design/XqqxlVTJ7dVi8Azy/scene.splinecode"
-              class="w-full h-full"
+              className="w-full h-full"
             />
           </div>
         </div>
