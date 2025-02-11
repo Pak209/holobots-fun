@@ -1,23 +1,23 @@
+
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 
 // Define the Ethereum provider interface
-interface RequestArguments {
-  method: string;
-  params?: any[];
+interface Window {
+  ethereum?: {
+    isMetaMask?: boolean;
+    request: (args: { method: string; params?: any[] }) => Promise<any>;
+  };
 }
 
-interface EthereumProvider {
-  request(args: RequestArguments): Promise<any>;
-  isMetaMask?: boolean;
-}
-
-// Extend the Window interface without conflicting declarations
 declare global {
   interface Window {
-    ethereum?: EthereumProvider;
+    ethereum?: {
+      isMetaMask?: boolean;
+      request: (args: { method: string; params?: any[] }) => Promise<any>;
+    };
   }
 }
 
