@@ -1,3 +1,4 @@
+
 import { Character } from "../Character";
 import { AttackParticle } from "../AttackParticle";
 
@@ -17,11 +18,19 @@ export const BattleCharacters = ({
   return (
     <div className="flex-1 flex justify-between items-center px-4 md:px-8">
       <div className="relative flex flex-col items-center gap-2">
-        <Character isLeft={true} isDamaged={leftIsDamaged} />
+        <Character 
+          isLeft={true} 
+          isDamaged={leftIsDamaged} 
+          modelUrl="/battlearena.glb"
+        />
         {leftIsAttacking && <AttackParticle isLeft={true} />}
       </div>
       <div className="relative flex items-center">
-        <Character isLeft={false} isDamaged={rightIsDamaged} />
+        <Character 
+          isLeft={false} 
+          isDamaged={rightIsDamaged}
+          modelUrl="/battlearena.glb"
+        />
         {rightIsAttacking && <AttackParticle isLeft={false} />}
       </div>
     </div>
