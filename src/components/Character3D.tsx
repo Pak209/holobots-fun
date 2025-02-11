@@ -62,9 +62,11 @@ export const Character3D = ({ modelUrl, isLeft = true, isDamaged = false }: Char
       scene.add(cube);
       modelRef.current = cube;
     } else {
+      console.log('Loading model from:', modelUrl); // Debug log
       // Load 3D model with proper scaling and positioning
       const loader = new GLTFLoader();
       loader.load(modelUrl, (gltf) => {
+        console.log('Model loaded successfully:', gltf); // Debug log
         const model = gltf.scene;
         
         // Calculate bounding box
@@ -83,6 +85,20 @@ export const Character3D = ({ modelUrl, isLeft = true, isDamaged = false }: Char
         
         scene.add(model);
         modelRef.current = model;
+      }, 
+      (progress) => {
+        console.log('Loading progress:', progress); // Debug log
+      },
+      (error) => {
+        console.error('Error loading model:', error); // Debug log
+        // Add fallback cube on error
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshPhongMaterial({
+          color: isDamaged ? 0xff0000 : 0x9b87f5,
+        });
+        const cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+        modelRef.current = cube;
       });
     }
 

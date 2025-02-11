@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { Character3D } from "./Character3D";
 
@@ -10,7 +11,7 @@ interface CharacterProps {
 export const Character = ({ isLeft = true, isDamaged = false, modelUrl }: CharacterProps) => {
   return (
     <div className={cn(
-      "relative w-16 h-16 animate-character-idle transition-colors duration-200",
+      "relative w-32 h-32 animate-character-idle transition-colors duration-200", // Increased size from w-16 h-16
       isLeft ? "scale-x-1" : "scale-x-[-1]",
       isDamaged && "bg-retro-health"
     )}>
