@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Twitter, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -93,30 +94,21 @@ const Landing = () => {
             >
               <CarouselContent>
                 <CarouselItem>
-                  <div className="p-1">
-                    <img
-                      src="/lovable-uploads/60586301-1d5a-471c-92b8-72e2d0f7c311.png"
-                      alt="Shadow Holobot"
-                      className="w-full h-auto rounded-lg object-contain"
-                    />
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white">
+                    <h3 className="text-lg font-bold mb-2">Battle Arena</h3>
+                    <p className="text-sm opacity-90">Compete in epic battles with your Holobots</p>
                   </div>
                 </CarouselItem>
                 <CarouselItem>
-                  <div className="p-1">
-                    <img
-                      src="/lovable-uploads/ec4c76d2-330e-4a83-8252-ff1ff19962e8.png"
-                      alt="Kuma Holobot"
-                      className="w-full h-auto rounded-lg object-contain"
-                    />
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-[#D946EF] to-[#8B5CF6] text-white">
+                    <h3 className="text-lg font-bold mb-2">Training Ground</h3>
+                    <p className="text-sm opacity-90">Level up your Holobots' abilities</p>
                   </div>
                 </CarouselItem>
                 <CarouselItem>
-                  <div className="p-1">
-                    <img
-                      src="/lovable-uploads/a8cd74c8-4e2e-4f29-8b1c-913657f0ae03.png"
-                      alt="Ace Holobot"
-                      className="w-full h-auto rounded-lg object-contain"
-                    />
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-[#F97316] to-[#D946EF] text-white">
+                    <h3 className="text-lg font-bold mb-2">Quest System</h3>
+                    <p className="text-sm opacity-90">Embark on adventures to earn rewards</p>
                   </div>
                 </CarouselItem>
               </CarouselContent>
