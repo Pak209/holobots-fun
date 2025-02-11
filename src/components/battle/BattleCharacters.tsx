@@ -21,7 +21,7 @@ export const BattleCharacters = ({
         <Character 
           isLeft={true} 
           isDamaged={leftIsDamaged} 
-          modelUrl="/battlearena.glb"
+          modelUrl="/models/battlearena.glb"
         />
         {leftIsAttacking && <AttackParticle isLeft={true} />}
       </div>
@@ -29,7 +29,7 @@ export const BattleCharacters = ({
         <Character 
           isLeft={false} 
           isDamaged={rightIsDamaged}
-          modelUrl="/battlearena.glb"
+          modelUrl="/models/battlearena.glb"
         />
         {rightIsAttacking && <AttackParticle isLeft={false} />}
       </div>
