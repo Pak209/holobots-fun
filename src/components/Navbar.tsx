@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
@@ -25,7 +26,7 @@ export function Navbar() {
       <Link to="#how-it-works" className="hidden md:block">
         <Button variant="ghost" className="text-holobots-text hover:text-holobots-accent text-sm">How It Works</Button>
       </Link>
-      <Link to="#signup">
+      <Link to="/app">
         <Button className="bg-holobots-accent hover:bg-holobots-hover text-white text-sm">Launch App</Button>
       </Link>
     </>
@@ -51,7 +52,7 @@ export function Navbar() {
 
         {/* Mobile Navigation */}
         <div className="md:hidden flex items-center gap-2">
-          <Link to="#signup">
+          <Link to="/app">
             <Button size="sm" className="bg-holobots-accent hover:bg-holobots-hover text-white text-sm">
               Launch App
             </Button>
