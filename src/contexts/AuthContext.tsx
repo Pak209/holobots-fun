@@ -1,8 +1,7 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { AuthState, UserProfile } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
-import { useWeb3React } from "@web3-react/core";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType extends AuthState {
@@ -21,8 +20,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     error: null,
   });
 
-  const { account: evmAccount } = useWeb3React();
-  const { publicKey: solanaPublicKey } = useWallet();
   const { toast } = useToast();
 
   useEffect(() => {
