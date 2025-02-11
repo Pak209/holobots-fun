@@ -4,20 +4,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 
-// Define the Ethereum provider interface
-interface Window {
-  ethereum?: {
-    isMetaMask?: boolean;
-    request: (args: { method: string; params?: any[] }) => Promise<any>;
-  };
+// Define a proper interface for the Ethereum provider
+interface EthereumProvider {
+  isMetaMask?: boolean;
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
 }
 
+// Extend the Window interface correctly
 declare global {
   interface Window {
-    ethereum?: {
-      isMetaMask?: boolean;
-      request: (args: { method: string; params?: any[] }) => Promise<any>;
-    };
+    ethereum?: EthereumProvider;
   }
 }
 
