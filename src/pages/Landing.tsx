@@ -4,25 +4,8 @@ import { ArrowRight, Twitter, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import WordCycler from "@/components/WordCycler";
 import { Characters } from "@/components/Characters";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { useEffect, useState } from "react";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
 
 const Landing = () => {
-  const [api, setApi] = useState<any>();
-
-  const autoplayOptions = {
-    delay: 3000,
-    rootNode: (emblaRoot: any) => emblaRoot.parentElement,
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-accent/5">
       <nav className="fixed top-0 w-full p-4 flex justify-between items-center z-50 bg-background/80 backdrop-blur-sm">
@@ -49,7 +32,7 @@ const Landing = () => {
         </div>
 
         {/* Discover/Collect Section */}
-        <div className="grid lg:grid-cols-[1fr_250px] gap-8 md:gap-12 items-start mb-16 px-4 md:px-0">
+        <div className="grid lg:grid-cols-[1fr_400px] gap-8 md:gap-12 items-start mb-16 px-4 md:px-0">
           <div className="space-y-6 md:space-y-8">
             <h2 className="text-2xl md:text-4xl font-bold leading-tight">
               Discover, Collect &{" "}
@@ -80,41 +63,11 @@ const Landing = () => {
               </div>
             </div>
           </div>
-          <div className="relative">
-            <Carousel 
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              plugins={[
-                Autoplay(autoplayOptions)
-              ]}
-              setApi={setApi}
-              className="w-full max-w-[250px]"
-            >
-              <CarouselContent>
-                <CarouselItem>
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] text-white">
-                    <h3 className="text-lg font-bold mb-2">Battle Arena</h3>
-                    <p className="text-sm opacity-90">Compete in epic battles with your Holobots</p>
-                  </div>
-                </CarouselItem>
-                <CarouselItem>
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-[#D946EF] to-[#8B5CF6] text-white">
-                    <h3 className="text-lg font-bold mb-2">Training Ground</h3>
-                    <p className="text-sm opacity-90">Level up your Holobots' abilities</p>
-                  </div>
-                </CarouselItem>
-                <CarouselItem>
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-[#F97316] to-[#D946EF] text-white">
-                    <h3 className="text-lg font-bold mb-2">Quest System</h3>
-                    <p className="text-sm opacity-90">Embark on adventures to earn rewards</p>
-                  </div>
-                </CarouselItem>
-              </CarouselContent>
-              <CarouselPrevious className="hidden sm:flex" />
-              <CarouselNext className="hidden sm:flex" />
-            </Carousel>
+          <div className="relative h-[400px] w-full rounded-xl overflow-hidden glass-morphism">
+            <spline-viewer 
+              url="https://prod.spline.design/XqqxlVTJ7dVi8Azy/scene.splinecode"
+              class="w-full h-full"
+            />
           </div>
         </div>
 
