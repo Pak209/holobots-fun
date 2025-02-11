@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -22,34 +23,38 @@ export const Character3D = ({ modelUrl, isLeft = true, isDamaged = false }: Char
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // Setup camera
+    // Setup camera with a wider field of view
     const camera = new THREE.PerspectiveCamera(
-      75,
+      50, // Reduced FOV for better perspective
       containerRef.current.clientWidth / containerRef.current.clientHeight,
       0.1,
       1000
     );
-    camera.position.z = 5;
+    camera.position.z = 3; // Moved camera closer
+    camera.position.y = 0.5; // Slight upward angle
     cameraRef.current = camera;
 
-    // Setup renderer
-    const renderer = new THREE.WebGLRenderer({ alpha: true });
+    // Setup renderer with transparency
+    const renderer = new THREE.WebGLRenderer({ 
+      alpha: true,
+      antialias: true // Added antialiasing for smoother edges
+    });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
     // Add lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
     directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
 
-    // Load default cube if no model provided
+    // Add default cube if no model provided
     if (!modelUrl) {
-      const geometry = new THREE.BoxGeometry(2, 2, 2);
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
       const material = new THREE.MeshPhongMaterial({
         color: isDamaged ? 0xff0000 : 0x9b87f5,
       });
@@ -57,11 +62,27 @@ export const Character3D = ({ modelUrl, isLeft = true, isDamaged = false }: Char
       scene.add(cube);
       modelRef.current = cube;
     } else {
-      // Load 3D model
+      // Load 3D model with proper scaling and positioning
       const loader = new GLTFLoader();
       loader.load(modelUrl, (gltf) => {
-        scene.add(gltf.scene);
-        modelRef.current = gltf.scene;
+        const model = gltf.scene;
+        
+        // Calculate bounding box
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 1.5 / maxDim; // Scale to fit within 1.5 units
+        
+        model.scale.setScalar(scale);
+        
+        // Center the model
+        const center = box.getCenter(new THREE.Vector3());
+        model.position.x = -center.x * scale;
+        model.position.y = -center.y * scale;
+        model.position.z = -center.z * scale;
+        
+        scene.add(model);
+        modelRef.current = model;
       });
     }
 
@@ -77,8 +98,23 @@ export const Character3D = ({ modelUrl, isLeft = true, isDamaged = false }: Char
     };
     animate();
 
+    // Handle window resize
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      
+      const width = containerRef.current.clientWidth;
+      const height = containerRef.current.clientHeight;
+      
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    };
+
+    window.addEventListener('resize', handleResize);
+
     // Cleanup
     return () => {
+      window.removeEventListener('resize', handleResize);
       renderer.dispose();
       containerRef.current?.removeChild(renderer.domElement);
     };
@@ -96,7 +132,7 @@ export const Character3D = ({ modelUrl, isLeft = true, isDamaged = false }: Char
   return (
     <div 
       ref={containerRef} 
-      className={`w-16 h-16 ${isLeft ? 'scale-x-1' : 'scale-x-[-1]'}`}
+      className={`w-full h-full ${isLeft ? 'scale-x-1' : 'scale-x-[-1]'}`}
     />
   );
 };
