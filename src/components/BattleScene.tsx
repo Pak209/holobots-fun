@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { BattleControls } from "./BattleControls";
 import { BattleLog } from "./BattleLog";
@@ -232,8 +233,8 @@ export const BattleScene = () => {
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex justify-between items-center mb-1 bg-holobots-card p-4 rounded-lg border border-holobots-border shadow-neon">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2 mb-1 bg-holobots-card p-2 md:p-4 rounded-lg border border-holobots-border shadow-neon">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
           <BattleControls
             onStartBattle={handleStartBattle}
             onHypeUp={handleHypeUp}
@@ -256,38 +257,40 @@ export const BattleScene = () => {
         />
       </div>
 
-      <BattleCards
-        selectedLeftHolobot={selectedLeftHolobot}
-        selectedRightHolobot={selectedRightHolobot}
-        leftLevel={leftLevel}
-        rightLevel={rightLevel}
-        leftXp={leftXp}
-        rightXp={rightXp}
-      />
-      
-      <div className="relative w-full max-w-3xl mx-auto h-24 md:h-32 bg-cyberpunk-background rounded-lg overflow-hidden border-2 border-cyberpunk-border shadow-neon">
-        <div className="absolute inset-0 bg-gradient-to-t from-cyberpunk-background to-cyberpunk-primary/5" />
+      <div className="flex flex-col gap-2">
+        <BattleCards
+          selectedLeftHolobot={selectedLeftHolobot}
+          selectedRightHolobot={selectedRightHolobot}
+          leftLevel={leftLevel}
+          rightLevel={rightLevel}
+          leftXp={leftXp}
+          rightXp={rightXp}
+        />
         
-        <div className="relative z-10 w-full h-full p-2 md:p-4 flex flex-col">
-          <BattleMeters
-            leftHealth={leftHealth}
-            rightHealth={rightHealth}
-            leftSpecial={leftSpecial}
-            rightSpecial={rightSpecial}
-            leftHack={leftHack}
-            rightHack={rightHack}
-          />
+        <div className="relative w-full max-w-3xl mx-auto h-20 md:h-32 bg-cyberpunk-background rounded-lg overflow-hidden border-2 border-cyberpunk-border shadow-neon">
+          <div className="absolute inset-0 bg-gradient-to-t from-cyberpunk-background to-cyberpunk-primary/5" />
+          
+          <div className="relative z-10 w-full h-full p-2 md:p-4 flex flex-col">
+            <BattleMeters
+              leftHealth={leftHealth}
+              rightHealth={rightHealth}
+              leftSpecial={leftSpecial}
+              rightSpecial={rightSpecial}
+              leftHack={leftHack}
+              rightHack={rightHack}
+            />
 
-          <BattleCharacters
-            leftIsDamaged={leftIsDamaged}
-            rightIsDamaged={rightIsDamaged}
-            leftIsAttacking={leftIsAttacking}
-            rightIsAttacking={rightIsAttacking}
-          />
+            <BattleCharacters
+              leftIsDamaged={leftIsDamaged}
+              rightIsDamaged={rightIsDamaged}
+              leftIsAttacking={leftIsAttacking}
+              rightIsAttacking={rightIsAttacking}
+            />
+          </div>
         </div>
-      </div>
 
-      <BattleLog logs={battleLog} />
+        <BattleLog logs={battleLog} />
+      </div>
     </div>
   );
 };
