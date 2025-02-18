@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { BattleControls } from "./BattleControls";
 import { BattleLog } from "./BattleLog";
@@ -15,7 +14,7 @@ interface BattleSceneProps {
   rightHolobot: string;
   isCpuBattle?: boolean;
   cpuLevel?: number;
-  onBattleEnd?: () => void;
+  onBattleEnd?: (result: 'victory' | 'defeat') => void;
 }
 
 export const BattleScene = ({ 
@@ -117,9 +116,11 @@ export const BattleScene = ({
         if (leftHealth > 0) {
           HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedLeftHolobot].intelligence + 1);
           HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedRightHolobot].intelligence - 1);
+          onBattleEnd?.('victory');
         } else {
           HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedLeftHolobot].intelligence - 1);
           HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedRightHolobot].intelligence + 1);
+          onBattleEnd?.('defeat');
         }
         
         addToBattleLog(`Battle ended! ${winner} is victorious!`);
@@ -241,7 +242,7 @@ export const BattleScene = ({
           }, 100); // Reduced from 200ms
         }, 250); // Reduced from 500ms
       }
-    }, 1000); // Reduced from 2000ms
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth, isDefenseMode]);
@@ -264,12 +265,14 @@ export const BattleScene = ({
           />
         </div>
         
-        <BattleSelectors
-          selectedLeftHolobot={selectedLeftHolobot}
-          selectedRightHolobot={selectedRightHolobot}
-          onLeftSelect={setSelectedLeftHolobot}
-          onRightSelect={setSelectedRightHolobot}
-        />
+        {!isCpuBattle && (
+          <BattleSelectors
+            selectedLeftHolobot={selectedLeftHolobot}
+            selectedRightHolobot={selectedRightHolobot}
+            onLeftSelect={setSelectedLeftHolobot}
+            onRightSelect={setSelectedRightHolobot}
+          />
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
