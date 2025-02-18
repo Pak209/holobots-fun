@@ -19,6 +19,7 @@ export interface UserProfile {
   dailyEnergy: number;
   maxDailyEnergy: number;
   holosTokens: number;
+  gachaTickets: number;
   stats: {
     wins: number;
     losses: number;
@@ -41,6 +42,7 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
     dailyEnergy: dbProfile.daily_energy,
     maxDailyEnergy: dbProfile.max_daily_energy,
     holosTokens: dbProfile.holos_tokens,
+    gachaTickets: dbProfile.gacha_tickets || 0,
     stats: {
       wins: dbProfile.wins || 0,
       losses: dbProfile.losses || 0

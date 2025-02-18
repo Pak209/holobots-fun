@@ -1,4 +1,3 @@
-
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { BattleScene } from "@/components/BattleScene";
 import { HOLOBOT_STATS } from "@/types/holobot";
@@ -7,17 +6,19 @@ import { useToast } from "@/components/ui/use-toast";
 import { Trophy, Ticket, Gem } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);
   const [victories, setVictories] = useState(0);
   const [userHolos, setUserHolos] = useState(0);
   const [hasEntryFee, setHasEntryFee] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const maxRounds = 3;
-  const entryFee = 50; // Holos tokens required to enter arena
+  const entryFee = 50;
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Define opponents for each round with increasing difficulty
   const roundOpponents = {
     1: { name: 'kuma', level: 1, stats: { attack: 1.0, defense: 1.0, speed: 1.0 } },
     2: { name: 'shadow', level: 2, stats: { attack: 1.2, defense: 1.1, speed: 1.2 } },
@@ -28,24 +29,32 @@ const Index = () => {
     const fetchUserData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+          navigate('/auth');
+          return;
+        }
 
-        const { data } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('holos_tokens')
           .eq('id', user.id)
           .single();
 
-        if (data) {
-          setUserHolos(data.holos_tokens || 0);
+        if (!profile || profile.holos_tokens === null) {
+          navigate('/mint');
+          return;
         }
+
+        setUserHolos(profile.holos_tokens);
+        setIsLoading(false);
       } catch (error) {
         console.error("Error fetching user data:", error);
+        setIsLoading(false);
       }
     };
 
     fetchUserData();
-  }, []);
+  }, [navigate]);
 
   const payEntryFee = async () => {
     try {
@@ -88,11 +97,10 @@ const Index = () => {
 
   const distributeRewards = async () => {
     try {
-      // Calculate rewards based on victories and rounds completed
       const baseReward = 100;
-      const holosTokens = victories * baseReward * currentRound; // More rewards for later rounds
-      const gachaTickets = Math.floor(victories / 2); // 1 ticket per 2 victories
-      const blueprintPieces = victories * currentRound; // More pieces for later rounds
+      const holosTokens = victories * baseReward * currentRound;
+      const gachaTickets = Math.floor(victories / 2);
+      const blueprintPieces = victories * currentRound;
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not found");
@@ -104,7 +112,6 @@ const Index = () => {
         .single();
 
       if (data) {
-        // Update profile with new rewards
         const { error } = await supabase
           .from('profiles')
           .update({
@@ -115,7 +122,6 @@ const Index = () => {
 
         if (error) throw error;
 
-        // Show rewards notification
         toast({
           title: "Arena Rewards!",
           description: (
@@ -153,20 +159,21 @@ const Index = () => {
       if (currentRound < maxRounds) {
         setCurrentRound(prev => prev + 1);
       } else {
-        // All rounds completed, distribute rewards
         distributeRewards();
-        // Reset for next arena run
         setCurrentRound(1);
         setVictories(0);
         setHasEntryFee(false);
       }
     } else {
-      // Reset on defeat
       setCurrentRound(1);
       setVictories(0);
       setHasEntryFee(false);
     }
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   if (!hasEntryFee) {
     return (
