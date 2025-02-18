@@ -90,10 +90,10 @@ export default function Auth() {
         let email = emailOrUsername;
         
         if (!emailOrUsername.includes('@')) {
-          // If username provided, get the corresponding profile
+          // If username provided, get the corresponding email from profiles
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('id, username')
+            .select('*')
             .eq('username', emailOrUsername)
             .single();
 
@@ -101,15 +101,18 @@ export default function Auth() {
             throw new Error("Username not found");
           }
 
-          // Get user's session data
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-          if (sessionError) throw sessionError;
+          // Get the user data associated with this profile
+          const { data: userData, error: userError } = await supabase
+            .from('User Table')
+            .select('email')
+            .eq('id', profile.id)
+            .single();
 
-          if (!session?.user?.email) {
-            throw new Error("Error retrieving user data");
+          if (userError || !userData?.email) {
+            throw new Error("Error retrieving user email");
           }
 
-          email = session.user.email;
+          email = userData.email;
         }
 
         const { error: signInError } = await supabase.auth.signInWithPassword({
