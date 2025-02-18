@@ -10,7 +10,21 @@ import { ModeSlider } from "./battle/ModeSlider";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost, applySpecialAttack } from "@/utils/battleUtils";
 
-export const BattleScene = () => {
+interface BattleSceneProps {
+  leftHolobot: string;
+  rightHolobot: string;
+  isCpuBattle?: boolean;
+  cpuLevel?: number;
+  onBattleEnd?: () => void;
+}
+
+export const BattleScene = ({ 
+  leftHolobot: initialLeftHolobot,
+  rightHolobot: initialRightHolobot,
+  isCpuBattle = false,
+  cpuLevel = 1,
+  onBattleEnd 
+}: BattleSceneProps) => {
   const [leftHealth, setLeftHealth] = useState(100);
   const [rightHealth, setRightHealth] = useState(100);
   const [leftSpecial, setLeftSpecial] = useState(0);
@@ -21,8 +35,8 @@ export const BattleScene = () => {
   const [rightIsAttacking, setRightIsAttacking] = useState(false);
   const [leftIsDamaged, setLeftIsDamaged] = useState(false);
   const [rightIsDamaged, setRightIsDamaged] = useState(false);
-  const [selectedLeftHolobot, setSelectedLeftHolobot] = useState("ace");
-  const [selectedRightHolobot, setSelectedRightHolobot] = useState("kuma");
+  const [selectedLeftHolobot, setSelectedLeftHolobot] = useState(initialLeftHolobot);
+  const [selectedRightHolobot, setSelectedRightHolobot] = useState(initialRightHolobot);
   const [isBattleStarted, setIsBattleStarted] = useState(false);
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [leftXp, setLeftXp] = useState(0);
@@ -64,6 +78,7 @@ export const BattleScene = () => {
       setLeftHack(0);
       setRightHack(0);
       setBattleLog(["Ready for a new battle!"]);
+      onBattleEnd?.();
       return;
     }
     
