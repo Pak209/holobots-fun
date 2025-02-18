@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { AuthState, UserProfile } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,8 @@ interface AuthContextType extends AuthState {
   logout: () => Promise<void>;
   signup: (email: string, password: string, username: string) => Promise<void>;
   updateUser: (updates: Partial<UserProfile>) => Promise<void>;
+  searchPlayers: (query: string) => Promise<UserProfile[]>;
+  getUserProfile: (userId: string) => Promise<UserProfile | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,13 +50,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const userProfile: UserProfile = {
               id: profile.id,
               username: profile.username,
-              holobots: [],
+              holobots: profile.holobots || [],
               dailyEnergy: profile.daily_energy,
               maxDailyEnergy: profile.max_daily_energy,
               holosTokens: profile.holos_tokens,
               stats: {
-                wins: 0,
-                losses: 0
+                wins: profile.wins || 0,
+                losses: profile.losses || 0
               },
               lastEnergyRefresh: profile.last_energy_refresh
             };
@@ -100,13 +101,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const userProfile: UserProfile = {
                 id: profile.id,
                 username: profile.username,
-                holobots: [],
+                holobots: profile.holobots || [],
                 dailyEnergy: profile.daily_energy,
                 maxDailyEnergy: profile.max_daily_energy,
                 holosTokens: profile.holos_tokens,
                 stats: {
-                  wins: 0,
-                  losses: 0
+                  wins: profile.wins || 0,
+                  losses: profile.losses || 0
                 },
                 lastEnergyRefresh: profile.last_energy_refresh
               };
@@ -124,6 +125,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  const searchPlayers = async (query: string): Promise<UserProfile[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .ilike('username', `%${query}%`)
+        .limit(10);
+
+      if (error) throw error;
+
+      return data.map(profile => ({
+        id: profile.id,
+        username: profile.username,
+        holobots: profile.holobots || [],
+        dailyEnergy: profile.daily_energy,
+        maxDailyEnergy: profile.max_daily_energy,
+        holosTokens: profile.holos_tokens,
+        stats: {
+          wins: profile.wins || 0,
+          losses: profile.losses || 0
+        },
+        lastEnergyRefresh: profile.last_energy_refresh
+      }));
+    } catch (error) {
+      console.error('Error searching players:', error);
+      return [];
+    }
+  };
+
+  const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: profile.id,
+        username: profile.username,
+        holobots: profile.holobots || [],
+        dailyEnergy: profile.daily_energy,
+        maxDailyEnergy: profile.max_daily_energy,
+        holosTokens: profile.holos_tokens,
+        stats: {
+          wins: profile.wins || 0,
+          losses: profile.losses || 0
+        },
+        lastEnergyRefresh: profile.last_energy_refresh
+      };
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  };
 
   const login = async (email: string, password: string) => {
     try {
@@ -233,7 +292,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, signup, updateUser }}>
+    <AuthContext.Provider value={{ 
+      ...state, 
+      login, 
+      logout, 
+      signup, 
+      updateUser,
+      searchPlayers,
+      getUserProfile
+    }}>
       {children}
     </AuthContext.Provider>
   );
