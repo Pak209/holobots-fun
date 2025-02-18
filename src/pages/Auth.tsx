@@ -34,7 +34,7 @@ export default function Auth() {
         if (signUpError) throw signUpError;
 
         if (signUpData.user) {
-          // Create profile
+          // Create profile with initial values
           const { error: profileError } = await supabase
             .from('profiles')
             .insert([
@@ -43,7 +43,10 @@ export default function Auth() {
                 username,
                 daily_energy: 100,
                 max_daily_energy: 100,
-                holos_tokens: null, // Will be set during mint
+                holos_tokens: null,
+                gacha_tickets: 0,
+                wins: 0,
+                losses: 0,
                 last_energy_refresh: new Date().toISOString(),
               },
             ]);
@@ -55,9 +58,11 @@ export default function Auth() {
             description: "Please proceed to mint your first Holobot.",
           });
 
+          // Redirect to mint page after successful signup
           navigate('/mint');
         }
       } else {
+        // Handle sign in
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -65,6 +70,7 @@ export default function Auth() {
 
         if (signInError) throw signInError;
 
+        // Get user profile after successful sign in
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
@@ -74,10 +80,17 @@ export default function Auth() {
             .eq('id', user.id)
             .single();
 
-          if (profile && profile.holos_tokens !== null) {
-            navigate('/');
+          if (profile) {
+            if (profile.holos_tokens === null) {
+              // User hasn't minted yet
+              navigate('/mint');
+            } else {
+              // User has already minted, go to main app
+              navigate('/');
+            }
           } else {
-            navigate('/mint');
+            // Something went wrong with profile fetch
+            throw new Error("Profile not found");
           }
         }
       }
@@ -141,6 +154,7 @@ export default function Auth() {
               required
               className="w-full"
               placeholder="Enter your password"
+              minLength={6}
             />
           </div>
 
