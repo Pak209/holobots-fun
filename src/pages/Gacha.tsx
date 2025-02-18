@@ -35,9 +35,9 @@ export default function Gacha() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { data: profile, error } = await supabase
+          const { data, error } = await supabase
             .from('profiles')
-            .select('holos_tokens, gacha_tickets')
+            .select('holos_tokens')
             .eq('id', user.id)
             .single();
 
@@ -46,9 +46,10 @@ export default function Gacha() {
             return;
           }
 
-          if (profile) {
-            setHolos(profile.holos_tokens || 0);
-            setGachaTickets(profile.gacha_tickets || 0);
+          if (data) {
+            setHolos(data.holos_tokens || 0);
+            // Initialize gacha tickets to 0 since the column doesn't exist yet
+            setGachaTickets(0);
           }
         }
       } catch (error) {

@@ -105,22 +105,23 @@ const Index = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not found");
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .select()
+        .select('holos_tokens')
         .eq('id', user.id)
         .single();
 
+      if (error) throw error;
+
       if (data) {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from('profiles')
           .update({
             holos_tokens: data.holos_tokens + holosTokens,
-            gacha_tickets: (data.gacha_tickets || 0) + gachaTickets
           })
           .eq('id', user.id);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
 
         toast({
           title: "Arena Rewards!",
