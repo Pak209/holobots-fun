@@ -27,13 +27,24 @@ const Index = () => {
       const gachaTickets = Math.floor(victories / 2); // 1 ticket per 2 victories
       const blueprintPieces = victories; // 1 piece per victory
 
-      // Update user's profile with rewards
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not found");
+
+      // First get current tokens
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('holos_tokens, gacha_tickets')
+        .eq('id', user.id)
+        .single();
+
+      // Then update with new total
       const { error } = await supabase
         .from('profiles')
         .update({
-          holos_tokens: supabase.rpc('increment_tokens', { amount: holosTokens })
+          holos_tokens: (currentProfile?.holos_tokens || 0) + holosTokens,
+          gacha_tickets: (currentProfile?.gacha_tickets || 0) + gachaTickets
         })
-        .eq('id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('id', user.id);
 
       if (error) throw error;
 

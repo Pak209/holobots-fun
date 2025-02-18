@@ -77,7 +77,7 @@ export const BattleScene = ({
       setLeftHack(0);
       setRightHack(0);
       setBattleLog(["Ready for a new battle!"]);
-      onBattleEnd?.();
+      onBattleEnd?.('defeat');
       return;
     }
     

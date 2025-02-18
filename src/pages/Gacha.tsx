@@ -23,7 +23,7 @@ const SINGLE_PULL_COST = 50;
 const MULTI_PULL_COST = 500;
 
 export default function Gacha() {
-  const [holos, setHolos] = useState(1000);
+  const [holos, setHolos] = useState(0);
   const [gachaTickets, setGachaTickets] = useState(0);
   const [pulls, setPulls] = useState<GachaItem[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -32,18 +32,27 @@ export default function Gacha() {
   useEffect(() => {
     // Fetch user's holos and gacha tickets
     const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('holos_tokens, gacha_tickets')
-          .eq('id', user.id)
-          .single();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('holos_tokens, gacha_tickets')
+            .eq('id', user.id)
+            .single();
 
-        if (profile) {
-          setHolos(profile.holos_tokens || 0);
-          setGachaTickets(profile.gacha_tickets || 0);
+          if (error) {
+            console.error("Error fetching profile:", error);
+            return;
+          }
+
+          if (profile) {
+            setHolos(profile.holos_tokens || 0);
+            setGachaTickets(profile.gacha_tickets || 0);
+          }
         }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
     };
 
