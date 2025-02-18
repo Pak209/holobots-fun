@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { AuthState, UserProfile } from "@/types/user";
+import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -47,20 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             console.log("Profile fetched successfully:", profile);
 
-            const userProfile: UserProfile = {
-              id: profile.id,
-              username: profile.username,
-              holobots: profile.holobots || [],
-              dailyEnergy: profile.daily_energy,
-              maxDailyEnergy: profile.max_daily_energy,
-              holosTokens: profile.holos_tokens,
-              stats: {
-                wins: profile.wins || 0,
-                losses: profile.losses || 0
-              },
-              lastEnergyRefresh: profile.last_energy_refresh
-            };
-
+            const userProfile = mapDatabaseToUserProfile(profile);
             setState({
               user: userProfile,
               loading: false,
@@ -98,19 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setState({ user: null, loading: false, error: error.message });
             } else {
               console.log("Initial profile loaded:", profile);
-              const userProfile: UserProfile = {
-                id: profile.id,
-                username: profile.username,
-                holobots: profile.holobots || [],
-                dailyEnergy: profile.daily_energy,
-                maxDailyEnergy: profile.max_daily_energy,
-                holosTokens: profile.holos_tokens,
-                stats: {
-                  wins: profile.wins || 0,
-                  losses: profile.losses || 0
-                },
-                lastEnergyRefresh: profile.last_energy_refresh
-              };
+              const userProfile = mapDatabaseToUserProfile(profile);
               setState({ user: userProfile, loading: false, error: null });
             }
           });
@@ -136,19 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      return data.map(profile => ({
-        id: profile.id,
-        username: profile.username,
-        holobots: profile.holobots || [],
-        dailyEnergy: profile.daily_energy,
-        maxDailyEnergy: profile.max_daily_energy,
-        holosTokens: profile.holos_tokens,
-        stats: {
-          wins: profile.wins || 0,
-          losses: profile.losses || 0
-        },
-        lastEnergyRefresh: profile.last_energy_refresh
-      }));
+      return data.map(profile => mapDatabaseToUserProfile(profile));
     } catch (error) {
       console.error('Error searching players:', error);
       return [];
@@ -165,19 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      return {
-        id: profile.id,
-        username: profile.username,
-        holobots: profile.holobots || [],
-        dailyEnergy: profile.daily_energy,
-        maxDailyEnergy: profile.max_daily_energy,
-        holosTokens: profile.holos_tokens,
-        stats: {
-          wins: profile.wins || 0,
-          losses: profile.losses || 0
-        },
-        lastEnergyRefresh: profile.last_energy_refresh
-      };
+      return mapDatabaseToUserProfile(profile);
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return null;
