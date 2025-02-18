@@ -1,5 +1,8 @@
 import { HolobotStats } from "@/types/holobot";
 
+const BASE_XP = 100; // Base experience points
+const LEVEL_SCALING_FACTOR = 10; // k factor for XP scaling
+
 export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) => {
   const evasionChance = (defender.speed - attacker.speed) * 0.05;
   const willEvade = Math.random() < Math.max(0, Math.min(0.25, evasionChance));
@@ -15,7 +18,12 @@ export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) 
 };
 
 export const calculateExperience = (level: number) => {
-  return Math.floor(100 * Math.pow(1.2, level - 1));
+  return Math.floor(BASE_XP * Math.pow(level, 2));
+};
+
+export const calculateBattleExperience = (winnerLevel: number, loserLevel: number) => {
+  const levelDifference = Math.abs(winnerLevel - loserLevel);
+  return Math.floor(BASE_XP * (1 + levelDifference / LEVEL_SCALING_FACTOR));
 };
 
 export const getNewLevel = (currentXp: number, currentLevel: number) => {
