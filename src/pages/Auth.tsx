@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Auth() {
@@ -86,62 +85,58 @@ export default function Auth() {
           navigate('/mint');
         }
       } else {
-        // For login, check if input is email or username
-        let loginEmail = emailOrUsername;
-        
+        // For login, we'll first try to find the user by username if it's not an email
         if (!emailOrUsername.includes('@')) {
-          // If username provided, get the corresponding user data
           const { data: profiles, error: profileError } = await supabase
             .from('profiles')
             .select('id, username')
-            .eq('username', emailOrUsername);
+            .eq('username', emailOrUsername)
+            .single();
 
-          if (profileError) throw profileError;
-          
-          if (!profiles || profiles.length === 0) {
-            throw new Error("Username not found");
+          if (profileError) {
+            // If no profile found, show a specific error
+            throw new Error("Username not found. Please check your credentials.");
           }
-
-          // Get user data for the profile
-          const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(profiles[0].id);
-          
-          if (authError || !authUser?.user?.email) {
-            throw new Error("Error retrieving user data");
-          }
-
-          loginEmail = authUser.user.email;
         }
 
-        // Attempt to sign in
+        // Attempt to sign in with email/password
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: loginEmail,
+          email: emailOrUsername.includes('@') ? emailOrUsername : `${emailOrUsername}@example.com`,
           password,
         });
 
-        if (signInError) throw signInError;
+        if (signInError) {
+          // Handle specific error cases
+          if (signInError.message.includes('Invalid login credentials')) {
+            throw new Error("Invalid username/email or password");
+          }
+          throw signInError;
+        }
 
         if (signInData.user) {
           // Check if user has minted a Holobot
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('holos_tokens')
             .eq('id', signInData.user.id)
             .single();
 
-          if (profile) {
-            console.log("Login successful, profile found:", profile);
-            if (profile.holos_tokens === null) {
-              navigate('/mint');
-            } else {
-              navigate('/');
-            }
+          if (profileError) {
+            throw new Error("Error fetching user profile");
+          }
+
+          console.log("Login successful, navigating...");
+          
+          if (!profile || profile.holos_tokens === null) {
+            navigate('/mint');
           } else {
-            throw new Error("Profile not found");
+            navigate('/');
           }
         }
       }
     } catch (error) {
       console.error('Auth error:', error);
+      setLoading(false);
       toast({
         title: "Authentication Error",
         description: error instanceof Error ? error.message : "An error occurred during authentication",
