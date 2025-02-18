@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Twitter, MessageSquare } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import WordCycler from "@/components/WordCycler";
 import { Characters } from "@/components/Characters";
 import BackgroundEffect from "@/components/BackgroundEffect";
@@ -13,15 +13,42 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useEffect, useState } from "react";
-import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import { supabase } from "@/integrations/supabase/client";
 
 const Landing = () => {
   const [api, setApi] = useState<any>();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is already authenticated
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Check if user has minted
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('holos_tokens')
+          .eq('id', user.id)
+          .single();
+
+        if (profile && profile.holos_tokens !== null) {
+          navigate('/');
+        } else {
+          navigate('/mint');
+        }
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   const autoplayOptions = {
     delay: 3000,
     rootNode: (emblaRoot: any) => emblaRoot.parentElement,
+  };
+
+  const handleLaunchApp = () => {
+    navigate('/auth');
   };
 
   return (
@@ -34,11 +61,12 @@ const Landing = () => {
         <div className="flex gap-4">
           <Button variant="ghost">About</Button>
           <Button variant="ghost">Features</Button>
-          <Link to="/app">
-            <Button className="bg-primary hover:bg-primary/90">
-              Launch App
-            </Button>
-          </Link>
+          <Button 
+            className="bg-primary hover:bg-primary/90"
+            onClick={handleLaunchApp}
+          >
+            Launch App
+          </Button>
         </div>
       </nav>
 
@@ -66,12 +94,13 @@ const Landing = () => {
               Join the next generation of digital asset staking. Earn rewards while holding unique NFTs in the Holobots ecosystem.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/app" className="w-full sm:w-auto">
-                <Button className="bg-primary hover:bg-primary/90 px-4 md:px-8 py-4 md:py-6 text-base md:text-lg w-full">
-                  Create Account to Mint Holobots
-                  <ArrowRight className="ml-2" />
-                </Button>
-              </Link>
+              <Button 
+                className="bg-primary hover:bg-primary/90 px-4 md:px-8 py-4 md:py-6 text-base md:text-lg w-full sm:w-auto"
+                onClick={handleLaunchApp}
+              >
+                Create Account to Mint Holobots
+                <ArrowRight className="ml-2" />
+              </Button>
               <div className="flex gap-2 justify-center sm:justify-start">
                 <Button variant="outline" size="icon" className="rounded-full">
                   <Twitter className="h-5 w-5" />
