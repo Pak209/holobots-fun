@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -18,7 +17,11 @@ const CPU_DIFFICULTIES = {
   hard: { cost: 30, level: 10, expReward: 200 }
 };
 
-export const TrainingGrid = () => {
+interface TrainingGridProps {
+  onBattleStart: (config: { holobot: string; difficulty: string; cpuLevel: number }) => void;
+}
+
+export const TrainingGrid = ({ onBattleStart }: TrainingGridProps) => {
   const [selectedHolobot, setSelectedHolobot] = useState("");
   const [selectedAttribute, setAttribute] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
@@ -52,10 +55,10 @@ export const TrainingGrid = () => {
     }
 
     const battle = CPU_DIFFICULTIES[difficulty];
-    // Here we'll eventually navigate to the battle training scene
-    toast({
-      title: "Battle Training Started",
-      description: `Starting ${difficulty} battle training with ${HOLOBOT_STATS[selectedHolobot].name}`,
+    onBattleStart({
+      holobot: selectedHolobot,
+      difficulty,
+      cpuLevel: battle.level
     });
   };
 
