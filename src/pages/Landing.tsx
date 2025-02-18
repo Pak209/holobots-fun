@@ -4,6 +4,7 @@ import { ArrowRight, Twitter, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 import WordCycler from "@/components/WordCycler";
 import { Characters } from "@/components/Characters";
+import BackgroundEffect from "@/components/BackgroundEffect";
 import {
   Carousel,
   CarouselContent,
@@ -24,7 +25,8 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-accent/5">
+    <div className="min-h-screen bg-gradient-to-br from-background to-accent/5 relative overflow-hidden">
+      <BackgroundEffect />
       <nav className="fixed top-0 w-full p-4 flex justify-between items-center z-50 bg-background/80 backdrop-blur-sm">
         <div className="text-2xl font-bold italic tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover">
           HOLOBOTS
