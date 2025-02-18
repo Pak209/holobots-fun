@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -90,10 +89,10 @@ export default function Auth() {
         let email = emailOrUsername;
         
         if (!emailOrUsername.includes('@')) {
-          // If username provided, get the corresponding email from profiles
+          // If username provided, get the corresponding email from auth.users
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('*')
+            .select('id')
             .eq('username', emailOrUsername)
             .single();
 
@@ -101,34 +100,29 @@ export default function Auth() {
             throw new Error("Username not found");
           }
 
-          // Get the user data associated with this profile
+          // Get the user's email from auth.users through RPC
           const { data: userData, error: userError } = await supabase
-            .from('User Table')
-            .select('email')
-            .eq('id', profile.id)
-            .single();
+            .rpc('get_user_email', { user_id: profile.id });
 
-          if (userError || !userData?.email) {
+          if (userError || !userData) {
             throw new Error("Error retrieving user email");
           }
 
-          email = userData.email;
+          email = userData;
         }
 
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (signInError) throw signInError;
 
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
+        if (signInData.user) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('holos_tokens')
-            .eq('id', user.id)
+            .eq('id', signInData.user.id)
             .single();
 
           if (profile) {
