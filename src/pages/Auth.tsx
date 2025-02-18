@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -86,39 +87,41 @@ export default function Auth() {
         }
       } else {
         // For login, check if input is email or username
-        let email = emailOrUsername;
+        let loginEmail = emailOrUsername;
         
         if (!emailOrUsername.includes('@')) {
-          // If username provided, get the corresponding email from auth.users
-          const { data: profile, error: profileError } = await supabase
+          // If username provided, get the corresponding user data
+          const { data: profiles, error: profileError } = await supabase
             .from('profiles')
-            .select('id')
-            .eq('username', emailOrUsername)
-            .single();
+            .select('id, username')
+            .eq('username', emailOrUsername);
 
-          if (profileError || !profile) {
+          if (profileError) throw profileError;
+          
+          if (!profiles || profiles.length === 0) {
             throw new Error("Username not found");
           }
 
-          // Get the user's email from auth.users through RPC
-          const { data: userData, error: userError } = await supabase
-            .rpc('get_user_email', { user_id: profile.id });
-
-          if (userError || !userData) {
-            throw new Error("Error retrieving user email");
+          // Get user data for the profile
+          const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(profiles[0].id);
+          
+          if (authError || !authUser?.user?.email) {
+            throw new Error("Error retrieving user data");
           }
 
-          email = userData;
+          loginEmail = authUser.user.email;
         }
 
+        // Attempt to sign in
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
+          email: loginEmail,
           password,
         });
 
         if (signInError) throw signInError;
 
         if (signInData.user) {
+          // Check if user has minted a Holobot
           const { data: profile } = await supabase
             .from('profiles')
             .select('holos_tokens')
@@ -126,6 +129,7 @@ export default function Auth() {
             .single();
 
           if (profile) {
+            console.log("Login successful, profile found:", profile);
             if (profile.holos_tokens === null) {
               navigate('/mint');
             } else {
