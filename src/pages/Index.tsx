@@ -3,11 +3,15 @@ import { NavigationMenu } from "@/components/NavigationMenu";
 import { BattleScene } from "@/components/BattleScene";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { Trophy, Ticket, Gem } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);
   const [victories, setVictories] = useState(0);
   const maxRounds = 3;
+  const { toast } = useToast();
 
   // Define opponents for each round
   const roundOpponents = {
@@ -16,11 +20,62 @@ const Index = () => {
     3: 'era'
   };
 
+  const distributeRewards = async () => {
+    try {
+      // Calculate rewards based on victories
+      const holosTokens = victories * 100;
+      const gachaTickets = Math.floor(victories / 2); // 1 ticket per 2 victories
+      const blueprintPieces = victories; // 1 piece per victory
+
+      // Update user's profile with rewards
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          holos_tokens: supabase.rpc('increment_tokens', { amount: holosTokens })
+        })
+        .eq('id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (error) throw error;
+
+      // Show rewards notification
+      toast({
+        title: "Arena Rewards!",
+        description: (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Gem className="w-4 h-4 text-purple-500" />
+              <span>{holosTokens} Holos Tokens</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Ticket className="w-4 h-4 text-yellow-500" />
+              <span>{gachaTickets} Gacha Tickets</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-blue-500" />
+              <span>{blueprintPieces} Blueprint Pieces</span>
+            </div>
+          </div>
+        ),
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error("Error distributing rewards:", error);
+      toast({
+        title: "Error",
+        description: "Failed to distribute rewards. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleBattleEnd = (result: 'victory' | 'defeat') => {
     if (result === 'victory') {
       setVictories(prev => prev + 1);
       if (currentRound < maxRounds) {
         setCurrentRound(prev => prev + 1);
+      } else {
+        // All rounds completed, distribute rewards
+        distributeRewards();
       }
     }
   };

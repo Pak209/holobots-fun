@@ -1,8 +1,10 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Package } from "lucide-react";
+import { Package, Ticket } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GachaItem {
   name: string;
@@ -21,10 +23,32 @@ const SINGLE_PULL_COST = 50;
 const MULTI_PULL_COST = 500;
 
 export default function Gacha() {
-  const [holos, setHolos] = useState(1000); // Starting amount for testing
+  const [holos, setHolos] = useState(1000);
+  const [gachaTickets, setGachaTickets] = useState(0);
   const [pulls, setPulls] = useState<GachaItem[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Fetch user's holos and gacha tickets
+    const fetchUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('holos_tokens, gacha_tickets')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          setHolos(profile.holos_tokens || 0);
+          setGachaTickets(profile.gacha_tickets || 0);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const pullGacha = (amount: number) => {
     const cost = amount === 1 ? SINGLE_PULL_COST : MULTI_PULL_COST;
@@ -86,8 +110,16 @@ export default function Gacha() {
             className="mx-auto mb-8 w-96 h-auto"
           />
           
-          <div className="absolute top-4 right-4 bg-holobots-card dark:bg-holobots-dark-card p-2 rounded-lg shadow-neon-border">
-            <span className="text-holobots-accent">Holos: {holos}</span>
+          <div className="absolute top-4 right-4 flex flex-col gap-2">
+            <div className="bg-holobots-card dark:bg-holobots-dark-card p-2 rounded-lg shadow-neon-border">
+              <div className="flex items-center gap-2">
+                <Ticket className="w-4 h-4 text-yellow-500" />
+                <span className="text-holobots-accent">Tickets: {gachaTickets}</span>
+              </div>
+            </div>
+            <div className="bg-holobots-card dark:bg-holobots-dark-card p-2 rounded-lg shadow-neon-border">
+              <span className="text-holobots-accent">Holos: {holos}</span>
+            </div>
           </div>
         </div>
 
