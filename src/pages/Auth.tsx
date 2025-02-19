@@ -73,11 +73,16 @@ export default function Auth() {
           const { data: profiles, error: profileError } = await supabase
             .from('profiles')
             .select('id')
-            .eq('username', emailOrUsername)
-            .single();
+            .eq('username', emailOrUsername);
 
           if (profileError) {
             console.error("Profile lookup error:", profileError);
+            throw new Error("Error looking up username");
+          }
+
+          // Check if any profiles were found
+          if (!profiles || profiles.length === 0) {
+            console.error("No profile found for username:", emailOrUsername);
             throw new Error("Username not found. Please check your credentials.");
           }
 
