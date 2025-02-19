@@ -25,7 +25,6 @@ import HolobotsInfo from "@/pages/HolobotsInfo";
 import Gacha from "@/pages/Gacha";
 import UserItems from "@/pages/UserItems";
 import Auth from "@/pages/Auth";
-import { useAuth } from "@/contexts/AuthContext";
 
 const network = WalletAdapterNetwork.Mainnet;
 const wallets = [
@@ -33,8 +32,8 @@ const wallets = [
   new SolflareWalletAdapter(),
 ];
 
+// Temporarily bypass authentication check
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  // Temporarily bypassing authentication check
   return <>{children}</>;
 }
 
@@ -48,15 +47,16 @@ function App() {
               <AuthProvider>
                 <Router>
                   <Routes>
-                    <Route path="/" element={<Landing />} />
+                    {/* Redirect / to /app for direct access */}
+                    <Route path="/" element={<Navigate to="/app" replace />} />
                     <Route path="/auth" element={<Auth />} />
-                    <Route path="/app" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                    <Route path="/training" element={<ProtectedRoute><Training /></ProtectedRoute>} />
-                    <Route path="/quests" element={<ProtectedRoute><Quests /></ProtectedRoute>} />
-                    <Route path="/holos-farm" element={<ProtectedRoute><HolosFarm /></ProtectedRoute>} />
-                    <Route path="/holobots-info" element={<ProtectedRoute><HolobotsInfo /></ProtectedRoute>} />
-                    <Route path="/gacha" element={<ProtectedRoute><Gacha /></ProtectedRoute>} />
-                    <Route path="/user-items" element={<ProtectedRoute><UserItems /></ProtectedRoute>} />
+                    <Route path="/app" element={<Index />} />
+                    <Route path="/training" element={<Training />} />
+                    <Route path="/quests" element={<Quests />} />
+                    <Route path="/holos-farm" element={<HolosFarm />} />
+                    <Route path="/holobots-info" element={<HolobotsInfo />} />
+                    <Route path="/gacha" element={<Gacha />} />
+                    <Route path="/user-items" element={<UserItems />} />
                   </Routes>
                 </Router>
                 <Toaster />
