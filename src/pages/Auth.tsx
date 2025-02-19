@@ -64,27 +64,58 @@ export default function Auth() {
           navigate('/mint');
         }
       } else {
-        // Simple email/password login
-        const loginEmail = emailOrUsername.includes('@') 
-          ? emailOrUsername 
-          : `${emailOrUsername}@example.com`;
+        let loginEmail = emailOrUsername;
+
+        // If input is not an email, try to find the associated email
+        if (!emailOrUsername.includes('@')) {
+          console.log("Attempting to login with username:", emailOrUsername);
+          
+          const { data: profiles, error: profileError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('username', emailOrUsername)
+            .single();
+
+          if (profileError) {
+            console.error("Profile lookup error:", profileError);
+            throw new Error("Username not found. Please check your credentials.");
+          }
+
+          // Use the username as part of a deterministic email
+          loginEmail = `${emailOrUsername.toLowerCase()}@holobots.com`;
+        }
+
+        console.log("Attempting login with email:", loginEmail);
 
         const { data, error } = await supabase.auth.signInWithPassword({
           email: loginEmail,
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Login error:", error);
+          if (error.message === "Invalid login credentials") {
+            throw new Error("Invalid username/email or password");
+          }
+          throw error;
+        }
 
         if (data.user) {
+          console.log("Login successful, checking profile...");
+          
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('holos_tokens')
             .eq('id', data.user.id)
             .single();
 
-          if (profileError) throw profileError;
+          if (profileError) {
+            console.error("Profile fetch error:", profileError);
+            throw new Error("Error fetching user profile");
+          }
 
+          console.log("Profile checked, navigating...");
+          
           if (!profile || profile.holos_tokens === null) {
             navigate('/mint');
           } else {
