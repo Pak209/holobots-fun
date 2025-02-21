@@ -37,7 +37,7 @@ export const HolobotCard = ({
         </span>
       </div>
       
-      <div className="aspect-square bg-black/30 mb-0.5 flex items-center justify-center border border-white/20 hover:border-holobots-accent transition-colors duration-150 rounded-sm">
+      <div className="aspect-square bg-black/30 mb-0.5 flex items-center justify-center border border-white/20 hover:border-holobots-accent transition-colors duration-150 rounded-sm mx-0">
         <img src={getHolobotImage(stats.name)} alt={stats.name || "Unknown Holobot"} className="w-16 h-16 md:w-20 md:h-20 pixelated object-contain hover:animate-pulse" />
       </div>
       
