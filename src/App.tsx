@@ -47,8 +47,7 @@ function App() {
               <AuthProvider>
                 <Router>
                   <Routes>
-                    {/* Redirect / to /app for direct access */}
-                    <Route path="/" element={<Navigate to="/app" replace />} />
+                    <Route path="/" element={<Landing />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/app" element={<Index />} />
                     <Route path="/training" element={<Training />} />
