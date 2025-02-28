@@ -49,9 +49,9 @@ export const NavigationMenu = () => {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button 
-            variant="ghost" 
+            variant="outline" 
             size="icon" 
-            className="fixed top-4 left-4 z-50 flex items-center gap-1"
+            className="fixed top-4 left-4 z-50 flex items-center gap-1 bg-background/90 border-accent"
           >
             <User className="h-5 w-5" />
             <ChevronDown className="h-3 w-3" />
@@ -98,7 +98,7 @@ export const NavigationMenu = () => {
           
           <DropdownMenuSeparator />
           
-          <div className="p-2">
+          <div className="p-2 flex justify-center">
             <ThemeToggle />
           </div>
           
