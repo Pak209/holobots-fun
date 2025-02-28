@@ -25,6 +25,8 @@ import HolobotsInfo from "@/pages/HolobotsInfo";
 import Gacha from "@/pages/Gacha";
 import UserItems from "@/pages/UserItems";
 import Auth from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
+import { MobileLayout } from "@/components/MobileLayout";
 
 const network = WalletAdapterNetwork.Mainnet;
 const wallets = [
@@ -38,19 +40,22 @@ function App() {
       <WagmiConfig config={wagmiConfig}>
         <ConnectionProvider endpoint="https://api.mainnet-beta.solana.com">
           <WalletProvider wallets={wallets} autoConnect>
-            <ThemeProvider defaultTheme="system" enableSystem>
+            <ThemeProvider defaultTheme="dark" enableSystem>
               <AuthProvider>
                 <Router>
                   <Routes>
                     <Route path="/" element={<Landing />} />
                     <Route path="/auth" element={<Auth />} />
-                    <Route path="/app" element={<Index />} />
-                    <Route path="/training" element={<Training />} />
-                    <Route path="/quests" element={<Quests />} />
-                    <Route path="/holos-farm" element={<HolosFarm />} />
-                    <Route path="/holobots-info" element={<HolobotsInfo />} />
-                    <Route path="/gacha" element={<Gacha />} />
-                    <Route path="/user-items" element={<UserItems />} />
+                    
+                    {/* App routes with mobile layout */}
+                    <Route path="/dashboard" element={<MobileLayout><Dashboard /></MobileLayout>} />
+                    <Route path="/app" element={<MobileLayout><Index /></MobileLayout>} />
+                    <Route path="/training" element={<MobileLayout><Training /></MobileLayout>} />
+                    <Route path="/quests" element={<MobileLayout><Quests /></MobileLayout>} />
+                    <Route path="/holos-farm" element={<MobileLayout><HolosFarm /></MobileLayout>} />
+                    <Route path="/holobots-info" element={<MobileLayout><HolobotsInfo /></MobileLayout>} />
+                    <Route path="/gacha" element={<MobileLayout><Gacha /></MobileLayout>} />
+                    <Route path="/user-items" element={<MobileLayout><UserItems /></MobileLayout>} />
                   </Routes>
                 </Router>
                 <Toaster />

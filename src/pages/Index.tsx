@@ -1,12 +1,12 @@
-import { NavigationMenu } from "@/components/NavigationMenu";
+
 import { BattleScene } from "@/components/BattleScene";
-import { HOLOBOT_STATS } from "@/types/holobot";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Trophy, Ticket, Gem } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);
@@ -30,7 +30,6 @@ const Index = () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          navigate('/auth');
           return;
         }
 
@@ -40,12 +39,10 @@ const Index = () => {
           .eq('id', user.id)
           .single();
 
-        if (!profile || profile.holos_tokens === null) {
-          navigate('/mint');
-          return;
+        if (profile) {
+          setUserHolos(profile.holos_tokens || 100);
         }
-
-        setUserHolos(profile.holos_tokens);
+        
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -58,33 +55,14 @@ const Index = () => {
 
   const payEntryFee = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not found");
-
-      if (userHolos < entryFee) {
-        toast({
-          title: "Insufficient Holos",
-          description: `You need ${entryFee} Holos tokens to enter the arena.`,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const { data } = await supabase
-        .from('profiles')
-        .update({ holos_tokens: userHolos - entryFee })
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (data) {
-        setUserHolos(data.holos_tokens);
-        setHasEntryFee(true);
-        toast({
-          title: "Entry Fee Paid",
-          description: `${entryFee} Holos tokens deducted. Good luck in the arena!`,
-        });
-      }
+      // For the demo, just deduct the entry fee directly
+      setUserHolos(prev => prev - entryFee);
+      setHasEntryFee(true);
+      
+      toast({
+        title: "Entry Fee Paid",
+        description: `${entryFee} Holos tokens deducted. Good luck in the arena!`,
+      });
     } catch (error) {
       console.error("Error paying entry fee:", error);
       toast({
@@ -102,48 +80,29 @@ const Index = () => {
       const gachaTickets = Math.floor(victories / 2);
       const blueprintPieces = victories * currentRound;
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not found");
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('holos_tokens')
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            holos_tokens: data.holos_tokens + holosTokens,
-          })
-          .eq('id', user.id);
-
-        if (updateError) throw updateError;
-
-        toast({
-          title: "Arena Rewards!",
-          description: (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <Gem className="w-4 h-4 text-purple-500" />
-                <span>{holosTokens} Holos Tokens</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Ticket className="w-4 h-4 text-yellow-500" />
-                <span>{gachaTickets} Gacha Tickets</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-blue-500" />
-                <span>{blueprintPieces} Blueprint Pieces</span>
-              </div>
+      // For the demo, just add rewards directly
+      setUserHolos(prev => prev + holosTokens);
+      
+      toast({
+        title: "Arena Rewards!",
+        description: (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Gem className="w-4 h-4 text-purple-500" />
+              <span>{holosTokens} Holos Tokens</span>
             </div>
-          ),
-          duration: 5000,
-        });
-      }
+            <div className="flex items-center gap-2">
+              <Ticket className="w-4 h-4 text-yellow-500" />
+              <span>{gachaTickets} Gacha Tickets</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-blue-500" />
+              <span>{blueprintPieces} Blueprint Pieces</span>
+            </div>
+          </div>
+        ),
+        duration: 5000,
+      });
     } catch (error) {
       console.error("Error distributing rewards:", error);
       toast({
@@ -173,65 +132,63 @@ const Index = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex justify-center items-center h-[80vh]">Loading...</div>;
   }
 
   if (!hasEntryFee) {
     return (
-      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background text-holobots-text dark:text-holobots-dark-text">
-        <NavigationMenu />
-        <div className="container mx-auto p-4 pt-16 flex flex-col items-center justify-center">
-          <div className="bg-holobots-card p-6 rounded-lg border border-holobots-border text-center">
-            <h2 className="text-2xl font-bold mb-4">Arena Entry</h2>
-            <p className="mb-4">Entry fee: {entryFee} Holos tokens</p>
-            <p className="mb-4">Your balance: {userHolos} Holos</p>
+      <div className="px-4 py-5">
+        <Card className="border border-holobots-border bg-[#1A1F2C]">
+          <CardHeader>
+            <CardTitle className="text-center text-xl text-white">Arena Entry</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-[#8E9196] mb-2">Entry fee: {entryFee} Holos tokens</p>
+            <p className="text-[#8E9196] mb-4">Your balance: {userHolos} Holos</p>
             <Button 
               onClick={payEntryFee}
               disabled={userHolos < entryFee}
-              className="bg-holobots-accent hover:bg-holobots-hover text-white"
+              className="w-full bg-holobots-accent hover:bg-holobots-hover text-white"
             >
               Pay Entry Fee
             </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background text-holobots-text dark:text-holobots-dark-text">
-      <NavigationMenu />
-      <div className="container mx-auto p-4 pt-16">
-        <div className="mb-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div className="bg-holobots-card p-2 rounded-lg border border-holobots-border">
-              <span className="text-sm font-bold">Round</span>
-              <div className="text-2xl font-bold text-holobots-accent">{currentRound}/{maxRounds}</div>
-            </div>
-            <div className="bg-holobots-card p-2 rounded-lg border border-holobots-border">
-              <span className="text-sm font-bold">Victories</span>
-              <div className="text-2xl font-bold text-green-500">{victories}</div>
-            </div>
-            <div className="bg-holobots-card p-2 rounded-lg border border-holobots-border">
-              <span className="text-sm font-bold">Opponent Level</span>
-              <div className="text-2xl font-bold text-yellow-500">
-                {roundOpponents[currentRound as keyof typeof roundOpponents].level}
-              </div>
-            </div>
+    <div className="px-2 py-3">
+      <div className="mb-4 bg-[#1A1F2C] rounded-lg p-3">
+        <div className="text-center mb-2 text-lg font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">
+          ARENA MODE
+        </div>
+        <div className="flex justify-between items-center mb-2">
+          <div className="bg-black/30 px-3 py-1 rounded-lg">
+            <span className="text-xs text-[#8E9196]">Round</span>
+            <div className="text-md font-bold text-holobots-accent">{currentRound}/{maxRounds}</div>
           </div>
-          <div className="text-xl font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">
-            ARENA MODE
+          <div className="bg-black/30 px-3 py-1 rounded-lg">
+            <span className="text-xs text-[#8E9196]">Victories</span>
+            <div className="text-md font-bold text-green-500">{victories}</div>
+          </div>
+          <div className="bg-black/30 px-3 py-1 rounded-lg">
+            <span className="text-xs text-[#8E9196]">Opponent Level</span>
+            <div className="text-md font-bold text-yellow-500">
+              {roundOpponents[currentRound as keyof typeof roundOpponents].level}
+            </div>
           </div>
         </div>
-        
-        <BattleScene 
-          leftHolobot="ace"
-          rightHolobot={roundOpponents[currentRound as keyof typeof roundOpponents].name}
-          isCpuBattle={true}
-          cpuLevel={roundOpponents[currentRound as keyof typeof roundOpponents].level}
-          onBattleEnd={handleBattleEnd}
-        />
       </div>
+      
+      <BattleScene 
+        leftHolobot="ace"
+        rightHolobot={roundOpponents[currentRound as keyof typeof roundOpponents].name}
+        isCpuBattle={true}
+        cpuLevel={roundOpponents[currentRound as keyof typeof roundOpponents].level}
+        onBattleEnd={handleBattleEnd}
+      />
     </div>
   );
 };

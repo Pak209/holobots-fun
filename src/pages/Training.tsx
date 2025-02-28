@@ -1,8 +1,9 @@
 
-import { NavigationMenu } from "@/components/NavigationMenu";
 import { TrainingGrid } from "@/components/TrainingGrid";
 import { BattleScene } from "@/components/BattleScene";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 const Training = () => {
   const [battleStarted, setBattleStarted] = useState(false);
@@ -18,13 +19,23 @@ const Training = () => {
   };
 
   return (
-    <div className="min-h-screen bg-holobots-background text-white">
-      <NavigationMenu />
-      <div className="container mx-auto p-4">
-        <h1 className="text-center text-4xl font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent my-8">
-          HOLOBOT TRAINING
-        </h1>
-        {battleStarted && battleConfig ? (
+    <div className="px-3 py-4">
+      <h1 className="text-center text-2xl font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent mb-4">
+        HOLOBOT TRAINING
+      </h1>
+      
+      {battleStarted && battleConfig ? (
+        <div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="mb-3"
+            onClick={handleEndBattle}
+          >
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back to Training
+          </Button>
+          
           <BattleScene 
             leftHolobot={battleConfig.holobot}
             rightHolobot="kuma"
@@ -32,13 +43,13 @@ const Training = () => {
             cpuLevel={battleConfig.cpuLevel}
             onBattleEnd={handleEndBattle}
           />
-        ) : (
-          <TrainingGrid onBattleStart={(config) => {
-            setBattleConfig(config);
-            setBattleStarted(true);
-          }} />
-        )}
-      </div>
+        </div>
+      ) : (
+        <TrainingGrid onBattleStart={(config) => {
+          setBattleConfig(config);
+          setBattleStarted(true);
+        }} />
+      )}
     </div>
   );
 };
