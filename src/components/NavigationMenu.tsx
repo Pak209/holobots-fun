@@ -1,14 +1,31 @@
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, Moon, Sun, LogOut } from "lucide-react";
+import { 
+  Menu, 
+  LogOut, 
+  User, 
+  ChevronDown,
+  Trophy,
+  Battery,
+  Coins,
+  ShoppingBag
+} from "lucide-react";
 import { Link } from "react-router-dom";
-import { useTheme } from "next-themes";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const NavigationMenu = () => {
-  const { theme, setTheme } = useTheme();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
 
   const handleLogout = async () => {
@@ -29,16 +46,70 @@ export const NavigationMenu = () => {
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-        className="fixed top-4 left-4 z-50"
-      >
-        <Sun className="h-6 w-6 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-        <Moon className="absolute h-6 w-6 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        <span className="sr-only">Toggle theme</span>
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="fixed top-4 left-4 z-50 flex items-center gap-1"
+          >
+            <User className="h-5 w-5" />
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64 bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border">
+          <DropdownMenuLabel className="text-center font-bold">{user?.username || 'Guest'}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          
+          <div className="p-2 space-y-2">
+            <div className="flex items-center justify-between px-2 py-1">
+              <div className="flex items-center gap-2">
+                <Battery className="h-4 w-4 text-blue-400" />
+                <span>Daily Energy:</span>
+              </div>
+              <span className="font-semibold">{user?.dailyEnergy}/{user?.maxDailyEnergy}</span>
+            </div>
+            
+            <div className="flex items-center justify-between px-2 py-1">
+              <div className="flex items-center gap-2">
+                <Coins className="h-4 w-4 text-yellow-400" />
+                <span>Holos Tokens:</span>
+              </div>
+              <span className="font-semibold">{user?.holosTokens}</span>
+            </div>
+            
+            <div className="flex items-center justify-between px-2 py-1">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-green-400" />
+                <span>Win/Loss:</span>
+              </div>
+              <span className="font-semibold">{user?.stats.wins}/{user?.stats.losses}</span>
+            </div>
+          </div>
+          
+          <DropdownMenuSeparator />
+          
+          <Link to="/user-items">
+            <DropdownMenuItem className="cursor-pointer">
+              <ShoppingBag className="mr-2 h-4 w-4" />
+              <span>My Items</span>
+            </DropdownMenuItem>
+          </Link>
+          
+          <DropdownMenuSeparator />
+          
+          <div className="p-2">
+            <ThemeToggle />
+          </div>
+          
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer">
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Logout</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       
       <Sheet>
         <SheetTrigger asChild>
@@ -90,14 +161,6 @@ export const NavigationMenu = () => {
             >
               My Items
             </Link>
-            <Button
-              variant="ghost"
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 text-holobots-text dark:text-holobots-dark-text hover:text-holobots-accent dark:hover:text-holobots-dark-accent transition-colors px-4 py-2 rounded-md hover:bg-white/10 border border-holobots-border dark:border-holobots-dark-border"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
           </nav>
         </SheetContent>
       </Sheet>

@@ -1,6 +1,6 @@
 
 import { createContext, useContext } from "react";
-import { AuthState, UserProfile } from "@/types/user";
+import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType extends AuthState {
@@ -16,13 +16,27 @@ interface AuthContextType extends AuthState {
 const mockUser: UserProfile = {
   id: "mock-user-id",
   username: "Guest User",
-  email: "guest@example.com",
-  walletAddress: null,
-  nftsOwned: [],
-  level: 1,
-  experience: 0,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
+  holobots: [
+    {
+      name: "Training Bot",
+      level: 5,
+      experience: 250,
+      nextLevelExp: 500,
+      boostedAttributes: {
+        attack: 10,
+        defense: 8
+      }
+    }
+  ],
+  dailyEnergy: 100,
+  maxDailyEnergy: 100,
+  holosTokens: 750,
+  gachaTickets: 3,
+  stats: {
+    wins: 12,
+    losses: 5
+  },
+  lastEnergyRefresh: new Date().toISOString()
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
