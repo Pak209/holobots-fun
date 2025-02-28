@@ -1,10 +1,10 @@
 
 import { useLocation, Link } from "react-router-dom";
-import { Home, Dumbbell, Trophy, Robot, Gem, Gamepad2, Boxes } from "lucide-react";
+import { Home, Dumbbell, Trophy, Bot, Gem, Gamepad2, Boxes } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { NavigationMenu } from "@/components/NavigationMenu";
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -25,7 +25,7 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
         <div className="text-xl font-bold italic tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover">
           HOLOBOTS
         </div>
-        <ThemeToggle />
+        <NavigationMenu />
       </header>
 
       {/* Main Content with padding for header and footer */}

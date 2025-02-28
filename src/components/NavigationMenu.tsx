@@ -45,20 +45,20 @@ export const NavigationMenu = () => {
   };
 
   return (
-    <>
+    <div className="flex items-center gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button 
             variant="outline" 
-            size="icon" 
-            className="fixed top-4 left-4 z-50 flex items-center gap-1 bg-background/90 border-accent"
+            size="sm" 
+            className="flex items-center gap-1 bg-background/90 border-holobots-accent px-2 py-1"
           >
-            <User className="h-5 w-5" />
+            <User className="h-4 w-4 text-holobots-accent" />
             <ChevronDown className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-64 bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border">
-          <DropdownMenuLabel className="text-center font-bold">{user?.username || 'Guest'}</DropdownMenuLabel>
+        <DropdownMenuContent align="end" className="w-64 bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border">
+          <DropdownMenuLabel className="text-center font-bold">{user?.username || 'Guest User'}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           
           <div className="p-2 space-y-2">
@@ -113,8 +113,8 @@ export const NavigationMenu = () => {
       
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="fixed top-4 right-4 z-50">
-            <Menu className="h-6 w-6" />
+          <Button variant="ghost" size="sm">
+            <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
         <SheetContent side="right" className="w-[250px] bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border">
@@ -164,6 +164,6 @@ export const NavigationMenu = () => {
           </nav>
         </SheetContent>
       </Sheet>
-    </>
+    </div>
   );
 };
