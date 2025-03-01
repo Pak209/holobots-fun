@@ -25,6 +25,7 @@ export interface UserProfile {
     losses: number;
   };
   lastEnergyRefresh: string; // ISO date string
+  level?: number; // Add level property to fix build error
 }
 
 export interface AuthState {
@@ -47,6 +48,7 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       wins: dbProfile.wins || 0,
       losses: dbProfile.losses || 0
     },
-    lastEnergyRefresh: dbProfile.last_energy_refresh
+    lastEnergyRefresh: dbProfile.last_energy_refresh,
+    level: dbProfile.level || 1 // Default to level 1 if not provided
   };
 }
