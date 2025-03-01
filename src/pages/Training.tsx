@@ -43,6 +43,15 @@ const Training = () => {
     return user.holobots.find(h => h.name.toLowerCase() === selectedHolobot.toLowerCase());
   };
 
+  // Get the holobot key from HOLOBOT_STATS based on name
+  const getHolobotKeyByName = (name: string): string => {
+    const lowerName = name.toLowerCase();
+    const key = Object.keys(HOLOBOT_STATS).find(
+      k => HOLOBOT_STATS[k].name.toLowerCase() === lowerName
+    );
+    return key || Object.keys(HOLOBOT_STATS)[0]; // fallback to first holobot if not found
+  };
+
   const handleStartTraining = async () => {
     if (!selectedHolobot || !selectedOpponent) {
       toast({
@@ -163,11 +172,14 @@ const Training = () => {
                 <SelectValue placeholder="Choose your holobot" />
               </SelectTrigger>
               <SelectContent>
-                {user?.holobots.map((holobot, index) => (
-                  <SelectItem key={index} value={holobot.name.toLowerCase()}>
-                    {holobot.name} (Lv.{holobot.level})
-                  </SelectItem>
-                ))}
+                {user?.holobots.map((holobot, index) => {
+                  const holobotKey = getHolobotKeyByName(holobot.name);
+                  return (
+                    <SelectItem key={index} value={holobotKey}>
+                      {holobot.name} (Lv.{holobot.level})
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
@@ -176,7 +188,7 @@ const Training = () => {
                 {getSelectedHolobotObject() && (
                   <HolobotCard 
                     stats={{
-                      ...HOLOBOT_STATS[selectedHolobot.toLowerCase()] || HOLOBOT_STATS['nexus'],
+                      ...HOLOBOT_STATS[selectedHolobot],
                       name: getSelectedHolobotObject()?.name || '',
                       level: getSelectedHolobotObject()?.level || 1,
                     }}

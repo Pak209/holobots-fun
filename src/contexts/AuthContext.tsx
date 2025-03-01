@@ -2,6 +2,7 @@
 import { createContext, useContext } from "react";
 import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
+import { HOLOBOT_STATS } from "@/types/holobot";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -12,13 +13,13 @@ interface AuthContextType extends AuthState {
   getUserProfile: (userId: string) => Promise<UserProfile | null>;
 }
 
-// Create a mock user profile with multiple holobots
+// Create a mock user profile with actual holobots from HOLOBOT_STATS
 const mockUser: UserProfile = {
   id: "mock-user-id",
   username: "Guest User",
   holobots: [
     {
-      name: "Nexus",
+      name: HOLOBOT_STATS["ace"].name,
       level: 8,
       experience: 750,
       nextLevelExp: 1000,
@@ -28,7 +29,7 @@ const mockUser: UserProfile = {
       }
     },
     {
-      name: "Cipher",
+      name: HOLOBOT_STATS["kuma"].name,
       level: 5,
       experience: 250,
       nextLevelExp: 500,
@@ -38,7 +39,7 @@ const mockUser: UserProfile = {
       }
     },
     {
-      name: "Photon",
+      name: HOLOBOT_STATS["shadow"].name,
       level: 3,
       experience: 120,
       nextLevelExp: 300,
