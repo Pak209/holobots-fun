@@ -37,6 +37,12 @@ const Training = () => {
     setBattleResult(null);
   }, [selectedHolobot, selectedOpponent, selectedDifficulty]);
 
+  // Find the selected holobot from user's holobots array
+  const getSelectedHolobotObject = () => {
+    if (!user?.holobots || !selectedHolobot) return null;
+    return user.holobots.find(h => h.name.toLowerCase() === selectedHolobot.toLowerCase());
+  };
+
   const handleStartTraining = async () => {
     if (!selectedHolobot || !selectedOpponent) {
       toast({
@@ -68,10 +74,8 @@ const Training = () => {
       const battleDuration = Math.random() * 2000 + 1000; // 1-3 seconds
       await new Promise(resolve => setTimeout(resolve, battleDuration));
 
-      // Calculate battle outcome (simplified for now)
-      const playerHolobot = user?.holobots.find(h => 
-        h.name.toLowerCase() === selectedHolobot.toLowerCase()
-      );
+      // Get the player's selected holobot
+      const playerHolobot = getSelectedHolobotObject();
       
       if (!playerHolobot) {
         throw new Error('Selected holobot not found');
@@ -159,8 +163,8 @@ const Training = () => {
                 <SelectValue placeholder="Choose your holobot" />
               </SelectTrigger>
               <SelectContent>
-                {user?.holobots.map((holobot) => (
-                  <SelectItem key={holobot.name} value={holobot.name.toLowerCase()}>
+                {user?.holobots.map((holobot, index) => (
+                  <SelectItem key={index} value={holobot.name.toLowerCase()}>
                     {holobot.name} (Lv.{holobot.level})
                   </SelectItem>
                 ))}
@@ -169,15 +173,16 @@ const Training = () => {
 
             {selectedHolobot && (
               <div className="mt-4 flex justify-center">
-                <HolobotCard 
-                  stats={{
-                    ...HOLOBOT_STATS[selectedHolobot],
-                    level: user?.holobots.find(h => 
-                      h.name.toLowerCase() === selectedHolobot.toLowerCase()
-                    )?.level || 1
-                  }}
-                  variant="blue"
-                />
+                {getSelectedHolobotObject() && (
+                  <HolobotCard 
+                    stats={{
+                      ...HOLOBOT_STATS[selectedHolobot.toLowerCase()] || HOLOBOT_STATS['nexus'],
+                      name: getSelectedHolobotObject()?.name || '',
+                      level: getSelectedHolobotObject()?.level || 1,
+                    }}
+                    variant="blue"
+                  />
+                )}
               </div>
             )}
           </div>

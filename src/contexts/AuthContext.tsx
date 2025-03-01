@@ -12,19 +12,39 @@ interface AuthContextType extends AuthState {
   getUserProfile: (userId: string) => Promise<UserProfile | null>;
 }
 
-// Create a mock user profile
+// Create a mock user profile with multiple holobots
 const mockUser: UserProfile = {
   id: "mock-user-id",
   username: "Guest User",
   holobots: [
     {
-      name: "Training Bot",
+      name: "Nexus",
+      level: 8,
+      experience: 750,
+      nextLevelExp: 1000,
+      boostedAttributes: {
+        attack: 15,
+        defense: 12
+      }
+    },
+    {
+      name: "Cipher",
       level: 5,
       experience: 250,
       nextLevelExp: 500,
       boostedAttributes: {
         attack: 10,
-        defense: 8
+        speed: 12
+      }
+    },
+    {
+      name: "Photon",
+      level: 3,
+      experience: 120,
+      nextLevelExp: 300,
+      boostedAttributes: {
+        defense: 8,
+        health: 15
       }
     }
   ],
@@ -36,7 +56,8 @@ const mockUser: UserProfile = {
     wins: 12,
     losses: 5
   },
-  lastEnergyRefresh: new Date().toISOString()
+  lastEnergyRefresh: new Date().toISOString(),
+  level: 10
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
