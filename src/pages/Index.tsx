@@ -3,21 +3,20 @@ import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Trophy, Ticket, Gem } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);
   const [victories, setVictories] = useState(0);
-  const [userHolos, setUserHolos] = useState(0);
   const [hasEntryFee, setHasEntryFee] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const maxRounds = 3;
   const entryFee = 50;
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, updateUser } = useAuth();
 
   const roundOpponents = {
     1: { name: 'kuma', level: 1, stats: { attack: 1.0, defense: 1.0, speed: 1.0 } },
@@ -25,44 +24,26 @@ const Index = () => {
     3: { name: 'era', level: 3, stats: { attack: 1.3, defense: 1.3, speed: 1.3 } }
   };
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          return;
-        }
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('holos_tokens')
-          .eq('id', user.id)
-          .single();
-
-        if (profile) {
-          setUserHolos(profile.holos_tokens || 100);
-        }
-        
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [navigate]);
-
   const payEntryFee = async () => {
     try {
-      // For the demo, just deduct the entry fee directly
-      setUserHolos(prev => prev - entryFee);
-      setHasEntryFee(true);
-      
-      toast({
-        title: "Entry Fee Paid",
-        description: `${entryFee} Holos tokens deducted. Good luck in the arena!`,
-      });
+      // Use the updateUser method from AuthContext to update the user's tokens
+      if (user && user.holosTokens >= entryFee) {
+        await updateUser({
+          holosTokens: user.holosTokens - entryFee
+        });
+        setHasEntryFee(true);
+        
+        toast({
+          title: "Entry Fee Paid",
+          description: `${entryFee} Holos tokens deducted. Good luck in the arena!`,
+        });
+      } else {
+        toast({
+          title: "Insufficient Tokens",
+          description: "You don't have enough Holos tokens for the entry fee.",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error("Error paying entry fee:", error);
       toast({
@@ -75,13 +56,18 @@ const Index = () => {
 
   const distributeRewards = async () => {
     try {
+      if (!user) return;
+      
       const baseReward = 100;
       const holosTokens = victories * baseReward * currentRound;
       const gachaTickets = Math.floor(victories / 2);
       const blueprintPieces = victories * currentRound;
 
-      // For the demo, just add rewards directly
-      setUserHolos(prev => prev + holosTokens);
+      // Update the user's tokens using the AuthContext
+      await updateUser({
+        holosTokens: user.holosTokens + holosTokens,
+        gachaTickets: user.gachaTickets + gachaTickets
+      });
       
       toast({
         title: "Arena Rewards!",
@@ -131,10 +117,6 @@ const Index = () => {
     }
   };
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-[80vh]">Loading...</div>;
-  }
-
   if (!hasEntryFee) {
     return (
       <div className="px-4 py-5">
@@ -144,10 +126,10 @@ const Index = () => {
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-[#8E9196] mb-2">Entry fee: {entryFee} Holos tokens</p>
-            <p className="text-[#8E9196] mb-4">Your balance: {userHolos} Holos</p>
+            <p className="text-[#8E9196] mb-4">Your balance: {user?.holosTokens || 0} Holos</p>
             <Button 
               onClick={payEntryFee}
-              disabled={userHolos < entryFee}
+              disabled={!user || user.holosTokens < entryFee}
               className="w-full bg-holobots-accent hover:bg-holobots-hover text-white"
             >
               Pay Entry Fee
