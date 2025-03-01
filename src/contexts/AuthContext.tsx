@@ -1,8 +1,9 @@
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
 import { HOLOBOT_STATS } from "@/types/holobot";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -14,7 +15,7 @@ interface AuthContextType extends AuthState {
 }
 
 // Create a mock user profile with actual holobots from HOLOBOT_STATS
-const mockUser: UserProfile = {
+const defaultMockUser: UserProfile = {
   id: "mock-user-id",
   username: "Guest User",
   holobots: [
@@ -61,11 +62,30 @@ const mockUser: UserProfile = {
   level: 10
 };
 
+const STORAGE_KEY = "holobots_user_data";
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState<UserProfile>({ ...mockUser });
+  const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
+    // Try to load user data from localStorage on initial render
+    const savedUserData = localStorage.getItem(STORAGE_KEY);
+    if (savedUserData) {
+      try {
+        return JSON.parse(savedUserData);
+      } catch (e) {
+        console.error("Error parsing saved user data:", e);
+        return { ...defaultMockUser };
+      }
+    }
+    return { ...defaultMockUser };
+  });
+
+  // Save user data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
+  }, [currentUser]);
 
   // Mock authentication functions
   const login = async () => {
@@ -76,9 +96,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    // Clear local storage and reset to default user
+    localStorage.removeItem(STORAGE_KEY);
+    setCurrentUser({ ...defaultMockUser });
+    
     toast({
-      title: "Debug Mode",
-      description: "Authentication is disabled",
+      title: "Logged Out",
+      description: "User has been logged out",
     });
   };
 
