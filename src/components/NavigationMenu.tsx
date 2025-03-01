@@ -6,7 +6,8 @@ import {
   Trophy,
   Battery,
   Coins,
-  ShoppingBag
+  ShoppingBag,
+  Database
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -85,6 +86,13 @@ export const NavigationMenu = () => {
         </div>
         
         <DropdownMenuSeparator />
+        
+        <Link to="/holobots-info">
+          <DropdownMenuItem className="cursor-pointer">
+            <Database className="mr-2 h-4 w-4" />
+            <span>Holobots Info</span>
+          </DropdownMenuItem>
+        </Link>
         
         <Link to="/user-items">
           <DropdownMenuItem className="cursor-pointer">

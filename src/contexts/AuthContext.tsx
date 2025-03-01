@@ -65,6 +65,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
+  
+  // Create a mutable copy of the mock user that can be updated
+  let currentUser = { ...mockUser };
 
   // Mock authentication functions
   const login = async () => {
@@ -88,24 +91,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateUser = async () => {
+  const updateUser = async (updates: Partial<UserProfile>) => {
+    // Update the current user with the provided updates
+    currentUser = { ...currentUser, ...updates };
+    
+    // For holobots array, we need to handle it specially to preserve objects not being updated
+    if (updates.holobots) {
+      currentUser.holobots = updates.holobots;
+    }
+    
+    // In a real app, this would make an API call to update the user in the database
     toast({
-      title: "Debug Mode",
-      description: "User updates are disabled",
+      title: "User Updated",
+      description: "User profile has been updated",
     });
+    
+    return currentUser;
   };
 
   const searchPlayers = async (): Promise<UserProfile[]> => {
-    return [mockUser];
+    return [currentUser];
   };
 
   const getUserProfile = async (): Promise<UserProfile> => {
-    return mockUser;
+    return currentUser;
   };
 
-  // Always provide an authenticated state
+  // Always provide the current user state
   const state: AuthState = {
-    user: mockUser,
+    user: currentUser,
     loading: false,
     error: null,
   };

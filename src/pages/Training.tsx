@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Battery, Swords, Trophy, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { calculateBattleExperience } from "@/utils/battleUtils";
+import { NavigationMenu } from "@/components/NavigationMenu";
 
 // CPU difficulty levels
 const DIFFICULTY_LEVELS = {
@@ -70,10 +71,10 @@ const Training = () => {
         throw new Error('Not enough energy for training');
       }
       
-      // Use energy
+      // Use energy - properly update the user's dailyEnergy
       if (user) {
         await updateUser({ 
-          dailyEnergy: user.dailyEnergy - difficulty.energyCost 
+          dailyEnergy: Math.max(0, user.dailyEnergy - difficulty.energyCost)
         });
       }
 
@@ -100,10 +101,11 @@ const Training = () => {
       // Update XP for the holobot if won
       if (won && user) {
         const updatedHolobots = user.holobots.map(h => {
-          if (h.name.toLowerCase() === selectedHolobot.toLowerCase()) {
+          if (h.name.toLowerCase() === playerHolobot.name.toLowerCase()) {
+            const newExperience = (h.experience || 0) + xpGained;
             return {
               ...h,
-              experience: (h.experience || 0) + xpGained
+              experience: newExperience
             };
           }
           return h;
