@@ -1,5 +1,5 @@
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
 import { HOLOBOT_STATS } from "@/types/holobot";
@@ -65,9 +65,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
-  
-  // Create a mutable copy of the mock user that can be updated
-  let currentUser = { ...mockUser };
+  const [currentUser, setCurrentUser] = useState<UserProfile>({ ...mockUser });
 
   // Mock authentication functions
   const login = async () => {
@@ -92,13 +90,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateUser = async (updates: Partial<UserProfile>): Promise<void> => {
-    // Update the current user with the provided updates
-    currentUser = { ...currentUser, ...updates };
+    // Create a copy of the current user
+    const updatedUser = { ...currentUser };
     
-    // For holobots array, we need to handle it specially to preserve objects not being updated
-    if (updates.holobots) {
-      currentUser.holobots = updates.holobots;
-    }
+    // Update each property from the updates object
+    Object.keys(updates).forEach(key => {
+      const typedKey = key as keyof UserProfile;
+      
+      if (typedKey === 'holobots' && updates.holobots) {
+        // For holobots array, we need special handling to properly merge
+        updatedUser.holobots = [...updates.holobots];
+      } else {
+        // For other properties, do a simple assignment
+        // @ts-ignore - TypeScript doesn't know that the key is valid
+        updatedUser[typedKey] = updates[typedKey];
+      }
+    });
+    
+    // Update the current user state
+    setCurrentUser(updatedUser);
     
     // In a real app, this would make an API call to update the user in the database
     toast({

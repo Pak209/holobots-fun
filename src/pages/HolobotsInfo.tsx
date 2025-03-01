@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS, getRank } from "@/types/holobot";
@@ -14,6 +14,7 @@ const HolobotsInfo = () => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const [isMinting, setIsMinting] = useState<string | null>(null);
+  const [justMinted, setJustMinted] = useState<string | null>(null);
   
   // Helper function to find user's holobot by name
   const findUserHolobot = (name: string) => {
@@ -24,6 +25,16 @@ const HolobotsInfo = () => {
   const calculateProgress = (current: number, total: number) => {
     return Math.min(100, Math.floor((current / total) * 100));
   };
+
+  // Clear the justMinted state after a delay
+  useEffect(() => {
+    if (justMinted) {
+      const timer = setTimeout(() => {
+        setJustMinted(null);
+      }, 3000); // Clear after 3 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [justMinted]);
 
   // Handle minting a new holobot
   const handleMintHolobot = async (holobotName: string) => {
@@ -61,6 +72,9 @@ const HolobotsInfo = () => {
         holosTokens: updatedHolosTokens
       });
       
+      // Set justMinted to display immediate feedback
+      setJustMinted(holobotName);
+      
       toast({
         title: "Holobot Minted!",
         description: `${holobotName} has been added to your collection.`,
@@ -93,6 +107,7 @@ const HolobotsInfo = () => {
             const currentXp = userHolobot?.experience || 0;
             const nextLevelXp = userHolobot?.nextLevelExp || 100;
             const xpProgress = calculateProgress(currentXp, nextLevelXp);
+            const isJustMinted = justMinted === holobot.name;
             
             return (
               <div key={key} className={`flex flex-col md:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon`}>
@@ -102,9 +117,14 @@ const HolobotsInfo = () => {
                     <h2 className="text-xl font-bold text-holobots-accent">
                       {holobot.name}
                     </h2>
-                    {isOwned && (
+                    {isOwned && !isJustMinted && (
                       <div className="px-2 py-1 bg-green-500/20 border border-green-500 rounded text-xs">
                         OWNED
+                      </div>
+                    )}
+                    {isJustMinted && (
+                      <div className="px-2 py-1 bg-blue-500/20 border border-blue-500 rounded text-xs animate-pulse">
+                        JUST MINTED
                       </div>
                     )}
                   </div>
@@ -129,7 +149,7 @@ const HolobotsInfo = () => {
                     <p>Speed: {holobot.speed}</p>
                     <p className="text-holobots-accent">Special: {holobot.specialMove}</p>
                     
-                    {!isOwned && (
+                    {!isOwned && !isJustMinted && (
                       <Button 
                         onClick={() => handleMintHolobot(holobot.name)}
                         disabled={isMinting === holobot.name || (user?.holosTokens || 0) < 100}
@@ -146,6 +166,12 @@ const HolobotsInfo = () => {
                           </>
                         )}
                       </Button>
+                    )}
+                    
+                    {isJustMinted && (
+                      <div className="w-full mt-4 p-2 bg-green-500/20 border border-green-500 rounded text-center">
+                        <span className="text-green-400 font-semibold">Minting Successful!</span>
+                      </div>
                     )}
                   </div>
                   
