@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateUser = async (updates: Partial<UserProfile>) => {
+  const updateUser = async (updates: Partial<UserProfile>): Promise<void> => {
     // Update the current user with the provided updates
     currentUser = { ...currentUser, ...updates };
     
@@ -105,8 +105,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       title: "User Updated",
       description: "User profile has been updated",
     });
-    
-    return currentUser;
   };
 
   const searchPlayers = async (): Promise<UserProfile[]> => {

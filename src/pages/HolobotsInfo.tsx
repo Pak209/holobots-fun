@@ -1,13 +1,19 @@
 
+import { useState } from "react";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS, getRank } from "@/types/holobot";
 import { useAuth } from "@/contexts/AuthContext";
-import { ExperienceBar } from "@/components/ExperienceBar";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Coins, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { UserHolobot } from "@/types/user";
 
 const HolobotsInfo = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const { toast } = useToast();
+  const [isMinting, setIsMinting] = useState<string | null>(null);
   
   // Helper function to find user's holobot by name
   const findUserHolobot = (name: string) => {
@@ -17,6 +23,57 @@ const HolobotsInfo = () => {
   // Calculate XP progress percentage
   const calculateProgress = (current: number, total: number) => {
     return Math.min(100, Math.floor((current / total) * 100));
+  };
+
+  // Handle minting a new holobot
+  const handleMintHolobot = async (holobotName: string) => {
+    if (!user) return;
+    
+    // Check if user has enough tokens
+    if (user.holosTokens < 100) {
+      toast({
+        title: "Insufficient Holos",
+        description: "You need 100 Holos tokens to mint this Holobot.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsMinting(holobotName);
+    
+    try {
+      // Create a new holobot
+      const baseStats = HOLOBOT_STATS[holobotName.toLowerCase()];
+      const newHolobot: UserHolobot = {
+        name: baseStats.name,
+        level: 1,
+        experience: 0,
+        nextLevelExp: 100,
+        boostedAttributes: {}
+      };
+      
+      // Add to user's holobots and deduct tokens
+      const updatedHolobots = [...user.holobots, newHolobot];
+      const updatedHolosTokens = user.holosTokens - 100;
+      
+      await updateUser({
+        holobots: updatedHolobots,
+        holosTokens: updatedHolosTokens
+      });
+      
+      toast({
+        title: "Holobot Minted!",
+        description: `${holobotName} has been added to your collection.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error Minting Holobot",
+        description: "An error occurred while minting the holobot. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsMinting(null);
+    }
   };
 
   return (
@@ -71,6 +128,25 @@ const HolobotsInfo = () => {
                     <p>Defense: {holobot.defense}</p>
                     <p>Speed: {holobot.speed}</p>
                     <p className="text-holobots-accent">Special: {holobot.specialMove}</p>
+                    
+                    {!isOwned && (
+                      <Button 
+                        onClick={() => handleMintHolobot(holobot.name)}
+                        disabled={isMinting === holobot.name || (user?.holosTokens || 0) < 100}
+                        className="w-full mt-4 bg-holobots-accent hover:bg-holobots-accent/80 text-black font-semibold"
+                      >
+                        {isMinting === holobot.name ? (
+                          "Minting..."
+                        ) : (
+                          <>
+                            <Plus size={16} />
+                            Mint Holobot
+                            <Coins size={16} />
+                            <span>100</span>
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                   
                   {/* Attribute Boost Section - Only show for owned holobots */}
@@ -106,7 +182,7 @@ const HolobotsInfo = () => {
                       experience: isOwned ? currentXp : undefined,
                       nextLevelExp: isOwned ? nextLevelXp : undefined,
                     }} 
-                    variant={isOwned ? "blue" : "gray"} 
+                    variant={isOwned ? "blue" : "red"} 
                   />
                 </div>
               </div>
