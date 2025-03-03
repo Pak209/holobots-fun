@@ -15,6 +15,17 @@ export const HOLOBOT_IMAGE_MAPPING: Record<string, string> = {
   "wolf": "/lovable-uploads/fb0ae83c-7473-463b-a994-8d6fac2aca3c.png"
 };
 
+// Add uppercase variants to ensure consistent lookup regardless of case
+const NORMALIZED_HOLOBOT_MAPPING: Record<string, string> = {};
+
+// Create normalized mapping for case-insensitive lookups
+Object.entries(HOLOBOT_IMAGE_MAPPING).forEach(([key, value]) => {
+  NORMALIZED_HOLOBOT_MAPPING[key.toLowerCase()] = value;
+  NORMALIZED_HOLOBOT_MAPPING[key.toUpperCase()] = value;
+  // Also add capitalized version (e.g., "Ace")
+  NORMALIZED_HOLOBOT_MAPPING[key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()] = value;
+});
+
 /**
  * Gets the correct image path for a holobot by its key/name
  * @param key The holobot key or name
@@ -26,34 +37,33 @@ export const getHolobotImagePath = (key: string | undefined): string => {
     return "/placeholder.svg";
   }
   
-  // Convert to lowercase for consistent comparison
-  const normalizedKey = key.toLowerCase().trim();
+  // Remove any non-alphanumeric characters and trim
+  const normalizedKey = key.trim().toLowerCase();
   
-  console.log(`Getting image for holobot: ${normalizedKey}`);
+  console.log(`Getting image for holobot key: "${normalizedKey}"`);
   
-  // Log all keys for debugging
-  console.log("Available holobot keys:", Object.keys(HOLOBOT_IMAGE_MAPPING));
-  
-  // Direct match - this is the primary lookup method
-  if (HOLOBOT_IMAGE_MAPPING[normalizedKey]) {
-    console.log(`Found direct image match for ${normalizedKey}: ${HOLOBOT_IMAGE_MAPPING[normalizedKey]}`);
-    return HOLOBOT_IMAGE_MAPPING[normalizedKey];
+  // First try the normalized mapping
+  if (NORMALIZED_HOLOBOT_MAPPING[normalizedKey]) {
+    console.log(`Found match in normalized mapping for "${normalizedKey}": ${NORMALIZED_HOLOBOT_MAPPING[normalizedKey]}`);
+    return NORMALIZED_HOLOBOT_MAPPING[normalizedKey];
   }
   
-  // Try to find a case-insensitive match among the keys
-  const matchingKey = Object.keys(HOLOBOT_IMAGE_MAPPING).find(
-    mapKey => mapKey.toLowerCase() === normalizedKey
-  );
+  // If not found in normalized map, try to extract just the holobot name 
+  // (in case key contains additional info like "ace-lvl1")
+  const possibleHolobotName = normalizedKey.split(/[^a-z0-9]/)[0];
   
-  if (matchingKey) {
-    console.log(`Found case-insensitive match for ${normalizedKey}: ${HOLOBOT_IMAGE_MAPPING[matchingKey]}`);
-    return HOLOBOT_IMAGE_MAPPING[matchingKey];
+  if (possibleHolobotName && NORMALIZED_HOLOBOT_MAPPING[possibleHolobotName]) {
+    console.log(`Found match for extracted name "${possibleHolobotName}" from "${normalizedKey}": ${NORMALIZED_HOLOBOT_MAPPING[possibleHolobotName]}`);
+    return NORMALIZED_HOLOBOT_MAPPING[possibleHolobotName];
   }
   
-  // Log error and return placeholder
-  console.error(`No image found for holobot: ${normalizedKey}`, { 
-    normalizedKey, 
-    availableKeys: Object.keys(HOLOBOT_IMAGE_MAPPING).join(", ") 
+  // Log error and return placeholder if no match found
+  console.error(`No image found for holobot: "${normalizedKey}"`, { 
+    originalKey: key,
+    normalizedKey,
+    possibleHolobotName,
+    availableKeys: Object.keys(NORMALIZED_HOLOBOT_MAPPING).join(", ")
   });
+  
   return "/placeholder.svg";
 };

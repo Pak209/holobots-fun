@@ -28,12 +28,33 @@ export const BattleCards = ({
     rightLevel
   });
   
+  // Get the proper holobot stats using case-insensitive lookups
+  const leftHolobotKey = selectedLeftHolobot.toLowerCase();
+  const rightHolobotKey = selectedRightHolobot.toLowerCase();
+  
+  // Look up the correct stats objects from HOLOBOT_STATS
+  const leftHolobotStats = HOLOBOT_STATS[leftHolobotKey] || 
+    Object.values(HOLOBOT_STATS).find(h => h.name.toLowerCase() === leftHolobotKey);
+    
+  const rightHolobotStats = HOLOBOT_STATS[rightHolobotKey] || 
+    Object.values(HOLOBOT_STATS).find(h => h.name.toLowerCase() === rightHolobotKey);
+  
+  if (!leftHolobotStats || !rightHolobotStats) {
+    console.error("Missing holobot stats", { 
+      leftKey: selectedLeftHolobot, 
+      rightKey: selectedRightHolobot,
+      leftFound: !!leftHolobotStats,
+      rightFound: !!rightHolobotStats,
+      availableKeys: Object.keys(HOLOBOT_STATS).join(", ")
+    });
+  }
+  
   return (
     <div className="flex justify-center gap-2 mb-2">
       <div className="flex flex-col">
         <HolobotCard 
           stats={{
-            ...HOLOBOT_STATS[selectedLeftHolobot], 
+            ...(leftHolobotStats || HOLOBOT_STATS.ace), 
             level: leftLevel
           }} 
           variant="blue" 
@@ -49,7 +70,7 @@ export const BattleCards = ({
       <div className="flex flex-col">
         <HolobotCard 
           stats={{
-            ...HOLOBOT_STATS[selectedRightHolobot], 
+            ...(rightHolobotStats || HOLOBOT_STATS.ace), 
             level: rightLevel
           }} 
           variant="red" 

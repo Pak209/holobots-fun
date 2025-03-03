@@ -12,11 +12,12 @@ export const HolobotCard = ({
   stats,
   variant = "blue"
 }: HolobotCardProps) => {
-  const holobotKey = stats.name?.toLowerCase() || "";
-  console.log(`HolobotCard rendering: ${holobotKey}`, stats);
+  // Ensure we're using the correct key for image lookup
+  const holobotName = stats.name.toLowerCase();
+  console.log(`HolobotCard rendering "${holobotName}"`, stats);
   
-  const imagePath = getHolobotImagePath(holobotKey);
-  console.log(`HolobotCard image path for ${holobotKey}: ${imagePath}`);
+  const imagePath = getHolobotImagePath(holobotName);
+  console.log(`HolobotCard image path for "${holobotName}": ${imagePath}`);
   
   return (
     <div className={`w-[100px] md:w-[130px] h-auto rounded-lg ${variant === "blue" ? "bg-holobots-card border-blue-300 shadow-neon-blue" : "bg-red-100 border-red-300 shadow-neon-border"} border-2 p-1 flex flex-col font-mono text-[6px] md:text-[8px] transition-all duration-300 hover:scale-105`}>
@@ -38,8 +39,7 @@ export const HolobotCard = ({
           onError={(e) => {
             console.error(`Failed to load image for holobot: ${stats.name}`, {
               attempted: (e.target as HTMLImageElement).src,
-              holobotName: stats.name,
-              holobotKey
+              holobotName: stats.name
             });
             // If image fails to load, set to placeholder
             (e.target as HTMLImageElement).src = "/placeholder.svg";
