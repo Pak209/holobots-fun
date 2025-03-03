@@ -20,9 +20,10 @@ export const HolobotCard = ({
     console.log(`Looking for holobot image for: ${normalizedName}`);
     
     // Direct mapping for Holobot images to ensure they load correctly
+    // Each key is the holobot name from HOLOBOT_STATS and each value is the correct image path
     const directMapping: Record<string, string> = {
       "ace": "/lovable-uploads/26ccfc85-75a9-45fe-916d-52221d0114ca.png",
-      "kuma": "/lovable-uploads/8538db67-52ba-404c-be52-f3bba93b356c.png",
+      "kuma": "/lovable-uploads/8538db67-52ba-404c-be52-f3bba93b356c.png", 
       "shadow": "/lovable-uploads/85a2cf79-1889-472d-9855-3048f24a5597.png",
       "era": "/lovable-uploads/433db76f-724b-484e-bd07-b01fde68f661.png",
       "hare": "/lovable-uploads/c4359243-8486-4c66-9a1b-ee1f00a53fc6.png",
@@ -35,10 +36,21 @@ export const HolobotCard = ({
       "wolf": "/lovable-uploads/fb0ae83c-7473-463b-a994-8d6fac2aca3c.png"
     };
     
-    // Return the direct mapping if it exists
+    // Check if the name is directly in the mapping
     if (normalizedName in directMapping) {
       const imagePath = directMapping[normalizedName];
       console.log(`Using direct mapping for ${normalizedName}: ${imagePath}`);
+      return imagePath;
+    }
+    
+    // If the normalized name is not found, try to match by the key itself (from HOLOBOT_STATS)
+    const holobotKey = Object.keys(directMapping).find(
+      key => key.toLowerCase() === normalizedName
+    );
+    
+    if (holobotKey) {
+      const imagePath = directMapping[holobotKey];
+      console.log(`Found match by key for ${normalizedName}: ${imagePath}`);
       return imagePath;
     }
     
