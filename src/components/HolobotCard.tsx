@@ -12,6 +12,12 @@ export const HolobotCard = ({
   stats,
   variant = "blue"
 }: HolobotCardProps) => {
+  const holobotKey = stats.name?.toLowerCase() || "";
+  console.log(`HolobotCard rendering: ${holobotKey}`, stats);
+  
+  const imagePath = getHolobotImagePath(holobotKey);
+  console.log(`HolobotCard image path for ${holobotKey}: ${imagePath}`);
+  
   return (
     <div className={`w-[100px] md:w-[130px] h-auto rounded-lg ${variant === "blue" ? "bg-holobots-card border-blue-300 shadow-neon-blue" : "bg-red-100 border-red-300 shadow-neon-border"} border-2 p-1 flex flex-col font-mono text-[6px] md:text-[8px] transition-all duration-300 hover:scale-105`}>
       <div className="flex items-center justify-between mb-0.5 bg-black/20 px-1 py-0.5 rounded-md">
@@ -25,14 +31,16 @@ export const HolobotCard = ({
       
       <div className="aspect-square bg-black/30 mb-0.5 flex items-center justify-center border border-white/20 hover:border-holobots-accent transition-colors duration-150 rounded-sm mx-0 overflow-hidden">
         <img 
-          src={getHolobotImagePath(stats.name)} 
+          src={imagePath}
           alt={stats.name || "Unknown Holobot"} 
           className="w-full h-full object-contain hover:animate-pulse"
           loading="eager"
           onError={(e) => {
-            console.error(`Failed to load image for holobot: ${stats.name}`);
-            // Log additional info about what went wrong
-            console.log(`Attempted path: ${(e.target as HTMLImageElement).src}`);
+            console.error(`Failed to load image for holobot: ${stats.name}`, {
+              attempted: (e.target as HTMLImageElement).src,
+              holobotName: stats.name,
+              holobotKey
+            });
             // If image fails to load, set to placeholder
             (e.target as HTMLImageElement).src = "/placeholder.svg";
           }}

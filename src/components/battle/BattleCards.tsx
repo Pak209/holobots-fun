@@ -21,10 +21,23 @@ export const BattleCards = ({
   leftXp,
   rightXp
 }: BattleCardsProps) => {
+  console.log("BattleCards rendering with:", {
+    left: selectedLeftHolobot,
+    right: selectedRightHolobot,
+    leftLevel,
+    rightLevel
+  });
+  
   return (
     <div className="flex justify-center gap-2 mb-2">
       <div className="flex flex-col">
-        <HolobotCard stats={{...HOLOBOT_STATS[selectedLeftHolobot], level: leftLevel}} variant="blue" />
+        <HolobotCard 
+          stats={{
+            ...HOLOBOT_STATS[selectedLeftHolobot], 
+            level: leftLevel
+          }} 
+          variant="blue" 
+        />
         <ExperienceBar 
           {...getExperienceProgress(leftXp, leftLevel)}
           level={leftLevel}
@@ -34,7 +47,13 @@ export const BattleCards = ({
         <span className="text-holobots-accent font-bold text-xl animate-neon-pulse">VS</span>
       </div>
       <div className="flex flex-col">
-        <HolobotCard stats={{...HOLOBOT_STATS[selectedRightHolobot], level: rightLevel}} variant="red" />
+        <HolobotCard 
+          stats={{
+            ...HOLOBOT_STATS[selectedRightHolobot], 
+            level: rightLevel
+          }} 
+          variant="red" 
+        />
       </div>
     </div>
   );

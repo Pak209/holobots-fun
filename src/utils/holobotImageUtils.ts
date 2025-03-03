@@ -21,12 +21,18 @@ export const HOLOBOT_IMAGE_MAPPING: Record<string, string> = {
  * @returns The image path for the holobot
  */
 export const getHolobotImagePath = (key: string | undefined): string => {
-  if (!key) return "/placeholder.svg";
+  if (!key) {
+    console.log("Missing holobot key, returning placeholder");
+    return "/placeholder.svg";
+  }
   
   // Convert to lowercase for consistent comparison
   const normalizedKey = key.toLowerCase().trim();
   
   console.log(`Getting image for holobot: ${normalizedKey}`);
+  
+  // Log all keys for debugging
+  console.log("Available holobot keys:", Object.keys(HOLOBOT_IMAGE_MAPPING));
   
   // Direct match - this is the primary lookup method
   if (HOLOBOT_IMAGE_MAPPING[normalizedKey]) {
@@ -44,6 +50,10 @@ export const getHolobotImagePath = (key: string | undefined): string => {
     return HOLOBOT_IMAGE_MAPPING[matchingKey];
   }
   
-  console.log(`No image found for holobot: ${normalizedKey}, using placeholder`);
+  // Log error and return placeholder
+  console.error(`No image found for holobot: ${normalizedKey}`, { 
+    normalizedKey, 
+    availableKeys: Object.keys(HOLOBOT_IMAGE_MAPPING).join(", ") 
+  });
   return "/placeholder.svg";
 };
