@@ -17,6 +17,9 @@ export const HolobotCard = ({
     // Normalize the name to lowercase
     const normalizedName = name.toLowerCase();
     
+    // Debug the normalized name
+    console.log(`Looking for holobot image: ${normalizedName}`);
+    
     // Define image paths for all holobots with simplified filenames
     const images: Record<string, string> = {
       "ace": "/lovable-uploads/ace.png",
@@ -33,10 +36,11 @@ export const HolobotCard = ({
       "wolf": "/lovable-uploads/wolf.png"
     };
     
-    // Add debugging to check the name being requested
-    console.log(`Looking for holobot image: ${normalizedName}`);
+    // Check if we have a match for the image
+    const imagePath = images[normalizedName];
+    console.log(`Image path for ${normalizedName}: ${imagePath || 'Not found'}`);
     
-    return images[normalizedName] || "/placeholder.svg";
+    return imagePath || "/placeholder.svg";
   };
 
   return (
@@ -58,6 +62,8 @@ export const HolobotCard = ({
           loading="eager"
           onError={(e) => {
             console.error(`Failed to load image for holobot: ${stats.name}`);
+            // Log additional info about what went wrong
+            console.log(`Attempted path: ${(e.target as HTMLImageElement).src}`);
             // If image fails to load, set to placeholder
             (e.target as HTMLImageElement).src = "/placeholder.svg";
           }}

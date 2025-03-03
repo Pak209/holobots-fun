@@ -1,3 +1,4 @@
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
@@ -24,20 +25,20 @@ export const BattleSelectors = ({
           <Button 
             variant="outline" 
             size="icon" 
-            className="block md:hidden bg-cyberpunk-card border-cyberpunk-border text-cyberpunk-primary hover:bg-cyberpunk-dark hover:text-cyberpunk-secondary"
+            className="block md:hidden bg-holobots-card border-holobots-border text-holobots-accent hover:bg-holobots-hover hover:text-white"
           >
             <Menu className="h-4 w-4" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="bg-cyberpunk-background border-cyberpunk-border">
+        <SheetContent side="right" className="bg-holobots-background border-holobots-border">
           <div className="flex flex-col gap-4 pt-4">
             <Select value={selectedLeftHolobot} onValueChange={onLeftSelect}>
-              <SelectTrigger className="bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
+              <SelectTrigger className="bg-holobots-card text-white border-holobots-border">
                 <SelectValue placeholder="Choose Holobot" />
               </SelectTrigger>
-              <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
+              <SelectContent className="bg-holobots-card border-holobots-border">
                 {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                  <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
+                  <SelectItem key={key} value={key} className="text-white hover:bg-holobots-hover">
                     {stats.name}
                   </SelectItem>
                 ))}
@@ -45,12 +46,12 @@ export const BattleSelectors = ({
             </Select>
             
             <Select value={selectedRightHolobot} onValueChange={onRightSelect}>
-              <SelectTrigger className="bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
+              <SelectTrigger className="bg-holobots-card text-white border-holobots-border">
                 <SelectValue placeholder="Choose Enemy" />
               </SelectTrigger>
-              <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
+              <SelectContent className="bg-holobots-card border-holobots-border">
                 {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                  <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
+                  <SelectItem key={key} value={key} className="text-white hover:bg-holobots-hover">
                     {stats.name}
                   </SelectItem>
                 ))}
@@ -62,12 +63,12 @@ export const BattleSelectors = ({
       
       <div className="hidden md:flex gap-4">
         <Select value={selectedLeftHolobot} onValueChange={onLeftSelect}>
-          <SelectTrigger className="w-32 bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
+          <SelectTrigger className="w-32 bg-holobots-card text-white border-holobots-border">
             <SelectValue placeholder="Choose Holobot" />
           </SelectTrigger>
-          <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
+          <SelectContent className="bg-holobots-card border-holobots-border">
             {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-              <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
+              <SelectItem key={key} value={key} className="text-white hover:bg-holobots-hover">
                 {stats.name}
               </SelectItem>
             ))}
@@ -75,12 +76,12 @@ export const BattleSelectors = ({
         </Select>
         
         <Select value={selectedRightHolobot} onValueChange={onRightSelect}>
-          <SelectTrigger className="w-32 bg-cyberpunk-card text-cyberpunk-light border-cyberpunk-border">
+          <SelectTrigger className="w-32 bg-holobots-card text-white border-holobots-border">
             <SelectValue placeholder="Choose Enemy" />
           </SelectTrigger>
-          <SelectContent className="bg-cyberpunk-card border-cyberpunk-border">
+          <SelectContent className="bg-holobots-card border-holobots-border">
             {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-              <SelectItem key={key} value={key} className="text-cyberpunk-light hover:bg-cyberpunk-dark">
+              <SelectItem key={key} value={key} className="text-white hover:bg-holobots-hover">
                 {stats.name}
               </SelectItem>
             ))}
