@@ -14,20 +14,20 @@ export const HolobotCard = ({
   const getHolobotImage = (name: string | undefined) => {
     if (!name) return "/placeholder.svg";
     
-    // Define image paths for all holobots with the correct mappings
+    // Define image paths for all holobots with simplified filenames
     const images: Record<string, string> = {
-      "ace": "/lovable-uploads/8d33b0c2-676e-40c9-845e-8d81095085d1.png",
-      "kuma": "/lovable-uploads/dfc882db-6efe-449a-9a18-d58975a0799d.png", 
-      "shadow": "/lovable-uploads/707b0fb5-b455-4a6a-9504-ae298ac17275.png",
-      "hare": "/lovable-uploads/fb0ae83c-7473-463b-a994-8d6fac2aca3c.png",
-      "tora": "/lovable-uploads/bf4d3b8d-ad08-4f80-b179-2cc0a647d1fa.png",
-      "wake": "/lovable-uploads/43352190-0af0-4ad7-aa3b-031a7a735552.png",
-      "era": "/lovable-uploads/26ccfc85-75a9-45fe-916d-52221d0114ca.png",
-      "gama": "/lovable-uploads/538299bd-064f-4e42-beb2-cfc90c89efd2.png",
-      "ken": "/lovable-uploads/956995e8-37fb-4c05-ba2e-98678d7e62e2.png",
-      "kurai": "/lovable-uploads/e29c3521-a46e-4cac-90c8-5bed2fc4d333.png",
-      "tsuin": "/lovable-uploads/d314a7bb-330c-46f6-a763-69d819e20ec2.png",
-      "wolf": "/lovable-uploads/8538db67-52ba-404c-be52-f3bba93b356c.png"
+      "ace": "/lovable-uploads/ace.png",
+      "kuma": "/lovable-uploads/kuma.png", 
+      "shadow": "/lovable-uploads/shadow.png",
+      "hare": "/lovable-uploads/hare.png",
+      "tora": "/lovable-uploads/tora.png",
+      "wake": "/lovable-uploads/wake.png",
+      "era": "/lovable-uploads/era.png",
+      "gama": "/lovable-uploads/gama.png",
+      "ken": "/lovable-uploads/ken.png",
+      "kurai": "/lovable-uploads/kurai.png",
+      "tsuin": "/lovable-uploads/tsuin.png",
+      "wolf": "/lovable-uploads/wolf.png"
     };
     
     // Normalize the name to lowercase for case-insensitive matching
