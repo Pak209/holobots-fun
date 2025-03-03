@@ -1,176 +1,191 @@
 import { useState, useEffect } from "react";
-import { NavigationMenu } from "@/components/NavigationMenu";
-import { HolobotCard } from "@/components/HolobotCard";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { HOLOBOT_STATS } from "@/types/holobot";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-
-const STARTER_HOLOBOTS = ['ace', 'kuma', 'shadow'];
-const INITIAL_HOLOS = 500;
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { Sparkles } from "lucide-react";
+import { NavigationMenu } from "@/components/NavigationMenu";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Mint() {
-  const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
-  const [hasMinted, setHasMinted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const [userTokens, setUserTokens] = useState(0);
+  const [mintedType, setMintedType] = useState<string | null>(null);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [minting, setMinting] = useState(false);
 
   useEffect(() => {
-    checkMintStatus();
+    // Fetch user's tokens
+    const fetchUserTokens = async () => {
+      try {
+        setLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Fetch from the users table instead of profiles
+          const { data, error } = await supabase
+            .from('users')
+            .select('tokens')
+            .eq('wallet_address', user.id)
+            .single();
+
+          if (error) {
+            console.error("Error fetching tokens:", error);
+            return;
+          }
+
+          if (data) {
+            setUserTokens(data.tokens || 0);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user tokens:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserTokens();
   }, []);
 
-  const checkMintStatus = async () => {
+  const handleMint = async (type: string) => {
     try {
+      setMinting(true);
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (!user) {
-        navigate('/auth');
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to mint a Holobot",
+          variant: "destructive",
+        });
         return;
       }
-
-      const { data: profile } = await supabase
+      
+      // Update user tokens
+      const { error: updateError } = await supabase
         .from('users')
-        .select('tokens')
-        .eq('id', user.id)
-        .single();
-
-      if (profile && profile.tokens !== null && profile.tokens > 0) {
-        setHasMinted(true);
-        navigate('/');
+        .update({ tokens: userTokens - 100 })
+        .eq('wallet_address', user.id);
+      
+      if (updateError) {
+        console.error("Error updating tokens:", updateError);
+        return;
       }
-
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error checking mint status:", error);
-      setIsLoading(false);
-    }
-  };
-
-  const handleMint = async () => {
-    if (!selectedHolobot) {
-      toast({
-        title: "Selection Required",
-        description: "Please select a Holobot to mint.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not found");
-
-      // Update user with initial Holos
-      const { error: userError } = await supabase
-        .from('users')
-        .update({
-          tokens: INITIAL_HOLOS
-        })
-        .eq('id', user.id);
-
-      if (userError) throw userError;
-
-      // Create Holobot entry with owner ID as a number
+      
+      // Add holobot to user's collection
       const { error: holobotError } = await supabase
         .from('holobots')
         .insert({
-          name: selectedHolobot,
-          owner_id: parseInt(user.id, 10) || null,
+          name: type,
+          owner_id: parseInt(user.id, 36) % 1000000, // Generate a numeric ID from the UUID
           level: 1,
-          attributes: JSON.stringify({
-            health: HOLOBOT_STATS[selectedHolobot].maxHealth,
-            attack: HOLOBOT_STATS[selectedHolobot].attack,
-            defense: HOLOBOT_STATS[selectedHolobot].defense,
-            speed: HOLOBOT_STATS[selectedHolobot].speed,
-            experience: 0,
-            nextLevelExp: 100
-          })
+          attributes: {
+            attack: Math.floor(Math.random() * 10) + 1,
+            defense: Math.floor(Math.random() * 10) + 1,
+            speed: Math.floor(Math.random() * 10) + 1,
+            health: Math.floor(Math.random() * 10) + 1,
+          }
         });
-
-      if (holobotError) throw holobotError;
-
+      
+      if (holobotError) {
+        console.error("Error creating holobot:", holobotError);
+        return;
+      }
+      
+      // Update UI
+      setUserTokens(prev => prev - 100);
+      setMintedType(type);
+      
       toast({
-        title: "Mint Successful!",
-        description: `You've received your ${selectedHolobot.toUpperCase()} and ${INITIAL_HOLOS} Holos Tokens!`,
+        title: "Holobot Minted!",
+        description: `Your ${type} Holobot has been minted successfully.`,
       });
-
-      // Redirect to home page
-      navigate('/');
+      
+      // Show success animation
+      setShowAnimation(true);
+      setTimeout(() => {
+        setShowAnimation(false);
+        navigate('/');
+      }, 3000);
+      
     } catch (error) {
-      console.error("Error minting Holobot:", error);
+      console.error("Error minting holobot:", error);
       toast({
-        title: "Mint Failed",
+        title: "Error",
         description: "There was an error minting your Holobot. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setMinting(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
-        <NavigationMenu />
-        <div className="container mx-auto p-4 pt-16 text-center">
-          Loading...
-        </div>
-      </div>
-    );
-  }
-
-  if (hasMinted) {
-    return null; // Will redirect to home
-  }
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
       <NavigationMenu />
-      <div className="container mx-auto p-4 pt-16">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-holobots 
-            bg-gradient-to-r from-holobots-accent to-holobots-hover 
-            bg-clip-text text-transparent">
-            Choose Your First Holobot
-          </h1>
-          <p className="text-holobots-text dark:text-holobots-dark-text">
-            Select your starter Holobot and receive {INITIAL_HOLOS} Holos Tokens!
-          </p>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-8">
-          {STARTER_HOLOBOTS.map((holobot) => (
-            <div
-              key={holobot}
-              className={`cursor-pointer transition-transform duration-200 transform 
-                ${selectedHolobot === holobot ? 'scale-110' : 'hover:scale-105'}`}
-              onClick={() => setSelectedHolobot(holobot)}
-            >
-              <div className={`p-4 rounded-lg ${
-                selectedHolobot === holobot 
-                  ? 'ring-4 ring-holobots-accent' 
-                  : ''
-              }`}>
-                <HolobotCard 
-                  stats={HOLOBOT_STATS[holobot]} 
-                  variant={selectedHolobot === holobot ? "blue" : undefined}
-                />
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold text-center text-holobots-text dark:text-holobots-dark-text mb-8">
+          Mint Your First Holobot
+        </h1>
+
+        {loading ? (
+          <p className="text-center text-holobots-text dark:text-holobots-dark-text">
+            Loading...
+          </p>
+        ) : (
+          <>
+            <div className="flex justify-center items-center mb-4">
+              <p className="text-holobots-text dark:text-holobots-dark-text mr-2">
+                Your Holos Tokens:
+              </p>
+              <div className="bg-holobots-card dark:bg-holobots-dark-card p-2 rounded-lg shadow-neon-border">
+                <span className="text-holobots-accent">{userTokens}</span>
               </div>
             </div>
-          ))}
-        </div>
 
-        <div className="text-center">
-          <Button
-            onClick={handleMint}
-            disabled={!selectedHolobot || isLoading}
-            className="bg-holobots-accent hover:bg-holobots-hover text-white px-8 py-4 text-lg"
-          >
-            {isLoading ? "Minting..." : "Mint Your Holobot"}
-          </Button>
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {["Ace", "Kuma", "Shadow"].map((type) => (
+                <div
+                  key={type}
+                  className="bg-holobots-card dark:bg-holobots-dark-card p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon-border"
+                >
+                  <h2 className="text-xl font-semibold text-holobots-text dark:text-holobots-dark-text mb-2">
+                    {type}
+                  </h2>
+                  <p className="text-holobots-text/80 dark:text-holobots-dark-text/80 mb-4">
+                    Mint a {type} Holobot for 100 Holos Tokens.
+                  </p>
+                  <Button
+                    onClick={() => handleMint(type)}
+                    disabled={userTokens < 100 || minting}
+                    className="w-full bg-holobots-accent hover:bg-holobots-hover text-white"
+                  >
+                    {minting ? "Minting..." : "Mint Holobot"}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {showAnimation && (
+          <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/50 z-50">
+            <div className="bg-holobots-card dark:bg-holobots-dark-card p-8 rounded-lg shadow-lg text-center">
+              <Sparkles className="mx-auto h-12 w-12 text-green-500 mb-4 animate-ping" />
+              <h2 className="text-2xl font-bold text-holobots-text dark:text-holobots-dark-text mb-2">
+                Minting Successful!
+              </h2>
+              <p className="text-holobots-text/80 dark:text-holobots-dark-text/80">
+                Your {mintedType} Holobot has been successfully minted.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

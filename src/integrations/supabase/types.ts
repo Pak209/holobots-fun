@@ -270,6 +270,45 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          daily_energy: number
+          gacha_tickets: number | null
+          holos_tokens: number | null
+          id: string
+          last_energy_refresh: string | null
+          losses: number | null
+          max_daily_energy: number
+          username: string
+          wins: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily_energy?: number
+          gacha_tickets?: number | null
+          holos_tokens?: number | null
+          id: string
+          last_energy_refresh?: string | null
+          losses?: number | null
+          max_daily_energy?: number
+          username: string
+          wins?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          daily_energy?: number
+          gacha_tickets?: number | null
+          holos_tokens?: number | null
+          id?: string
+          last_energy_refresh?: string | null
+          losses?: number | null
+          max_daily_energy?: number
+          username?: string
+          wins?: number | null
+        }
+        Relationships: []
+      }
       quests: {
         Row: {
           difficulty: string | null

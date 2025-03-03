@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ export default function Gacha() {
           const { data, error } = await supabase
             .from('users')
             .select('tokens')
-            .eq('id', user.id)
+            .eq('wallet_address', user.id)
             .single();
 
           if (error) {
@@ -65,7 +66,7 @@ export default function Gacha() {
     if (holos < cost) {
       toast({
         title: "Insufficient Holos",
-        description: `You need ${cost} Holos to perform this pull.`,
+        description: `You need ${cost} Holos tokens to perform this pull.`,
         variant: "destructive"
       });
       return;

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -51,19 +52,20 @@ export default function Auth() {
         if (!emailOrUsername.includes('@')) {
           console.log("Attempting to login with username:", emailOrUsername);
           
-          const { data: profiles, error: profileError } = await supabase
+          // Look for user in the users table by wallet_address
+          const { data: users, error: userError } = await supabase
             .from('users')
             .select('id')
             .eq('wallet_address', emailOrUsername);
 
-          if (profileError) {
-            console.error("Profile lookup error:", profileError);
+          if (userError) {
+            console.error("User lookup error:", userError);
             throw new Error("Error looking up username");
           }
 
-          // Check if any profiles were found
-          if (!profiles || profiles.length === 0) {
-            console.error("No profile found for username:", emailOrUsername);
+          // Check if any users were found
+          if (!users || users.length === 0) {
+            console.error("No user found for username:", emailOrUsername);
             throw new Error("Username not found. Please check your credentials.");
           }
 
@@ -89,14 +91,15 @@ export default function Auth() {
         if (data.user) {
           console.log("Login successful, checking profile...");
           
+          // Check user tokens in the users table
           const { data: userTokens, error: userError } = await supabase
             .from('users')
             .select('tokens')
-            .eq('id', data.user.id)
+            .eq('wallet_address', data.user.id)
             .single();
 
           if (userError) {
-            console.error("Profile fetch error:", userError);
+            console.error("User fetch error:", userError);
             throw new Error("Error fetching user profile");
           }
 
