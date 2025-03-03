@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -38,24 +37,6 @@ export default function Auth() {
         if (signUpError) throw signUpError;
 
         if (signUpData.user) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([
-              {
-                id: signUpData.user.id,
-                username,
-                daily_energy: 100,
-                max_daily_energy: 100,
-                holos_tokens: null,
-                gacha_tickets: 0,
-                wins: 0,
-                losses: 0,
-                last_energy_refresh: new Date().toISOString(),
-              },
-            ]);
-
-          if (profileError) throw profileError;
-
           toast({
             title: "Account created!",
             description: "Please proceed to mint your first Holobot.",
@@ -71,9 +52,9 @@ export default function Auth() {
           console.log("Attempting to login with username:", emailOrUsername);
           
           const { data: profiles, error: profileError } = await supabase
-            .from('profiles')
+            .from('users')
             .select('id')
-            .eq('username', emailOrUsername);
+            .eq('wallet_address', emailOrUsername);
 
           if (profileError) {
             console.error("Profile lookup error:", profileError);
@@ -108,20 +89,20 @@ export default function Auth() {
         if (data.user) {
           console.log("Login successful, checking profile...");
           
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('holos_tokens')
+          const { data: userTokens, error: userError } = await supabase
+            .from('users')
+            .select('tokens')
             .eq('id', data.user.id)
             .single();
 
-          if (profileError) {
-            console.error("Profile fetch error:", profileError);
+          if (userError) {
+            console.error("Profile fetch error:", userError);
             throw new Error("Error fetching user profile");
           }
 
           console.log("Profile checked, navigating...");
           
-          if (!profile || profile.holos_tokens === null) {
+          if (!userTokens || userTokens.tokens === null) {
             navigate('/mint');
           } else {
             navigate('/');

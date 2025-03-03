@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { HolobotCard } from "@/components/HolobotCard";
@@ -31,12 +30,12 @@ export default function Mint() {
       }
 
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('holos_tokens')
+        .from('users')
+        .select('tokens')
         .eq('id', user.id)
         .single();
 
-      if (profile && profile.holos_tokens !== null) {
+      if (profile && profile.tokens !== null && profile.tokens > 0) {
         setHasMinted(true);
         navigate('/');
       }
@@ -63,36 +62,34 @@ export default function Mint() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not found");
 
-      // Update profile with initial Holos
-      const { error: profileError } = await supabase
-        .from('profiles')
+      // Update user with initial Holos
+      const { error: userError } = await supabase
+        .from('users')
         .update({
-          holos_tokens: INITIAL_HOLOS
+          tokens: INITIAL_HOLOS
         })
         .eq('id', user.id);
 
-      if (profileError) throw profileError;
+      if (userError) throw userError;
 
-      // Create Holobot entry
+      // Create Holobot entry with owner ID as a number
       const { error: holobotError } = await supabase
         .from('holobots')
         .insert({
           name: selectedHolobot,
-          owner_id: user.id,
+          owner_id: parseInt(user.id, 10) || null,
           level: 1,
-          experience: 0,
-          next_level_exp: 100,
-          health: HOLOBOT_STATS[selectedHolobot].maxHealth,
-          attack: HOLOBOT_STATS[selectedHolobot].attack,
-          defense: HOLOBOT_STATS[selectedHolobot].defense,
-          speed: HOLOBOT_STATS[selectedHolobot].speed
+          attributes: JSON.stringify({
+            health: HOLOBOT_STATS[selectedHolobot].maxHealth,
+            attack: HOLOBOT_STATS[selectedHolobot].attack,
+            defense: HOLOBOT_STATS[selectedHolobot].defense,
+            speed: HOLOBOT_STATS[selectedHolobot].speed,
+            experience: 0,
+            nextLevelExp: 100
+          })
         });
 
       if (holobotError) throw holobotError;
-
-      // Save to local storage
-      localStorage.setItem('selectedHolobot', selectedHolobot);
-      localStorage.setItem('holosTokens', INITIAL_HOLOS.toString());
 
       toast({
         title: "Mint Successful!",

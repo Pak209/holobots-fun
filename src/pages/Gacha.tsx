@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { Button } from "@/components/ui/button";
@@ -36,8 +35,8 @@ export default function Gacha() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data, error } = await supabase
-            .from('profiles')
-            .select('holos_tokens')
+            .from('users')
+            .select('tokens')
             .eq('id', user.id)
             .single();
 
@@ -47,7 +46,7 @@ export default function Gacha() {
           }
 
           if (data) {
-            setHolos(data.holos_tokens || 0);
+            setHolos(data.tokens || 0);
             // Initialize gacha tickets to 0 since the column doesn't exist yet
             setGachaTickets(0);
           }

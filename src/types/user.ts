@@ -36,19 +36,39 @@ export interface AuthState {
 
 // Add database profile mapping helper
 export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
-  return {
-    id: dbProfile.id,
-    username: dbProfile.username,
-    holobots: dbProfile.holobots || [],
-    dailyEnergy: dbProfile.daily_energy,
-    maxDailyEnergy: dbProfile.max_daily_energy,
-    holosTokens: dbProfile.holos_tokens,
-    gachaTickets: dbProfile.gacha_tickets || 0,
-    stats: {
-      wins: dbProfile.wins || 0,
-      losses: dbProfile.losses || 0
-    },
-    lastEnergyRefresh: dbProfile.last_energy_refresh,
-    level: dbProfile.level || 1 // Default to level 1 if not provided
-  };
+  if (dbProfile.username) {
+    // This is from the profiles table
+    return {
+      id: dbProfile.id,
+      username: dbProfile.username,
+      holobots: dbProfile.holobots || [],
+      dailyEnergy: dbProfile.daily_energy || 100,
+      maxDailyEnergy: dbProfile.max_daily_energy || 100,
+      holosTokens: dbProfile.holos_tokens || 0,
+      gachaTickets: dbProfile.gacha_tickets || 0,
+      stats: {
+        wins: dbProfile.wins || 0,
+        losses: dbProfile.losses || 0
+      },
+      lastEnergyRefresh: dbProfile.last_energy_refresh || new Date().toISOString(),
+      level: dbProfile.level || 1
+    };
+  } else {
+    // This is from the users table
+    return {
+      id: dbProfile.id,
+      username: dbProfile.wallet_address || `user_${dbProfile.id.substring(0, 8)}`,
+      holobots: [],
+      dailyEnergy: dbProfile.energy || 100,
+      maxDailyEnergy: 100,
+      holosTokens: dbProfile.tokens || 0,
+      gachaTickets: 0,
+      stats: {
+        wins: 0,
+        losses: 0
+      },
+      lastEnergyRefresh: new Date().toISOString(),
+      level: 1
+    };
+  }
 }
