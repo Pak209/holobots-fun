@@ -14,10 +14,10 @@ export const HolobotCard = ({
   const getHolobotImage = (name: string | undefined) => {
     if (!name) return "/placeholder.svg";
     
-    // Define image paths for all holobots with the new uploaded images
+    // Define image paths for all holobots with the correct mappings
     const images: Record<string, string> = {
       "ace": "/lovable-uploads/8d33b0c2-676e-40c9-845e-8d81095085d1.png",
-      "kuma": "/lovable-uploads/dfc882db-6efe-449a-9a18-d58975a0799d.png",
+      "kuma": "/lovable-uploads/dfc882db-6efe-449a-9a18-d58975a0799d.png", 
       "shadow": "/lovable-uploads/707b0fb5-b455-4a6a-9504-ae298ac17275.png",
       "hare": "/lovable-uploads/fb0ae83c-7473-463b-a994-8d6fac2aca3c.png",
       "tora": "/lovable-uploads/bf4d3b8d-ad08-4f80-b179-2cc0a647d1fa.png",
@@ -32,6 +32,10 @@ export const HolobotCard = ({
     
     // Normalize the name to lowercase for case-insensitive matching
     const normalizedName = name.toLowerCase();
+    
+    // Add debugging to check the name being requested
+    console.log(`Getting image for holobot: ${normalizedName}`);
+    
     return images[normalizedName] || "/placeholder.svg";
   };
 
