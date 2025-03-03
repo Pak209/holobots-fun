@@ -38,7 +38,20 @@ export const BattleSelectors = ({
               </SelectTrigger>
               <SelectContent className="bg-holobots-card border-holobots-border">
                 {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                  <SelectItem key={key} value={key} className="text-white hover:bg-holobots-hover">
+                  <SelectItem 
+                    key={key} 
+                    value={key} 
+                    className="text-white hover:bg-holobots-hover flex items-center gap-2"
+                  >
+                    <img 
+                      src={`/lovable-uploads/${key.toLowerCase()}.png`}
+                      alt={stats.name} 
+                      className="w-6 h-6 object-contain" 
+                      onError={(e) => {
+                        console.error(`Failed to load thumbnail for ${key}`);
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
+                    />
                     {stats.name}
                   </SelectItem>
                 ))}
@@ -51,7 +64,20 @@ export const BattleSelectors = ({
               </SelectTrigger>
               <SelectContent className="bg-holobots-card border-holobots-border">
                 {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                  <SelectItem key={key} value={key} className="text-white hover:bg-holobots-hover">
+                  <SelectItem 
+                    key={key} 
+                    value={key} 
+                    className="text-white hover:bg-holobots-hover flex items-center gap-2"
+                  >
+                    <img 
+                      src={`/lovable-uploads/${key.toLowerCase()}.png`}
+                      alt={stats.name} 
+                      className="w-6 h-6 object-contain"
+                      onError={(e) => {
+                        console.error(`Failed to load thumbnail for ${key}`);
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
+                    />
                     {stats.name}
                   </SelectItem>
                 ))}
@@ -68,7 +94,20 @@ export const BattleSelectors = ({
           </SelectTrigger>
           <SelectContent className="bg-holobots-card border-holobots-border">
             {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-              <SelectItem key={key} value={key} className="text-white hover:bg-holobots-hover">
+              <SelectItem 
+                key={key} 
+                value={key} 
+                className="text-white hover:bg-holobots-hover flex items-center gap-2"
+              >
+                <img 
+                  src={`/lovable-uploads/${key.toLowerCase()}.png`}
+                  alt={stats.name} 
+                  className="w-6 h-6 object-contain"
+                  onError={(e) => {
+                    console.error(`Failed to load thumbnail for ${key}`);
+                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                  }}
+                />
                 {stats.name}
               </SelectItem>
             ))}
@@ -81,7 +120,20 @@ export const BattleSelectors = ({
           </SelectTrigger>
           <SelectContent className="bg-holobots-card border-holobots-border">
             {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-              <SelectItem key={key} value={key} className="text-white hover:bg-holobots-hover">
+              <SelectItem 
+                key={key} 
+                value={key} 
+                className="text-white hover:bg-holobots-hover flex items-center gap-2"
+              >
+                <img 
+                  src={`/lovable-uploads/${key.toLowerCase()}.png`}
+                  alt={stats.name} 
+                  className="w-6 h-6 object-contain"
+                  onError={(e) => {
+                    console.error(`Failed to load thumbnail for ${key}`);
+                    (e.target as HTMLImageElement).src = "/placeholder.svg";
+                  }}
+                />
                 {stats.name}
               </SelectItem>
             ))}

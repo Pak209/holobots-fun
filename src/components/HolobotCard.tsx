@@ -20,27 +20,11 @@ export const HolobotCard = ({
     // Debug the normalized name
     console.log(`Looking for holobot image: ${normalizedName}`);
     
-    // Define image paths for all holobots with simplified filenames
-    const images: Record<string, string> = {
-      "ace": "/lovable-uploads/ace.png",
-      "kuma": "/lovable-uploads/kuma.png", 
-      "shadow": "/lovable-uploads/shadow.png",
-      "hare": "/lovable-uploads/hare.png",
-      "tora": "/lovable-uploads/tora.png",
-      "wake": "/lovable-uploads/wake.png",
-      "era": "/lovable-uploads/era.png",
-      "gama": "/lovable-uploads/gama.png",
-      "ken": "/lovable-uploads/ken.png",
-      "kurai": "/lovable-uploads/kurai.png",
-      "tsuin": "/lovable-uploads/tsuin.png",
-      "wolf": "/lovable-uploads/wolf.png"
-    };
+    // Use direct path to the PNG files
+    const imagePath = `/lovable-uploads/${normalizedName}.png`;
+    console.log(`Image path for ${normalizedName}: ${imagePath}`);
     
-    // Check if we have a match for the image
-    const imagePath = images[normalizedName];
-    console.log(`Image path for ${normalizedName}: ${imagePath || 'Not found'}`);
-    
-    return imagePath || "/placeholder.svg";
+    return imagePath;
   };
 
   return (
