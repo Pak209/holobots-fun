@@ -14,6 +14,9 @@ export const HolobotCard = ({
   const getHolobotImage = (name: string | undefined) => {
     if (!name) return "/placeholder.svg";
     
+    // Normalize the name to lowercase
+    const normalizedName = name.toLowerCase();
+    
     // Define image paths for all holobots with simplified filenames
     const images: Record<string, string> = {
       "ace": "/lovable-uploads/ace.png",
@@ -30,11 +33,8 @@ export const HolobotCard = ({
       "wolf": "/lovable-uploads/wolf.png"
     };
     
-    // Normalize the name to lowercase for case-insensitive matching
-    const normalizedName = name.toLowerCase();
-    
     // Add debugging to check the name being requested
-    console.log(`Getting image for holobot: ${normalizedName}`);
+    console.log(`Looking for holobot image: ${normalizedName}`);
     
     return images[normalizedName] || "/placeholder.svg";
   };
@@ -52,7 +52,7 @@ export const HolobotCard = ({
       
       <div className="aspect-square bg-black/30 mb-0.5 flex items-center justify-center border border-white/20 hover:border-holobots-accent transition-colors duration-150 rounded-sm mx-0 overflow-hidden">
         <img 
-          src={getHolobotImage(stats.name)} 
+          src={getHolobotImage(stats.name?.toLowerCase())} 
           alt={stats.name || "Unknown Holobot"} 
           className="w-full h-full object-contain hover:animate-pulse"
           loading="eager"
