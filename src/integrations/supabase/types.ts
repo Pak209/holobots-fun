@@ -9,369 +9,350 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      "Attribute Boosts Table": {
+      battle_participants: {
         Row: {
-          attack: string
-          Boost_value: number
-          defense: string
-          holobot_id: string
-          hp: string
-          id: string
-          speed: string
+          battle_id: number | null
+          holobot_id: number | null
+          id: number
         }
         Insert: {
-          attack: string
-          Boost_value: number
-          defense: string
-          holobot_id?: string
-          hp: string
-          id?: string
-          speed: string
+          battle_id?: number | null
+          holobot_id?: number | null
+          id?: never
         }
         Update: {
-          attack?: string
-          Boost_value?: number
-          defense?: string
-          holobot_id?: string
-          hp?: string
-          id?: string
-          speed?: string
+          battle_id?: number | null
+          holobot_id?: number | null
+          id?: never
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "battle_participants_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "battle_participants_holobot_id_fkey"
+            columns: ["holobot_id"]
+            isOneToOne: false
+            referencedRelation: "holobots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      "Attributes Table": {
-        Row: {
-          attribute_type: string
-          current_value: number | null
-          holobot_id: string
-          id: string
-          max_value: number | null
-        }
-        Insert: {
-          attribute_type: string
-          current_value?: number | null
-          holobot_id?: string
-          id?: string
-          max_value?: number | null
-        }
-        Update: {
-          attribute_type?: string
-          current_value?: number | null
-          holobot_id?: string
-          id?: string
-          max_value?: number | null
-        }
-        Relationships: []
-      }
-      "Base Stats Table": {
-        Row: {
-          attack: string
-          defense: string
-          holobot_id: string
-          hp: string
-          id: string
-          speed: string
-        }
-        Insert: {
-          attack: string
-          defense: string
-          holobot_id?: string
-          hp: string
-          id?: string
-          speed: string
-        }
-        Update: {
-          attack?: string
-          defense?: string
-          holobot_id?: string
-          hp?: string
-          id?: string
-          speed?: string
-        }
-        Relationships: []
-      }
-      "Battles Table": {
+      battles: {
         Row: {
           created_at: string | null
-          holobot_id: string
-          id: string
-          opponent: string | null
-          result: string | null
-          user_id: string
+          id: number
+          participant_ids: number[] | null
+          rewards: Json | null
+          winner_id: number | null
         }
         Insert: {
           created_at?: string | null
-          holobot_id?: string
-          id?: string
-          opponent?: string | null
-          result?: string | null
-          user_id?: string
+          id?: never
+          participant_ids?: number[] | null
+          rewards?: Json | null
+          winner_id?: number | null
         }
         Update: {
           created_at?: string | null
-          holobot_id?: string
-          id?: string
-          opponent?: string | null
-          result?: string | null
-          user_id?: string
+          id?: never
+          participant_ids?: number[] | null
+          rewards?: Json | null
+          winner_id?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "battles_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "holobots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      "Blueprints Table": {
+      cooldowns: {
         Row: {
-          created_at: string
-          id: string
-          name: string
-          required_parts: Json
-          required_tokens: number
+          energy_refill_time: string | null
+          id: number
+          user_id: number | null
         }
         Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          required_parts: Json
-          required_tokens: number
+          energy_refill_time?: string | null
+          id?: never
+          user_id?: number | null
         }
         Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          required_parts?: Json
-          required_tokens?: number
+          energy_refill_time?: string | null
+          id?: never
+          user_id?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cooldowns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      game_progress: {
+      holobot_progression: {
         Row: {
-          created_at: string | null
-          id: string
-          losses: number | null
-          quests_completed: number | null
-          training_sessions: number | null
-          updated_at: string | null
-          user_id: string
-          wins: number | null
+          battle_id: number | null
+          holobot_id: number | null
+          id: number
+          level_after_battle: number | null
+          xp_gained: number | null
         }
         Insert: {
-          created_at?: string | null
-          id?: string
-          losses?: number | null
-          quests_completed?: number | null
-          training_sessions?: number | null
-          updated_at?: string | null
-          user_id: string
-          wins?: number | null
+          battle_id?: number | null
+          holobot_id?: number | null
+          id?: never
+          level_after_battle?: number | null
+          xp_gained?: number | null
         }
         Update: {
-          created_at?: string | null
-          id?: string
-          losses?: number | null
-          quests_completed?: number | null
-          training_sessions?: number | null
-          updated_at?: string | null
-          user_id?: string
-          wins?: number | null
+          battle_id?: number | null
+          holobot_id?: number | null
+          id?: never
+          level_after_battle?: number | null
+          xp_gained?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "holobot_progression_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holobot_progression_holobot_id_fkey"
+            columns: ["holobot_id"]
+            isOneToOne: false
+            referencedRelation: "holobots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       holobots: {
         Row: {
-          attack: number | null
+          attributes: Json | null
           created_at: string | null
-          defense: number | null
-          experience: number | null
-          health: number | null
-          id: string
+          id: number
           level: number | null
-          name: string
-          next_level_exp: number | null
-          owner_id: string
-          speed: number | null
-          updated_at: string | null
+          name: string | null
+          owner_id: number | null
+          parts: number | null
+          rank: number | null
         }
         Insert: {
-          attack?: number | null
+          attributes?: Json | null
           created_at?: string | null
-          defense?: number | null
-          experience?: number | null
-          health?: number | null
-          id?: string
+          id?: never
           level?: number | null
-          name: string
-          next_level_exp?: number | null
-          owner_id: string
-          speed?: number | null
-          updated_at?: string | null
+          name?: string | null
+          owner_id?: number | null
+          parts?: number | null
+          rank?: number | null
         }
         Update: {
-          attack?: number | null
+          attributes?: Json | null
           created_at?: string | null
-          defense?: number | null
-          experience?: number | null
-          health?: number | null
-          id?: string
+          id?: never
           level?: number | null
-          name?: string
-          next_level_exp?: number | null
-          owner_id?: string
-          speed?: number | null
-          updated_at?: string | null
+          name?: string | null
+          owner_id?: number | null
+          parts?: number | null
+          rank?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "holobots_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holobots_parts_fkey"
+            columns: ["parts"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      "Marketplace Table": {
+      marketplace: {
         Row: {
-          created_at: string
-          holobot_id: string
-          id: string
-          price: number
-          status: string
-          user_id: string
+          buyer_id: number | null
+          created_at: string | null
+          id: number
+          item_id: number | null
+          price: number | null
+          seller_id: number | null
+          status: string | null
+          transaction_status: string | null
         }
         Insert: {
-          created_at: string
-          holobot_id?: string
-          id?: string
-          price: number
-          status: string
-          user_id?: string
+          buyer_id?: number | null
+          created_at?: string | null
+          id?: never
+          item_id?: number | null
+          price?: number | null
+          seller_id?: number | null
+          status?: string | null
+          transaction_status?: string | null
         }
         Update: {
-          created_at?: string
-          holobot_id?: string
-          id?: string
-          price?: number
-          status?: string
-          user_id?: string
+          buyer_id?: number | null
+          created_at?: string | null
+          id?: never
+          item_id?: number | null
+          price?: number | null
+          seller_id?: number | null
+          status?: string | null
+          transaction_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parts: {
+        Row: {
+          blueprint_required: boolean | null
+          id: number
+          name: string | null
+          owner_id: number | null
+          tier: number | null
+          type: string | null
+        }
+        Insert: {
+          blueprint_required?: boolean | null
+          id?: never
+          name?: string | null
+          owner_id?: number | null
+          tier?: number | null
+          type?: string | null
+        }
+        Update: {
+          blueprint_required?: boolean | null
+          id?: never
+          name?: string | null
+          owner_id?: number | null
+          tier?: number | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quests: {
+        Row: {
+          difficulty: string | null
+          energy_cost: number | null
+          id: number
+          rewards: Json | null
+          zone: string | null
+        }
+        Insert: {
+          difficulty?: string | null
+          energy_cost?: number | null
+          id?: never
+          rewards?: Json | null
+          zone?: string | null
+        }
+        Update: {
+          difficulty?: string | null
+          energy_cost?: number | null
+          id?: never
+          rewards?: Json | null
+          zone?: string | null
         }
         Relationships: []
       }
-      profiles: {
+      transactions: {
+        Row: {
+          amount: number | null
+          id: number
+          timestamp: string | null
+          type: string | null
+          user_id: number | null
+        }
+        Insert: {
+          amount?: number | null
+          id?: never
+          timestamp?: string | null
+          type?: string | null
+          user_id?: number | null
+        }
+        Update: {
+          amount?: number | null
+          id?: never
+          timestamp?: string | null
+          type?: string | null
+          user_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
         Row: {
           created_at: string | null
-          daily_energy: number | null
-          holos_tokens: number | null
-          id: string
-          last_energy_refresh: string | null
-          max_daily_energy: number | null
-          updated_at: string | null
-          username: string
-        }
-        Insert: {
-          created_at?: string | null
-          daily_energy?: number | null
-          holos_tokens?: number | null
-          id: string
-          last_energy_refresh?: string | null
-          max_daily_energy?: number | null
-          updated_at?: string | null
-          username: string
-        }
-        Update: {
-          created_at?: string | null
-          daily_energy?: number | null
-          holos_tokens?: number | null
-          id?: string
-          last_energy_refresh?: string | null
-          max_daily_energy?: number | null
-          updated_at?: string | null
-          username?: string
-        }
-        Relationships: []
-      }
-      "Tokens Table": {
-        Row: {
-          amount: number
-          created_at: string
-          id: string
-          purpose: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          id?: string
-          purpose: string
-          type: string
-          user_id?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          id?: string
-          purpose?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      "User Table": {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          last_login: string | null
-          password_hash: string
-          username: string
+          email: string | null
+          energy: number | null
+          id: number
+          sync_points: number | null
+          tokens: number | null
           wallet_address: string | null
         }
         Insert: {
-          created_at?: string
-          email?: string
-          id?: string
-          last_login?: string | null
-          password_hash?: string
-          username?: string
+          created_at?: string | null
+          email?: string | null
+          energy?: number | null
+          id?: never
+          sync_points?: number | null
+          tokens?: number | null
           wallet_address?: string | null
         }
         Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          last_login?: string | null
-          password_hash?: string
-          username?: string
+          created_at?: string | null
+          email?: string | null
+          energy?: number | null
+          id?: never
+          sync_points?: number | null
+          tokens?: number | null
           wallet_address?: string | null
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
-      web3_users: {
-        Row: {
-          created_at: string | null
-          id: string
-          wallet_address: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          wallet_address: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          wallet_address?: string
         }
         Relationships: []
       }
@@ -380,16 +361,181 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
+      binary_quantize:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
+      halfvec_avg: {
         Args: {
-          user_id: string
-          role: Database["public"]["Enums"]["app_role"]
+          "": number[]
         }
-        Returns: boolean
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
+      }
+      hnsw_bit_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflat_bit_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      l2_norm:
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+      l2_normalize:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
+      sparsevec_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
+      }
+      vector_avg: {
+        Args: {
+          "": number[]
+        }
+        Returns: string
+      }
+      vector_dims:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+      vector_norm: {
+        Args: {
+          "": string
+        }
+        Returns: number
+      }
+      vector_out: {
+        Args: {
+          "": string
+        }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: {
+          "": string
+        }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
       }
     }
     Enums: {
-      app_role: "admin" | "user" | "nft_holder"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
