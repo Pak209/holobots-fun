@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS, getRank, HolobotStats } from "@/types/holobot";
 import { Button } from "@/components/ui/button";
-import { Coins, ShoppingCart } from "lucide-react";
+import { Coins, ShoppingCart, ChevronUp, ChevronDown } from "lucide-react";
 import { UserHolobot } from "@/types/user";
 import { Badge } from "@/components/ui/badge";
 

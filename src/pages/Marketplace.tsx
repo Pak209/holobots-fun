@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { MarketplaceFilters, FilterOptions } from "@/components/marketplace/MarketplaceFilters";
@@ -19,7 +18,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Mock data for marketplace items
 const MARKETPLACE_ITEMS = [
   // Holobots
   {
