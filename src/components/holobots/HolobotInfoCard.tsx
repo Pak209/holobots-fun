@@ -42,39 +42,39 @@ export const HolobotInfoCard = ({
   return (
     <div className={`flex flex-col sm:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300 ${isExpanded ? 'sm:h-auto' : 'sm:h-auto'}`}>
       <div className="flex sm:flex-row gap-4 w-full">
-        {/* Stats Panel - Reduced width for better mobile display */}
-        <div className="flex-1 flex flex-col justify-between max-w-[250px] sm:max-w-[220px] bg-black/30 p-3 rounded-lg border border-holobots-accent self-start">
+        {/* Stats Panel - Further reduced width to ensure TCG fits */}
+        <div className="flex-1 flex flex-col justify-between max-w-[180px] sm:max-w-[180px] bg-black/30 p-2 rounded-lg border border-holobots-accent self-start">
           <div>
             <div className="flex justify-between items-start mb-2">
               <h2 className="text-lg font-bold text-holobots-accent">
                 {holobot.name}
               </h2>
               {isOwned && !isJustMinted && (
-                <div className="px-2 py-0.5 bg-green-500/20 border border-green-500 rounded text-xs">
+                <div className="px-1 py-0.5 bg-green-500/20 border border-green-500 rounded text-[10px]">
                   OWNED
                 </div>
               )}
               {isJustMinted && (
-                <div className="px-2 py-0.5 bg-blue-500/20 border border-blue-500 rounded text-xs animate-pulse">
-                  JUST MINTED
+                <div className="px-1 py-0.5 bg-blue-500/20 border border-blue-500 rounded text-[10px] animate-pulse">
+                  NEW
                 </div>
               )}
             </div>
             
             {isOwned && (
-              <div className="mb-3 space-y-1">
+              <div className="mb-2 space-y-1">
                 <div className="flex justify-between items-center text-xs">
-                  <span>Level {level}</span>
-                  <span>{currentXp}/{nextLevelXp} XP</span>
+                  <span>LV {level}</span>
+                  <span>{currentXp}/{nextLevelXp}</span>
                 </div>
-                <Progress value={xpProgress} className="h-1.5" />
-                <div className="text-xs text-right text-holobots-accent">
+                <Progress value={xpProgress} className="h-1" />
+                <div className="text-[10px] text-right text-holobots-accent">
                   Rank: {getRank(level)}
                 </div>
               </div>
             )}
             
-            <div className="space-y-1 font-mono text-sm">
+            <div className="space-y-0.5 font-mono text-sm">
               <p>HP: {holobot.maxHealth}</p>
               <p>Attack: {holobot.attack}</p>
               <p>Defense: {holobot.defense}</p>
@@ -83,20 +83,20 @@ export const HolobotInfoCard = ({
             </div>
           </div>
           
-          <div className="mt-3 pt-2 border-t border-holobots-border dark:border-holobots-dark-border">
+          <div className="mt-2 pt-1 border-t border-holobots-border dark:border-holobots-dark-border">
             {!isOwned && !isJustMinted && (
               <Button 
                 onClick={() => onMint(holobot.name)}
                 disabled={isMinting === holobot.name || userTokens < 100}
-                className="w-full py-1 h-auto text-sm bg-holobots-accent hover:bg-holobots-accent/80 text-black font-semibold"
+                className="w-full py-0.5 h-7 text-xs bg-holobots-accent hover:bg-holobots-accent/80 text-black font-semibold"
               >
                 {isMinting === holobot.name ? (
                   "Minting..."
                 ) : (
                   <>
-                    <Plus size={14} className="mr-1" />
+                    <Plus size={12} className="mr-0.5" />
                     Mint Holobot
-                    <Coins size={14} className="ml-1 mr-0.5" />
+                    <Coins size={12} className="ml-0.5 mr-0.5" />
                     <span>100</span>
                   </>
                 )}
@@ -104,28 +104,28 @@ export const HolobotInfoCard = ({
             )}
             
             {isJustMinted && (
-              <div className="w-full p-1.5 bg-green-500/20 border border-green-500 rounded text-center">
-                <span className="text-green-400 text-xs font-semibold">Minting Successful!</span>
+              <div className="w-full p-1 bg-green-500/20 border border-green-500 rounded text-center">
+                <span className="text-green-400 text-[10px] font-semibold">Minting Successful!</span>
               </div>
             )}
             
-            {/* Attribute Boost Section - Only show for owned holobots */}
+            {/* Attribute Boost Section - Only show for owned holobots with compact layout */}
             {isOwned && (
               <div>
-                <h3 className="text-xs font-bold mb-1.5 text-holobots-accent">
+                <h3 className="text-[10px] font-bold mb-1 text-holobots-accent">
                   Available Boosts
                 </h3>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button className="px-1.5 py-0.5 text-xs bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
+                <div className="grid grid-cols-2 gap-1">
+                  <button className="px-1 py-0.5 text-[10px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
                     +1 ATK
                   </button>
-                  <button className="px-1.5 py-0.5 text-xs bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
+                  <button className="px-1 py-0.5 text-[10px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
                     +1 DEF
                   </button>
-                  <button className="px-1.5 py-0.5 text-xs bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
+                  <button className="px-1 py-0.5 text-[10px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
                     +1 SPD
                   </button>
-                  <button className="px-1.5 py-0.5 text-xs bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
+                  <button className="px-1 py-0.5 text-[10px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
                     +10 HP
                   </button>
                 </div>
@@ -134,18 +134,20 @@ export const HolobotInfoCard = ({
           </div>
         </div>
         
-        {/* TCG Card - Positioned to the right of attributes */}
+        {/* TCG Card - Positioned to the right of attributes with adjusted sizing */}
         <div className="flex-1 flex justify-center items-start">
-          <HolobotCard 
-            stats={{
-              ...holobot,
-              level: isOwned ? level : holobot.level,
-              experience: isOwned ? currentXp : undefined,
-              nextLevelExp: isOwned ? nextLevelXp : undefined,
-              name: holobot.name.toUpperCase(),
-            }} 
-            variant={isOwned ? "blue" : "red"} 
-          />
+          <div className="transform scale-90 origin-top-left">
+            <HolobotCard 
+              stats={{
+                ...holobot,
+                level: isOwned ? level : holobot.level,
+                experience: isOwned ? currentXp : undefined,
+                nextLevelExp: isOwned ? nextLevelXp : undefined,
+                name: holobot.name.toUpperCase(),
+              }} 
+              variant={isOwned ? "blue" : "red"} 
+            />
+          </div>
         </div>
       </div>
       
