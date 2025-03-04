@@ -228,8 +228,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const dbUpdates: any = {};
       
       if (updates.username) dbUpdates.username = updates.username;
-      if (updates.holos_tokens !== undefined) dbUpdates.holos_tokens = updates.holosTokens;
-      if (updates.gacha_tickets !== undefined) dbUpdates.gacha_tickets = updates.gachaTickets;
+      if (updates.holosTokens !== undefined) dbUpdates.holos_tokens = updates.holosTokens;
+      if (updates.gachaTickets !== undefined) dbUpdates.gacha_tickets = updates.gachaTickets;
       if (updates.dailyEnergy !== undefined) dbUpdates.daily_energy = updates.dailyEnergy;
       if (updates.maxDailyEnergy !== undefined) dbUpdates.max_daily_energy = updates.maxDailyEnergy;
       if (updates.lastEnergyRefresh) dbUpdates.last_energy_refresh = updates.lastEnergyRefresh;
