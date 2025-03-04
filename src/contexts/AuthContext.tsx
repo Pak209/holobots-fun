@@ -1,8 +1,8 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -13,7 +13,6 @@ interface AuthContextType extends AuthState {
   getUserProfile: (userId: string) => Promise<UserProfile | null>;
 }
 
-// Create a placeholder user profile for when not authenticated
 const defaultGuestUser: UserProfile = {
   id: "guest",
   username: "Guest User",
@@ -39,18 +38,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  // Initially check if the user is logged in
   useEffect(() => {
     const checkUser = async () => {
       setLoading(true);
       
       try {
-        // Get the current authenticated user
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // User is authenticated - fetch their profile
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -62,11 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setCurrentUser(null);
             setError(profileError.message);
           } else if (profile) {
-            // Map the database profile to our UserProfile type
             setCurrentUser(mapDatabaseToUserProfile(profile));
           }
         } else {
-          // No authenticated user - set to guest
           setCurrentUser(null);
         }
       } catch (err) {
@@ -80,12 +75,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     checkUser();
     
-    // Set up auth state change listener
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
-        // User signed in - fetch their profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -100,18 +93,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setCurrentUser(mapDatabaseToUserProfile(profile));
         }
       } else if (event === 'SIGNED_OUT') {
-        // User signed out
         setCurrentUser(null);
       }
     });
     
-    // Clean up the listener when the component unmounts
     return () => {
       authListener.subscription.unsubscribe();
     };
   }, []);
 
-  // Authentication functions
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
@@ -155,8 +145,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw signOutError;
       }
       
-      // Clear user state
       setCurrentUser(null);
+      navigate('/');
       
       toast({
         title: "Logged Out",
@@ -180,7 +170,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     
     try {
-      // Sign up the user
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -224,7 +213,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     try {
-      // Prepare the updates in the format Supabase expects
       const dbUpdates: any = {};
       
       if (updates.username) dbUpdates.username = updates.username;
@@ -236,9 +224,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updates.stats?.wins !== undefined) dbUpdates.wins = updates.stats.wins;
       if (updates.stats?.losses !== undefined) dbUpdates.losses = updates.stats.losses;
       
-      // For holobots, we need special handling since it's stored as JSON
       if (updates.holobots) {
-        // Get the current profile to update the holobots array
         const { data: currentProfile } = await supabase
           .from('profiles')
           .select('holobots')
@@ -248,7 +234,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dbUpdates.holobots = updates.holobots;
       }
       
-      // Update the profile in Supabase
       const { error: updateError } = await supabase
         .from('profiles')
         .update(dbUpdates)
@@ -258,7 +243,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw updateError;
       }
       
-      // Update the local state
       setCurrentUser({ ...currentUser, ...updates });
       
       toast({
@@ -277,7 +261,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const searchPlayers = async (query: string): Promise<UserProfile[]> => {
     try {
-      // Search for players in the profiles table
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -288,7 +271,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
       
-      // Map the database profiles to our UserProfile type
       return data.map(profile => mapDatabaseToUserProfile(profile));
     } catch (error) {
       console.error("Error searching players:", error);
@@ -303,7 +285,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      // Get a user profile by ID
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -314,7 +295,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
       
-      // Map the database profile to our UserProfile type
       return mapDatabaseToUserProfile(data);
     } catch (error) {
       console.error("Error getting user profile:", error);
@@ -322,9 +302,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Provide the current user state and auth functions
   const state: AuthState = {
-    user: currentUser || defaultGuestUser, // Fallback to guest user if not authenticated
+    user: currentUser || defaultGuestUser,
     loading,
     error,
   };
