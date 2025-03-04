@@ -277,6 +277,7 @@ export type Database = {
           gacha_tickets: number | null
           holos_tokens: number | null
           id: string
+          last_daily_pull: string | null
           last_energy_refresh: string | null
           losses: number | null
           max_daily_energy: number
@@ -289,6 +290,7 @@ export type Database = {
           gacha_tickets?: number | null
           holos_tokens?: number | null
           id: string
+          last_daily_pull?: string | null
           last_energy_refresh?: string | null
           losses?: number | null
           max_daily_energy?: number
@@ -301,6 +303,7 @@ export type Database = {
           gacha_tickets?: number | null
           holos_tokens?: number | null
           id?: string
+          last_daily_pull?: string | null
           last_energy_refresh?: string | null
           losses?: number | null
           max_daily_energy?: number
