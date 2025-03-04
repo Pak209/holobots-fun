@@ -23,7 +23,7 @@ const HolobotsInfo = () => {
           HOLOBOTS INFO
         </h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-6">
           {Object.entries(HOLOBOT_STATS).map(([key, holobot]) => {
             const userHolobot = findUserHolobot(holobot.name);
             
