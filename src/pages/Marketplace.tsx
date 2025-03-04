@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { MarketplaceFilters, FilterOptions } from "@/components/marketplace/MarketplaceFilters";

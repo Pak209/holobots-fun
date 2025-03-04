@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BlueprintCardProps {
@@ -38,53 +40,66 @@ export const BlueprintCard = ({
   };
 
   return (
-    <div 
-      className={cn(
-        "w-32 h-48 relative rounded-lg overflow-hidden cursor-pointer transform transition-all duration-300",
-        isHovered ? "scale-105 shadow-xl" : "shadow-md",
-        forSale ? "border-2 border-holobots-accent" : "border border-holobots-border"
-      )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
-    >
-      {/* Blueprint frame with gradient background */}
-      <div className={`absolute inset-0 bg-gradient-to-b ${getTierColor()} opacity-80`}></div>
-      
-      {/* Blueprint image */}
-      <div className="absolute inset-0 flex items-center justify-center p-2">
-        <div className="w-full h-2/3 flex items-center justify-center overflow-hidden">
-          <img 
-            src={imagePath} 
-            alt={`${holobotName} blueprint`} 
-            className="w-3/4 h-3/4 object-contain opacity-50 mix-blend-overlay"
-          />
-        </div>
-      </div>
-      
-      {/* Blueprint info */}
-      <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/50 backdrop-blur-sm">
-        <h3 className="text-xs font-bold text-white truncate">{normalizedName} BLUEPRINT</h3>
-        <div className="flex justify-between items-center mt-1">
-          <Badge variant="outline" className="text-[10px] bg-black/30 text-white">
-            Tier {tier}
-          </Badge>
-          {quantity > 1 && (
-            <span className="text-[10px] text-white">x{quantity}</span>
-          )}
+    <div className="flex flex-col items-center">
+      <div 
+        className={cn(
+          "w-32 h-48 relative rounded-lg overflow-hidden cursor-pointer transform transition-all duration-300",
+          isHovered ? "scale-105 shadow-xl" : "shadow-md",
+          forSale ? "border-2 border-holobots-accent" : "border border-holobots-border"
+        )}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Blueprint frame with gradient background */}
+        <div className={`absolute inset-0 bg-gradient-to-b ${getTierColor()} opacity-80`}></div>
+        
+        {/* Blueprint image */}
+        <div className="absolute inset-0 flex items-center justify-center p-2">
+          <div className="w-full h-2/3 flex items-center justify-center overflow-hidden">
+            <img 
+              src={imagePath} 
+              alt={`${holobotName} blueprint`} 
+              className="w-3/4 h-3/4 object-contain opacity-50 mix-blend-overlay"
+            />
+          </div>
         </div>
         
-        {forSale && price && (
-          <div className="mt-1 text-xs font-bold text-yellow-400 flex items-center justify-end">
-            {price} HOLOS
+        {/* Blueprint info */}
+        <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/50 backdrop-blur-sm">
+          <h3 className="text-xs font-bold text-white truncate">{normalizedName} BLUEPRINT</h3>
+          <div className="flex justify-between items-center mt-1">
+            <Badge variant="outline" className="text-[10px] bg-black/30 text-white">
+              Tier {tier}
+            </Badge>
+            {quantity > 1 && (
+              <span className="text-[10px] text-white">x{quantity}</span>
+            )}
+          </div>
+        </div>
+        
+        {/* Sale indicator */}
+        {forSale && (
+          <div className="absolute top-1 right-1 bg-holobots-accent text-black text-[8px] px-1 rounded">
+            FOR SALE
           </div>
         )}
       </div>
       
-      {/* Sale indicator */}
-      {forSale && (
-        <div className="absolute top-1 right-1 bg-holobots-accent text-black text-[8px] px-1 rounded">
-          FOR SALE
+      {/* Price and buy button below the card */}
+      {forSale && price && (
+        <div className="flex items-center gap-2 mt-2 w-full">
+          <div className="text-sm font-bold text-yellow-400">
+            {price} HOLOS
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-7 bg-holobots-accent hover:bg-holobots-accent/80 text-black border-none ml-auto"
+            onClick={onClick}
+          >
+            <ShoppingCart className="h-3.5 w-3.5 mr-1" />
+            Buy
+          </Button>
         </div>
       )}
     </div>
