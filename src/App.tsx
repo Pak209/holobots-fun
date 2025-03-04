@@ -41,8 +41,8 @@ function App() {
         <ConnectionProvider endpoint="https://api.mainnet-beta.solana.com">
           <WalletProvider wallets={wallets} autoConnect>
             <ThemeProvider defaultTheme="dark" enableSystem>
-              <AuthProvider>
-                <Router>
+              <Router>
+                <AuthProvider>
                   <Routes>
                     <Route path="/" element={<Landing />} />
                     <Route path="/auth" element={<Auth />} />
@@ -57,9 +57,9 @@ function App() {
                     <Route path="/gacha" element={<MobileLayout><Gacha /></MobileLayout>} />
                     <Route path="/user-items" element={<MobileLayout><UserItems /></MobileLayout>} />
                   </Routes>
-                </Router>
-                <Toaster />
-              </AuthProvider>
+                  <Toaster />
+                </AuthProvider>
+              </Router>
             </ThemeProvider>
           </WalletProvider>
         </ConnectionProvider>
