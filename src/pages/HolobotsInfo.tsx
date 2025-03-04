@@ -1,5 +1,4 @@
 
-import { NavigationMenu } from "@/components/NavigationMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotInfoCard } from "@/components/holobots/HolobotInfoCard";
@@ -16,8 +15,6 @@ const HolobotsInfo = () => {
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background text-holobots-text dark:text-holobots-dark-text p-4">
-      <NavigationMenu />
-      
       <div className="max-w-7xl mx-auto pt-16">
         <h1 className="text-3xl font-bold text-center mb-8 text-holobots-accent">
           HOLOBOTS INFO
