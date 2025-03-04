@@ -33,6 +33,8 @@ export default function Gacha() {
   const [cooldownProgress, setCooldownProgress] = useState(0);
   const { toast } = useToast();
 
+  // Fix: Change the daily pull availability logic
+  // Only check for lastEnergyRefresh if it exists
   const isDailyPullAvailable = !user.lastEnergyRefresh || 
     new Date(user.lastEnergyRefresh).getTime() + (DAILY_COOLDOWN_HOURS * 60 * 60 * 1000) < Date.now();
 
