@@ -33,10 +33,15 @@ export default function Gacha() {
   const [cooldownProgress, setCooldownProgress] = useState(0);
   const { toast } = useToast();
 
-  // Fix: Change the daily pull availability logic
-  // Only check for lastEnergyRefresh if it exists
-  const isDailyPullAvailable = !user.lastEnergyRefresh || 
-    new Date(user.lastEnergyRefresh).getTime() + (DAILY_COOLDOWN_HOURS * 60 * 60 * 1000) < Date.now();
+  // Updated daily pull availability logic:
+  // 1. Available by default for new users (lastEnergyRefresh is null)
+  // 2. Available if the user has minted at least one Holobot
+  // 3. Available again after cooldown period has passed
+  const isDailyPullAvailable = 
+    !user.lastEnergyRefresh || 
+    (user.holobots.length > 0 && 
+     (!user.lastEnergyRefresh || 
+      new Date(user.lastEnergyRefresh).getTime() + (DAILY_COOLDOWN_HOURS * 60 * 60 * 1000) < Date.now()));
 
   useEffect(() => {
     // Update countdown timer
@@ -87,11 +92,20 @@ export default function Gacha() {
     } else {
       // For free daily pull, check if cooldown has passed
       if (!isDailyPullAvailable) {
-        toast({
-          title: "Daily Pull Not Available",
-          description: `Your next free pull will be available ${timeUntilNextDailyPull}.`,
-          variant: "destructive"
-        });
+        // If user hasn't minted a Holobot yet
+        if (user.holobots.length === 0) {
+          toast({
+            title: "Mint a Holobot First",
+            description: "You need to mint at least one Holobot to use the daily free pull.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Daily Pull Not Available",
+            description: `Your next free pull will be available ${timeUntilNextDailyPull}.`,
+            variant: "destructive"
+          });
+        }
         return;
       }
     }
