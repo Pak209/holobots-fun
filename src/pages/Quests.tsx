@@ -1,5 +1,4 @@
 
-import { NavigationMenu } from "@/components/NavigationMenu";
 import { QuestGrid } from "@/components/QuestGrid";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -8,8 +7,6 @@ const Quests = () => {
   
   return (
     <div className="min-h-screen bg-background">
-      <NavigationMenu />
-      
       <div className="container mx-auto pt-16 px-4 pb-16">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">

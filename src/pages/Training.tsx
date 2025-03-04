@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS } from "@/types/holobot";
@@ -9,7 +8,6 @@ import { Card } from "@/components/ui/card";
 import { Battery, Swords, Trophy, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { calculateBattleExperience } from "@/utils/battleUtils";
-import { NavigationMenu } from "@/components/NavigationMenu";
 
 // CPU difficulty levels
 const DIFFICULTY_LEVELS = {

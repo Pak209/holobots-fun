@@ -1,6 +1,4 @@
-
 import { useState, useEffect } from "react";
-import { NavigationMenu } from "@/components/NavigationMenu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Package, Ticket, Clock } from "lucide-react";
@@ -33,10 +31,6 @@ export default function Gacha() {
   const [cooldownProgress, setCooldownProgress] = useState(0);
   const { toast } = useToast();
 
-  // Updated daily pull availability logic:
-  // 1. Available by default for new users (lastEnergyRefresh is null)
-  // 2. Available if the user has minted at least one Holobot
-  // 3. Available again after cooldown period has passed
   const isDailyPullAvailable = 
     !user.lastEnergyRefresh || 
     (user.holobots.length > 0 && 
@@ -44,7 +38,6 @@ export default function Gacha() {
       new Date(user.lastEnergyRefresh).getTime() + (DAILY_COOLDOWN_HOURS * 60 * 60 * 1000) < Date.now()));
 
   useEffect(() => {
-    // Update countdown timer
     const updateCooldown = () => {
       if (!user.lastEnergyRefresh) {
         setTimeUntilNextDailyPull(null);
@@ -62,7 +55,6 @@ export default function Gacha() {
       } else {
         setTimeUntilNextDailyPull(formatDistanceToNow(nextAvailableTime, { addSuffix: true }));
         
-        // Calculate progress percentage (inverted - shows how much cooldown has passed)
         const totalDuration = DAILY_COOLDOWN_HOURS * 60 * 60 * 1000;
         const elapsed = now - lastPullTime;
         const progressPercent = Math.min(Math.floor((elapsed / totalDuration) * 100), 100);
@@ -71,13 +63,12 @@ export default function Gacha() {
     };
 
     updateCooldown();
-    const interval = setInterval(updateCooldown, 60000); // Update every minute
+    const interval = setInterval(updateCooldown, 60000);
     
     return () => clearInterval(interval);
   }, [user.lastEnergyRefresh]);
 
   const pullGacha = (amount: number, isPaidPull: boolean = true) => {
-    // For paid pulls, check if user has enough tokens
     if (isPaidPull) {
       const cost = amount === 1 ? SINGLE_PULL_COST : MULTI_PULL_COST;
       
@@ -90,9 +81,7 @@ export default function Gacha() {
         return;
       }
     } else {
-      // For free daily pull, check if cooldown has passed
       if (!isDailyPullAvailable) {
-        // If user hasn't minted a Holobot yet
         if (user.holobots.length === 0) {
           toast({
             title: "Mint a Holobot First",
@@ -126,12 +115,10 @@ export default function Gacha() {
       }
     }
 
-    // Update user data
     if (isPaidPull) {
       const cost = amount === 1 ? SINGLE_PULL_COST : MULTI_PULL_COST;
       updateUser({ holosTokens: user.holosTokens - cost });
     } else {
-      // Update the last daily pull timestamp
       updateUser({ lastEnergyRefresh: new Date().toISOString() });
     }
 
@@ -156,9 +143,7 @@ export default function Gacha() {
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
-      <NavigationMenu />
-      
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-16">
         <div className="relative">
           <img 
             src="/lovable-uploads/dbbb9702-9979-48e3-96d9-574fbbf4ec3f.png" 
@@ -179,7 +164,6 @@ export default function Gacha() {
           </div>
         </div>
 
-        {/* Daily Free Pull Section */}
         <div className="mb-6">
           <div className="flex flex-col items-center gap-2 mb-2">
             <Button
@@ -209,7 +193,6 @@ export default function Gacha() {
           </div>
         </div>
 
-        {/* Paid Pulls Section */}
         <div className="flex justify-center gap-2 mb-8">
           <Button
             onClick={() => pullGacha(1)}
