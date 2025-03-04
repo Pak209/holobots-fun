@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { MarketplaceFilters, FilterOptions } from "@/components/marketplace/MarketplaceFilters";
@@ -92,7 +93,7 @@ const MARKETPLACE_ITEMS = [
     type: "item",
     name: "Daily Energy Refill",
     description: "Restores your daily energy to full",
-    rarity: "common",
+    rarity: "common" as "common" | "rare" | "extremely-rare",
     price: 200,
     seller: "ItemShop",
     quantity: 3,
@@ -103,7 +104,7 @@ const MARKETPLACE_ITEMS = [
     type: "item",
     name: "Exp Battle Booster",
     description: "Doubles experience gained from battles for 24 hours",
-    rarity: "rare",
+    rarity: "rare" as "common" | "rare" | "extremely-rare",
     price: 750,
     seller: "BoostMaster",
     quantity: 1,
@@ -114,7 +115,7 @@ const MARKETPLACE_ITEMS = [
     type: "item",
     name: "Rank Skip",
     description: "Skip to the next rank instantly",
-    rarity: "extremely-rare",
+    rarity: "extremely-rare" as "common" | "rare" | "extremely-rare",
     price: 5000,
     seller: "LegendaryTrader",
     quantity: 1,
