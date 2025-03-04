@@ -29,9 +29,43 @@ Object.entries(HOLOBOT_IMAGE_MAPPING).forEach(([key, value]) => {
   // Capitalized version (e.g., "Ace")
   NORMALIZED_HOLOBOT_MAPPING[key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()] = value;
   
-  // Add special case for Shadow and other potential problem cases
-  if (key === "shadow") {
+  // Add special cases for each Holobot to ensure they match regardless of casing
+  if (key === "ace") {
+    NORMALIZED_HOLOBOT_MAPPING["Ace"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["ACE"] = value;
+  } else if (key === "shadow") {
     NORMALIZED_HOLOBOT_MAPPING["Shadow"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["SHADOW"] = value;
+  } else if (key === "kuma") {
+    NORMALIZED_HOLOBOT_MAPPING["Kuma"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["KUMA"] = value;
+  } else if (key === "era") {
+    NORMALIZED_HOLOBOT_MAPPING["Era"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["ERA"] = value;
+  } else if (key === "hare") {
+    NORMALIZED_HOLOBOT_MAPPING["Hare"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["HARE"] = value;
+  } else if (key === "tora") {
+    NORMALIZED_HOLOBOT_MAPPING["Tora"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["TORA"] = value;
+  } else if (key === "wake") {
+    NORMALIZED_HOLOBOT_MAPPING["Wake"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["WAKE"] = value;
+  } else if (key === "gama") {
+    NORMALIZED_HOLOBOT_MAPPING["Gama"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["GAMA"] = value;
+  } else if (key === "ken") {
+    NORMALIZED_HOLOBOT_MAPPING["Ken"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["KEN"] = value;
+  } else if (key === "kurai") {
+    NORMALIZED_HOLOBOT_MAPPING["Kurai"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["KURAI"] = value;
+  } else if (key === "tsuin") {
+    NORMALIZED_HOLOBOT_MAPPING["Tsuin"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["TSUIN"] = value;
+  } else if (key === "wolf") {
+    NORMALIZED_HOLOBOT_MAPPING["Wolf"] = value;
+    NORMALIZED_HOLOBOT_MAPPING["WOLF"] = value;
   }
 });
 
@@ -46,45 +80,47 @@ export const getHolobotImagePath = (key: string | undefined): string => {
     return "/placeholder.svg";
   }
   
-  // Remove any non-alphanumeric characters and trim
-  const normalizedKey = key.trim().toLowerCase();
+  // Trim the key and make a clean version
+  const cleanKey = key.trim();
   
-  console.log(`Getting image for holobot key: "${normalizedKey}" (original: "${key}")`);
+  console.log(`Getting image for holobot key: "${cleanKey}" (original: "${key}")`);
   
-  // First try the direct match in normalized mapping
-  if (NORMALIZED_HOLOBOT_MAPPING[key]) {
-    console.log(`Found direct match for original key "${key}": ${NORMALIZED_HOLOBOT_MAPPING[key]}`);
-    return NORMALIZED_HOLOBOT_MAPPING[key];
+  // First try an exact match with the original key
+  if (NORMALIZED_HOLOBOT_MAPPING[cleanKey]) {
+    console.log(`Found direct match for key "${cleanKey}": ${NORMALIZED_HOLOBOT_MAPPING[cleanKey]}`);
+    return NORMALIZED_HOLOBOT_MAPPING[cleanKey];
   }
   
-  // Try normalized key
-  if (NORMALIZED_HOLOBOT_MAPPING[normalizedKey]) {
-    console.log(`Found match in normalized mapping for "${normalizedKey}": ${NORMALIZED_HOLOBOT_MAPPING[normalizedKey]}`);
-    return NORMALIZED_HOLOBOT_MAPPING[normalizedKey];
+  // Try lowercase version
+  const lowercaseKey = cleanKey.toLowerCase();
+  if (NORMALIZED_HOLOBOT_MAPPING[lowercaseKey]) {
+    console.log(`Found match for lowercase key "${lowercaseKey}": ${NORMALIZED_HOLOBOT_MAPPING[lowercaseKey]}`);
+    return NORMALIZED_HOLOBOT_MAPPING[lowercaseKey];
   }
   
-  // If not found, try to extract just the holobot name 
-  // (in case key contains additional info like "ace-lvl1")
-  const possibleHolobotName = normalizedKey.split(/[^a-z0-9]/)[0];
-  
-  if (possibleHolobotName && NORMALIZED_HOLOBOT_MAPPING[possibleHolobotName]) {
-    console.log(`Found match for extracted name "${possibleHolobotName}" from "${normalizedKey}": ${NORMALIZED_HOLOBOT_MAPPING[possibleHolobotName]}`);
-    return NORMALIZED_HOLOBOT_MAPPING[possibleHolobotName];
-  }
-  
-  // Final fallback: try all variations of capitalization of the key
-  const capitalizedKey = normalizedKey.charAt(0).toUpperCase() + normalizedKey.slice(1);
+  // Try capitalized version
+  const capitalizedKey = lowercaseKey.charAt(0).toUpperCase() + lowercaseKey.slice(1);
   if (NORMALIZED_HOLOBOT_MAPPING[capitalizedKey]) {
     console.log(`Found match for capitalized key "${capitalizedKey}": ${NORMALIZED_HOLOBOT_MAPPING[capitalizedKey]}`);
     return NORMALIZED_HOLOBOT_MAPPING[capitalizedKey];
   }
   
+  // If not found, try to extract just the holobot name 
+  // (in case key contains additional info like "ace-lvl1")
+  const possibleHolobotName = lowercaseKey.split(/[^a-z0-9]/)[0];
+  
+  if (possibleHolobotName && NORMALIZED_HOLOBOT_MAPPING[possibleHolobotName]) {
+    console.log(`Found match for extracted name "${possibleHolobotName}" from "${lowercaseKey}": ${NORMALIZED_HOLOBOT_MAPPING[possibleHolobotName]}`);
+    return NORMALIZED_HOLOBOT_MAPPING[possibleHolobotName];
+  }
+  
   // Log error and return placeholder if no match found
-  console.error(`No image found for holobot: "${normalizedKey}"`, { 
+  console.error(`No image found for holobot: "${cleanKey}"`, { 
     originalKey: key,
-    normalizedKey,
-    possibleHolobotName,
+    cleanKey,
+    lowercaseKey,
     capitalizedKey,
+    possibleHolobotName,
     availableKeys: Object.keys(NORMALIZED_HOLOBOT_MAPPING).join(", ")
   });
   

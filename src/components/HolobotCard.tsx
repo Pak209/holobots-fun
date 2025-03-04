@@ -13,7 +13,7 @@ export const HolobotCard = ({
   variant = "blue"
 }: HolobotCardProps) => {
   // Ensure we're using the correct key for image lookup
-  const holobotName = stats.name.toLowerCase();
+  const holobotName = stats.name;
   console.log(`HolobotCard rendering "${holobotName}"`, stats);
   
   const imagePath = getHolobotImagePath(holobotName);
