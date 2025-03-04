@@ -26,6 +26,7 @@ import Gacha from "@/pages/Gacha";
 import UserItems from "@/pages/UserItems";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
+import Leaderboard from "@/pages/Leaderboard";
 import { MobileLayout } from "@/components/MobileLayout";
 
 const network = WalletAdapterNetwork.Mainnet;
@@ -56,6 +57,7 @@ function App() {
                     <Route path="/holobots-info" element={<MobileLayout><HolobotsInfo /></MobileLayout>} />
                     <Route path="/gacha" element={<MobileLayout><Gacha /></MobileLayout>} />
                     <Route path="/user-items" element={<MobileLayout><UserItems /></MobileLayout>} />
+                    <Route path="/leaderboard" element={<MobileLayout><Leaderboard /></MobileLayout>} />
                   </Routes>
                   <Toaster />
                 </AuthProvider>

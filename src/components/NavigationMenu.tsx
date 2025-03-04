@@ -7,7 +7,9 @@ import {
   Battery,
   Coins,
   ShoppingBag,
-  Database
+  Database,
+  BarChart4,
+  Wheat
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -98,6 +100,20 @@ export const NavigationMenu = () => {
           <DropdownMenuItem className="cursor-pointer">
             <ShoppingBag className="mr-2 h-4 w-4" />
             <span>My Items</span>
+          </DropdownMenuItem>
+        </Link>
+        
+        <Link to="/leaderboard">
+          <DropdownMenuItem className="cursor-pointer">
+            <BarChart4 className="mr-2 h-4 w-4" />
+            <span>Leaderboard</span>
+          </DropdownMenuItem>
+        </Link>
+        
+        <Link to="/holos-farm">
+          <DropdownMenuItem className="cursor-pointer">
+            <Wheat className="mr-2 h-4 w-4" />
+            <span>Holos Farm</span>
           </DropdownMenuItem>
         </Link>
         
