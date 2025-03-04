@@ -9,7 +9,8 @@ import {
   ShoppingBag,
   Database,
   BarChart4,
-  Wheat
+  Wheat,
+  Award
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -76,6 +77,14 @@ export const NavigationMenu = () => {
               <span>Holos Tokens:</span>
             </div>
             <span className="font-semibold">{user?.holosTokens}</span>
+          </div>
+          
+          <div className="flex items-center justify-between px-2 py-1">
+            <div className="flex items-center gap-2">
+              <Award className="h-4 w-4 text-purple-400" />
+              <span>Arena Passes:</span>
+            </div>
+            <span className="font-semibold">{user?.arena_passes || 0}</span>
           </div>
           
           <div className="flex items-center justify-between px-2 py-1">

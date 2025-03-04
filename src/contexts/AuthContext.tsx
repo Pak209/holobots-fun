@@ -224,6 +224,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updates.stats?.wins !== undefined) dbUpdates.wins = updates.stats.wins;
       if (updates.stats?.losses !== undefined) dbUpdates.losses = updates.stats.losses;
       
+      if (updates.arena_passes !== undefined) dbUpdates.arena_passes = updates.arena_passes;
+      if (updates.exp_boosters !== undefined) dbUpdates.exp_boosters = updates.exp_boosters;
+      if (updates.energy_refills !== undefined) dbUpdates.energy_refills = updates.energy_refills;
+      if (updates.rank_skips !== undefined) dbUpdates.rank_skips = updates.rank_skips;
+      
       if (updates.holobots) {
         const { data: currentProfile } = await supabase
           .from('profiles')

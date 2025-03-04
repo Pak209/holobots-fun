@@ -272,8 +272,11 @@ export type Database = {
       }
       profiles: {
         Row: {
+          arena_passes: number | null
           created_at: string | null
           daily_energy: number
+          energy_refills: number | null
+          exp_boosters: number | null
           gacha_tickets: number | null
           holos_tokens: number | null
           id: string
@@ -281,12 +284,16 @@ export type Database = {
           last_energy_refresh: string | null
           losses: number | null
           max_daily_energy: number
+          rank_skips: number | null
           username: string
           wins: number | null
         }
         Insert: {
+          arena_passes?: number | null
           created_at?: string | null
           daily_energy?: number
+          energy_refills?: number | null
+          exp_boosters?: number | null
           gacha_tickets?: number | null
           holos_tokens?: number | null
           id: string
@@ -294,12 +301,16 @@ export type Database = {
           last_energy_refresh?: string | null
           losses?: number | null
           max_daily_energy?: number
+          rank_skips?: number | null
           username: string
           wins?: number | null
         }
         Update: {
+          arena_passes?: number | null
           created_at?: string | null
           daily_energy?: number
+          energy_refills?: number | null
+          exp_boosters?: number | null
           gacha_tickets?: number | null
           holos_tokens?: number | null
           id?: string
@@ -307,6 +318,7 @@ export type Database = {
           last_energy_refresh?: string | null
           losses?: number | null
           max_daily_energy?: number
+          rank_skips?: number | null
           username?: string
           wins?: number | null
         }

@@ -1,86 +1,73 @@
-import { NavigationMenu } from "@/components/NavigationMenu";
 
-interface Item {
-  name: string;
-  rarity: "common" | "rare" | "extremely-rare";
-  description: string;
-  quantity: number;
-}
+import { NavigationMenu } from "@/components/NavigationMenu";
+import { ItemCard } from "@/components/items/ItemCard";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function UserItems() {
-  // Mock data - in a real app this would come from your backend
-  const items: Item[] = [
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  // Mock data for visual appearance (this would come from user profile in reality)
+  const items = [
     {
+      type: "arena-pass" as const,
+      name: "Arena Pass",
+      description: "Grants entry to one arena battle without costing HOLOS tokens",
+      quantity: user?.arena_passes || 0
+    },
+    {
+      type: "gacha-ticket" as const,
+      name: "Gacha Ticket",
+      description: "Can be used for one pull in the Gacha system",
+      quantity: user?.gachaTickets || 0
+    },
+    {
+      type: "energy-refill" as const,
       name: "Daily Energy Refill",
-      rarity: "common",
-      description: "Restores your daily energy to full",
-      quantity: 5
+      description: "Instantly restores your daily energy to full",
+      quantity: user?.energy_refills || 0
     },
     {
-      name: "Exp Battle Booster",
-      rarity: "rare",
-      description: "Doubles experience gained from battles",
-      quantity: 2
+      type: "exp-booster" as const,
+      name: "EXP Battle Booster",
+      description: "Doubles experience gained from battles for 24 hours",
+      quantity: user?.exp_boosters || 0
     },
     {
-      name: "Temporary Attribute Boost",
-      rarity: "rare",
-      description: "Temporarily boosts your attributes",
-      quantity: 3
-    },
-    {
+      type: "rank-skip" as const,
       name: "Rank Skip",
-      rarity: "extremely-rare",
       description: "Skip to the next rank instantly",
-      quantity: 1
+      quantity: user?.rank_skips || 0
     }
   ];
 
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case "common":
-        return "text-gray-400";
-      case "rare":
-        return "text-purple-400";
-      case "extremely-rare":
-        return "text-yellow-400";
-      default:
-        return "text-gray-400";
-    }
+  const handleUseItem = (type: string, name: string) => {
+    toast({
+      title: `Used ${name}`,
+      description: `You have used one ${name}. Effects applied!`,
+    });
   };
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
-      <NavigationMenu />
-      
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8 text-holobots-text dark:text-holobots-dark-text">
+      <div className="container mx-auto px-4 py-16">
+        <h1 className="text-3xl font-bold mb-8 text-holobots-text dark:text-holobots-dark-text bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">
           Your Items
         </h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {items.map((item, index) => (
-            <div
+            <ItemCard
               key={index}
-              className="p-6 rounded-lg bg-holobots-card dark:bg-holobots-dark-card
-                border border-holobots-border dark:border-holobots-dark-border
-                shadow-neon-border transition-all duration-300 hover:shadow-neon-blue"
-            >
-              <h3 className={`text-lg font-bold mb-2 ${getRarityColor(item.rarity)}`}>
-                {item.name}
-              </h3>
-              <p className="text-sm text-holobots-text dark:text-holobots-dark-text mb-4">
-                {item.description}
-              </p>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-holobots-text dark:text-holobots-dark-text capitalize">
-                  {item.rarity}
-                </span>
-                <span className="text-holobots-accent dark:text-holobots-dark-accent font-bold">
-                  x{item.quantity}
-                </span>
-              </div>
-            </div>
+              name={item.name}
+              description={item.description}
+              quantity={item.quantity}
+              type={item.type}
+              onClick={() => handleUseItem(item.type, item.name)}
+              actionLabel="Use Item"
+              disabled={item.quantity <= 0}
+            />
           ))}
         </div>
       </div>

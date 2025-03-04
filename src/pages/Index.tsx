@@ -2,11 +2,12 @@
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Trophy, Ticket, Gem } from "lucide-react";
+import { Trophy, Ticket, Gem, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { ItemCard } from "@/components/items/ItemCard";
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);
@@ -54,6 +55,35 @@ const Index = () => {
     }
   };
 
+  const useArenaPass = async () => {
+    try {
+      if (user && user.arena_passes > 0) {
+        await updateUser({
+          arena_passes: user.arena_passes - 1
+        });
+        setHasEntryFee(true);
+        
+        toast({
+          title: "Arena Pass Used",
+          description: "You've used 1 Arena Pass. Good luck in the arena!",
+        });
+      } else {
+        toast({
+          title: "No Arena Passes",
+          description: "You don't have any Arena Passes. Try using HOLOS tokens instead.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error using arena pass:", error);
+      toast({
+        title: "Error",
+        description: "Failed to use Arena Pass. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const distributeRewards = async () => {
     try {
       if (!user) return;
@@ -62,12 +92,20 @@ const Index = () => {
       const holosTokens = victories * baseReward * currentRound;
       const gachaTickets = Math.floor(victories / 2);
       const blueprintPieces = victories * currentRound;
+      const arenaPass = Math.random() > 0.7 ? 1 : 0; // 30% chance to get arena pass as reward
 
       // Update the user's tokens using the AuthContext
-      await updateUser({
+      const updates: any = {
         holosTokens: user.holosTokens + holosTokens,
         gachaTickets: user.gachaTickets + gachaTickets
-      });
+      };
+      
+      // Add arena pass if won
+      if (arenaPass > 0) {
+        updates.arena_passes = (user.arena_passes || 0) + arenaPass;
+      }
+      
+      await updateUser(updates);
       
       toast({
         title: "Arena Rewards!",
@@ -85,6 +123,12 @@ const Index = () => {
               <Trophy className="w-4 h-4 text-blue-500" />
               <span>{blueprintPieces} Blueprint Pieces</span>
             </div>
+            {arenaPass > 0 && (
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-purple-500" />
+                <span>{arenaPass} Arena Pass</span>
+              </div>
+            )}
           </div>
         ),
         duration: 5000,
@@ -124,16 +168,33 @@ const Index = () => {
           <CardHeader>
             <CardTitle className="text-center text-xl text-white">Arena Entry</CardTitle>
           </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-[#8E9196] mb-2">Entry fee: {entryFee} Holos tokens</p>
-            <p className="text-[#8E9196] mb-4">Your balance: {user?.holosTokens || 0} Holos</p>
-            <Button 
-              onClick={payEntryFee}
-              disabled={!user || user.holosTokens < entryFee}
-              className="w-full bg-holobots-accent hover:bg-holobots-hover text-white"
-            >
-              Pay Entry Fee
-            </Button>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-4 w-full">
+              <div className="flex-1">
+                <p className="text-[#8E9196] mb-2 text-center">Entry fee: {entryFee} Holos tokens</p>
+                <p className="text-[#8E9196] mb-4 text-center">Your balance: {user?.holosTokens || 0} Holos</p>
+                <Button 
+                  onClick={payEntryFee}
+                  disabled={!user || user.holosTokens < entryFee}
+                  className="w-full bg-holobots-accent hover:bg-holobots-hover text-white"
+                >
+                  <Gem className="mr-2 h-4 w-4" />
+                  Pay Entry Fee
+                </Button>
+              </div>
+              
+              <div className="border-t md:border-t-0 md:border-l border-gray-700 md:pl-4 pt-4 md:pt-0 flex-1">
+                <ItemCard
+                  name="Arena Pass"
+                  description="Use a pass to enter the arena without spending HOLOS tokens"
+                  quantity={user?.arena_passes || 0}
+                  type="arena-pass"
+                  onClick={useArenaPass}
+                  actionLabel="Use Arena Pass"
+                  disabled={!user || !user.arena_passes || user.arena_passes <= 0}
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
