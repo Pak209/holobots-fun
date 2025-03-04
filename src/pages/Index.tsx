@@ -184,6 +184,7 @@ const Index = () => {
               </div>
               
               <div className="border-t md:border-t-0 md:border-l border-gray-700 md:pl-4 pt-4 md:pt-0 flex-1">
+                <p className="text-[#8E9196] mb-2 text-center">Your Arena Passes: {user?.arena_passes || 0}</p>
                 <ItemCard
                   name="Arena Pass"
                   description="Use a pass to enter the arena without spending HOLOS tokens"

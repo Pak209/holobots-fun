@@ -1,7 +1,7 @@
 
 import { VariantProps, cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { Coin, Zap, FastForward, Trophy, Ticket } from "lucide-react";
+import { Coins, Zap, FastForward, Trophy, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -50,7 +50,7 @@ export const ItemCard = ({
     "gacha-ticket": <Ticket className="h-5 w-5 text-yellow-300" />,
     "energy-refill": <Zap className="h-5 w-5 text-blue-300" />,
     "exp-booster": <FastForward className="h-5 w-5 text-green-300" />,
-    "rank-skip": <Coin className="h-5 w-5 text-red-300" />,
+    "rank-skip": <Coins className="h-5 w-5 text-red-300" />,
   };
 
   return (
