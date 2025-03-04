@@ -53,13 +53,17 @@ export const BattleCards = ({
     });
   }
   
+  console.log(`Left holobot: ${normalizedLeftKey}, Found stats: ${!!leftHolobotStats}`);
+  console.log(`Right holobot: ${normalizedRightKey}, Found stats: ${!!rightHolobotStats}`);
+  
   return (
     <div className="flex justify-center gap-2 mb-2">
       <div className="flex flex-col">
         <HolobotCard 
           stats={{
             ...(leftHolobotStats || HOLOBOT_STATS.ace), 
-            level: leftLevel
+            level: leftLevel,
+            name: normalizedLeftKey // Ensure name is passed in uppercase
           }} 
           variant="blue" 
         />
@@ -75,7 +79,8 @@ export const BattleCards = ({
         <HolobotCard 
           stats={{
             ...(rightHolobotStats || HOLOBOT_STATS.ace), 
-            level: rightLevel
+            level: rightLevel,
+            name: normalizedRightKey // Ensure name is passed in uppercase
           }} 
           variant="red" 
         />

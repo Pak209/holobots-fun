@@ -18,6 +18,8 @@ export const HolobotCard = ({
   // Get the image path using our utility function
   const imagePath = getHolobotImagePath(holobotName);
   
+  console.log(`Rendering HolobotCard for ${holobotName} with image path: ${imagePath}`);
+  
   return (
     <div className={`w-[100px] md:w-[130px] h-auto rounded-lg ${variant === "blue" ? "bg-holobots-card border-blue-300 shadow-neon-blue" : "bg-red-100 border-red-300 shadow-neon-border"} border-2 p-1 flex flex-col font-mono text-[6px] md:text-[8px] transition-all duration-300 hover:scale-105`}>
       <div className="flex items-center justify-between mb-0.5 bg-black/20 px-1 py-0.5 rounded-md">
@@ -36,11 +38,20 @@ export const HolobotCard = ({
           className="w-full h-full object-contain hover:animate-pulse"
           loading="eager"
           onError={(e) => {
+            const target = e.target as HTMLImageElement;
             console.error(`Failed to load image for holobot: ${holobotName}`, {
-              attempted: (e.target as HTMLImageElement).src,
+              attempted: target.src,
               holobotName
             });
-            (e.target as HTMLImageElement).src = "/placeholder.svg";
+            
+            // Try alternative formats if the initial one fails
+            if (target.src.endsWith('.png')) {
+              const altPath = `/lovable-uploads/${holobotName.toLowerCase()}.png`;
+              console.log(`Trying alternative path: ${altPath}`);
+              target.src = altPath;
+            } else {
+              target.src = "/placeholder.svg";
+            }
           }}
         />
       </div>

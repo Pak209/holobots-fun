@@ -47,23 +47,15 @@ export const getHolobotImagePath = (key: string | undefined): string => {
   
   // Try uppercase (standard format in HOLOBOT_IMAGE_MAPPING)
   const upperKey = cleanKey.toUpperCase();
-  if (NORMALIZED_HOLOBOT_MAPPING[upperKey]) {
-    return NORMALIZED_HOLOBOT_MAPPING[upperKey];
-  }
-  
-  // Try lowercase
-  const lowerKey = cleanKey.toLowerCase();
-  if (NORMALIZED_HOLOBOT_MAPPING[lowerKey]) {
-    return NORMALIZED_HOLOBOT_MAPPING[lowerKey];
-  }
-  
-  // Try direct lookup from original mapping as last resort
   if (HOLOBOT_IMAGE_MAPPING[upperKey]) {
     return HOLOBOT_IMAGE_MAPPING[upperKey];
   }
   
-  console.error(`No image found for holobot: "${cleanKey}"`, {
-    availableKeys: Object.keys(HOLOBOT_IMAGE_MAPPING).join(", ")
-  });
-  return "/placeholder.svg";
+  // Try direct reference to image path based on name pattern
+  const directPath = `/lovable-uploads/${cleanKey.toLowerCase()}.png`;
+  
+  console.log(`Trying direct path: ${directPath} for holobot: ${cleanKey}`);
+  
+  // Return the direct path as a last resort before placeholder
+  return directPath;
 };
