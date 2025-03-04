@@ -1,6 +1,6 @@
 
 import { useLocation, Link } from "react-router-dom";
-import { Home, Dumbbell, Trophy, Bot, Gem, Gamepad2, Boxes } from "lucide-react";
+import { Home, Dumbbell, Trophy, Bot, Gem, Gamepad2, ShoppingBag } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -91,18 +91,18 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
           <span className="text-[10px] mt-0.5">Gacha</span>
         </Link>
         
-        <Link to="/user-items" className="flex flex-col items-center justify-center w-1/6">
+        <Link to="/marketplace" className="flex flex-col items-center justify-center w-1/6">
           <Button 
             variant="ghost" 
             size="icon" 
             className={cn(
               "h-10 w-10 rounded-full", 
-              isActive("/user-items") && "bg-holobots-accent text-white"
+              isActive("/marketplace") && "bg-holobots-accent text-white"
             )}
           >
-            <Boxes className="h-5 w-5" />
+            <ShoppingBag className="h-5 w-5" />
           </Button>
-          <span className="text-[10px] mt-0.5">Items</span>
+          <span className="text-[10px] mt-0.5">Market</span>
         </Link>
       </nav>
     </div>

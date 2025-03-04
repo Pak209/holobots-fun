@@ -24,6 +24,7 @@ import HolosFarm from "@/pages/HolosFarm";
 import HolobotsInfo from "@/pages/HolobotsInfo";
 import Gacha from "@/pages/Gacha";
 import UserItems from "@/pages/UserItems";
+import Marketplace from "@/pages/Marketplace";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import Leaderboard from "@/pages/Leaderboard";
@@ -57,6 +58,7 @@ function App() {
                     <Route path="/holobots-info" element={<MobileLayout><HolobotsInfo /></MobileLayout>} />
                     <Route path="/gacha" element={<MobileLayout><Gacha /></MobileLayout>} />
                     <Route path="/user-items" element={<MobileLayout><UserItems /></MobileLayout>} />
+                    <Route path="/marketplace" element={<MobileLayout><Marketplace /></MobileLayout>} />
                     <Route path="/leaderboard" element={<MobileLayout><Leaderboard /></MobileLayout>} />
                   </Routes>
                   <Toaster />

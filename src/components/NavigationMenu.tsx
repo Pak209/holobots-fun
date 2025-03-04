@@ -96,10 +96,10 @@ export const NavigationMenu = () => {
           </DropdownMenuItem>
         </Link>
         
-        <Link to="/user-items">
+        <Link to="/marketplace">
           <DropdownMenuItem className="cursor-pointer">
             <ShoppingBag className="mr-2 h-4 w-4" />
-            <span>My Items</span>
+            <span>Marketplace</span>
           </DropdownMenuItem>
         </Link>
         
