@@ -1,4 +1,3 @@
-
 import { HolobotStats } from "@/types/holobot";
 import { getRank } from "@/types/holobot";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
@@ -12,8 +11,7 @@ export const HolobotCard = ({
   stats,
   variant = "blue"
 }: HolobotCardProps) => {
-  // Ensure we're using the correct key for image lookup
-  const holobotName = stats.name;
+  const holobotName = stats.name?.toUpperCase();
   console.log(`HolobotCard rendering "${holobotName}"`, stats);
   
   const imagePath = getHolobotImagePath(holobotName);
@@ -41,7 +39,6 @@ export const HolobotCard = ({
               attempted: (e.target as HTMLImageElement).src,
               holobotName: stats.name
             });
-            // If image fails to load, set to placeholder
             (e.target as HTMLImageElement).src = "/placeholder.svg";
           }}
         />
