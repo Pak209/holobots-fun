@@ -1,4 +1,3 @@
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
@@ -41,8 +40,7 @@ export const BattleSelectors = ({
               </SelectTrigger>
               <SelectContent className="bg-holobots-card border-holobots-border">
                 {Object.entries(HOLOBOT_STATS).map(([key, stats]) => {
-                  const imagePath = getHolobotImagePath(key);
-                  console.log(`Selector option for ${key}: ${imagePath}`);
+                  const imagePath = getHolobotImagePath(stats.name);
                   
                   return (
                     <SelectItem 
@@ -55,10 +53,7 @@ export const BattleSelectors = ({
                         alt={stats.name} 
                         className="w-6 h-6 object-contain" 
                         onError={(e) => {
-                          console.error(`Failed to load thumbnail for ${key}`, {
-                            attempted: (e.target as HTMLImageElement).src,
-                            key
-                          });
+                          console.error(`Failed to load thumbnail for ${stats.name}`);
                           (e.target as HTMLImageElement).src = "/placeholder.svg";
                         }}
                       />
@@ -109,7 +104,7 @@ export const BattleSelectors = ({
           </SelectTrigger>
           <SelectContent className="bg-holobots-card border-holobots-border">
             {Object.entries(HOLOBOT_STATS).map(([key, stats]) => {
-              const imagePath = getHolobotImagePath(key);
+              const imagePath = getHolobotImagePath(stats.name);
               
               return (
                 <SelectItem 
@@ -122,7 +117,7 @@ export const BattleSelectors = ({
                     alt={stats.name} 
                     className="w-6 h-6 object-contain"
                     onError={(e) => {
-                      console.error(`Failed to load thumbnail for ${key}`);
+                      console.error(`Failed to load thumbnail for ${stats.name}`);
                       (e.target as HTMLImageElement).src = "/placeholder.svg";
                     }}
                   />

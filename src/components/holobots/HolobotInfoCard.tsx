@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS, getRank } from "@/types/holobot";
@@ -32,7 +31,6 @@ export const HolobotInfoCard = ({
   const currentXp = userHolobot?.experience || 0;
   const nextLevelXp = userHolobot?.nextLevelExp || 100;
   
-  // Calculate XP progress percentage
   const calculateProgress = (current: number, total: number) => {
     return Math.min(100, Math.floor((current / total) * 100));
   };
@@ -137,6 +135,7 @@ export const HolobotInfoCard = ({
             level: isOwned ? level : holobot.level,
             experience: isOwned ? currentXp : undefined,
             nextLevelExp: isOwned ? nextLevelXp : undefined,
+            name: holobot.name.toUpperCase(),
           }} 
           variant={isOwned ? "blue" : "red"} 
         />

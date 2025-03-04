@@ -44,9 +44,9 @@ export const HolobotCard = ({
               holobotName
             });
             
-            // Try alternative formats if the initial one fails
-            if (target.src.endsWith('.png')) {
-              const altPath = `/lovable-uploads/${holobotName.toLowerCase()}.png`;
+            // If we failed with the normal path, try a direct path with lowercase
+            if (!target.src.includes('placeholder')) {
+              const altPath = `/lovable-uploads/${holobotName?.toLowerCase()}.png`;
               console.log(`Trying alternative path: ${altPath}`);
               target.src = altPath;
             } else {
