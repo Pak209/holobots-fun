@@ -3,7 +3,7 @@ import { useState } from "react";
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS, getRank } from "@/types/holobot";
 import { Button } from "@/components/ui/button";
-import { Coins, Plus, ChevronUp, ChevronDown } from "lucide-react";
+import { Coins, Plus } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { UserHolobot } from "@/types/user";
 
@@ -26,7 +26,6 @@ export const HolobotInfoCard = ({
   justMinted,
   onMint
 }: HolobotInfoCardProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const isOwned = !!userHolobot;
   const isJustMinted = justMinted === holobot.name;
   const level = userHolobot?.level || holobot.level;
@@ -40,7 +39,7 @@ export const HolobotInfoCard = ({
   const xpProgress = calculateProgress(currentXp, nextLevelXp);
 
   return (
-    <div className={`flex flex-col sm:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300 ${isExpanded ? 'sm:h-auto' : 'sm:h-auto'}`}>
+    <div className={`flex flex-col sm:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300`}>
       <div className="flex sm:flex-row gap-4 w-full">
         {/* Stats Panel - Further reduced height to match TCG */}
         <div className="flex-1 flex flex-col justify-between max-w-[180px] sm:max-w-[180px] bg-black/30 p-2 rounded-lg border border-holobots-accent self-start">
@@ -152,23 +151,6 @@ export const HolobotInfoCard = ({
           </div>
         </div>
       </div>
-      
-      {/* Expand/Collapse Button (Mobile only) */}
-      <Button
-        variant="ghost"
-        className="sm:hidden mt-2 text-xs"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        {isExpanded ? (
-          <>
-            <ChevronUp className="h-4 w-4 mr-1" /> Show Less
-          </>
-        ) : (
-          <>
-            <ChevronDown className="h-4 w-4 mr-1" /> Show More
-          </>
-        )}
-      </Button>
     </div>
   );
 };
