@@ -28,24 +28,28 @@ export const BattleCards = ({
     rightLevel
   });
   
-  // Get the proper holobot stats using case-insensitive lookups
-  const leftHolobotKey = selectedLeftHolobot.toLowerCase();
-  const rightHolobotKey = selectedRightHolobot.toLowerCase();
+  // Look up the correct stats objects from HOLOBOT_STATS using normalized keys
+  const normalizedLeftKey = selectedLeftHolobot.toUpperCase();
+  const normalizedRightKey = selectedRightHolobot.toUpperCase();
   
-  // Look up the correct stats objects from HOLOBOT_STATS
-  const leftHolobotStats = HOLOBOT_STATS[leftHolobotKey] || 
-    Object.values(HOLOBOT_STATS).find(h => h.name.toLowerCase() === leftHolobotKey);
-    
-  const rightHolobotStats = HOLOBOT_STATS[rightHolobotKey] || 
-    Object.values(HOLOBOT_STATS).find(h => h.name.toLowerCase() === rightHolobotKey);
+  // Find the correct stats by normalized key or name property
+  const leftHolobotStats = Object.values(HOLOBOT_STATS).find(
+    h => h.name.toUpperCase() === normalizedLeftKey
+  );
+  
+  const rightHolobotStats = Object.values(HOLOBOT_STATS).find(
+    h => h.name.toUpperCase() === normalizedRightKey
+  );
   
   if (!leftHolobotStats || !rightHolobotStats) {
     console.error("Missing holobot stats", { 
       leftKey: selectedLeftHolobot, 
       rightKey: selectedRightHolobot,
+      normalizedLeftKey,
+      normalizedRightKey,
       leftFound: !!leftHolobotStats,
       rightFound: !!rightHolobotStats,
-      availableKeys: Object.keys(HOLOBOT_STATS).join(", ")
+      availableNames: Object.values(HOLOBOT_STATS).map(h => h.name).join(", ")
     });
   }
   

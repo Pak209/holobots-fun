@@ -39,31 +39,31 @@ export const getHolobotImagePath = (key: string | undefined): string => {
   }
 
   const cleanKey = key.trim();
-  console.log(`Looking up image for holobot: "${cleanKey}"`);
-
-  // Try exact match first
+  
+  // Try exact match first (most direct)
   if (NORMALIZED_HOLOBOT_MAPPING[cleanKey]) {
-    console.log(`Found exact match for "${cleanKey}"`);
     return NORMALIZED_HOLOBOT_MAPPING[cleanKey];
   }
-
-  // Try uppercase
+  
+  // Try uppercase (standard format in HOLOBOT_IMAGE_MAPPING)
   const upperKey = cleanKey.toUpperCase();
   if (NORMALIZED_HOLOBOT_MAPPING[upperKey]) {
-    console.log(`Found uppercase match for "${upperKey}"`);
     return NORMALIZED_HOLOBOT_MAPPING[upperKey];
   }
-
+  
   // Try lowercase
   const lowerKey = cleanKey.toLowerCase();
   if (NORMALIZED_HOLOBOT_MAPPING[lowerKey]) {
-    console.log(`Found lowercase match for "${lowerKey}"`);
     return NORMALIZED_HOLOBOT_MAPPING[lowerKey];
   }
-
+  
+  // Try direct lookup from original mapping as last resort
+  if (HOLOBOT_IMAGE_MAPPING[upperKey]) {
+    return HOLOBOT_IMAGE_MAPPING[upperKey];
+  }
+  
   console.error(`No image found for holobot: "${cleanKey}"`, {
-    availableKeys: Object.keys(NORMALIZED_HOLOBOT_MAPPING).join(", ")
+    availableKeys: Object.keys(HOLOBOT_IMAGE_MAPPING).join(", ")
   });
   return "/placeholder.svg";
 };
-

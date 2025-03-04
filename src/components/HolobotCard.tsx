@@ -1,3 +1,4 @@
+
 import { HolobotStats } from "@/types/holobot";
 import { getRank } from "@/types/holobot";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
@@ -11,11 +12,11 @@ export const HolobotCard = ({
   stats,
   variant = "blue"
 }: HolobotCardProps) => {
+  // Ensure consistent case handling for the holobot name
   const holobotName = stats.name?.toUpperCase();
-  console.log(`HolobotCard rendering "${holobotName}"`, stats);
   
+  // Get the image path using our utility function
   const imagePath = getHolobotImagePath(holobotName);
-  console.log(`HolobotCard image path for "${holobotName}": ${imagePath}`);
   
   return (
     <div className={`w-[100px] md:w-[130px] h-auto rounded-lg ${variant === "blue" ? "bg-holobots-card border-blue-300 shadow-neon-blue" : "bg-red-100 border-red-300 shadow-neon-border"} border-2 p-1 flex flex-col font-mono text-[6px] md:text-[8px] transition-all duration-300 hover:scale-105`}>
@@ -24,20 +25,20 @@ export const HolobotCard = ({
           HOLOBOTS
         </span>
         <span className={`font-bold ${variant === "blue" ? "text-blue-200" : "text-red-200"}`}>
-          {stats.name || "UNKNOWN"}
+          {holobotName || "UNKNOWN"}
         </span>
       </div>
       
       <div className="aspect-square bg-black/30 mb-0.5 flex items-center justify-center border border-white/20 hover:border-holobots-accent transition-colors duration-150 rounded-sm mx-0 overflow-hidden">
         <img 
           src={imagePath}
-          alt={stats.name || "Unknown Holobot"} 
+          alt={holobotName || "Unknown Holobot"} 
           className="w-full h-full object-contain hover:animate-pulse"
           loading="eager"
           onError={(e) => {
-            console.error(`Failed to load image for holobot: ${stats.name}`, {
+            console.error(`Failed to load image for holobot: ${holobotName}`, {
               attempted: (e.target as HTMLImageElement).src,
-              holobotName: stats.name
+              holobotName
             });
             (e.target as HTMLImageElement).src = "/placeholder.svg";
           }}
