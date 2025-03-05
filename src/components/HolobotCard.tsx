@@ -99,6 +99,13 @@ export const HolobotCard = ({
                 return;
               }
               
+              if (holobotName?.toUpperCase() === 'KEN') {
+                const kenPath = "/lovable-uploads/58e4110e-07f8-44ab-983e-b6caa5098cc3.png";
+                console.log(`Using direct KEN path: ${kenPath}`);
+                target.src = kenPath;
+                return;
+              }
+              
               const altPath = `/lovable-uploads/${holobotName?.toLowerCase()}.png`;
               console.log(`Trying alternative path for ${holobotName}: ${altPath}`);
               target.src = altPath;
