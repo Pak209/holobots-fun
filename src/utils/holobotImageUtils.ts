@@ -38,23 +38,26 @@ export const getHolobotImagePath = (key: string | undefined): string => {
     return "/placeholder.svg";
   }
 
+  // Clean up and normalize the key
   const cleanKey = key.trim();
+  console.log(`Getting image path for holobot: "${cleanKey}"`);
   
-  // Try exact match first
+  // Try exact match first in normalized mapping
   if (NORMALIZED_HOLOBOT_MAPPING[cleanKey]) {
     console.log(`Found exact match for ${cleanKey}: ${NORMALIZED_HOLOBOT_MAPPING[cleanKey]}`);
     return NORMALIZED_HOLOBOT_MAPPING[cleanKey];
   }
   
-  // Try uppercase match
+  // Try uppercase match in original mapping
   const upperKey = cleanKey.toUpperCase();
   if (HOLOBOT_IMAGE_MAPPING[upperKey]) {
     console.log(`Found uppercase match for ${cleanKey}: ${HOLOBOT_IMAGE_MAPPING[upperKey]}`);
     return HOLOBOT_IMAGE_MAPPING[upperKey];
   }
   
-  // Try to construct the path directly
+  // If still no match, create the path directly based on lowercase name
+  // This is our fallback strategy
   const directPath = `/lovable-uploads/${cleanKey.toLowerCase()}.png`;
-  console.log(`Trying direct path for ${cleanKey}: ${directPath}`);
+  console.log(`Using direct path for ${cleanKey}: ${directPath}`);
   return directPath;
 };

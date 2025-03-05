@@ -64,8 +64,9 @@ export const HolobotCard = ({
               holobotName
             });
             
-            // If we failed with the normal path, try a direct path with lowercase
+            // Only fallback to placeholder if we've tried everything else
             if (!target.src.includes('placeholder')) {
+              console.log(`Falling back to placeholder for ${holobotName}`);
               target.src = "/placeholder.svg";
             }
           }}
