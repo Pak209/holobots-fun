@@ -90,6 +90,7 @@ const MARKETPLACE_ITEMS = [
   {
     id: "i1",
     type: "item",
+    itemType: "energy-refill" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
     name: "Daily Energy Refill",
     description: "Restores your daily energy to full",
     rarity: "common" as "common" | "rare" | "extremely-rare",
@@ -101,6 +102,7 @@ const MARKETPLACE_ITEMS = [
   {
     id: "i2",
     type: "item",
+    itemType: "exp-booster" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
     name: "Exp Battle Booster",
     description: "Doubles experience gained from battles for 24 hours",
     rarity: "rare" as "common" | "rare" | "extremely-rare",
@@ -112,6 +114,7 @@ const MARKETPLACE_ITEMS = [
   {
     id: "i3",
     type: "item",
+    itemType: "rank-skip" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
     name: "Rank Skip",
     description: "Skip to the next rank instantly",
     rarity: "extremely-rare" as "common" | "rare" | "extremely-rare",
@@ -119,6 +122,30 @@ const MARKETPLACE_ITEMS = [
     seller: "LegendaryTrader",
     quantity: 1,
     createdAt: new Date('2023-07-05')
+  },
+  {
+    id: "i4",
+    type: "item",
+    itemType: "arena-pass" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
+    name: "Arena Pass",
+    description: "Grants entry to one arena battle without costing HOLOS tokens",
+    rarity: "rare" as "common" | "rare" | "extremely-rare",
+    price: 1000,
+    seller: "BattleMaster",
+    quantity: 2,
+    createdAt: new Date('2023-07-12')
+  },
+  {
+    id: "i5",
+    type: "item",
+    itemType: "gacha-ticket" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
+    name: "Gacha Ticket",
+    description: "Can be used for one pull in the Gacha system",
+    rarity: "rare" as "common" | "rare" | "extremely-rare",
+    price: 850,
+    seller: "GachaDealer",
+    quantity: 3,
+    createdAt: new Date('2023-07-16')
   }
 ];
 
@@ -352,6 +379,7 @@ const Marketplace = () => {
                             price={item.price}
                             seller={item.seller}
                             quantity={item.quantity}
+                            type={item.itemType}
                             onBuy={() => handleBuy(item.id, item.name, item.price)}
                           />
                         ))}

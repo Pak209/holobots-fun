@@ -1,9 +1,9 @@
 
 import { VariantProps, cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { Coins, Zap, FastForward, Trophy, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ItemImage } from "@/components/items/ItemImage";
 
 // Define item card variants based on type
 const itemCardVariants = cva(
@@ -44,30 +44,25 @@ export const ItemCard = ({
   actionLabel,
   disabled = false,
 }: ItemCardProps) => {
-  // Icon mapping for each item type
-  const iconMap = {
-    "arena-pass": <Trophy className="h-5 w-5 text-purple-300" />,
-    "gacha-ticket": <Ticket className="h-5 w-5 text-yellow-300" />,
-    "energy-refill": <Zap className="h-5 w-5 text-blue-300" />,
-    "exp-booster": <FastForward className="h-5 w-5 text-green-300" />,
-    "rank-skip": <Coins className="h-5 w-5 text-red-300" />,
-  };
-
   return (
     <div className={cn(itemCardVariants({ type }))}>
-      <div className="flex justify-between items-start mb-2">
-        <div className="flex items-center gap-2">
-          {iconMap[type]}
-          <h3 className="font-bold text-white">{name}</h3>
+      <div className="flex gap-4 mb-3">
+        {/* Item Card Image */}
+        <ItemImage type={type} size="lg" className="shadow-lg" />
+        
+        <div className="flex-1">
+          <div className="flex justify-between items-start mb-1">
+            <h3 className="font-bold text-white">{name}</h3>
+            {quantity > 0 && (
+              <Badge className="bg-black/40 text-white border-none">
+                x{quantity}
+              </Badge>
+            )}
+          </div>
+          
+          <p className="text-xs text-gray-300">{description}</p>
         </div>
-        {quantity > 0 && (
-          <Badge className="bg-black/40 text-white border-none">
-            x{quantity}
-          </Badge>
-        )}
       </div>
-      
-      <p className="text-xs text-gray-300 mb-3">{description}</p>
       
       {onClick && actionLabel && (
         <Button 

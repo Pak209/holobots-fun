@@ -1,0 +1,64 @@
+
+import { cva, type VariantProps } from "class-variance-authority";
+import { Zap, Trophy, Ticket, FastForward, Coins } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const itemImageVariants = cva(
+  "relative flex flex-col items-center justify-center rounded-lg overflow-hidden transition-all duration-300",
+  {
+    variants: {
+      type: {
+        "arena-pass": "bg-gradient-to-br from-purple-900/60 via-purple-700/40 to-purple-950/90 border border-purple-500",
+        "gacha-ticket": "bg-gradient-to-br from-yellow-900/60 via-yellow-700/40 to-yellow-950/90 border border-yellow-500",
+        "energy-refill": "bg-gradient-to-br from-blue-900/60 via-blue-700/40 to-blue-950/90 border border-blue-500",
+        "exp-booster": "bg-gradient-to-br from-green-900/60 via-green-700/40 to-green-950/90 border border-green-500",
+        "rank-skip": "bg-gradient-to-br from-red-900/60 via-red-700/40 to-red-950/90 border border-red-500",
+      },
+      size: {
+        sm: "w-12 h-12",
+        md: "w-16 h-16",
+        lg: "w-24 h-24",
+        xl: "w-32 h-32",
+      },
+    },
+    defaultVariants: {
+      type: "energy-refill",
+      size: "md",
+    },
+  }
+);
+
+export interface ItemImageProps extends VariantProps<typeof itemImageVariants> {
+  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip";
+  size?: "sm" | "md" | "lg" | "xl";
+  className?: string;
+}
+
+export const ItemImage = ({ type, size, className }: ItemImageProps) => {
+  // Icon mapping for each item type
+  const iconMap = {
+    "arena-pass": <Trophy className="w-8 h-8 text-purple-300" />,
+    "gacha-ticket": <Ticket className="w-8 h-8 text-yellow-300" />,
+    "energy-refill": <Zap className="w-8 h-8 text-blue-300" />,
+    "exp-booster": <FastForward className="w-8 h-8 text-green-300" />,
+    "rank-skip": <Coins className="w-8 h-8 text-red-300" />,
+  };
+
+  const shineEffect = "before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-tr before:from-transparent before:via-white/20 before:to-transparent before:opacity-70";
+
+  return (
+    <div className={cn(itemImageVariants({ type, size }), shineEffect, className)}>
+      {/* Decorative elements to make it look like a card */}
+      <div className="absolute top-0 left-0 w-full h-1/6 bg-gradient-to-b from-white/20 to-transparent"></div>
+      <div className="absolute inset-0 border-4 border-white/5 pointer-events-none"></div>
+      
+      {/* Card icon */}
+      <div className="transform transition-all duration-300">
+        {iconMap[type]}
+      </div>
+      
+      {/* Card shine overlay */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-700"></div>
+    </div>
+  );
+};
