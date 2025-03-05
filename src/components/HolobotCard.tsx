@@ -1,3 +1,4 @@
+
 import { HolobotStats, getRank } from "@/types/holobot";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 
@@ -75,6 +76,13 @@ export const HolobotCard = ({
                 const shadowPath = "/lovable-uploads/ef60f626-b571-46ba-9d37-6045b020669a.png";
                 console.log(`Using direct SHADOW path: ${shadowPath}`);
                 target.src = shadowPath;
+                return;
+              }
+              
+              if (holobotName?.toUpperCase() === 'KUMA') {
+                const kumaPath = "/lovable-uploads/78f2c37a-43a3-4cce-a767-bc3f614e7a80.png";
+                console.log(`Using direct KUMA path: ${kumaPath}`);
+                target.src = kumaPath;
                 return;
               }
               
