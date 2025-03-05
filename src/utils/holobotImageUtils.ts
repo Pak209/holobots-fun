@@ -3,7 +3,7 @@
 export const HOLOBOT_IMAGE_MAPPING: Record<string, string> = {
   "ACE": "/lovable-uploads/7223a5e5-abcb-4911-8436-bddbbd851ae2.png", // Updated path for ace.png
   "KUMA": "/lovable-uploads/kuma.png",
-  "SHADOW": "/lovable-uploads/shadow.png",
+  "SHADOW": "/lovable-uploads/ef60f626-b571-46ba-9d37-6045b020669a.png", // Updated path for shadow.png
   "ERA": "/lovable-uploads/c2cd6b0a-0e49-4ede-9507-e55d05aa608d.png", // Updated path for era.png
   "HARE": "/lovable-uploads/hare.png",
   "TORA": "/lovable-uploads/tora.png",
@@ -65,6 +65,12 @@ export const getHolobotImagePath = (key: string | undefined): string => {
   if (cleanKey.toLowerCase() === "era") {
     console.log(`Special handling for era: ${HOLOBOT_IMAGE_MAPPING["ERA"]}`);
     return HOLOBOT_IMAGE_MAPPING["ERA"];
+  }
+  
+  // Special handling for "shadow"
+  if (cleanKey.toLowerCase() === "shadow") {
+    console.log(`Special handling for shadow: ${HOLOBOT_IMAGE_MAPPING["SHADOW"]}`);
+    return HOLOBOT_IMAGE_MAPPING["SHADOW"];
   }
   
   // If still no match, check the key format more aggressively

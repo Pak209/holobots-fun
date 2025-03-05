@@ -1,4 +1,3 @@
-
 import { HolobotStats, getRank } from "@/types/holobot";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 
@@ -19,13 +18,8 @@ export const HolobotCard = ({
   stats,
   variant = "blue"
 }: HolobotCardProps) => {
-  // Ensure consistent case handling for the holobot name
   const holobotName = stats.name?.toUpperCase();
-  
-  // Get the proper image path from our utility function
   const imagePath = getHolobotImagePath(holobotName);
-  
-  // Get the color based on rank instead of variant
   const rankColor = getRankColor(stats.level || 1);
   
   console.log(`Rendering HolobotCard for ${holobotName} with image path: ${imagePath}`);
@@ -34,7 +28,6 @@ export const HolobotCard = ({
     <div className={`w-[130px] md:w-[180px] h-auto rounded-lg ${
       variant === "red" ? "bg-red-900/80 border-red-400" : rankColor
     } border-2 p-1.5 flex flex-col font-mono text-[8px] transition-all duration-300 hover:scale-105 shadow-lg`}>
-      {/* Header */}
       <div className="flex items-center justify-between mb-1 bg-black/40 px-1.5 py-0.5 rounded-md border border-white/20">
         <span className="font-bold italic text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
           HOLOBOTS
@@ -49,7 +42,6 @@ export const HolobotCard = ({
         </div>
       </div>
       
-      {/* Image Container */}
       <div className="aspect-square bg-black/40 rounded-lg mb-1 flex items-center justify-center border border-white/20 hover:border-blue-400/50 transition-colors duration-300 p-1">
         <img 
           src={imagePath}
@@ -64,9 +56,7 @@ export const HolobotCard = ({
               holobotName
             });
             
-            // Try alternative approach if the regular path fails
             if (!target.src.includes('placeholder')) {
-              // Special handling for ACE
               if (holobotName?.toUpperCase() === 'ACE') {
                 const acePath = "/lovable-uploads/7223a5e5-abcb-4911-8436-bddbbd851ae2.png";
                 console.log(`Using direct ACE path: ${acePath}`);
@@ -74,7 +64,6 @@ export const HolobotCard = ({
                 return;
               }
               
-              // Special handling for ERA
               if (holobotName?.toUpperCase() === 'ERA') {
                 const eraPath = "/lovable-uploads/c2cd6b0a-0e49-4ede-9507-e55d05aa608d.png";
                 console.log(`Using direct ERA path: ${eraPath}`);
@@ -82,16 +71,20 @@ export const HolobotCard = ({
                 return;
               }
               
-              // Try a direct lowercase version as final attempt
+              if (holobotName?.toUpperCase() === 'SHADOW') {
+                const shadowPath = "/lovable-uploads/ef60f626-b571-46ba-9d37-6045b020669a.png";
+                console.log(`Using direct SHADOW path: ${shadowPath}`);
+                target.src = shadowPath;
+                return;
+              }
+              
               const altPath = `/lovable-uploads/${holobotName?.toLowerCase()}.png`;
               console.log(`Trying alternative path for ${holobotName}: ${altPath}`);
               target.src = altPath;
               
-              // Add a second error handler for this alternative path
               target.onerror = () => {
                 console.error(`Alternative path also failed for ${holobotName}, using placeholder`);
                 target.src = "/placeholder.svg";
-                // Remove this error handler to prevent infinite loop
                 target.onerror = null;
               };
             }
@@ -99,7 +92,6 @@ export const HolobotCard = ({
         />
       </div>
       
-      {/* Ability Section */}
       <div className="bg-black/40 rounded-lg p-1.5 mb-1 border border-white/20">
         <div className="font-bold text-white mb-0.5 text-[6px] md:text-[8px]">
           Ability: {stats.specialMove || "None"}
@@ -109,7 +101,6 @@ export const HolobotCard = ({
         </div>
       </div>
       
-      {/* Stats Grid */}
       <div className="bg-black/40 rounded-lg p-1.5 border border-white/20">
         <div className="grid grid-cols-4 gap-1 text-white text-[5px] md:text-[7px]">
           <div>HP:{stats.maxHealth || 0}</div>
