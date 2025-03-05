@@ -66,6 +66,14 @@ export const HolobotCard = ({
             
             // Try alternative approach if the regular path fails
             if (!target.src.includes('placeholder')) {
+              // Special handling for ACE
+              if (holobotName?.toUpperCase() === 'ACE') {
+                const acePath = "/lovable-uploads/7223a5e5-abcb-4911-8436-bddbbd851ae2.png";
+                console.log(`Using direct ACE path: ${acePath}`);
+                target.src = acePath;
+                return;
+              }
+              
               // Try a direct lowercase version as final attempt
               const altPath = `/lovable-uploads/${holobotName?.toLowerCase()}.png`;
               console.log(`Trying alternative path for ${holobotName}: ${altPath}`);

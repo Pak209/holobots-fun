@@ -1,7 +1,7 @@
 
 // Central source of truth for holobot image mappings
 export const HOLOBOT_IMAGE_MAPPING: Record<string, string> = {
-  "ACE": "/lovable-uploads/ace.png",
+  "ACE": "/lovable-uploads/7223a5e5-abcb-4911-8436-bddbbd851ae2.png", // Updated path for ace.png
   "KUMA": "/lovable-uploads/kuma.png",
   "SHADOW": "/lovable-uploads/shadow.png",
   "ERA": "/lovable-uploads/era.png",
@@ -53,6 +53,12 @@ export const getHolobotImagePath = (key: string | undefined): string => {
   if (HOLOBOT_IMAGE_MAPPING[upperKey]) {
     console.log(`Found uppercase match for ${cleanKey}: ${HOLOBOT_IMAGE_MAPPING[upperKey]}`);
     return HOLOBOT_IMAGE_MAPPING[upperKey];
+  }
+  
+  // Special handling for "ace"
+  if (cleanKey.toLowerCase() === "ace") {
+    console.log(`Special handling for ace: ${HOLOBOT_IMAGE_MAPPING["ACE"]}`);
+    return HOLOBOT_IMAGE_MAPPING["ACE"];
   }
   
   // If still no match, check the key format more aggressively
