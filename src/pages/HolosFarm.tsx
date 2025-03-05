@@ -1,4 +1,3 @@
-import { NavigationMenu } from "@/components/NavigationMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -16,8 +15,6 @@ const HolosFarm = () => {
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background text-holobots-text dark:text-holobots-dark-text p-4">
-      <NavigationMenu />
-      
       <div className="max-w-7xl mx-auto pt-16">
         <h1 className="text-3xl font-bold text-center mb-8 text-holobots-accent">
           HOLOS FARMING

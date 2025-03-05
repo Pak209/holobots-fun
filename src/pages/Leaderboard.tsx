@@ -1,6 +1,4 @@
-
 import { useState } from "react";
-import { NavigationMenu } from "@/components/NavigationMenu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -113,8 +111,6 @@ const Leaderboard = () => {
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background p-4">
-      <NavigationMenu />
-      
       <div className="max-w-7xl mx-auto pt-16">
         <h1 className="text-3xl font-bold text-center mb-6 text-holobots-accent">
           LEADERBOARDS
