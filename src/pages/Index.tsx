@@ -14,7 +14,7 @@ const Index = () => {
   const [victories, setVictories] = useState(0);
   const [hasEntryFee, setHasEntryFee] = useState(false);
   const maxRounds = 3;
-  const entryFee = 50;
+  const entryFee = 50; // Already set to 50, but confirming it's correct
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { MarketplaceFilters, FilterOptions } from "@/components/marketplace/MarketplaceFilters";
@@ -130,7 +131,7 @@ const MARKETPLACE_ITEMS = [
     name: "Arena Pass",
     description: "Grants entry to one arena battle without costing HOLOS tokens",
     rarity: "rare" as "common" | "rare" | "extremely-rare",
-    price: 1000,
+    price: 50,  // Changed from 1000 to 50
     seller: "BattleMaster",
     quantity: 2,
     createdAt: new Date('2023-07-12')
@@ -142,7 +143,7 @@ const MARKETPLACE_ITEMS = [
     name: "Gacha Ticket",
     description: "Can be used for one pull in the Gacha system",
     rarity: "rare" as "common" | "rare" | "extremely-rare",
-    price: 850,
+    price: 50,  // Changed from 850 to 50
     seller: "GachaDealer",
     quantity: 3,
     createdAt: new Date('2023-07-16')
