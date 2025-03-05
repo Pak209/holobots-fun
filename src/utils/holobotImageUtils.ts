@@ -26,7 +26,7 @@ Object.entries(HOLOBOT_IMAGE_MAPPING).forEach(([key, value]) => {
   // Store lowercase version
   NORMALIZED_HOLOBOT_MAPPING[key.toLowerCase()] = value;
   
-  // Store capitalized version
+  // Store capitalized version (first letter uppercase, rest lowercase)
   NORMALIZED_HOLOBOT_MAPPING[
     key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()
   ] = value;
@@ -55,8 +55,20 @@ export const getHolobotImagePath = (key: string | undefined): string => {
     return HOLOBOT_IMAGE_MAPPING[upperKey];
   }
   
-  // If still no match, create the path directly based on lowercase name
-  // This is our fallback strategy
+  // If still no match, check the key format more aggressively
+  // First check if it's a filename without extension
+  if (cleanKey.indexOf('.') === -1) {
+    // Check if it's a part of a known holobot name
+    for (const [botName, path] of Object.entries(HOLOBOT_IMAGE_MAPPING)) {
+      if (botName.toLowerCase().includes(cleanKey.toLowerCase()) || 
+          cleanKey.toLowerCase().includes(botName.toLowerCase())) {
+        console.log(`Found partial match: ${botName} for input ${cleanKey}, using: ${path}`);
+        return path;
+      }
+    }
+  }
+  
+  // Last resort: create the path directly based on lowercase name
   const directPath = `/lovable-uploads/${cleanKey.toLowerCase()}.png`;
   console.log(`Using direct path for ${cleanKey}: ${directPath}`);
   return directPath;

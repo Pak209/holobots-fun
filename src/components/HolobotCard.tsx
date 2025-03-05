@@ -64,10 +64,20 @@ export const HolobotCard = ({
               holobotName
             });
             
-            // Only fallback to placeholder if we've tried everything else
+            // Try alternative approach if the regular path fails
             if (!target.src.includes('placeholder')) {
-              console.log(`Falling back to placeholder for ${holobotName}`);
-              target.src = "/placeholder.svg";
+              // Try a direct lowercase version as final attempt
+              const altPath = `/lovable-uploads/${holobotName?.toLowerCase()}.png`;
+              console.log(`Trying alternative path for ${holobotName}: ${altPath}`);
+              target.src = altPath;
+              
+              // Add a second error handler for this alternative path
+              target.onerror = () => {
+                console.error(`Alternative path also failed for ${holobotName}, using placeholder`);
+                target.src = "/placeholder.svg";
+                // Remove this error handler to prevent infinite loop
+                target.onerror = null;
+              };
             }
           }}
         />
