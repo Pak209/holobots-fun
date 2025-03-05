@@ -26,10 +26,10 @@ export const MarketplaceHolobotCard = ({
 }: MarketplaceHolobotCardProps) => {
   return (
     <div className="flex flex-col gap-4 bg-holobots-card/90 dark:bg-holobots-dark-card p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300">
-      {/* Main content - now side by side */}
-      <div className="flex flex-col sm:flex-row gap-4 w-full">
+      {/* Main content - side by side layout for both mobile and desktop */}
+      <div className="flex flex-row gap-4 w-full">
         {/* Stats Panel */}
-        <div className="flex-none flex flex-col justify-between w-full sm:w-[220px] bg-black/30 p-3 rounded-lg border border-holobots-border self-start">
+        <div className="flex-1 flex flex-col justify-between bg-black/30 p-3 rounded-lg border border-holobots-border self-start">
           <div>
             <div className="flex justify-between items-start mb-2">
               <h2 className="text-lg font-bold text-holobots-accent">
@@ -54,7 +54,7 @@ export const MarketplaceHolobotCard = ({
           </div>
         </div>
         
-        {/* TCG Card - now side by side with stats panel */}
+        {/* TCG Card - side by side with stats panel */}
         <div className="flex-1 flex justify-center items-center">
           <HolobotCard 
             stats={{
