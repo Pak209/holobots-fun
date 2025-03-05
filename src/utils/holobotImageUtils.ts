@@ -53,8 +53,8 @@ export const getHolobotImagePath = (key: string | undefined): string => {
     return HOLOBOT_IMAGE_MAPPING[upperKey];
   }
   
-  // Direct fallback path (based on lowercase name)
-  const fallbackPath = `/lovable-uploads/${cleanKey.toLowerCase()}.png`;
-  console.log(`No mapping found for ${cleanKey}, using fallback path: ${fallbackPath}`);
-  return fallbackPath;
+  // Try to construct the path directly
+  const directPath = `/lovable-uploads/${cleanKey.toLowerCase()}.png`;
+  console.log(`Trying direct path for ${cleanKey}: ${directPath}`);
+  return directPath;
 };
