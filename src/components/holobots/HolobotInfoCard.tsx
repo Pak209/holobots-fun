@@ -40,9 +40,9 @@ export const HolobotInfoCard = ({
 
   return (
     <div className={`flex flex-col sm:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300`}>
-      <div className="flex sm:flex-row gap-4 w-full">
-        {/* Stats Panel - Further reduced height to match TCG */}
-        <div className="flex-1 flex flex-col justify-between max-w-[180px] sm:max-w-[180px] bg-black/30 p-2 rounded-lg border border-holobots-accent self-start">
+      <div className="flex sm:flex-row gap-4 w-full items-stretch">
+        {/* Stats Panel - Increased height to match TCG card */}
+        <div className="flex-1 flex flex-col justify-between min-h-[330px] max-w-[180px] sm:max-w-[180px] bg-black/30 p-2 rounded-lg border border-holobots-accent self-start">
           <div>
             <div className="flex justify-between items-start mb-1.5">
               <h2 className="text-lg font-bold text-holobots-accent drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] border border-transparent">
@@ -73,7 +73,7 @@ export const HolobotInfoCard = ({
               </div>
             )}
             
-            <div className="space-y-0.5 font-mono text-xs">
+            <div className="space-y-2 font-mono text-xs">
               <p>HP: {holobot.maxHealth}</p>
               <p>Attack: {holobot.attack}</p>
               <p>Defense: {holobot.defense}</p>
@@ -135,9 +135,9 @@ export const HolobotInfoCard = ({
           </div>
         </div>
         
-        {/* TCG Card - Positioned to the right of attributes with adjusted sizing */}
-        <div className="flex-1 flex justify-center items-start">
-          <div className="transform scale-90 origin-top-left">
+        {/* TCG Card - Properly contained within a fixed size container */}
+        <div className="flex-1 flex justify-center items-center bg-black/20 rounded-lg p-4 overflow-hidden">
+          <div className="transform scale-100 origin-center">
             <HolobotCard 
               stats={{
                 ...holobot,
