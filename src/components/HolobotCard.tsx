@@ -1,6 +1,6 @@
 
-import { HolobotStats } from "@/types/holobot";
-import { getRank } from "@/types/holobot";
+import { HolobotStats, getRank } from "@/types/holobot";
+import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 
 interface HolobotCardProps {
   stats: HolobotStats;
@@ -23,7 +23,7 @@ export const HolobotCard = ({
   const holobotName = stats.name?.toUpperCase();
   
   // Get the proper image path from our utility function
-  const imagePath = `/lovable-uploads/${holobotName?.toLowerCase()}.png`;
+  const imagePath = getHolobotImagePath(holobotName);
   
   // Get the color based on rank instead of variant
   const rankColor = getRankColor(stats.level || 1);
