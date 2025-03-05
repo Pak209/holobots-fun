@@ -74,6 +74,14 @@ export const HolobotCard = ({
                 return;
               }
               
+              // Special handling for ERA
+              if (holobotName?.toUpperCase() === 'ERA') {
+                const eraPath = "/lovable-uploads/c2cd6b0a-0e49-4ede-9507-e55d05aa608d.png";
+                console.log(`Using direct ERA path: ${eraPath}`);
+                target.src = eraPath;
+                return;
+              }
+              
               // Try a direct lowercase version as final attempt
               const altPath = `/lovable-uploads/${holobotName?.toLowerCase()}.png`;
               console.log(`Trying alternative path for ${holobotName}: ${altPath}`);
