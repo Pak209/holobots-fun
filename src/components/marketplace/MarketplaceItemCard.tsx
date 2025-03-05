@@ -54,8 +54,10 @@ export const MarketplaceItemCard = ({
   return (
     <div className="p-6 rounded-lg bg-holobots-card dark:bg-holobots-dark-card border border-holobots-accent shadow-neon-border transition-all duration-300 hover:shadow-neon-blue">
       <div className="flex gap-4">
-        {/* Item Image */}
-        <ItemImage type={itemType} size="xl" />
+        {/* Item Image - Setting a fixed size for consistency across all items */}
+        <div className="flex-shrink-0" style={{ width: '80px', height: '120px' }}>
+          <ItemImage type={itemType} size="lg" className="w-full h-full" />
+        </div>
         
         <div className="flex-1">
           <div className="flex justify-between items-start mb-2">

@@ -35,13 +35,24 @@ export interface ItemImageProps extends VariantProps<typeof itemImageVariants> {
 }
 
 export const ItemImage = ({ type, size, className }: ItemImageProps) => {
+  // Map of icon sizes based on the size prop
+  const iconSizeMap = {
+    sm: "w-6 h-6",
+    md: "w-8 h-8",
+    lg: "w-12 h-12",
+    xl: "w-16 h-16",
+  };
+  
+  // Get the appropriate icon size or default to medium
+  const iconSize = iconSizeMap[size || "md"];
+  
   // Icon mapping for each item type with darker colors
   const iconMap = {
-    "arena-pass": <Trophy className="w-8 h-8 text-purple-700 font-bold" strokeWidth={2.5} />,
-    "gacha-ticket": <Ticket className="w-8 h-8 text-yellow-700 font-bold" strokeWidth={2.5} />,
-    "energy-refill": <Zap className="w-8 h-8 text-blue-700 font-bold" strokeWidth={2.5} />,
-    "exp-booster": <FastForward className="w-8 h-8 text-green-700 font-bold" strokeWidth={2.5} />,
-    "rank-skip": <Coins className="w-8 h-8 text-red-700 font-bold" strokeWidth={2.5} />,
+    "arena-pass": <Trophy className={`${iconSize} text-purple-700 font-bold`} strokeWidth={2.5} />,
+    "gacha-ticket": <Ticket className={`${iconSize} text-yellow-700 font-bold`} strokeWidth={2.5} />,
+    "energy-refill": <Zap className={`${iconSize} text-blue-700 font-bold`} strokeWidth={2.5} />,
+    "exp-booster": <FastForward className={`${iconSize} text-green-700 font-bold`} strokeWidth={2.5} />,
+    "rank-skip": <Coins className={`${iconSize} text-red-700 font-bold`} strokeWidth={2.5} />,
   };
 
   const shineEffect = "before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-tr before:from-transparent before:via-white/20 before:to-transparent before:opacity-70";
@@ -52,8 +63,8 @@ export const ItemImage = ({ type, size, className }: ItemImageProps) => {
       <div className="absolute top-0 left-0 w-full h-1/6 bg-gradient-to-b from-white/20 to-transparent"></div>
       <div className="absolute inset-0 border-4 border-white/5 pointer-events-none"></div>
       
-      {/* Card icon with increased visibility */}
-      <div className="transform transition-all duration-300 bg-white/10 p-2 rounded-full">
+      {/* Card icon with increased visibility - adding background for better contrast */}
+      <div className="flex items-center justify-center bg-white/15 backdrop-blur-sm rounded-full p-2 w-3/4 h-3/4 aspect-square">
         {iconMap[type]}
       </div>
       
