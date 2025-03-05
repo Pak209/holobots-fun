@@ -35,13 +35,13 @@ export interface ItemImageProps extends VariantProps<typeof itemImageVariants> {
 }
 
 export const ItemImage = ({ type, size, className }: ItemImageProps) => {
-  // Icon mapping for each item type
+  // Icon mapping for each item type with darker colors
   const iconMap = {
-    "arena-pass": <Trophy className="w-8 h-8 text-purple-300" />,
-    "gacha-ticket": <Ticket className="w-8 h-8 text-yellow-300" />,
-    "energy-refill": <Zap className="w-8 h-8 text-blue-300" />,
-    "exp-booster": <FastForward className="w-8 h-8 text-green-300" />,
-    "rank-skip": <Coins className="w-8 h-8 text-red-300" />,
+    "arena-pass": <Trophy className="w-8 h-8 text-purple-700 font-bold" strokeWidth={2.5} />,
+    "gacha-ticket": <Ticket className="w-8 h-8 text-yellow-700 font-bold" strokeWidth={2.5} />,
+    "energy-refill": <Zap className="w-8 h-8 text-blue-700 font-bold" strokeWidth={2.5} />,
+    "exp-booster": <FastForward className="w-8 h-8 text-green-700 font-bold" strokeWidth={2.5} />,
+    "rank-skip": <Coins className="w-8 h-8 text-red-700 font-bold" strokeWidth={2.5} />,
   };
 
   const shineEffect = "before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-tr before:from-transparent before:via-white/20 before:to-transparent before:opacity-70";
@@ -52,8 +52,8 @@ export const ItemImage = ({ type, size, className }: ItemImageProps) => {
       <div className="absolute top-0 left-0 w-full h-1/6 bg-gradient-to-b from-white/20 to-transparent"></div>
       <div className="absolute inset-0 border-4 border-white/5 pointer-events-none"></div>
       
-      {/* Card icon */}
-      <div className="transform transition-all duration-300">
+      {/* Card icon with increased visibility */}
+      <div className="transform transition-all duration-300 bg-white/10 p-2 rounded-full">
         {iconMap[type]}
       </div>
       
