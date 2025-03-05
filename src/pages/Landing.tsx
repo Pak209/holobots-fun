@@ -1,6 +1,5 @@
-
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight, FileText } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import WordCycler from "@/components/WordCycler";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
@@ -34,14 +33,26 @@ const Landing = () => {
         <div className="text-xl font-bold italic tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover">
           HOLOBOTS
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="bg-primary/20 border-primary/50 text-primary"
-          onClick={handleLaunchApp}
-        >
-          Launch App
-        </Button>
+        <div className="flex gap-2">
+          <Link to="/bytepaper">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="border border-primary/30 text-primary"
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              Bytepaper
+            </Button>
+          </Link>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="bg-primary/20 border-primary/50 text-primary"
+            onClick={handleLaunchApp}
+          >
+            Launch App
+          </Button>
+        </div>
       </header>
 
       <main className="pt-20 pb-10 px-4">
@@ -53,13 +64,24 @@ const Landing = () => {
           <p className="text-muted-foreground mb-6">
             Train, battle and collect unique digital fighters
           </p>
-          <Button 
-            className="w-full bg-primary hover:bg-primary/90 py-6 text-lg"
-            onClick={handleLaunchApp}
-          >
-            Start Your Journey
-            <ArrowRight className="ml-2" />
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Button 
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90 py-6 text-lg"
+              onClick={handleLaunchApp}
+            >
+              Start Your Journey
+              <ArrowRight className="ml-2" />
+            </Button>
+            <Link to="/bytepaper" className="w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                className="w-full py-6 text-lg border-primary/50 text-primary"
+              >
+                Read Bytepaper
+                <FileText className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Discover Section */}

@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
@@ -29,6 +28,7 @@ import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import Leaderboard from "@/pages/Leaderboard";
 import { MobileLayout } from "@/components/MobileLayout";
+import Bytepaper from "./pages/Bytepaper";
 
 const network = WalletAdapterNetwork.Mainnet;
 const wallets = [
@@ -60,6 +60,7 @@ function App() {
                     <Route path="/user-items" element={<MobileLayout><UserItems /></MobileLayout>} />
                     <Route path="/marketplace" element={<MobileLayout><Marketplace /></MobileLayout>} />
                     <Route path="/leaderboard" element={<MobileLayout><Leaderboard /></MobileLayout>} />
+                    <Route path="/bytepaper" element={<Bytepaper />} />
                   </Routes>
                   <Toaster />
                 </AuthProvider>
