@@ -1,4 +1,3 @@
-
 // Central source of truth for holobot image mappings
 export const HOLOBOT_IMAGE_MAPPING: Record<string, string> = {
   "ACE": "/lovable-uploads/7223a5e5-abcb-4911-8436-bddbbd851ae2.png", // Updated path for ace.png
@@ -12,7 +11,7 @@ export const HOLOBOT_IMAGE_MAPPING: Record<string, string> = {
   "KEN": "/lovable-uploads/58e4110e-07f8-44ab-983e-b6caa5098cc3.png", // Updated path for ken.png
   "KURAI": "/lovable-uploads/a2ce9d10-b01e-4b86-b52b-74f196b39a6c.png", // Updated path for kurai.png
   "TSUIN": "/lovable-uploads/e6982da0-9c53-4d62-a2b8-7ede52d89ca7.png", // Updated path for tsuin.png
-  "WOLF": "/lovable-uploads/wolf.png"
+  "WOLF": "/lovable-uploads/46001c5e-b6c6-4c4d-8006-5926b85c13d9.png" // Updated path for wolf.png
 };
 
 // Create normalized mapping that includes all possible variations
@@ -119,6 +118,12 @@ export const getHolobotImagePath = (key: string | undefined): string => {
   if (cleanKey.toLowerCase() === "wake") {
     console.log(`Special handling for wake: ${HOLOBOT_IMAGE_MAPPING["WAKE"]}`);
     return HOLOBOT_IMAGE_MAPPING["WAKE"];
+  }
+  
+  // Special handling for "wolf"
+  if (cleanKey.toLowerCase() === "wolf") {
+    console.log(`Special handling for wolf: ${HOLOBOT_IMAGE_MAPPING["WOLF"]}`);
+    return HOLOBOT_IMAGE_MAPPING["WOLF"];
   }
   
   // If still no match, check the key format more aggressively
