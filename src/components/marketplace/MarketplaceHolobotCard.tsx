@@ -29,10 +29,10 @@ export const MarketplaceHolobotCard = ({
       {/* Main content - side by side layout for both mobile and desktop */}
       <div className="flex flex-row gap-4 w-full">
         {/* Stats Panel */}
-        <div className="flex-1 flex flex-col justify-between bg-black/30 p-3 rounded-lg border border-holobots-border self-start">
+        <div className="flex-1 flex flex-col justify-between bg-black/30 p-3 rounded-lg border border-holobots-border h-full">
           <div>
             <div className="flex justify-between items-start mb-2">
-              <h2 className="text-lg font-bold text-holobots-accent">
+              <h2 className="text-lg font-bold text-holobots-accent drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] text-shadow">
                 {holobotStats.name}
               </h2>
               <Badge className="text-xs py-0 h-5 bg-holobots-accent text-black">
@@ -49,7 +49,7 @@ export const MarketplaceHolobotCard = ({
               <p>Attack: {holobotStats.attack}</p>
               <p>Defense: {holobotStats.defense}</p>
               <p>Speed: {holobotStats.speed}</p>
-              <p className="text-holobots-accent text-xs">Special: {holobotStats.specialMove}</p>
+              <p className="text-holobots-accent text-xs drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] text-shadow">Special: {holobotStats.specialMove}</p>
             </div>
           </div>
         </div>

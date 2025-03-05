@@ -105,4 +105,9 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
+  
+  /* Text shadow utility for better readability */
+  .text-shadow {
+    text-shadow: -1px -1px 0 #221F26, 1px -1px 0 #221F26, -1px 1px 0 #221F26, 1px 1px 0 #221F26;
+  }
 }
