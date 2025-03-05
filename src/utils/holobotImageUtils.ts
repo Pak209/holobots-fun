@@ -7,7 +7,7 @@ export const HOLOBOT_IMAGE_MAPPING: Record<string, string> = {
   "HARE": "/lovable-uploads/hare.png",
   "TORA": "/lovable-uploads/tora.png",
   "WAKE": "/lovable-uploads/wake.png",
-  "GAMA": "/lovable-uploads/gama.png",
+  "GAMA": "/lovable-uploads/4af336bd-2825-4faf-9b2c-58cc86354b14.png", // Updated path for gama.png
   "KEN": "/lovable-uploads/ken.png",
   "KURAI": "/lovable-uploads/kurai.png",
   "TSUIN": "/lovable-uploads/tsuin.png",
@@ -76,6 +76,12 @@ export const getHolobotImagePath = (key: string | undefined): string => {
   if (cleanKey.toLowerCase() === "kuma") {
     console.log(`Special handling for kuma: ${HOLOBOT_IMAGE_MAPPING["KUMA"]}`);
     return HOLOBOT_IMAGE_MAPPING["KUMA"];
+  }
+  
+  // Special handling for "gama"
+  if (cleanKey.toLowerCase() === "gama") {
+    console.log(`Special handling for gama: ${HOLOBOT_IMAGE_MAPPING["GAMA"]}`);
+    return HOLOBOT_IMAGE_MAPPING["GAMA"];
   }
   
   // If still no match, check the key format more aggressively

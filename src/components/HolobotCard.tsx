@@ -86,6 +86,13 @@ export const HolobotCard = ({
                 return;
               }
               
+              if (holobotName?.toUpperCase() === 'GAMA') {
+                const gamaPath = "/lovable-uploads/4af336bd-2825-4faf-9b2c-58cc86354b14.png";
+                console.log(`Using direct GAMA path: ${gamaPath}`);
+                target.src = gamaPath;
+                return;
+              }
+              
               const altPath = `/lovable-uploads/${holobotName?.toLowerCase()}.png`;
               console.log(`Trying alternative path for ${holobotName}: ${altPath}`);
               target.src = altPath;
