@@ -106,6 +106,13 @@ export const HolobotCard = ({
                 return;
               }
               
+              if (holobotName?.toUpperCase() === 'KURAI') {
+                const kuraiPath = "/lovable-uploads/a2ce9d10-b01e-4b86-b52b-74f196b39a6c.png";
+                console.log(`Using direct KURAI path: ${kuraiPath}`);
+                target.src = kuraiPath;
+                return;
+              }
+              
               const altPath = `/lovable-uploads/${holobotName?.toLowerCase()}.png`;
               console.log(`Trying alternative path for ${holobotName}: ${altPath}`);
               target.src = altPath;
