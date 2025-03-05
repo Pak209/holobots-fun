@@ -1,3 +1,4 @@
+
 // Central source of truth for holobot image mappings
 export const HOLOBOT_IMAGE_MAPPING: Record<string, string> = {
   "ACE": "/lovable-uploads/7223a5e5-abcb-4911-8436-bddbbd851ae2.png", // Updated path for ace.png
@@ -6,7 +7,7 @@ export const HOLOBOT_IMAGE_MAPPING: Record<string, string> = {
   "ERA": "/lovable-uploads/c2cd6b0a-0e49-4ede-9507-e55d05aa608d.png", // Updated path for era.png
   "HARE": "/lovable-uploads/4ad952b3-4337-4120-9542-ed14ca1051d5.png", // Updated path for hare.png
   "TORA": "/lovable-uploads/e79a5ab6-4577-4e0e-a2b9-32cafd91a212.png", // Updated path for tora.png
-  "WAKE": "/lovable-uploads/wake.png",
+  "WAKE": "/lovable-uploads/e8128616-6ab5-4995-91b8-2989d18a0508.png", // Updated path for wake.png
   "GAMA": "/lovable-uploads/4af336bd-2825-4faf-9b2c-58cc86354b14.png", // Updated path for gama.png
   "KEN": "/lovable-uploads/58e4110e-07f8-44ab-983e-b6caa5098cc3.png", // Updated path for ken.png
   "KURAI": "/lovable-uploads/a2ce9d10-b01e-4b86-b52b-74f196b39a6c.png", // Updated path for kurai.png
@@ -112,6 +113,12 @@ export const getHolobotImagePath = (key: string | undefined): string => {
   if (cleanKey.toLowerCase() === "tsuin") {
     console.log(`Special handling for tsuin: ${HOLOBOT_IMAGE_MAPPING["TSUIN"]}`);
     return HOLOBOT_IMAGE_MAPPING["TSUIN"];
+  }
+  
+  // Special handling for "wake"
+  if (cleanKey.toLowerCase() === "wake") {
+    console.log(`Special handling for wake: ${HOLOBOT_IMAGE_MAPPING["WAKE"]}`);
+    return HOLOBOT_IMAGE_MAPPING["WAKE"];
   }
   
   // If still no match, check the key format more aggressively

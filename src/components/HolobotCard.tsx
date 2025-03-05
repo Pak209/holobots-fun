@@ -1,3 +1,4 @@
+
 import { HolobotStats, getRank } from "@/types/holobot";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 
@@ -124,6 +125,13 @@ export const HolobotCard = ({
                 const tsuinPath = "/lovable-uploads/e6982da0-9c53-4d62-a2b8-7ede52d89ca7.png";
                 console.log(`Using direct TSUIN path: ${tsuinPath}`);
                 target.src = tsuinPath;
+                return;
+              }
+              
+              if (holobotName?.toUpperCase() === 'WAKE') {
+                const wakePath = "/lovable-uploads/e8128616-6ab5-4995-91b8-2989d18a0508.png";
+                console.log(`Using direct WAKE path: ${wakePath}`);
+                target.src = wakePath;
                 return;
               }
               
