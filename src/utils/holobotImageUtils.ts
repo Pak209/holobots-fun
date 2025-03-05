@@ -1,10 +1,11 @@
+
 // Central source of truth for holobot image mappings
 export const HOLOBOT_IMAGE_MAPPING: Record<string, string> = {
   "ACE": "/lovable-uploads/7223a5e5-abcb-4911-8436-bddbbd851ae2.png", // Updated path for ace.png
   "KUMA": "/lovable-uploads/78f2c37a-43a3-4cce-a767-bc3f614e7a80.png", // Updated path for kuma.png
   "SHADOW": "/lovable-uploads/ef60f626-b571-46ba-9d37-6045b020669a.png", // Updated path for shadow.png
   "ERA": "/lovable-uploads/c2cd6b0a-0e49-4ede-9507-e55d05aa608d.png", // Updated path for era.png
-  "HARE": "/lovable-uploads/hare.png",
+  "HARE": "/lovable-uploads/4ad952b3-4337-4120-9542-ed14ca1051d5.png", // Updated path for hare.png
   "TORA": "/lovable-uploads/tora.png",
   "WAKE": "/lovable-uploads/wake.png",
   "GAMA": "/lovable-uploads/4af336bd-2825-4faf-9b2c-58cc86354b14.png", // Updated path for gama.png
@@ -82,6 +83,12 @@ export const getHolobotImagePath = (key: string | undefined): string => {
   if (cleanKey.toLowerCase() === "gama") {
     console.log(`Special handling for gama: ${HOLOBOT_IMAGE_MAPPING["GAMA"]}`);
     return HOLOBOT_IMAGE_MAPPING["GAMA"];
+  }
+  
+  // Special handling for "hare"
+  if (cleanKey.toLowerCase() === "hare") {
+    console.log(`Special handling for hare: ${HOLOBOT_IMAGE_MAPPING["HARE"]}`);
+    return HOLOBOT_IMAGE_MAPPING["HARE"];
   }
   
   // If still no match, check the key format more aggressively
