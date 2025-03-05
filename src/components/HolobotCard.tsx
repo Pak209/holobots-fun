@@ -1,4 +1,3 @@
-
 import { HolobotStats, getRank } from "@/types/holobot";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 
@@ -118,6 +117,13 @@ export const HolobotCard = ({
                 const toraPath = "/lovable-uploads/e79a5ab6-4577-4e0e-a2b9-32cafd91a212.png";
                 console.log(`Using direct TORA path: ${toraPath}`);
                 target.src = toraPath;
+                return;
+              }
+              
+              if (holobotName?.toUpperCase() === 'TSUIN') {
+                const tsuinPath = "/lovable-uploads/e6982da0-9c53-4d62-a2b8-7ede52d89ca7.png";
+                console.log(`Using direct TSUIN path: ${tsuinPath}`);
+                target.src = tsuinPath;
                 return;
               }
               
