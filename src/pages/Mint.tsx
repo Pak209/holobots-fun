@@ -29,7 +29,7 @@ export default function Mint() {
   console.log("Mint page - Current user:", user);
 
   // Starter holobots available for minting - ensure they exist in HOLOBOT_STATS
-  const starterHolobots = ['alpha', 'beta', 'gamma'].filter(key => HOLOBOT_STATS[key]);
+  const starterHolobots = ['ace', 'shadow', 'kuma'].filter(key => HOLOBOT_STATS[key]);
 
   const handleSelectHolobot = (holobotKey: string) => {
     setSelectedHolobot(holobotKey);
