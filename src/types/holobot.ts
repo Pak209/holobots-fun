@@ -1,3 +1,4 @@
+
 export interface HolobotStats {
     name: string;
     maxHealth: number;
@@ -20,6 +21,48 @@ export interface HolobotStats {
 }
 
 export const HOLOBOT_STATS: Record<string, HolobotStats> = {
+    alpha: {
+        name: "ALPHA",
+        maxHealth: 180,
+        attack: 7,
+        defense: 7,
+        speed: 6,
+        intelligence: 6,
+        specialMove: "System Override",
+        level: 1,
+        experience: 0,
+        nextLevelExp: 100,
+        abilityDescription: "Temporarily boosts all stats by hacking into opponent's system",
+        abilityStats: "+2 all stats"
+    },
+    beta: {
+        name: "BETA",
+        maxHealth: 160,
+        attack: 8,
+        defense: 5,
+        speed: 7,
+        intelligence: 6,
+        specialMove: "Logic Bomb",
+        level: 1,
+        experience: 0,
+        nextLevelExp: 100,
+        abilityDescription: "Deploys a devastating logic bomb that confuses the opponent",
+        abilityStats: "+4 atk | -2 def to opponent"
+    },
+    gamma: {
+        name: "GAMMA",
+        maxHealth: 200,
+        attack: 6,
+        defense: 8,
+        speed: 5,
+        intelligence: 7,
+        specialMove: "Firewall",
+        level: 1,
+        experience: 0,
+        nextLevelExp: 100,
+        abilityDescription: "Creates an impenetrable defensive barrier",
+        abilityStats: "+5 def"
+    },
     ace: {
         name: "ACE",
         maxHealth: 150,

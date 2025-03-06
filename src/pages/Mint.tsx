@@ -28,8 +28,8 @@ export default function Mint() {
 
   console.log("Mint page - Current user:", user);
 
-  // Starter holobots available for minting
-  const starterHolobots = ['alpha', 'beta', 'gamma'];
+  // Starter holobots available for minting - ensure they exist in HOLOBOT_STATS
+  const starterHolobots = ['alpha', 'beta', 'gamma'].filter(key => HOLOBOT_STATS[key]);
 
   const handleSelectHolobot = (holobotKey: string) => {
     setSelectedHolobot(holobotKey);
@@ -45,11 +45,20 @@ export default function Mint() {
       return;
     }
 
+    if (!HOLOBOT_STATS[selectedHolobot]) {
+      toast({
+        title: "Invalid Selection",
+        description: "The selected Holobot is not available for minting",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsMinting(true);
     
     try {
       // Create the user's first holobot
-      const baseStats = HOLOBOT_STATS[selectedHolobot.toLowerCase()];
+      const baseStats = HOLOBOT_STATS[selectedHolobot];
       
       // Create new holobot object
       const newHolobot = {
@@ -86,6 +95,12 @@ export default function Mint() {
   };
 
   const renderHolobotCard = (holobotKey: string) => {
+    // Check if this holobot exists in our stats
+    if (!HOLOBOT_STATS[holobotKey]) {
+      console.error(`Missing holobot stats for: ${holobotKey}`);
+      return null;
+    }
+    
     const holobot = HOLOBOT_STATS[holobotKey];
     const isSelected = selectedHolobot === holobotKey;
     
@@ -168,9 +183,15 @@ export default function Mint() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          {starterHolobots.map((holobotKey) => renderHolobotCard(holobotKey))}
-        </div>
+        {starterHolobots.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            {starterHolobots.map((holobotKey) => renderHolobotCard(holobotKey))}
+          </div>
+        ) : (
+          <div className="text-center p-8 bg-red-500/20 rounded-lg mb-8">
+            <p className="text-red-500">No starter Holobots available. Please contact support.</p>
+          </div>
+        )}
         
         <div className="flex justify-center">
           <Button
