@@ -6,7 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotCard } from "@/components/HolobotCard";
-import { Lock, Coins, FileCode2 } from "lucide-react";
+import { Lock, Coins, FileCode2, Shield, Zap, Heart, Gauge, Brain } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 export default function Mint() {
   const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
@@ -136,28 +137,65 @@ export default function Mint() {
           </h3>
         </div>
         
-        {/* Stats Summary */}
-        <div className="mt-6 space-y-3 text-xs relative z-10">
-          <div className="flex justify-between items-center bg-black/40 p-2 rounded">
-            <span className="text-gray-400">HP</span>
-            <span className="text-holobots-accent">{holobot.maxHealth}</span>
-          </div>
-          <div className="flex justify-between items-center bg-black/40 p-2 rounded">
-            <span className="text-gray-400">Attack</span>
-            <span className="text-holobots-accent">{holobot.attack}</span>
-          </div>
-          <div className="flex justify-between items-center bg-black/40 p-2 rounded">
-            <span className="text-gray-400">Defense</span>
-            <span className="text-holobots-accent">{holobot.defense}</span>
-          </div>
-          <div className="flex justify-between items-center bg-black/40 p-2 rounded">
-            <span className="text-gray-400">Speed</span>
-            <span className="text-holobots-accent">{holobot.speed}</span>
-          </div>
-          <div className="flex justify-between items-center bg-black/40 p-2 rounded">
-            <span className="text-gray-400">Special Move</span>
-            <span className="text-holobots-accent">{holobot.specialMove}</span>
-          </div>
+        {/* Stats Summary - Updated to look more like HolobotInfo */}
+        <div className="mt-6 space-y-2 relative z-10">
+          <Card className="bg-black/40 border border-holobots-accent/30 p-4 rounded-lg">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-2">
+                <Heart className="w-4 h-4 text-red-500" />
+                <div className="flex justify-between w-full">
+                  <span className="text-xs text-gray-400">HP</span>
+                  <span className="text-xs font-semibold text-holobots-accent">{holobot.maxHealth}</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-yellow-500" />
+                <div className="flex justify-between w-full">
+                  <span className="text-xs text-gray-400">ATK</span>
+                  <span className="text-xs font-semibold text-holobots-accent">{holobot.attack}</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-blue-500" />
+                <div className="flex justify-between w-full">
+                  <span className="text-xs text-gray-400">DEF</span>
+                  <span className="text-xs font-semibold text-holobots-accent">{holobot.defense}</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Gauge className="w-4 h-4 text-green-500" />
+                <div className="flex justify-between w-full">
+                  <span className="text-xs text-gray-400">SPD</span>
+                  <span className="text-xs font-semibold text-holobots-accent">{holobot.speed}</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 col-span-2">
+                <Brain className="w-4 h-4 text-purple-500" />
+                <div className="flex justify-between w-full">
+                  <span className="text-xs text-gray-400">INT</span>
+                  <span className="text-xs font-semibold text-holobots-accent">{holobot.intelligence}</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 col-span-2 mt-1 pt-2 border-t border-holobots-accent/20">
+                <FileCode2 className="w-4 h-4 text-cyan-500" />
+                <div className="flex justify-between w-full">
+                  <span className="text-xs text-gray-400">Special</span>
+                  <span className="text-xs font-semibold text-holobots-accent">{holobot.specialMove}</span>
+                </div>
+              </div>
+              
+              {holobot.abilityDescription && (
+                <div className="col-span-2 mt-1 text-xs text-gray-400 italic border-t border-holobots-accent/20 pt-2">
+                  "{holobot.abilityDescription}"
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
 
         {/* Selection Indicator */}
