@@ -12,8 +12,8 @@ interface HolobotInfoCardProps {
   holobot: typeof HOLOBOT_STATS[keyof typeof HOLOBOT_STATS];
   userHolobot: UserHolobot | undefined;
   userTokens: number;
-  isMinting: string | null;
-  justMinted: string | null;
+  isMinting: boolean;
+  justMinted: boolean;
   onMint: (holobotName: string) => void;
 }
 
@@ -27,7 +27,6 @@ export const HolobotInfoCard = ({
   onMint
 }: HolobotInfoCardProps) => {
   const isOwned = !!userHolobot;
-  const isJustMinted = justMinted === holobot.name;
   const level = userHolobot?.level || holobot.level;
   const currentXp = userHolobot?.experience || 0;
   const nextLevelXp = userHolobot?.nextLevelExp || 100;
@@ -39,21 +38,21 @@ export const HolobotInfoCard = ({
   const xpProgress = calculateProgress(currentXp, nextLevelXp);
 
   return (
-    <div className={`flex flex-col sm:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300`}>
-      <div className="flex sm:flex-row gap-4 w-full items-stretch">
-        {/* Stats Panel - With increased min-height */}
-        <div className="flex-1 flex flex-col justify-between max-w-[180px] sm:max-w-[180px] bg-black/30 p-2 rounded-lg border border-holobots-accent self-start min-h-[320px]">
+    <div className={`flex flex-col sm:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-3 sm:p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300`}>
+      <div className="flex sm:flex-row gap-3 sm:gap-4 w-full items-stretch">
+        {/* Stats Panel - With reduced width on mobile */}
+        <div className="flex-none flex flex-col justify-between w-[120px] sm:w-[180px] bg-black/30 p-2 rounded-lg border border-holobots-accent self-start min-h-[320px]">
           <div>
             <div className="flex justify-between items-start mb-1.5">
               <h2 className="text-lg font-bold text-holobots-accent drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] border border-transparent">
                 {holobot.name}
               </h2>
-              {isOwned && !isJustMinted && (
+              {isOwned && !justMinted && (
                 <div className="px-1 py-0.5 bg-green-500/20 border border-green-500 rounded text-[9px]">
                   OWNED
                 </div>
               )}
-              {isJustMinted && (
+              {justMinted && (
                 <div className="px-1 py-0.5 bg-blue-500/20 border border-blue-500 rounded text-[9px] animate-pulse">
                   NEW
                 </div>
@@ -85,18 +84,18 @@ export const HolobotInfoCard = ({
           </div>
           
           <div className="mt-1.5 pt-1 border-t border-holobots-border dark:border-holobots-dark-border">
-            {!isOwned && !isJustMinted && (
+            {!isOwned && !justMinted && (
               <Button 
                 onClick={() => onMint(holobot.name)}
-                disabled={isMinting === holobot.name || userTokens < 100}
+                disabled={isMinting || userTokens < 100}
                 className="w-full py-0 h-6 text-xs bg-holobots-accent hover:bg-holobots-accent/80 text-black font-semibold"
               >
-                {isMinting === holobot.name ? (
+                {isMinting ? (
                   "Minting..."
                 ) : (
                   <>
                     <Plus size={10} className="mr-0.5" />
-                    Mint Holobot
+                    Mint
                     <Coins size={10} className="ml-0.5 mr-0.5" />
                     <span>100</span>
                   </>
@@ -104,7 +103,7 @@ export const HolobotInfoCard = ({
               </Button>
             )}
             
-            {isJustMinted && (
+            {justMinted && (
               <div className="w-full p-1 bg-green-500/20 border border-green-500 rounded text-center">
                 <span className="text-green-400 text-[9px] font-semibold">Minting Successful!</span>
               </div>
@@ -135,9 +134,9 @@ export const HolobotInfoCard = ({
           </div>
         </div>
         
-        {/* TCG Card - With wrapper to prevent overflow */}
-        <div className="flex-1 flex justify-center items-center overflow-hidden">
-          <div className="transform scale-100 origin-center">
+        {/* TCG Card - With preserved width on mobile */}
+        <div className="flex-1 flex justify-center items-center">
+          <div className="transform scale-100 origin-center w-[150px] sm:w-auto">
             <HolobotCard 
               stats={{
                 ...holobot,

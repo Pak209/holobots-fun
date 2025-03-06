@@ -31,8 +31,8 @@ const HolobotsInfo = () => {
                 holobot={holobot}
                 userHolobot={userHolobot}
                 userTokens={user?.holosTokens || 0}
-                isMinting={isMinting}
-                justMinted={justMinted}
+                isMinting={isMinting === holobot.name}
+                justMinted={justMinted === holobot.name}
                 onMint={handleMintHolobot}
               />
             );

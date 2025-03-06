@@ -58,15 +58,17 @@ export const BattleCards = ({
   
   return (
     <div className="flex justify-center gap-2 mb-2">
-      <div className="flex flex-col">
-        <HolobotCard 
-          stats={{
-            ...(leftHolobotStats || HOLOBOT_STATS.ace), 
-            level: leftLevel,
-            name: normalizedLeftKey // Ensure name is passed in uppercase
-          }} 
-          variant="blue" 
-        />
+      <div className="flex flex-col items-center">
+        <div className="w-[150px] sm:w-auto">
+          <HolobotCard 
+            stats={{
+              ...(leftHolobotStats || HOLOBOT_STATS.ace), 
+              level: leftLevel,
+              name: normalizedLeftKey // Ensure name is passed in uppercase
+            }} 
+            variant="blue" 
+          />
+        </div>
         <ExperienceBar 
           {...getExperienceProgress(leftXp, leftLevel)}
           level={leftLevel}
@@ -75,16 +77,19 @@ export const BattleCards = ({
       <div className="flex items-center">
         <span className="text-holobots-accent font-bold text-xl animate-neon-pulse">VS</span>
       </div>
-      <div className="flex flex-col">
-        <HolobotCard 
-          stats={{
-            ...(rightHolobotStats || HOLOBOT_STATS.ace), 
-            level: rightLevel,
-            name: normalizedRightKey // Ensure name is passed in uppercase
-          }} 
-          variant="red" 
-        />
+      <div className="flex flex-col items-center">
+        <div className="w-[150px] sm:w-auto">
+          <HolobotCard 
+            stats={{
+              ...(rightHolobotStats || HOLOBOT_STATS.ace), 
+              level: rightLevel,
+              name: normalizedRightKey // Ensure name is passed in uppercase
+            }} 
+            variant="red" 
+          />
+        </div>
       </div>
     </div>
   );
 };
+
