@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -75,11 +74,11 @@ export default function Auth() {
         if (data.user) {
           console.log("Login successful, checking profile...");
           
-          // Fix type mismatch by using maybeSingle
+          // Fix type mismatch by using maybeSingle and casting UUID
           const { data: userProfile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', data.user.id)
+            .eq('id', data.user.id as any)
             .maybeSingle();
 
           if (profileError) {
@@ -89,10 +88,12 @@ export default function Auth() {
 
           console.log("Profile checked:", userProfile);
           
-          // Check if the user already has holobots - properly handle the case when userProfile might be null
-          if (!userProfile || !userProfile.holobots || 
-              !Array.isArray(userProfile.holobots) || 
-              userProfile.holobots.length === 0) {
+          // Check if the user already has holobots - properly handle null case
+          if (!userProfile || 
+              !userProfile.holobots || 
+              (typeof userProfile.holobots === 'object' && 
+               Array.isArray(userProfile.holobots) && 
+               userProfile.holobots.length === 0)) {
             // New user or user without holobots, send to mint page
             console.log("User has no holobots, redirecting to mint page");
             navigate('/mint');

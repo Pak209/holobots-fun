@@ -50,11 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Use maybeSingle to handle missing profiles - fix the type mismatch
+          // Use maybeSingle to handle missing profiles and properly cast UUID
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', session.user.id)
+            .eq('id', session.user.id as any)
             .maybeSingle();
           
           if (profileError) {
@@ -84,11 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Auth state changed:", event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
-        // Use maybeSingle to handle missing profiles - fix the type mismatch
+        // Use maybeSingle to handle missing profiles and properly cast UUID
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', session.user.id)
+          .eq('id', session.user.id as any)
           .maybeSingle();
         
         if (profileError) {
@@ -242,11 +242,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       console.log("Updating user profile with:", dbUpdates);
       
-      // Fix type mismatch by using maybeSingle
+      // Fix type mismatch by using maybeSingle and casting UUID
       const { error: updateError } = await supabase
         .from('profiles')
         .update(dbUpdates)
-        .eq('id', currentUser.id);
+        .eq('id', currentUser.id as any);
       
       if (updateError) {
         throw updateError;
@@ -299,11 +299,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      // Fix type mismatch by using maybeSingle
+      // Fix type mismatch by using maybeSingle and casting UUID
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', userId as any)
         .maybeSingle();
       
       if (error) {

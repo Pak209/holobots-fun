@@ -21,7 +21,7 @@ export const supabase = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
-      // Redirect URL is now set in the correct place
+      // Fix: Use the correct property name for redirects (redirectTo instead of redirect_to)
       redirectTo: `${SITE_URL}/auth`
     }
   }
