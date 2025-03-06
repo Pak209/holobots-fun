@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -105,7 +106,9 @@ export default function Auth() {
           console.log("Profile checked:", userProfile);
           
           // Check if the user already has holobots
-          if (!userProfile || !userProfile.holobots || userProfile.holobots.length === 0) {
+          if (!userProfile || !userProfile.holobots || 
+              !Array.isArray(userProfile.holobots) || 
+              userProfile.holobots.length === 0) {
             // New user or user without holobots, send to mint page
             console.log("User has no holobots, redirecting to mint page");
             navigate('/mint');
