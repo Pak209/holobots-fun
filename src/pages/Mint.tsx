@@ -6,8 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotCard } from "@/components/HolobotCard";
-import { Lock, Coins, FileCode2, Shield, Zap, Heart, Gauge, Brain } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { FileCode2, Coins, Shield, Zap } from "lucide-react";
 
 export default function Mint() {
   const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
@@ -119,7 +118,7 @@ export default function Mint() {
           overflow-hidden
         `}
       >
-        <div className="relative flex items-start gap-4">
+        <div className="relative flex flex-col items-center gap-4">
           {/* TCG Card Container */}
           <div className="flex-shrink-0 relative z-10 w-[180px] mx-auto">
             <HolobotCard 
@@ -130,72 +129,35 @@ export default function Mint() {
               variant="blue" 
             />
           </div>
-          
-          {/* Holobot name on small screens */}
-          <h3 className="md:hidden text-xl font-bold text-center text-holobots-accent mt-4">
-            {holobot.name}
-          </h3>
-        </div>
-        
-        {/* Stats Summary - Updated to look more like HolobotInfo */}
-        <div className="mt-6 space-y-2 relative z-10">
-          <Card className="bg-black/40 border border-holobots-accent/30 p-4 rounded-lg">
-            <div className="grid grid-cols-2 gap-3">
+
+          {/* Simplified info section - Just combat style and special move */}
+          <div className="w-full mt-4 space-y-3 text-holobots-accent">
+            <div className="flex items-center justify-between border-b border-holobots-accent/30 pb-2">
               <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4 text-red-500" />
-                <div className="flex justify-between w-full">
-                  <span className="text-xs text-gray-400">HP</span>
-                  <span className="text-xs font-semibold text-holobots-accent">{holobot.maxHealth}</span>
-                </div>
+                <Shield className="w-5 h-5 text-blue-400" />
+                <span className="text-gray-300 font-medium text-sm">Combat Style</span>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-yellow-500" />
-                <div className="flex justify-between w-full">
-                  <span className="text-xs text-gray-400">ATK</span>
-                  <span className="text-xs font-semibold text-holobots-accent">{holobot.attack}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-blue-500" />
-                <div className="flex justify-between w-full">
-                  <span className="text-xs text-gray-400">DEF</span>
-                  <span className="text-xs font-semibold text-holobots-accent">{holobot.defense}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Gauge className="w-4 h-4 text-green-500" />
-                <div className="flex justify-between w-full">
-                  <span className="text-xs text-gray-400">SPD</span>
-                  <span className="text-xs font-semibold text-holobots-accent">{holobot.speed}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2 col-span-2">
-                <Brain className="w-4 h-4 text-purple-500" />
-                <div className="flex justify-between w-full">
-                  <span className="text-xs text-gray-400">INT</span>
-                  <span className="text-xs font-semibold text-holobots-accent">{holobot.intelligence}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2 col-span-2 mt-1 pt-2 border-t border-holobots-accent/20">
-                <FileCode2 className="w-4 h-4 text-cyan-500" />
-                <div className="flex justify-between w-full">
-                  <span className="text-xs text-gray-400">Special</span>
-                  <span className="text-xs font-semibold text-holobots-accent">{holobot.specialMove}</span>
-                </div>
-              </div>
-              
-              {holobot.abilityDescription && (
-                <div className="col-span-2 mt-1 text-xs text-gray-400 italic border-t border-holobots-accent/20 pt-2">
-                  "{holobot.abilityDescription}"
-                </div>
-              )}
+              <span className="text-holobots-accent font-bold">
+                {holobotKey === 'ace' ? 'Balanced' : 
+                 holobotKey === 'kuma' ? 'Aggressive' : 
+                 holobotKey === 'shadow' ? 'Defensive' : 'Standard'}
+              </span>
             </div>
-          </Card>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-yellow-400" />
+                <span className="text-gray-300 font-medium text-sm">Special Move</span>
+              </div>
+              <span className="text-holobots-accent font-bold">{holobot.specialMove}</span>
+            </div>
+
+            {holobot.abilityDescription && (
+              <div className="text-xs text-gray-400 italic mt-2 border-t border-holobots-accent/20 pt-2">
+                "{holobot.abilityDescription}"
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Selection Indicator */}
@@ -258,6 +220,12 @@ export default function Mint() {
           <div className="flex items-center justify-center gap-2 mt-2">
             <FileCode2 className="w-4 h-4 text-purple-400" />
             <span>Collect blueprints and resources from quests and battles</span>
+          </div>
+          <div className="flex items-center justify-center mt-4 gap-2">
+            <Coins className="w-4 h-4 text-yellow-400" />
+            <span className="text-xs text-gray-400">
+              Holos tokens earned in-game now will seamlessly transfer to crypto tokens in the future
+            </span>
           </div>
         </div>
       </div>
