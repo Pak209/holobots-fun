@@ -278,6 +278,7 @@ export type Database = {
           energy_refills: number | null
           exp_boosters: number | null
           gacha_tickets: number | null
+          holobots: Json | null
           holos_tokens: number | null
           id: string
           last_daily_pull: string | null
@@ -295,6 +296,7 @@ export type Database = {
           energy_refills?: number | null
           exp_boosters?: number | null
           gacha_tickets?: number | null
+          holobots?: Json | null
           holos_tokens?: number | null
           id: string
           last_daily_pull?: string | null
@@ -312,6 +314,7 @@ export type Database = {
           energy_refills?: number | null
           exp_boosters?: number | null
           gacha_tickets?: number | null
+          holobots?: Json | null
           holos_tokens?: number | null
           id?: string
           last_daily_pull?: string | null

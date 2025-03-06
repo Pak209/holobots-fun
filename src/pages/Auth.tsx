@@ -93,7 +93,7 @@ export default function Auth() {
           // Check if user has any holobots
           const { data: userProfile, error: profileError } = await supabase
             .from('profiles')
-            .select('holobots')
+            .select('*')
             .eq('id', data.user.id)
             .single();
 
@@ -102,14 +102,16 @@ export default function Auth() {
             throw new Error("Error fetching user profile");
           }
 
-          console.log("Profile checked, navigating...");
+          console.log("Profile checked:", userProfile);
           
           // Check if the user already has holobots
           if (!userProfile || !userProfile.holobots || userProfile.holobots.length === 0) {
             // New user or user without holobots, send to mint page
+            console.log("User has no holobots, redirecting to mint page");
             navigate('/mint');
           } else {
             // Existing user with holobots, send to dashboard
+            console.log("User has holobots, redirecting to dashboard");
             navigate('/dashboard');
           }
         }
