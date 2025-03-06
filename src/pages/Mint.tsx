@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotCard } from "@/components/HolobotCard";
 
@@ -17,10 +16,16 @@ export default function Mint() {
   
   useEffect(() => {
     // If user already has holobots, redirect to dashboard
-    if (user?.holobots && user.holobots.length > 0) {
+    if (user?.holobots && Array.isArray(user.holobots) && user.holobots.length > 0) {
       navigate('/dashboard');
     }
+    // If user is not logged in, redirect to auth page
+    if (!user) {
+      navigate('/auth');
+    }
   }, [user, navigate]);
+
+  console.log("Mint page - Current user:", user);
 
   // Starter holobots available for minting
   const starterHolobots = ['alpha', 'beta', 'gamma'];
