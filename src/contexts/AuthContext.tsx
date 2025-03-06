@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +41,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Ensure new users get 500 Holos tokens when they sign up
+  const ensureWelcomeGift = async (userId: string): Promise<void> => {
+    try {
+      // Get the current user profile
+      const { data: profile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('holos_tokens')
+        .eq('id', userId as any)
+        .maybeSingle();
+      
+      if (fetchError) {
+        console.error("Error fetching profile for welcome gift:", fetchError);
+        return;
+      }
+      
+      // If user exists but has 0 tokens, give them 500 tokens
+      if (profile && profile.holos_tokens === 0) {
+        console.log("Giving welcome gift of 500 Holos tokens to new user");
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ holos_tokens: 500 })
+          .eq('id', userId as any);
+        
+        if (updateError) {
+          console.error("Error giving welcome gift:", updateError);
+        } else {
+          console.log("Welcome gift of 500 Holos tokens successfully given");
+          
+          // Update local state if this is the current user
+          if (currentUser && currentUser.id === userId) {
+            setCurrentUser({
+              ...currentUser,
+              holosTokens: 500
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error in ensureWelcomeGift:", err);
+    }
+  };
+
   useEffect(() => {
     const checkUser = async () => {
       setLoading(true);
@@ -64,7 +106,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else if (profile) {
             // Successfully found profile
             console.log("Found user profile:", profile);
-            setCurrentUser(mapDatabaseToUserProfile(profile));
+            const mappedProfile = mapDatabaseToUserProfile(profile);
+            setCurrentUser(mappedProfile);
+            
+            // Ensure new users get their welcome gift of 500 Holos tokens
+            await ensureWelcomeGift(session.user.id);
           }
         } else {
           setCurrentUser(null);
@@ -97,7 +143,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setError(profileError.message);
         } else if (profile) {
           console.log("Setting user from auth state change:", profile);
-          setCurrentUser(mapDatabaseToUserProfile(profile));
+          const mappedProfile = mapDatabaseToUserProfile(profile);
+          setCurrentUser(mappedProfile);
+          
+          // Ensure new users get their welcome gift of 500 Holos tokens
+          await ensureWelcomeGift(session.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
         setCurrentUser(null);

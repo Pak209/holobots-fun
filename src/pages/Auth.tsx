@@ -88,19 +88,24 @@ export default function Auth() {
 
           console.log("Profile checked:", userProfile);
           
-          // Check if the user already has holobots - properly handle null case
-          if (!userProfile || 
-              !userProfile.holobots || 
-              (typeof userProfile.holobots === 'object' && 
-               Array.isArray(userProfile.holobots) && 
-               userProfile.holobots.length === 0)) {
-            // New user or user without holobots, send to mint page
-            console.log("User has no holobots, redirecting to mint page");
+          // Properly check if the user has holobots with proper type checking
+          if (!userProfile) {
+            console.log("No user profile found, redirecting to mint page");
             navigate('/mint');
           } else {
-            // Existing user with holobots, send to dashboard
-            console.log("User has holobots, redirecting to dashboard");
-            navigate('/dashboard');
+            const hasHolobots = userProfile.holobots && 
+                               Array.isArray(userProfile.holobots) && 
+                               userProfile.holobots.length > 0;
+            
+            if (!hasHolobots) {
+              // New user or user without holobots, send to mint page
+              console.log("User has no holobots, redirecting to mint page");
+              navigate('/mint');
+            } else {
+              // Existing user with holobots, send to dashboard
+              console.log("User has holobots, redirecting to dashboard");
+              navigate('/dashboard');
+            }
           }
         }
       }
