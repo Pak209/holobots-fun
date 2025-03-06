@@ -22,7 +22,7 @@ export const supabase = createClient<Database>(
       detectSessionInUrl: true,
       flowType: 'pkce',
       // Use the current site URL for redirects
-      redirectTo: `${SITE_URL}/auth`
+      redirect_to: `${SITE_URL}/auth`
     }
   }
 );

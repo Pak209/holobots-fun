@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -69,11 +68,27 @@ export default function Mint() {
         boostedAttributes: {}
       };
       
+      // Ensure tokens are added here
+      console.log("Adding 500 Holos tokens to user");
+      
       // User gets their first holobot for free and some starter tokens
       await updateUser({
         holobots: [newHolobot],
         holosTokens: 500
       });
+      
+      // Double-check the tokens were added
+      setTimeout(async () => {
+        // If user still doesn't have tokens, try again
+        if (user?.holosTokens === 0 || user?.holosTokens === undefined) {
+          console.log("Initial token update may have failed, trying again...");
+          try {
+            await updateUser({ holosTokens: 500 });
+          } catch (retryError) {
+            console.error("Retry token update failed:", retryError);
+          }
+        }
+      }, 1000);
       
       toast({
         title: "Holobot Minted!",

@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
@@ -13,9 +14,10 @@ interface AuthContextType extends AuthState {
   getUserProfile: (userId: string) => Promise<UserProfile | null>;
 }
 
-const defaultGuestUser: UserProfile = {
+// Create a default user with a dynamic username that defaults to "Guest User" but can be updated
+const createDefaultUser = (username: string = "Guest User"): UserProfile => ({
   id: "guest",
-  username: "Guest User",
+  username,
   holobots: [],
   dailyEnergy: 100,
   maxDailyEnergy: 100,
@@ -27,7 +29,7 @@ const defaultGuestUser: UserProfile = {
   },
   lastEnergyRefresh: new Date().toISOString(),
   level: 1
-};
+});
 
 const STORAGE_KEY = "holobots_user_data";
 
@@ -48,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
+          // Cast the ID to string since that's what our profiles table expects
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -59,6 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setCurrentUser(null);
             setError(profileError.message);
           } else if (profile) {
+            // Successfully found profile
+            console.log("Found user profile:", profile);
             setCurrentUser(mapDatabaseToUserProfile(profile));
           }
         } else {
@@ -90,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setCurrentUser(null);
           setError(profileError.message);
         } else if (profile) {
+          console.log("Setting user from auth state change:", profile);
           setCurrentUser(mapDatabaseToUserProfile(profile));
         }
       } else if (event === 'SIGNED_OUT') {
@@ -230,14 +236,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updates.rank_skips !== undefined) dbUpdates.rank_skips = updates.rank_skips;
       
       if (updates.holobots) {
-        const { data: currentProfile } = await supabase
-          .from('profiles')
-          .select('holobots')
-          .eq('id', currentUser.id)
-          .single();
-        
         dbUpdates.holobots = updates.holobots;
       }
+      
+      console.log("Updating user profile with:", dbUpdates);
       
       const { error: updateError } = await supabase
         .from('profiles')
@@ -248,7 +250,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw updateError;
       }
       
-      setCurrentUser({ ...currentUser, ...updates });
+      // Update the local user state with the new values
+      const updatedUser = { ...currentUser, ...updates };
+      setCurrentUser(updatedUser);
+      
+      // Log the updated state
+      console.log("User profile updated successfully:", updatedUser);
       
       toast({
         title: "Profile Updated",
@@ -308,7 +315,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const state: AuthState = {
-    user: currentUser || defaultGuestUser,
+    user: currentUser || createDefaultUser(currentUser?.username),
     loading,
     error,
   };

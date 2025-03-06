@@ -8,12 +8,10 @@ import { HOLOBOT_STATS } from "@/types/holobot";
 const Dashboard = () => {
   const { user } = useAuth();
 
-  // Mock data for user holobots (would come from user state in a real app)
-  const userHolobots = [
-    { name: "ace", level: 5 },
-    { name: "kuma", level: 3 },
-    { name: "shadow", level: 4 }
-  ];
+  console.log("Dashboard - Current user:", user);
+
+  // Get user's holobots from state
+  const userHolobots = user?.holobots || [];
 
   return (
     <div className="flex flex-col gap-5 px-4 py-2">
@@ -25,25 +23,25 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-black/30 rounded-lg p-3 flex flex-col items-center">
             <Bolt className="h-6 w-6 text-[#D6BCFA] mb-1" />
-            <span className="text-white text-xl font-bold">10</span>
-            <span className="text-[#8E9196] text-xs">Sync Points</span>
+            <span className="text-white text-xl font-bold">{user?.dailyEnergy || 0}</span>
+            <span className="text-[#8E9196] text-xs">Energy</span>
           </div>
           
           <div className="bg-black/30 rounded-lg p-3 flex flex-col items-center">
             <Coins className="h-6 w-6 text-[#D6BCFA] mb-1" />
-            <span className="text-white text-xl font-bold">100</span>
+            <span className="text-white text-xl font-bold">{user?.holosTokens || 0}</span>
             <span className="text-[#8E9196] text-xs">Holos</span>
           </div>
           
           <div className="bg-black/30 rounded-lg p-3 flex flex-col items-center">
             <Sword className="h-6 w-6 text-[#D6BCFA] mb-1" />
-            <span className="text-white text-xl font-bold">0</span>
+            <span className="text-white text-xl font-bold">{user?.stats?.losses || 0}</span>
             <span className="text-[#8E9196] text-xs">Battles</span>
           </div>
           
           <div className="bg-black/30 rounded-lg p-3 flex flex-col items-center">
             <Trophy className="h-6 w-6 text-[#D6BCFA] mb-1" />
-            <span className="text-white text-xl font-bold">0</span>
+            <span className="text-white text-xl font-bold">{user?.stats?.wins || 0}</span>
             <span className="text-[#8E9196] text-xs">Victories</span>
           </div>
         </div>
@@ -65,16 +63,20 @@ const Dashboard = () => {
         </div>
         
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {userHolobots.map((bot, index) => (
-            <div key={index} className="min-w-[100px] flex-shrink-0">
-              <HolobotCard 
-                stats={{
-                  ...HOLOBOT_STATS[bot.name as keyof typeof HOLOBOT_STATS],
-                  level: bot.level
-                }} 
-              />
-            </div>
-          ))}
+          {userHolobots.length > 0 ? (
+            userHolobots.map((bot, index) => (
+              <div key={index} className="min-w-[100px] flex-shrink-0">
+                <HolobotCard 
+                  stats={{
+                    ...HOLOBOT_STATS[bot.name.toLowerCase() as keyof typeof HOLOBOT_STATS],
+                    level: bot.level || 1
+                  }} 
+                />
+              </div>
+            ))
+          ) : (
+            <p className="text-[#8E9196] text-sm">No Holobots yet. Visit the Mint page to get your first Holobot!</p>
+          )}
         </div>
       </div>
     </div>

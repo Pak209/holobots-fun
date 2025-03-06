@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -52,25 +51,9 @@ export default function Auth() {
         if (!emailOrUsername.includes('@')) {
           console.log("Attempting to login with username:", emailOrUsername);
           
-          // Look for user in the users table by wallet_address
-          const { data: users, error: userError } = await supabase
-            .from('users')
-            .select('id')
-            .eq('wallet_address', emailOrUsername);
-
-          if (userError) {
-            console.error("User lookup error:", userError);
-            throw new Error("Error looking up username");
-          }
-
-          // Check if any users were found
-          if (!users || users.length === 0) {
-            console.error("No user found for username:", emailOrUsername);
-            throw new Error("Username not found. Please check your credentials.");
-          }
-
-          // Use the username as part of a deterministic email
+          // Use a custom login approach for usernames
           loginEmail = `${emailOrUsername.toLowerCase()}@holobots.com`;
+          console.log("Using generated email for login:", loginEmail);
         }
 
         console.log("Attempting login with email:", loginEmail);
