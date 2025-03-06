@@ -19,7 +19,7 @@ const Landing = () => {
   };
 
   const handleLaunchApp = () => {
-    navigate('/dashboard');
+    navigate('/auth');
   };
 
   const featuredHolobots = ["ace", "kuma", "shadow", "era"];

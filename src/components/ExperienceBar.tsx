@@ -1,6 +1,5 @@
 
 import { Progress } from "./ui/progress";
-import { Star } from "lucide-react";
 
 interface ExperienceBarProps {
   currentXp: number;
@@ -24,4 +23,3 @@ export const ExperienceBar = ({ progress }: ExperienceBarProps) => {
     </div>
   );
 };
-
