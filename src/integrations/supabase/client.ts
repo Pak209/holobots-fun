@@ -21,8 +21,16 @@ export const supabase = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
-      // Use the correct redirect URL format
-      redirect_to: `${SITE_URL}/auth`
+      // Use correct auth.Auth options (redirect_to is deprecated)
+      // https://supabase.com/docs/reference/javascript/auth-signup
+      storage: localStorage
     }
   }
 );
+
+// After authentication, redirect to /auth route
+supabase.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_IN') {
+    window.location.href = `${SITE_URL}/auth`;
+  }
+});

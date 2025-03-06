@@ -63,7 +63,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ holos_tokens: 500 } as any)
+          .update({ 
+            holos_tokens: 500 
+          } as any)
           .eq('id', userId as any);
         
         if (updateError) {
@@ -93,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Use single to get exactly one profile (we expect there to be one)
+          // Use maybeSingle to get profile
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -112,6 +114,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Ensure new users get their welcome gift of 500 Holos tokens
             await ensureWelcomeGift(session.user.id);
+          } else {
+            // User in auth but not in profiles (rare case)
+            console.log("User exists in auth but not in profiles");
+            setCurrentUser(null);
           }
         } else {
           setCurrentUser(null);
@@ -131,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Auth state changed:", event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
-        // Use single to get exactly one profile (we expect there to be one)
+        // Use maybeSingle to get profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')

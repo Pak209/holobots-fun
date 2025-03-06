@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,18 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate('/dashboard');
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +87,7 @@ export default function Auth() {
         if (data.user) {
           console.log("Login successful, checking profile...");
           
-          // Use maybeSingle to safely get a profile which might not exist
+          // Use maybeSingle and add proper type checking
           const { data: userProfile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
