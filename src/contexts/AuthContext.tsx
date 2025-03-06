@@ -50,12 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Cast the ID to string since that's what our profiles table expects
+          // Use maybeSingle to handle missing profiles - fix the type mismatch
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
           
           if (profileError) {
             console.error("Error fetching profile:", profileError);
@@ -84,11 +84,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Auth state changed:", event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
+        // Use maybeSingle to handle missing profiles - fix the type mismatch
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
         
         if (profileError) {
           console.error("Error fetching profile:", profileError);
@@ -241,6 +242,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       console.log("Updating user profile with:", dbUpdates);
       
+      // Fix type mismatch by using maybeSingle
       const { error: updateError } = await supabase
         .from('profiles')
         .update(dbUpdates)
@@ -297,17 +299,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
+      // Fix type mismatch by using maybeSingle
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
       if (error) {
         throw error;
       }
       
-      return mapDatabaseToUserProfile(data);
+      return data ? mapDatabaseToUserProfile(data) : null;
     } catch (error) {
       console.error("Error getting user profile:", error);
       return null;

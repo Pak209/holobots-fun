@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -74,12 +75,12 @@ export default function Auth() {
         if (data.user) {
           console.log("Login successful, checking profile...");
           
-          // Check if user has any holobots
+          // Fix type mismatch by using maybeSingle
           const { data: userProfile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', data.user.id)
-            .single();
+            .maybeSingle();
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);
@@ -88,7 +89,7 @@ export default function Auth() {
 
           console.log("Profile checked:", userProfile);
           
-          // Check if the user already has holobots
+          // Check if the user already has holobots - properly handle the case when userProfile might be null
           if (!userProfile || !userProfile.holobots || 
               !Array.isArray(userProfile.holobots) || 
               userProfile.holobots.length === 0) {
