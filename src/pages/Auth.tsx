@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -75,12 +74,12 @@ export default function Auth() {
         if (data.user) {
           console.log("Login successful, checking profile...");
           
-          // Use single() to get a single result and handle error properly
+          // Use maybeSingle to safely get a profile which might not exist
           const { data: userProfile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', data.user.id)
-            .single();
+            .eq('id', data.user.id as any)
+            .maybeSingle();
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);

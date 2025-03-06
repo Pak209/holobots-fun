@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
@@ -48,8 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: profile, error: fetchError } = await supabase
         .from('profiles')
         .select('holos_tokens')
-        .eq('id', userId)
-        .single();
+        .eq('id', userId as any)
+        .maybeSingle();
       
       if (fetchError) {
         console.error("Error fetching profile for welcome gift:", fetchError);
@@ -62,8 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ holos_tokens: 500 })
-          .eq('id', userId);
+          .update({ holos_tokens: 500 } as any)
+          .eq('id', userId as any);
         
         if (updateError) {
           console.error("Error giving welcome gift:", updateError);
@@ -96,8 +97,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', session.user.id)
-            .single();
+            .eq('id', session.user.id as any)
+            .maybeSingle();
           
           if (profileError) {
             console.error("Error fetching profile:", profileError);
@@ -134,8 +135,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', session.user.id)
-          .single();
+          .eq('id', session.user.id as any)
+          .maybeSingle();
         
         if (profileError) {
           console.error("Error fetching profile:", profileError);
@@ -295,7 +296,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error: updateError } = await supabase
         .from('profiles')
         .update(dbUpdates)
-        .eq('id', currentUser.id);
+        .eq('id', currentUser.id as any);
       
       if (updateError) {
         throw updateError;
@@ -351,8 +352,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
-        .single();
+        .eq('id', userId as any)
+        .maybeSingle();
       
       if (error) {
         throw error;
