@@ -21,8 +21,6 @@ export const supabase = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
-      // Use correct auth.Auth options (redirect_to is deprecated)
-      // https://supabase.com/docs/reference/javascript/auth-signup
       storage: localStorage
     }
   }
