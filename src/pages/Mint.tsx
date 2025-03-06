@@ -131,7 +131,7 @@ export default function Mint() {
           </div>
 
           {/* Simplified info section - Just combat style and special move with narrow width on mobile */}
-          <div className="w-full mt-2 sm:mt-4 space-y-2 sm:space-y-3 text-holobots-accent text-xs sm:text-sm max-w-[150px] sm:max-w-full mx-auto">
+          <div className="w-full mt-2 sm:mt-4 space-y-2 sm:space-y-3 text-holobots-accent text-xs sm:text-sm max-w-[120px] sm:max-w-full mx-auto">
             <div className="flex items-center justify-between border-b border-holobots-accent/30 pb-1 sm:pb-2">
               <div className="flex items-center gap-1 sm:gap-2">
                 <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
@@ -169,9 +169,9 @@ export default function Mint() {
   };
 
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex flex-col items-center justify-center p-3 sm:p-4">
+    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex flex-col items-center justify-center p-2 sm:p-4">
       <div className="max-w-4xl w-full">
-        <div className="text-center mb-6 sm:mb-8">
+        <div className="text-center mb-5 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-holobots-accent mb-2">Choose Your First Holobot</h1>
           <p className="text-holobots-text dark:text-holobots-dark-text text-sm sm:text-base">
             Welcome to Holobots! Select your starter Holobot to begin your journey.
@@ -184,7 +184,7 @@ export default function Mint() {
         </div>
         
         {starterHolobots.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 mb-6 sm:mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-8 mb-5 sm:mb-8">
             {starterHolobots.map((holobotKey) => renderHolobotCard(holobotKey))}
           </div>
         ) : (
@@ -199,7 +199,7 @@ export default function Mint() {
             disabled={!selectedHolobot || isMinting}
             className={`
               bg-holobots-accent hover:bg-holobots-hover text-black font-bold py-1.5 sm:py-2 px-6 sm:px-8 text-base sm:text-lg
-              max-w-[240px] w-full
+              w-[200px] max-w-full
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-300
               ${isMinting ? 'animate-pulse' : ''}
@@ -216,7 +216,7 @@ export default function Mint() {
           </Button>
         </div>
         
-        <div className="mt-8 sm:mt-10 text-center text-holobots-text dark:text-holobots-dark-text text-xs sm:text-sm max-w-[320px] sm:max-w-full mx-auto">
+        <div className="mt-6 sm:mt-10 text-center text-holobots-text dark:text-holobots-dark-text text-xs sm:text-sm max-w-[280px] sm:max-w-full mx-auto">
           <p>You'll be able to unlock additional Holobots with tokens as you progress through the game!</p>
           <div className="flex items-center justify-center gap-2 mt-2">
             <FileCode2 className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400" />
