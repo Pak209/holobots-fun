@@ -1,19 +1,20 @@
 
 import { useState } from "react";
-import { Shield, Zap } from "lucide-react";
-import { HolobotStats } from "@/types/holobot";
 import { HolobotCard } from "@/components/HolobotCard";
+import { HOLOBOT_STATS, getRank } from "@/types/holobot";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Coins, Plus } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { UserHolobot } from "@/types/user";
 
 interface HolobotInfoCardProps {
   holobotKey: string;
-  holobot: HolobotStats;
-  userHolobot?: any;
+  holobot: typeof HOLOBOT_STATS[keyof typeof HOLOBOT_STATS];
+  userHolobot: UserHolobot | undefined;
   userTokens: number;
-  isMinting: boolean;
+  isMinting: string | null;
   justMinted: string | null;
-  onMint: (holobotKey: string) => void;
+  onMint: (holobotName: string) => void;
 }
 
 export const HolobotInfoCard = ({
@@ -25,124 +26,131 @@ export const HolobotInfoCard = ({
   justMinted,
   onMint
 }: HolobotInfoCardProps) => {
-  const { toast } = useToast();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const isOwned = !!userHolobot;
+  const isJustMinted = justMinted === holobot.name;
+  const level = userHolobot?.level || holobot.level;
+  const currentXp = userHolobot?.experience || 0;
+  const nextLevelXp = userHolobot?.nextLevelExp || 100;
   
-  const hasHolobot = !!userHolobot;
-  const mintPrice = 1000;
-  const canAfford = userTokens >= mintPrice;
-  
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
+  const calculateProgress = (current: number, total: number) => {
+    return Math.min(100, Math.floor((current / total) * 100));
   };
   
-  const handleMint = () => {
-    if (hasHolobot) {
-      toast({
-        title: "Already Owned",
-        description: `You already have ${holobot.name} in your collection`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!canAfford) {
-      toast({
-        title: "Insufficient Tokens",
-        description: `You need ${mintPrice} Holos tokens to mint this Holobot`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    onMint(holobotKey);
-  };
+  const xpProgress = calculateProgress(currentXp, nextLevelXp);
 
   return (
-    <div 
-      className={`relative overflow-hidden bg-holobots-card dark:bg-holobots-dark-card rounded-lg border-2 ${
-        hasHolobot ? 'border-green-500/70' : 'border-holobots-accent/20'
-      } shadow-[0_0_10px_rgba(34,211,238,0.1)] transition-all duration-300`}
-    >
-      <div className="flex flex-col md:flex-row p-3 md:p-4 items-center">
-        {/* Card container - fixed width on mobile */}
-        <div className="flex-shrink-0 w-[150px] md:w-[180px] mx-auto md:mx-0 mb-3 md:mb-0">
-          <HolobotCard 
-            stats={{
-              ...holobot,
-              name: holobot.name.toUpperCase(),
-            }} 
-            variant={hasHolobot ? "blue" : "red"} 
-          />
-        </div>
-        
-        {/* Info section - reduced width on mobile */}
-        <div className="flex-1 flex flex-col max-w-full md:ml-4 space-y-2 w-full md:w-auto">
-          <div className="text-xl font-bold text-holobots-accent text-center md:text-left mb-1">
-            {holobot.name.toUpperCase()}
+    <div className={`flex flex-col sm:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300`}>
+      <div className="flex sm:flex-row gap-4 w-full items-stretch">
+        {/* Stats Panel - With increased min-height */}
+        <div className="flex-1 flex flex-col justify-between max-w-[180px] sm:max-w-[180px] bg-black/30 p-2 rounded-lg border border-holobots-accent self-start min-h-[320px]">
+          <div>
+            <div className="flex justify-between items-start mb-1.5">
+              <h2 className="text-lg font-bold text-holobots-accent drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] border border-transparent">
+                {holobot.name}
+              </h2>
+              {isOwned && !isJustMinted && (
+                <div className="px-1 py-0.5 bg-green-500/20 border border-green-500 rounded text-[9px]">
+                  OWNED
+                </div>
+              )}
+              {isJustMinted && (
+                <div className="px-1 py-0.5 bg-blue-500/20 border border-blue-500 rounded text-[9px] animate-pulse">
+                  NEW
+                </div>
+              )}
+            </div>
+            
+            {isOwned && (
+              <div className="mb-1.5 space-y-0.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span>LV {level}</span>
+                  <span>{currentXp}/{nextLevelXp}</span>
+                </div>
+                <Progress value={xpProgress} className="h-1" />
+                <div className="text-[9px] text-right text-holobots-accent">
+                  Rank: {getRank(level)}
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-0.5 font-mono text-xs">
+              <p>HP: {holobot.maxHealth}</p>
+              <p>Attack: {holobot.attack}</p>
+              <p>Defense: {holobot.defense}</p>
+              <p>Speed: {holobot.speed}</p>
+              <p className="text-sky-400 text-[10px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                Special: {holobot.specialMove}
+              </p>
+            </div>
           </div>
           
-          {/* Combat style and special move section - narrower on mobile */}
-          <div className="w-full max-w-[200px] md:max-w-none mx-auto md:mx-0 space-y-2 text-holobots-accent">
-            <div className="flex items-center justify-between border-b border-holobots-accent/30 pb-1">
-              <div className="flex items-center gap-1 md:gap-2">
-                <Shield className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
-                <span className="text-gray-300 font-medium text-xs md:text-sm">Combat Style</span>
+          <div className="mt-1.5 pt-1 border-t border-holobots-border dark:border-holobots-dark-border">
+            {!isOwned && !isJustMinted && (
+              <Button 
+                onClick={() => onMint(holobot.name)}
+                disabled={isMinting === holobot.name || userTokens < 100}
+                className="w-full py-0 h-6 text-xs bg-holobots-accent hover:bg-holobots-accent/80 text-black font-semibold"
+              >
+                {isMinting === holobot.name ? (
+                  "Minting..."
+                ) : (
+                  <>
+                    <Plus size={10} className="mr-0.5" />
+                    Mint Holobot
+                    <Coins size={10} className="ml-0.5 mr-0.5" />
+                    <span>100</span>
+                  </>
+                )}
+              </Button>
+            )}
+            
+            {isJustMinted && (
+              <div className="w-full p-1 bg-green-500/20 border border-green-500 rounded text-center">
+                <span className="text-green-400 text-[9px] font-semibold">Minting Successful!</span>
               </div>
-              <span className="text-holobots-accent font-bold text-xs md:text-sm">
-                {holobotKey === 'ace' ? 'Balanced' : 
-                 holobotKey === 'kuma' ? 'Aggressive' : 
-                 holobotKey === 'shadow' ? 'Defensive' : 'Standard'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1 md:gap-2">
-                <Zap className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
-                <span className="text-gray-300 font-medium text-xs md:text-sm">Special Move</span>
-              </div>
-              <span className="text-holobots-accent font-bold text-xs md:text-sm">{holobot.specialMove}</span>
-            </div>
-
-            {holobot.abilityDescription && (
-              <div className="text-xs text-gray-400 italic mt-1 border-t border-holobots-accent/20 pt-1">
-                "{holobot.abilityDescription}"
+            )}
+            
+            {/* Attribute Boost Section - Only show for owned holobots with compact layout */}
+            {isOwned && (
+              <div>
+                <h3 className="text-[9px] font-bold mb-0.5 text-holobots-accent">
+                  Available Boosts
+                </h3>
+                <div className="grid grid-cols-2 gap-1">
+                  <button className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
+                    +1 ATK
+                  </button>
+                  <button className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
+                    +1 DEF
+                  </button>
+                  <button className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
+                    +1 SPD
+                  </button>
+                  <button className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
+                    +10 HP
+                  </button>
+                </div>
               </div>
             )}
           </div>
         </div>
         
-        {/* Mint button section - reduced width on mobile */}
-        <div className="mt-3 md:mt-0 md:ml-4 flex-shrink-0 w-[180px] md:w-auto mx-auto">
-          {hasHolobot ? (
-            <div className="bg-green-900/30 text-green-400 px-4 py-2 rounded text-sm font-medium flex items-center justify-center">
-              <span className="mr-1">✓</span> In Collection (Level {userHolobot.level})
-            </div>
-          ) : (
-            <Button
-              onClick={handleMint}
-              disabled={isMinting || !canAfford || justMinted === holobotKey}
-              className={`
-                w-full md:w-auto bg-holobots-accent hover:bg-holobots-hover text-black font-bold py-2 px-4
-                disabled:opacity-50 disabled:cursor-not-allowed
-                transition-all duration-300
-                ${isMinting ? 'animate-pulse' : ''}
-              `}
-            >
-              {isMinting && justMinted === holobotKey ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full"></div>
-                  <span>Minting...</span>
-                </div>
-              ) : justMinted === holobotKey ? (
-                <>Minted!</>
-              ) : (
-                <>Mint for {mintPrice} Tokens</>
-              )}
-            </Button>
-          )}
+        {/* TCG Card - With wrapper to prevent overflow */}
+        <div className="flex-1 flex justify-center items-center overflow-hidden">
+          <div className="transform scale-100 origin-center">
+            <HolobotCard 
+              stats={{
+                ...holobot,
+                level: isOwned ? level : holobot.level,
+                experience: isOwned ? currentXp : undefined,
+                nextLevelExp: isOwned ? nextLevelXp : undefined,
+                name: holobot.name.toUpperCase(),
+              }} 
+              variant={isOwned ? "blue" : "red"} 
+            />
+          </div>
         </div>
       </div>
     </div>
   );
-};
+}

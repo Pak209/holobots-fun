@@ -14,13 +14,13 @@ const HolobotsInfo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background text-holobots-text dark:text-holobots-dark-text p-2 sm:p-4">
+    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background text-holobots-text dark:text-holobots-dark-text p-4">
       <div className="max-w-7xl mx-auto pt-16">
-        <h1 className="text-3xl font-bold text-center mb-6 md:mb-8 text-holobots-accent">
+        <h1 className="text-3xl font-bold text-center mb-8 text-holobots-accent">
           HOLOBOTS INFO
         </h1>
         
-        <div className="grid grid-cols-1 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {Object.entries(HOLOBOT_STATS).map(([key, holobot]) => {
             const userHolobot = findUserHolobot(holobot.name);
             
