@@ -21,9 +21,8 @@ export const supabase = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
-      // Use redirect URL as part of options without explicit property name
-      // This avoids the TS error by using the correct typing
-      redirect_to: `${SITE_URL}/auth`
+      // Use the correct property name redirectTo (not redirect_to)
+      redirectTo: `${SITE_URL}/auth`
     }
   }
 );

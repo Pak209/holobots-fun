@@ -48,8 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: profile, error: fetchError } = await supabase
         .from('profiles')
         .select('holos_tokens')
-        .eq('id', userId as any)
-        .maybeSingle();
+        .eq('id', userId)
+        .single();
       
       if (fetchError) {
         console.error("Error fetching profile for welcome gift:", fetchError);
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ holos_tokens: 500 })
-          .eq('id', userId as any);
+          .eq('id', userId);
         
         if (updateError) {
           console.error("Error giving welcome gift:", updateError);
@@ -92,12 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Use maybeSingle to handle missing profiles and properly cast UUID
+          // Use single to get exactly one profile (we expect there to be one)
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', session.user.id as any)
-            .maybeSingle();
+            .eq('id', session.user.id)
+            .single();
           
           if (profileError) {
             console.error("Error fetching profile:", profileError);
@@ -130,12 +130,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Auth state changed:", event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
-        // Use maybeSingle to handle missing profiles and properly cast UUID
+        // Use single to get exactly one profile (we expect there to be one)
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', session.user.id as any)
-          .maybeSingle();
+          .eq('id', session.user.id)
+          .single();
         
         if (profileError) {
           console.error("Error fetching profile:", profileError);
@@ -292,11 +292,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       console.log("Updating user profile with:", dbUpdates);
       
-      // Fix type mismatch by using maybeSingle and casting UUID
       const { error: updateError } = await supabase
         .from('profiles')
         .update(dbUpdates)
-        .eq('id', currentUser.id as any);
+        .eq('id', currentUser.id);
       
       if (updateError) {
         throw updateError;
@@ -349,12 +348,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      // Fix type mismatch by using maybeSingle and casting UUID
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId as any)
-        .maybeSingle();
+        .eq('id', userId)
+        .single();
       
       if (error) {
         throw error;

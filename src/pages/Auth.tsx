@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -74,12 +75,12 @@ export default function Auth() {
         if (data.user) {
           console.log("Login successful, checking profile...");
           
-          // Fix type mismatch by using maybeSingle and casting UUID
+          // Use single() to get a single result and handle error properly
           const { data: userProfile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', data.user.id as any)
-            .maybeSingle();
+            .eq('id', data.user.id)
+            .single();
 
           if (profileError) {
             console.error("Profile fetch error:", profileError);
@@ -88,14 +89,16 @@ export default function Auth() {
 
           console.log("Profile checked:", userProfile);
           
-          // Properly check if the user has holobots with proper type checking
+          // Safety check to ensure userProfile exists before accessing properties
           if (!userProfile) {
             console.log("No user profile found, redirecting to mint page");
             navigate('/mint');
           } else {
-            const hasHolobots = userProfile.holobots && 
-                               Array.isArray(userProfile.holobots) && 
-                               userProfile.holobots.length > 0;
+            // Check if holobots property exists and is a non-empty array
+            const hasHolobots = 
+              userProfile.holobots && 
+              Array.isArray(userProfile.holobots) && 
+              userProfile.holobots.length > 0;
             
             if (!hasHolobots) {
               // New user or user without holobots, send to mint page
