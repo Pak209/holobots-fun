@@ -90,24 +90,27 @@ export default function Auth() {
         if (data.user) {
           console.log("Login successful, checking profile...");
           
-          // Check user tokens in the users table
-          const { data: userTokens, error: userError } = await supabase
-            .from('users')
-            .select('tokens')
-            .eq('wallet_address', data.user.id)
+          // Check if user has any holobots
+          const { data: userProfile, error: profileError } = await supabase
+            .from('profiles')
+            .select('holobots')
+            .eq('id', data.user.id)
             .single();
 
-          if (userError) {
-            console.error("User fetch error:", userError);
+          if (profileError) {
+            console.error("Profile fetch error:", profileError);
             throw new Error("Error fetching user profile");
           }
 
           console.log("Profile checked, navigating...");
           
-          if (!userTokens || userTokens.tokens === null) {
+          // Check if the user already has holobots
+          if (!userProfile || !userProfile.holobots || userProfile.holobots.length === 0) {
+            // New user or user without holobots, send to mint page
             navigate('/mint');
           } else {
-            navigate('/');
+            // Existing user with holobots, send to dashboard
+            navigate('/dashboard');
           }
         }
       }
