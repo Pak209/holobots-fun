@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotCard } from "@/components/HolobotCard";
+import { Lock, Coins, FileCode2 } from "lucide-react";
 
 export default function Mint() {
   const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
@@ -84,6 +85,74 @@ export default function Mint() {
     }
   };
 
+  const renderHolobotCard = (holobotKey: string) => {
+    const holobot = HOLOBOT_STATS[holobotKey];
+    const isSelected = selectedHolobot === holobotKey;
+    
+    return (
+      <div 
+        key={holobotKey}
+        onClick={() => handleSelectHolobot(holobotKey)}
+        className={`
+          relative cursor-pointer transition-all duration-300 transform 
+          hover:scale-105 ${isSelected ? 'scale-105' : ''}
+          bg-holobots-card dark:bg-holobots-dark-card rounded-lg p-6 border-2
+          ${isSelected ? 'border-holobots-accent' : 'border-holobots-accent/20'}
+          shadow-[0_0_10px_rgba(34,211,238,0.1)]
+          hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]
+          overflow-hidden
+        `}
+      >
+        <div className="relative flex items-start gap-4">
+          {/* TCG Card Container */}
+          <div className="flex-shrink-0 relative z-10 w-[180px] mx-auto">
+            <HolobotCard 
+              stats={{
+                ...holobot,
+                name: holobot.name.toUpperCase(),
+              }} 
+              variant="blue" 
+            />
+          </div>
+          
+          {/* Holobot name on small screens */}
+          <h3 className="md:hidden text-xl font-bold text-center text-holobots-accent mt-4">
+            {holobot.name}
+          </h3>
+        </div>
+        
+        {/* Stats Summary */}
+        <div className="mt-6 space-y-3 text-xs relative z-10">
+          <div className="flex justify-between items-center bg-black/40 p-2 rounded">
+            <span className="text-gray-400">HP</span>
+            <span className="text-holobots-accent">{holobot.maxHealth}</span>
+          </div>
+          <div className="flex justify-between items-center bg-black/40 p-2 rounded">
+            <span className="text-gray-400">Attack</span>
+            <span className="text-holobots-accent">{holobot.attack}</span>
+          </div>
+          <div className="flex justify-between items-center bg-black/40 p-2 rounded">
+            <span className="text-gray-400">Defense</span>
+            <span className="text-holobots-accent">{holobot.defense}</span>
+          </div>
+          <div className="flex justify-between items-center bg-black/40 p-2 rounded">
+            <span className="text-gray-400">Speed</span>
+            <span className="text-holobots-accent">{holobot.speed}</span>
+          </div>
+          <div className="flex justify-between items-center bg-black/40 p-2 rounded">
+            <span className="text-gray-400">Special Move</span>
+            <span className="text-holobots-accent">{holobot.specialMove}</span>
+          </div>
+        </div>
+
+        {/* Selection Indicator */}
+        {isSelected && (
+          <div className="absolute -inset-0.5 border-2 border-holobots-accent rounded-lg animate-pulse pointer-events-none" />
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex flex-col items-center justify-center p-4">
       <div className="max-w-4xl w-full">
@@ -92,59 +161,45 @@ export default function Mint() {
           <p className="text-holobots-text dark:text-holobots-dark-text">
             Welcome to Holobots! Select your starter Holobot to begin your journey.
           </p>
+          
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <Coins className="w-5 h-5 text-yellow-400" />
+            <span className="text-yellow-400 font-semibold">500 Holos tokens will be added to your account</span>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          {starterHolobots.map((holobotKey) => {
-            const holobot = HOLOBOT_STATS[holobotKey];
-            const isSelected = selectedHolobot === holobotKey;
-            
-            return (
-              <div 
-                key={holobotKey}
-                className={`cursor-pointer transition-all transform hover:scale-105 ${
-                  isSelected ? 'ring-4 ring-holobots-accent scale-105' : ''
-                }`}
-                onClick={() => handleSelectHolobot(holobotKey)}
-              >
-                <div className="bg-holobots-card dark:bg-holobots-dark-card rounded-lg overflow-hidden shadow-lg p-4">
-                  <h3 className="text-xl font-bold text-center text-holobots-accent mb-4">
-                    {holobot.name}
-                  </h3>
-                  
-                  <div className="flex justify-center mb-4">
-                    <HolobotCard 
-                      stats={{
-                        ...holobot,
-                        name: holobot.name.toUpperCase(),
-                      }} 
-                      variant="blue" 
-                    />
-                  </div>
-                  
-                  <div className="space-y-1 text-sm">
-                    <p>HP: {holobot.maxHealth}</p>
-                    <p>Attack: {holobot.attack}</p>
-                    <p>Defense: {holobot.defense}</p>
-                    <p>Speed: {holobot.speed}</p>
-                    <p className="text-sky-400 text-xs my-2">
-                      Special: {holobot.specialMove}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {starterHolobots.map((holobotKey) => renderHolobotCard(holobotKey))}
         </div>
         
         <div className="flex justify-center">
           <Button
             onClick={handleMintHolobot}
             disabled={!selectedHolobot || isMinting}
-            className="bg-holobots-accent hover:bg-holobots-hover text-black font-bold py-2 px-8 text-lg"
+            className={`
+              bg-holobots-accent hover:bg-holobots-hover text-black font-bold py-2 px-8 text-lg
+              disabled:opacity-50 disabled:cursor-not-allowed
+              transition-all duration-300
+              ${isMinting ? 'animate-pulse' : ''}
+            `}
           >
-            {isMinting ? "Minting..." : "Mint Your Holobot"}
+            {isMinting ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full"></div>
+                <span>Minting...</span>
+              </div>
+            ) : (
+              <>Mint Your Holobot</>
+            )}
           </Button>
+        </div>
+        
+        <div className="mt-10 text-center text-holobots-text dark:text-holobots-dark-text text-sm">
+          <p>You'll be able to unlock additional Holobots with tokens as you progress through the game!</p>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <FileCode2 className="w-4 h-4 text-purple-400" />
+            <span>Collect blueprints and resources from quests and battles</span>
+          </div>
         </div>
       </div>
     </div>
