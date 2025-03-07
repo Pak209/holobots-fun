@@ -21,14 +21,17 @@ export const supabase = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
-      storage: localStorage
+      storage: typeof window !== 'undefined' ? localStorage : undefined
     }
   }
 );
 
-// After authentication, redirect to /auth route
-supabase.auth.onAuthStateChange((event) => {
-  if (event === 'SIGNED_IN') {
-    window.location.href = `${SITE_URL}/auth`;
-  }
-});
+// Fix the redirect issue by checking if we're in a browser context
+if (typeof window !== 'undefined') {
+  // After authentication, redirect to /auth route
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      window.location.href = `${SITE_URL}/dashboard`;
+    }
+  });
+}

@@ -37,6 +37,7 @@ export default function Auth() {
           throw new Error("Please provide a valid email address for signup");
         }
 
+        // Use the official Supabase method for sign up
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: emailOrUsername,
           password,
@@ -55,9 +56,10 @@ export default function Auth() {
             description: "Please proceed to mint your first Holobot.",
           });
           
-          navigate('/mint');
+          // Redirect happens in onAuthStateChange listener in client.ts
         }
       } else {
+        // Login logic
         let loginEmail = emailOrUsername;
 
         // If input is not an email, try to find the associated email
@@ -78,51 +80,14 @@ export default function Auth() {
 
         if (error) {
           console.error("Login error:", error);
-          if (error.message === "Invalid login credentials") {
-            throw new Error("Invalid username/email or password");
-          }
           throw error;
         }
 
-        if (data.user) {
-          console.log("Login successful, checking profile...");
-          
-          // Use maybeSingle and add proper type checking
-          const { data: userProfile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id as any)
-            .maybeSingle();
-
-          if (profileError) {
-            console.error("Profile fetch error:", profileError);
-            throw new Error("Error fetching user profile");
-          }
-
-          console.log("Profile checked:", userProfile);
-          
-          // Safety check to ensure userProfile exists before accessing properties
-          if (!userProfile) {
-            console.log("No user profile found, redirecting to mint page");
-            navigate('/mint');
-          } else {
-            // Check if holobots property exists and is a non-empty array
-            const hasHolobots = 
-              userProfile.holobots && 
-              Array.isArray(userProfile.holobots) && 
-              userProfile.holobots.length > 0;
-            
-            if (!hasHolobots) {
-              // New user or user without holobots, send to mint page
-              console.log("User has no holobots, redirecting to mint page");
-              navigate('/mint');
-            } else {
-              // Existing user with holobots, send to dashboard
-              console.log("User has holobots, redirecting to dashboard");
-              navigate('/dashboard');
-            }
-          }
-        }
+        // Successful login is handled by onAuthStateChange in client.ts
+        toast({
+          title: "Login successful",
+          description: "Redirecting you to the dashboard",
+        });
       }
     } catch (error) {
       console.error('Auth error:', error);

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
@@ -13,25 +12,6 @@ interface AuthContextType extends AuthState {
   searchPlayers: (query: string) => Promise<UserProfile[]>;
   getUserProfile: (userId: string) => Promise<UserProfile | null>;
 }
-
-// Create a default user with a dynamic username that defaults to "Guest User" but can be updated
-const createDefaultUser = (username: string = "Guest User"): UserProfile => ({
-  id: "guest",
-  username,
-  holobots: [],
-  dailyEnergy: 100,
-  maxDailyEnergy: 100,
-  holosTokens: 0,
-  gachaTickets: 0,
-  stats: {
-    wins: 0,
-    losses: 0
-  },
-  lastEnergyRefresh: new Date().toISOString(),
-  level: 1
-});
-
-const STORAGE_KEY = "holobots_user_data";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -95,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
+          console.log("Found session with user:", session.user.id);
           // Use maybeSingle to get profile
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -110,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Successfully found profile
             console.log("Found user profile:", profile);
             const mappedProfile = mapDatabaseToUserProfile(profile);
+            console.log("Mapped profile:", mappedProfile);
             setCurrentUser(mappedProfile);
             
             // Ensure new users get their welcome gift of 500 Holos tokens
@@ -120,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setCurrentUser(null);
           }
         } else {
+          console.log("No session found, user is not logged in");
           setCurrentUser(null);
         }
       } catch (err) {
@@ -373,7 +356,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const state: AuthState = {
-    user: currentUser || createDefaultUser(currentUser?.username),
+    user: currentUser, 
     loading,
     error,
   };
