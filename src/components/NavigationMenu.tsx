@@ -72,12 +72,12 @@ export const NavigationMenu = () => {
           className="flex items-center gap-1 bg-background/90 border-holobots-accent px-2 py-1"
         >
           <User className="h-4 w-4 text-holobots-accent" />
-          <span className="mr-1">{user.username}</span>
+          <span className="mr-1">{user.username || 'User'}</span>
           <ChevronDown className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border">
-        <DropdownMenuLabel className="text-center font-bold">{user.username}</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-center font-bold">{user.username || 'User'}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         
         <div className="p-2 space-y-2">

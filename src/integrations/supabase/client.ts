@@ -6,12 +6,7 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://pfpidggrdnmfgrbncpyl.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmcGlkZ2dyZG5tZmdyYm5jcHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA3ODM5ODcsImV4cCI6MjA1NjM1OTk4N30.fyR2E6WWCGmBTK322Tre7RRMh65I55kaPHF5RYJKGgo";
 
-// Get the current origin for redirects
-const SITE_URL = typeof window !== 'undefined' ? window.location.origin : '';
-
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
-
+// Create the Supabase client
 export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
@@ -26,12 +21,5 @@ export const supabase = createClient<Database>(
   }
 );
 
-// Fix the redirect issue by checking if we're in a browser context
-if (typeof window !== 'undefined') {
-  // After authentication, redirect to /auth route
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      window.location.href = `${SITE_URL}/dashboard`;
-    }
-  });
-}
+// NOTE: Removed the automatic redirect on sign-in to prevent redirection loops
+// The redirection will now be handled by the React Router in the Auth component and AuthContext

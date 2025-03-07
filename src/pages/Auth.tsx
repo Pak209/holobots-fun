@@ -20,7 +20,19 @@ export default function Auth() {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        navigate('/dashboard');
+        // Check if the user has holobots before redirecting
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('holobots')
+          .eq('id', data.session.user.id)
+          .maybeSingle();
+        
+        // If user has holobots, redirect to dashboard, otherwise to mint page
+        if (profile && profile.holobots && profile.holobots.length > 0) {
+          navigate('/dashboard');
+        } else {
+          navigate('/mint');
+        }
       }
     };
     
@@ -56,7 +68,8 @@ export default function Auth() {
             description: "Please proceed to mint your first Holobot.",
           });
           
-          // Redirect happens in onAuthStateChange listener in client.ts
+          // Redirect to mint page after signup
+          navigate('/mint');
         }
       } else {
         // Login logic
@@ -83,11 +96,24 @@ export default function Auth() {
           throw error;
         }
 
-        // Successful login is handled by onAuthStateChange in client.ts
         toast({
           title: "Login successful",
           description: "Redirecting you to the dashboard",
         });
+
+        // Check if the user has holobots before redirecting
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('holobots')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        
+        // If user has holobots, redirect to dashboard, otherwise to mint page
+        if (profile && profile.holobots && profile.holobots.length > 0) {
+          navigate('/dashboard');
+        } else {
+          navigate('/mint');
+        }
       }
     } catch (error) {
       console.error('Auth error:', error);
