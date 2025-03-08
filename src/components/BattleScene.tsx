@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { BattleControls } from "./BattleControls";
 import { BattleLog } from "./BattleLog";
@@ -7,7 +8,9 @@ import { BattleSelectors } from "./battle/BattleSelectors";
 import { BattleCards } from "./battle/BattleCards";
 import { ModeSlider } from "./battle/ModeSlider";
 import { HOLOBOT_STATS } from "@/types/holobot";
-import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost, applySpecialAttack } from "@/utils/battleUtils";
+import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost, applySpecialAttack, updateHolobotExperience } from "@/utils/battleUtils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface BattleSceneProps {
   leftHolobot: string;
@@ -24,6 +27,8 @@ export const BattleScene = ({
   cpuLevel = 1,
   onBattleEnd 
 }: BattleSceneProps) => {
+  const { user, updateUser } = useAuth();
+  const { toast } = useToast();
   const [leftHealth, setLeftHealth] = useState(100);
   const [rightHealth, setRightHealth] = useState(100);
   const [leftSpecial, setLeftSpecial] = useState(0);
@@ -46,6 +51,19 @@ export const BattleScene = ({
   const [rightFatigue, setRightFatigue] = useState(0);
   const [isDefenseMode, setIsDefenseMode] = useState(false);
   const [defenseModeRounds, setDefenseModeRounds] = useState(0);
+
+  // Initialize levels from user data if available
+  useEffect(() => {
+    if (user && user.holobots && Array.isArray(user.holobots)) {
+      const leftUserHolobot = user.holobots.find(h => 
+        h.name.toLowerCase() === selectedLeftHolobot.toLowerCase());
+      
+      if (leftUserHolobot) {
+        setLeftLevel(leftUserHolobot.level || 1);
+        setLeftXp(leftUserHolobot.experience || 0);
+      }
+    }
+  }, [user, selectedLeftHolobot]);
 
   const addToBattleLog = (message: string) => {
     setBattleLog(prev => [...prev, message]);
@@ -103,28 +121,79 @@ export const BattleScene = ({
     }
   };
 
+  // Save battle results to user profile
+  const saveBattleResults = async (winner: string) => {
+    try {
+      if (!user) return;
+
+      // Only save if the user's holobot won
+      if (winner === selectedLeftHolobot) {
+        const updatedHolobots = updateHolobotExperience(
+          user.holobots,
+          HOLOBOT_STATS[selectedLeftHolobot].name,
+          leftXp,
+          leftLevel
+        );
+        
+        console.log("Updating user holobots with:", updatedHolobots);
+        
+        await updateUser({ 
+          holobots: updatedHolobots,
+          stats: {
+            wins: (user.stats?.wins || 0) + 1,
+            losses: user.stats?.losses || 0
+          }
+        });
+        
+        toast({
+          title: "Battle Progress Saved",
+          description: `${HOLOBOT_STATS[selectedLeftHolobot].name} is now level ${leftLevel}!`,
+        });
+      } else {
+        // Update losses if the user's holobot lost
+        await updateUser({ 
+          stats: {
+            wins: user.stats?.wins || 0,
+            losses: (user.stats?.losses || 0) + 1
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error saving battle results:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save battle progress",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     if (!isBattleStarted) return;
 
     const interval = setInterval(() => {
       if (leftHealth <= 0 || rightHealth <= 0) {
         setIsBattleStarted(false);
-        const winner = leftHealth > 0 ? HOLOBOT_STATS[selectedLeftHolobot].name : HOLOBOT_STATS[selectedRightHolobot].name;
-        const loser = leftHealth > 0 ? HOLOBOT_STATS[selectedRightHolobot].name : HOLOBOT_STATS[selectedLeftHolobot].name;
+        const winner = leftHealth > 0 ? selectedLeftHolobot : selectedRightHolobot;
+        const winnerName = HOLOBOT_STATS[winner].name;
+        const loser = leftHealth > 0 ? selectedRightHolobot : selectedLeftHolobot;
+        const loserName = HOLOBOT_STATS[loser].name;
         
         // Update intelligence based on battle result
         if (leftHealth > 0) {
           HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedLeftHolobot].intelligence + 1);
           HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedRightHolobot].intelligence - 1);
           onBattleEnd?.('victory');
+          saveBattleResults(selectedLeftHolobot);
         } else {
           HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedLeftHolobot].intelligence - 1);
           HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedRightHolobot].intelligence + 1);
           onBattleEnd?.('defeat');
+          saveBattleResults(selectedRightHolobot);
         }
         
-        addToBattleLog(`Battle ended! ${winner} is victorious!`);
-        addToBattleLog(`${winner}'s intelligence increased! ${loser}'s intelligence decreased!`);
+        addToBattleLog(`Battle ended! ${winnerName} is victorious!`);
+        addToBattleLog(`${winnerName}'s intelligence increased! ${loserName}'s intelligence decreased!`);
         clearInterval(interval);
         return;
       }
