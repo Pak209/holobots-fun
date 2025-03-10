@@ -43,8 +43,16 @@ export const BattleScene = ({
   const [selectedRightHolobot, setSelectedRightHolobot] = useState(initialRightHolobot);
   const [isBattleStarted, setIsBattleStarted] = useState(false);
   const [battleLog, setBattleLog] = useState<string[]>([]);
+  
+  // Current XP that is shown to the user but not saved until battle end
+  const [displayLeftXp, setDisplayLeftXp] = useState(0);
+  const [displayRightXp, setRightXp] = useState(0);
+  
+  // Accumulated XP during battle (not shown in UI)
+  const [pendingXpGained, setPendingXpGained] = useState(0);
+  
+  // Original left holobot level and XP from user data
   const [leftXp, setLeftXp] = useState(0);
-  const [rightXp, setRightXp] = useState(0);
   const [leftLevel, setLeftLevel] = useState(1);
   const [rightLevel, setRightLevel] = useState(1);
   const [leftFatigue, setLeftFatigue] = useState(0);
@@ -61,6 +69,7 @@ export const BattleScene = ({
       if (leftUserHolobot) {
         setLeftLevel(leftUserHolobot.level || 1);
         setLeftXp(leftUserHolobot.experience || 0);
+        setDisplayLeftXp(leftUserHolobot.experience || 0);
       }
     }
   }, [user, selectedLeftHolobot]);
@@ -99,6 +108,7 @@ export const BattleScene = ({
       return;
     }
     
+    // Reset all battle-related states at start
     setIsBattleStarted(true);
     setLeftHealth(100);
     setRightHealth(100);
@@ -106,6 +116,13 @@ export const BattleScene = ({
     setRightSpecial(0);
     setLeftHack(0);
     setRightHack(0);
+    
+    // Reset the pending XP gained to 0 at the start of a battle
+    setPendingXpGained(0);
+    
+    // Display current XP from saved data, not battle progress
+    setDisplayLeftXp(leftXp);
+    
     setBattleLog(["Battle started!"]);
   };
 
@@ -128,15 +145,22 @@ export const BattleScene = ({
 
       // Only save if the user's holobot won
       if (winner === selectedLeftHolobot) {
+        // Apply the accumulated XP to the saved XP
+        const newTotalXp = leftXp + pendingXpGained;
+        
+        // Check for level up based on the new total XP
+        const newLevel = getNewLevel(newTotalXp, leftLevel);
+        
         const updatedHolobots = updateHolobotExperience(
           user.holobots,
           HOLOBOT_STATS[selectedLeftHolobot].name,
-          leftXp,
-          leftLevel
+          newTotalXp,
+          newLevel
         );
         
         console.log("Updating user holobots with:", updatedHolobots);
         
+        // Update user's holobots and stats in database
         await updateUser({ 
           holobots: updatedHolobots,
           stats: {
@@ -145,10 +169,18 @@ export const BattleScene = ({
           }
         });
         
-        toast({
-          title: "Battle Progress Saved",
-          description: `${HOLOBOT_STATS[selectedLeftHolobot].name} is now level ${leftLevel}!`,
-        });
+        // Show level up toast if the level changed
+        if (newLevel > leftLevel) {
+          toast({
+            title: "Level Up!",
+            description: `${HOLOBOT_STATS[selectedLeftHolobot].name} is now level ${newLevel}!`,
+          });
+        } else {
+          toast({
+            title: "Battle Progress Saved",
+            description: `${HOLOBOT_STATS[selectedLeftHolobot].name} gained ${pendingXpGained} XP!`,
+          });
+        }
       } else {
         // Update losses if the user's holobot lost
         await updateUser({ 
@@ -245,15 +277,19 @@ export const BattleScene = ({
               addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} used their special move!`);
             }
             
-            setLeftXp(prev => {
-              const newXp = prev + Math.floor(damage * 2);
-              const newLevel = getNewLevel(newXp, leftLevel);
-              if (newLevel > leftLevel) {
-                setLeftLevel(newLevel);
-                addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} reached level ${newLevel}!`);
-              }
-              return newXp;
-            });
+            // Don't update the actual XP until battle ends
+            // Instead, accumulate the pending XP
+            const damageXp = Math.floor(damage * 2);
+            setPendingXpGained(prev => prev + damageXp);
+            
+            // Update the display XP (visual only)
+            setDisplayLeftXp(leftXp + pendingXpGained + damageXp);
+            
+            // Check if visual level up would occur based on display XP
+            const newDisplayLevel = getNewLevel(displayLeftXp + damageXp, leftLevel);
+            if (newDisplayLevel > leftLevel) {
+              addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} is close to level ${newDisplayLevel}!`);
+            }
             
             addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} attacks for ${damage} damage!`);
           } else {
@@ -288,6 +324,7 @@ export const BattleScene = ({
               addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} used their special move!`);
             }
             
+            // Update enemy XP (doesn't need to be delayed since it's not saved)
             setRightXp(prev => {
               const newXp = prev + Math.floor(damage * 2);
               const newLevel = getNewLevel(newXp, rightLevel);
@@ -314,7 +351,7 @@ export const BattleScene = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth, isDefenseMode]);
+  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth, isDefenseMode, leftXp, pendingXpGained, displayLeftXp]);
 
   return (
     <div className="flex flex-col gap-1">
@@ -350,8 +387,8 @@ export const BattleScene = ({
           selectedRightHolobot={selectedRightHolobot}
           leftLevel={leftLevel}
           rightLevel={rightLevel}
-          leftXp={leftXp}
-          rightXp={rightXp}
+          leftXp={displayLeftXp}
+          rightXp={displayRightXp}
         />
         
         <div className="relative w-full max-w-3xl mx-auto h-20 md:h-32 bg-cyberpunk-background rounded-lg overflow-hidden border-2 border-cyberpunk-border shadow-neon">
