@@ -1,3 +1,4 @@
+
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
@@ -90,4 +91,23 @@ export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
     specialAttackThreshold: 5,
     syncPoints: 0
   };
+};
+
+// New function to update holobot experience and level
+export const updateHolobotExperience = (holobots, holobotName, newExperience, newLevel) => {
+  if (!holobots || !Array.isArray(holobots)) {
+    return [];
+  }
+  
+  return holobots.map(holobot => {
+    if (holobot.name.toLowerCase() === holobotName.toLowerCase()) {
+      return {
+        ...holobot,
+        level: newLevel,
+        experience: newExperience,
+        nextLevelExp: calculateExperience(newLevel)
+      };
+    }
+    return holobot;
+  });
 };
