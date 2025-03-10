@@ -18,21 +18,33 @@ export default function Auth() {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        // Check if the user has holobots before redirecting
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('holobots')
-          .eq('id', data.session.user.id)
-          .maybeSingle();
+      try {
+        const { data } = await supabase.auth.getSession();
+        console.log("Session check on Auth page:", data.session ? "User is logged in" : "No session");
         
-        // If user has holobots, redirect to dashboard, otherwise to mint page
-        if (profile && profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
-          navigate('/dashboard');
-        } else {
-          navigate('/mint');
+        if (data.session) {
+          // User is logged in, check if they have holobots
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('holobots')
+            .eq('id', data.session.user.id)
+            .maybeSingle();
+          
+          if (error) {
+            console.error("Error fetching profile:", error);
+          }
+          
+          // If user has holobots, redirect to dashboard, otherwise to mint page
+          if (profile && profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
+            console.log("User has holobots, redirecting to dashboard");
+            navigate('/dashboard');
+          } else {
+            console.log("User has no holobots, redirecting to mint page");
+            navigate('/mint');
+          }
         }
+      } catch (error) {
+        console.error("Error checking session:", error);
       }
     };
     
@@ -96,22 +108,30 @@ export default function Auth() {
           throw error;
         }
 
+        console.log("Login successful, user:", data.user.id);
+        
         toast({
           title: "Login successful",
           description: "Redirecting you to the dashboard",
         });
 
         // Check if the user has holobots before redirecting
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('holobots')
           .eq('id', data.user.id)
           .maybeSingle();
         
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+        }
+        
         // If user has holobots, redirect to dashboard, otherwise to mint page
         if (profile && profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
+          console.log("User has holobots, redirecting to dashboard");
           navigate('/dashboard');
         } else {
+          console.log("User has no holobots, redirecting to mint page");
           navigate('/mint');
         }
       }
@@ -148,6 +168,7 @@ export default function Auth() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                disabled={loading}
                 className="w-full"
                 placeholder="Choose a username"
               />
@@ -163,6 +184,7 @@ export default function Auth() {
               value={emailOrUsername}
               onChange={(e) => setEmailOrUsername(e.target.value)}
               required
+              disabled={loading}
               className="w-full"
               placeholder={isSignUp ? "Enter your email" : "Enter your email or username"}
             />
@@ -175,6 +197,7 @@ export default function Auth() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
               className="w-full"
               placeholder="Enter your password"
               minLength={6}
@@ -186,7 +209,7 @@ export default function Auth() {
             className="w-full bg-holobots-accent hover:bg-holobots-hover"
             disabled={loading}
           >
-            {loading ? "Loading..." : isSignUp ? "Create Account" : "Sign In"}
+            {loading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
           </Button>
         </form>
 
@@ -194,6 +217,7 @@ export default function Auth() {
           <Button
             variant="link"
             onClick={() => setIsSignUp(!isSignUp)}
+            disabled={loading}
             className="text-holobots-accent hover:text-holobots-hover"
           >
             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
