@@ -72,7 +72,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       
       try {
-        console.log("Checking user session in AuthContext");
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
@@ -121,49 +120,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Auth state changed:", event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
-        setLoading(true);
-        try {
-          // Use maybeSingle to get profile
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id as any)
-            .maybeSingle();
+        // Use maybeSingle to get profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id as any)
+          .maybeSingle();
+        
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          setCurrentUser(null);
+          setError(profileError.message);
+        } else if (profile) {
+          console.log("Setting user from auth state change:", profile);
+          const mappedProfile = mapDatabaseToUserProfile(profile);
+          setCurrentUser(mappedProfile);
           
-          if (profileError) {
-            console.error("Error fetching profile:", profileError);
-            setCurrentUser(null);
-            setError(profileError.message);
-          } else if (profile) {
-            console.log("Setting user from auth state change:", profile);
-            const mappedProfile = mapDatabaseToUserProfile(profile);
-            setCurrentUser(mappedProfile);
-            
-            // Ensure new users get their welcome gift of 500 Holos tokens
-            await ensureWelcomeGift(session.user.id);
-            
-            // Redirect based on whether user has holobots
-            if (profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
-              navigate('/dashboard');
-            } else {
-              navigate('/mint');
-            }
-          }
-        } catch (err) {
-          console.error("Error handling auth state change:", err);
-        } finally {
-          setLoading(false);
+          // Ensure new users get their welcome gift of 500 Holos tokens
+          await ensureWelcomeGift(session.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
         setCurrentUser(null);
-        navigate('/');
       }
     });
     
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
   const login = async (email: string, password: string) => {
     setLoading(true);

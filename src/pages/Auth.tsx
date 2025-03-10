@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 export default function Auth() {
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -12,6 +13,7 @@ export default function Auth() {
   const [username, setUsername] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -19,32 +21,38 @@ export default function Auth() {
   useEffect(() => {
     const checkSession = async () => {
       try {
+        setCheckingSession(true);
         const { data } = await supabase.auth.getSession();
-        console.log("Session check on Auth page:", data.session ? "User is logged in" : "No session");
         
         if (data.session) {
-          // User is logged in, check if they have holobots
-          const { data: profile, error } = await supabase
+          console.log("User is already logged in, checking profile data");
+          // Check if the user has holobots before redirecting
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('holobots')
             .eq('id', data.session.user.id)
             .maybeSingle();
           
-          if (error) {
-            console.error("Error fetching profile:", error);
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            // Continue with the auth page if there's an error fetching the profile
+            setCheckingSession(false);
+            return;
           }
           
           // If user has holobots, redirect to dashboard, otherwise to mint page
           if (profile && profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
-            console.log("User has holobots, redirecting to dashboard");
             navigate('/dashboard');
           } else {
-            console.log("User has no holobots, redirecting to mint page");
             navigate('/mint');
           }
+        } else {
+          console.log("No active session found");
+          setCheckingSession(false);
         }
       } catch (error) {
         console.error("Error checking session:", error);
+        setCheckingSession(false);
       }
     };
     
@@ -108,8 +116,6 @@ export default function Auth() {
           throw error;
         }
 
-        console.log("Login successful, user:", data.user.id);
-        
         toast({
           title: "Login successful",
           description: "Redirecting you to the dashboard",
@@ -123,15 +129,16 @@ export default function Auth() {
           .maybeSingle();
         
         if (profileError) {
-          console.error("Error fetching profile:", profileError);
+          console.error("Error fetching profile after login:", profileError);
+          // Default to mint page if there's an error
+          navigate('/mint');
+          return;
         }
         
         // If user has holobots, redirect to dashboard, otherwise to mint page
         if (profile && profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
-          console.log("User has holobots, redirecting to dashboard");
           navigate('/dashboard');
         } else {
-          console.log("User has no holobots, redirecting to mint page");
           navigate('/mint');
         }
       }
@@ -146,6 +153,18 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  // Show loading indicator while checking session
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
+        <div className="flex flex-col items-center justify-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-holobots-accent" />
+          <p className="text-holobots-text dark:text-holobots-dark-text">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
@@ -168,9 +187,9 @@ export default function Auth() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                disabled={loading}
                 className="w-full"
                 placeholder="Choose a username"
+                disabled={loading}
               />
             </div>
           )}
@@ -184,9 +203,9 @@ export default function Auth() {
               value={emailOrUsername}
               onChange={(e) => setEmailOrUsername(e.target.value)}
               required
-              disabled={loading}
               className="w-full"
               placeholder={isSignUp ? "Enter your email" : "Enter your email or username"}
+              disabled={loading}
             />
           </div>
 
@@ -197,10 +216,10 @@ export default function Auth() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              disabled={loading}
               className="w-full"
               placeholder="Enter your password"
               minLength={6}
+              disabled={loading}
             />
           </div>
 
@@ -209,7 +228,12 @@ export default function Auth() {
             className="w-full bg-holobots-accent hover:bg-holobots-hover"
             disabled={loading}
           >
-            {loading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
+            {loading ? (
+              <div className="flex items-center justify-center">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <span>Processing...</span>
+              </div>
+            ) : isSignUp ? "Create Account" : "Sign In"}
           </Button>
         </form>
 
@@ -217,8 +241,8 @@ export default function Auth() {
           <Button
             variant="link"
             onClick={() => setIsSignUp(!isSignUp)}
-            disabled={loading}
             className="text-holobots-accent hover:text-holobots-hover"
+            disabled={loading}
           >
             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
           </Button>
