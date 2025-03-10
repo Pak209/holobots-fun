@@ -12,36 +12,28 @@ export default function Auth() {
   const [username, setUsername] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
+  const [initialChecking, setInitialChecking] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      setCheckingSession(true);
       try {
-        console.log("Checking session...");
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Session check error:", error);
-          setCheckingSession(false);
-          return;
-        }
+        const { data } = await supabase.auth.getSession();
+        console.log("Session check on Auth page:", data.session ? "User is logged in" : "No session");
         
         if (data.session) {
-          console.log("Session found, checking profile...");
-          // Check if the user has holobots before redirecting
-          const { data: profile, error: profileError } = await supabase
+          // User is logged in, check if they have holobots
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('holobots')
             .eq('id', data.session.user.id)
             .maybeSingle();
           
-          if (profileError) {
-            console.error("Profile fetch error:", profileError);
-            setCheckingSession(false);
+          if (error) {
+            console.error("Error fetching profile:", error);
+            setInitialChecking(false);
             return;
           }
           
@@ -50,16 +42,15 @@ export default function Auth() {
             console.log("User has holobots, redirecting to dashboard");
             navigate('/dashboard');
           } else {
-            console.log("User has no holobots, redirecting to mint");
+            console.log("User has no holobots, redirecting to mint page");
             navigate('/mint');
           }
         } else {
-          console.log("No session found");
-          setCheckingSession(false);
+          setInitialChecking(false);
         }
-      } catch (err) {
-        console.error("Session check failed:", err);
-        setCheckingSession(false);
+      } catch (error) {
+        console.error("Error checking session:", error);
+        setInitialChecking(false);
       }
     };
     
@@ -68,8 +59,6 @@ export default function Auth() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return; // Prevent multiple submissions
-    
     setLoading(true);
 
     try {
@@ -125,6 +114,8 @@ export default function Auth() {
           throw error;
         }
 
+        console.log("Login successful, user:", data.user.id);
+        
         toast({
           title: "Login successful",
           description: "Redirecting you to the dashboard",
@@ -138,8 +129,10 @@ export default function Auth() {
           .maybeSingle();
         
         if (profileError) {
-          console.error("Profile fetch error after login:", profileError);
-          throw profileError;
+          console.error("Error fetching profile:", profileError);
+          // Instead of stopping here, we'll redirect to mint since that's the default for new users
+          navigate('/mint');
+          return;
         }
         
         // If user has holobots, redirect to dashboard, otherwise to mint page
@@ -147,7 +140,7 @@ export default function Auth() {
           console.log("User has holobots, redirecting to dashboard");
           navigate('/dashboard');
         } else {
-          console.log("User has no holobots, redirecting to mint");
+          console.log("User has no holobots, redirecting to mint page");
           navigate('/mint');
         }
       }
@@ -158,18 +151,21 @@ export default function Auth() {
         description: error instanceof Error ? error.message : "An error occurred during authentication",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
 
-  if (checkingSession) {
+  // If we're still checking the initial session, show a loading state
+  if (initialChecking) {
     return (
       <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center">
-          <div className="bg-blue-200 text-blue-800 p-4 rounded-lg">
-            <p>Loading...</p>
-          </div>
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-holobots-text dark:text-holobots-dark-text mb-4">
+            Loading...
+          </h2>
+          <p className="text-holobots-text/60 dark:text-holobots-dark-text/60">
+            Please wait while we check your session.
+          </p>
         </div>
       </div>
     );
@@ -196,9 +192,9 @@ export default function Auth() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                disabled={loading}
                 className="w-full"
                 placeholder="Choose a username"
-                disabled={loading}
               />
             </div>
           )}
@@ -212,9 +208,9 @@ export default function Auth() {
               value={emailOrUsername}
               onChange={(e) => setEmailOrUsername(e.target.value)}
               required
+              disabled={loading}
               className="w-full"
               placeholder={isSignUp ? "Enter your email" : "Enter your email or username"}
-              disabled={loading}
             />
           </div>
 
@@ -225,10 +221,10 @@ export default function Auth() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
               className="w-full"
               placeholder="Enter your password"
               minLength={6}
-              disabled={loading}
             />
           </div>
 
@@ -237,7 +233,7 @@ export default function Auth() {
             className="w-full bg-holobots-accent hover:bg-holobots-hover"
             disabled={loading}
           >
-            {loading ? "Loading..." : isSignUp ? "Create Account" : "Sign In"}
+            {loading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
           </Button>
         </form>
 
@@ -245,8 +241,8 @@ export default function Auth() {
           <Button
             variant="link"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-holobots-accent hover:text-holobots-hover"
             disabled={loading}
+            className="text-holobots-accent hover:text-holobots-hover"
           >
             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
           </Button>

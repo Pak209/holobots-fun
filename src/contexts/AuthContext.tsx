@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
@@ -68,13 +69,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
+    
     const checkUser = async () => {
+      if (!isMounted) return;
       setLoading(true);
       
       try {
+        console.log("Checking user session in AuthContext");
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (session?.user) {
+        if (session?.user && isMounted) {
           console.log("Found session with user:", session.user.id);
           // Use maybeSingle to get profile
           const { data: profile, error: profileError } = await supabase
@@ -85,9 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (profileError) {
             console.error("Error fetching profile:", profileError);
-            setCurrentUser(null);
-            setError(profileError.message);
-          } else if (profile) {
+            if (isMounted) {
+              setCurrentUser(null);
+              setError(profileError.message);
+            }
+          } else if (profile && isMounted) {
             // Successfully found profile
             console.log("Found user profile:", profile);
             const mappedProfile = mapDatabaseToUserProfile(profile);
@@ -96,21 +103,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Ensure new users get their welcome gift of 500 Holos tokens
             await ensureWelcomeGift(session.user.id);
-          } else {
+          } else if (isMounted) {
             // User in auth but not in profiles (rare case)
             console.log("User exists in auth but not in profiles");
             setCurrentUser(null);
           }
-        } else {
+        } else if (isMounted) {
           console.log("No session found, user is not logged in");
           setCurrentUser(null);
         }
       } catch (err) {
         console.error("Auth error:", err);
-        setError(err instanceof Error ? err.message : "Authentication error");
-        setCurrentUser(null);
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Authentication error");
+          setCurrentUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     
@@ -119,35 +130,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session?.user?.id);
       
-      if (event === 'SIGNED_IN' && session) {
-        // Use maybeSingle to get profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id as any)
-          .maybeSingle();
-        
-        if (profileError) {
-          console.error("Error fetching profile:", profileError);
-          setCurrentUser(null);
-          setError(profileError.message);
-        } else if (profile) {
-          console.log("Setting user from auth state change:", profile);
-          const mappedProfile = mapDatabaseToUserProfile(profile);
-          setCurrentUser(mappedProfile);
+      if (event === 'SIGNED_IN' && session && isMounted) {
+        setLoading(true);
+        try {
+          // Use maybeSingle to get profile
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id as any)
+            .maybeSingle();
           
-          // Ensure new users get their welcome gift of 500 Holos tokens
-          await ensureWelcomeGift(session.user.id);
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            if (isMounted) {
+              setCurrentUser(null);
+              setError(profileError.message);
+            }
+          } else if (profile && isMounted) {
+            console.log("Setting user from auth state change:", profile);
+            const mappedProfile = mapDatabaseToUserProfile(profile);
+            setCurrentUser(mappedProfile);
+            
+            // Ensure new users get their welcome gift of 500 Holos tokens
+            await ensureWelcomeGift(session.user.id);
+            
+            // Only redirect if we're not already on the mint or dashboard page
+            if (!window.location.pathname.includes('/mint') && !window.location.pathname.includes('/dashboard')) {
+              // Redirect based on whether user has holobots
+              if (profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
+                navigate('/dashboard');
+              } else {
+                navigate('/mint');
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Error handling auth state change:", err);
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
         }
-      } else if (event === 'SIGNED_OUT') {
+      } else if (event === 'SIGNED_OUT' && isMounted) {
         setCurrentUser(null);
+        // Only redirect to home if we're not already there
+        if (window.location.pathname !== '/') {
+          navigate('/');
+        }
       }
     });
     
     return () => {
+      isMounted = false;
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
