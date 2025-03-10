@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -64,9 +64,6 @@ function App() {
                     <Route path="/marketplace" element={<MobileLayout><Marketplace /></MobileLayout>} />
                     <Route path="/leaderboard" element={<MobileLayout><Leaderboard /></MobileLayout>} />
                     <Route path="/bytepaper" element={<Bytepaper />} />
-                    
-                    {/* Fallback route */}
-                    <Route path="*" element={<Navigate to="/" />} />
                   </Routes>
                   <Toaster />
                 </AuthProvider>
