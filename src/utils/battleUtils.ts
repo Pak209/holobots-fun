@@ -93,7 +93,7 @@ export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
   };
 };
 
-// Update holobot experience and level without changing the base stats
+// New function to update holobot experience and level
 export const updateHolobotExperience = (holobots, holobotName, newExperience, newLevel) => {
   if (!holobots || !Array.isArray(holobots)) {
     return [];

@@ -125,10 +125,10 @@ export const HolobotInfoCard = ({
             )}
             
             <div className="space-y-0.5 font-mono text-xs">
-              <p>HP: {holobot.maxHealth} {userHolobot?.boostedAttributes?.health ? `+${userHolobot.boostedAttributes.health}` : ''}</p>
-              <p>Attack: {holobot.attack} {userHolobot?.boostedAttributes?.attack ? `+${userHolobot.boostedAttributes.attack}` : ''}</p>
-              <p>Defense: {holobot.defense} {userHolobot?.boostedAttributes?.defense ? `+${userHolobot.boostedAttributes.defense}` : ''}</p>
-              <p>Speed: {holobot.speed} {userHolobot?.boostedAttributes?.speed ? `+${userHolobot.boostedAttributes.speed}` : ''}</p>
+              <p>HP: {holobot.maxHealth + (userHolobot?.boostedAttributes?.health || 0)}</p>
+              <p>Attack: {holobot.attack + (userHolobot?.boostedAttributes?.attack || 0)}</p>
+              <p>Defense: {holobot.defense + (userHolobot?.boostedAttributes?.defense || 0)}</p>
+              <p>Speed: {holobot.speed + (userHolobot?.boostedAttributes?.speed || 0)}</p>
               <p className="text-sky-400 text-[10px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                 Special: {holobot.specialMove}
               </p>
