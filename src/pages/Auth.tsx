@@ -28,7 +28,7 @@ export default function Auth() {
           .maybeSingle();
         
         // If user has holobots, redirect to dashboard, otherwise to mint page
-        if (profile && profile.holobots && profile.holobots.length > 0) {
+        if (profile && profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
           navigate('/dashboard');
         } else {
           navigate('/mint');
@@ -109,7 +109,7 @@ export default function Auth() {
           .maybeSingle();
         
         // If user has holobots, redirect to dashboard, otherwise to mint page
-        if (profile && profile.holobots && profile.holobots.length > 0) {
+        if (profile && profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
           navigate('/dashboard');
         } else {
           navigate('/mint');
