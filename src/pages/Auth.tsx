@@ -12,7 +12,6 @@ export default function Auth() {
   const [username, setUsername] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [initialChecking, setInitialChecking] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -33,8 +32,6 @@ export default function Auth() {
           
           if (error) {
             console.error("Error fetching profile:", error);
-            setInitialChecking(false);
-            return;
           }
           
           // If user has holobots, redirect to dashboard, otherwise to mint page
@@ -45,12 +42,9 @@ export default function Auth() {
             console.log("User has no holobots, redirecting to mint page");
             navigate('/mint');
           }
-        } else {
-          setInitialChecking(false);
         }
       } catch (error) {
         console.error("Error checking session:", error);
-        setInitialChecking(false);
       }
     };
     
@@ -130,9 +124,6 @@ export default function Auth() {
         
         if (profileError) {
           console.error("Error fetching profile:", profileError);
-          // Instead of stopping here, we'll redirect to mint since that's the default for new users
-          navigate('/mint');
-          return;
         }
         
         // If user has holobots, redirect to dashboard, otherwise to mint page
@@ -151,25 +142,10 @@ export default function Auth() {
         description: error instanceof Error ? error.message : "An error occurred during authentication",
         variant: "destructive",
       });
+    } finally {
       setLoading(false);
     }
   };
-
-  // If we're still checking the initial session, show a loading state
-  if (initialChecking) {
-    return (
-      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-holobots-text dark:text-holobots-dark-text mb-4">
-            Loading...
-          </h2>
-          <p className="text-holobots-text/60 dark:text-holobots-dark-text/60">
-            Please wait while we check your session.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
