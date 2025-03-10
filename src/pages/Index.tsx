@@ -4,30 +4,30 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Trophy, Ticket, Gem, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { ItemCard } from "@/components/items/ItemCard";
+import { ArenaPrebattleMenu } from "@/components/arena/ArenaPrebattleMenu";
+import { generateArenaOpponent } from "@/utils/battleUtils";
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);
   const [victories, setVictories] = useState(0);
   const [hasEntryFee, setHasEntryFee] = useState(false);
+  const [selectedHolobot, setSelectedHolobot] = useState("ace"); // Default holobot
+  const [currentOpponent, setCurrentOpponent] = useState(generateArenaOpponent(1));
   const maxRounds = 3;
-  const entryFee = 50; // Already set to 50, but confirming it's correct
+  const entryFee = 50;
   const { toast } = useToast();
-  const navigate = useNavigate();
   const { user, updateUser } = useAuth();
 
-  const roundOpponents = {
-    1: { name: 'kuma', level: 1, stats: { attack: 1.0, defense: 1.0, speed: 1.0 } },
-    2: { name: 'shadow', level: 2, stats: { attack: 1.2, defense: 1.1, speed: 1.2 } },
-    3: { name: 'era', level: 3, stats: { attack: 1.3, defense: 1.3, speed: 1.3 } }
-  };
+  // Generate a new opponent when the round changes
+  useEffect(() => {
+    setCurrentOpponent(generateArenaOpponent(currentRound));
+  }, [currentRound]);
 
   const payEntryFee = async () => {
     try {
-      // Use the updateUser method from AuthContext to update the user's tokens
       if (user && user.holosTokens >= entryFee) {
         await updateUser({
           holosTokens: user.holosTokens - entryFee
@@ -84,6 +84,18 @@ const Index = () => {
     }
   };
 
+  const handleHolobotSelect = (holobotKey: string) => {
+    setSelectedHolobot(holobotKey);
+  };
+
+  const handleEntryFeeMethod = async (method: 'tokens' | 'pass') => {
+    if (method === 'tokens') {
+      await payEntryFee();
+    } else {
+      await useArenaPass();
+    }
+  };
+
   const distributeRewards = async () => {
     try {
       if (!user) return;
@@ -94,13 +106,11 @@ const Index = () => {
       const blueprintPieces = victories * currentRound;
       const arenaPass = Math.random() > 0.7 ? 1 : 0; // 30% chance to get arena pass as reward
 
-      // Update the user's tokens using the AuthContext
       const updates: any = {
         holosTokens: user.holosTokens + holosTokens,
         gachaTickets: user.gachaTickets + gachaTickets
       };
       
-      // Add arena pass if won
       if (arenaPass > 0) {
         updates.arena_passes = (user.arena_passes || 0) + arenaPass;
       }
@@ -148,56 +158,30 @@ const Index = () => {
       setVictories(prev => prev + 1);
       if (currentRound < maxRounds) {
         setCurrentRound(prev => prev + 1);
+        setCurrentOpponent(generateArenaOpponent(currentRound + 1));
       } else {
         distributeRewards();
         setCurrentRound(1);
         setVictories(0);
         setHasEntryFee(false);
+        setCurrentOpponent(generateArenaOpponent(1));
       }
     } else {
       setCurrentRound(1);
       setVictories(0);
       setHasEntryFee(false);
+      setCurrentOpponent(generateArenaOpponent(1));
     }
   };
 
   if (!hasEntryFee) {
     return (
       <div className="px-4 py-5">
-        <Card className="border border-holobots-border bg-[#1A1F2C]">
-          <CardHeader>
-            <CardTitle className="text-center text-xl text-white">Arena Entry</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col md:flex-row gap-4 w-full">
-              <div className="flex-1">
-                <p className="text-[#8E9196] mb-2 text-center">Entry fee: {entryFee} Holos tokens</p>
-                <p className="text-[#8E9196] mb-4 text-center">Your balance: {user?.holosTokens || 0} Holos</p>
-                <Button 
-                  onClick={payEntryFee}
-                  disabled={!user || user.holosTokens < entryFee}
-                  className="w-full bg-holobots-accent hover:bg-holobots-hover text-white"
-                >
-                  <Gem className="mr-2 h-4 w-4" />
-                  Pay Entry Fee
-                </Button>
-              </div>
-              
-              <div className="border-t md:border-t-0 md:border-l border-gray-700 md:pl-4 pt-4 md:pt-0 flex-1">
-                <p className="text-[#8E9196] mb-2 text-center">Your Arena Passes: {user?.arena_passes || 0}</p>
-                <ItemCard
-                  name="Arena Pass"
-                  description="Use a pass to enter the arena without spending HOLOS tokens"
-                  quantity={user?.arena_passes || 0}
-                  type="arena-pass"
-                  onClick={useArenaPass}
-                  actionLabel="Use Arena Pass"
-                  disabled={!user || !user.arena_passes || user.arena_passes <= 0}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <ArenaPrebattleMenu 
+          onHolobotSelect={handleHolobotSelect}
+          onEntryFeeMethod={handleEntryFeeMethod}
+          entryFee={entryFee}
+        />
       </div>
     );
   }
@@ -220,17 +204,17 @@ const Index = () => {
           <div className="bg-black/30 px-3 py-1 rounded-lg">
             <span className="text-xs text-[#8E9196]">Opponent Level</span>
             <div className="text-md font-bold text-yellow-500">
-              {roundOpponents[currentRound as keyof typeof roundOpponents].level}
+              {currentOpponent.level}
             </div>
           </div>
         </div>
       </div>
       
       <BattleScene 
-        leftHolobot="ace"
-        rightHolobot={roundOpponents[currentRound as keyof typeof roundOpponents].name}
+        leftHolobot={selectedHolobot}
+        rightHolobot={currentOpponent.name}
         isCpuBattle={true}
-        cpuLevel={roundOpponents[currentRound as keyof typeof roundOpponents].level}
+        cpuLevel={currentOpponent.level}
         onBattleEnd={handleBattleEnd}
       />
     </div>

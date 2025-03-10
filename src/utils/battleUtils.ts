@@ -89,7 +89,9 @@ export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
     hackUsed: false,
     specialAttackGauge: 0,
     specialAttackThreshold: 5,
-    syncPoints: 0
+    syncPoints: 0,
+    comboChain: 0, // Add combo chain tracking
+    maxComboChain: stats.intelligence > 5 ? 8 : 5 // Max combo based on intelligence
   };
 };
 
@@ -110,4 +112,54 @@ export const updateHolobotExperience = (holobots, holobotName, newExperience, ne
     }
     return holobot;
   });
+};
+
+// Reset combo chain after battle
+export const resetComboChain = (stats: HolobotStats): HolobotStats => {
+  return {
+    ...stats,
+    comboChain: 0
+  };
+};
+
+// Increment combo chain with intelligence-based limit
+export const incrementComboChain = (stats: HolobotStats): HolobotStats => {
+  const maxCombo = stats.intelligence > 5 ? 8 : 5;
+  let newComboChain = (stats.comboChain || 0) + 1;
+  
+  // Reset if max reached
+  if (newComboChain > maxCombo) {
+    newComboChain = 0;
+  }
+  
+  return {
+    ...stats,
+    comboChain: newComboChain
+  };
+};
+
+// Generate random arena opponents based on progress
+export const generateArenaOpponent = (currentRound: number) => {
+  // List of possible holobot keys
+  const holobotKeys = ['ace', 'kuma', 'shadow', 'era', 'nova'];
+  
+  // Randomly select a holobot
+  const randomIndex = Math.floor(Math.random() * holobotKeys.length);
+  const holobotKey = holobotKeys[randomIndex];
+  
+  // Scale difficulty based on current round
+  const baseLevel = Math.max(1, Math.min(50, Math.floor(currentRound * 1.5)));
+  const attackMod = 1 + (currentRound * 0.1);
+  const defenseMod = 1 + (currentRound * 0.05);
+  const speedMod = 1 + (currentRound * 0.08);
+  
+  return {
+    name: holobotKey,
+    level: baseLevel,
+    stats: {
+      attack: attackMod,
+      defense: defenseMod,
+      speed: speedMod
+    }
+  };
 };
