@@ -33,6 +33,7 @@ export interface ItemCardProps extends VariantProps<typeof itemCardVariants> {
   onClick?: () => void;
   actionLabel?: string;
   disabled?: boolean;
+  isLoading?: boolean;
 }
 
 export const ItemCard = ({
@@ -43,6 +44,7 @@ export const ItemCard = ({
   onClick,
   actionLabel,
   disabled = false,
+  isLoading = false,
 }: ItemCardProps) => {
   return (
     <div className={cn(itemCardVariants({ type }))}>
@@ -67,11 +69,11 @@ export const ItemCard = ({
       {onClick && actionLabel && (
         <Button 
           onClick={onClick}
-          disabled={disabled || quantity <= 0}
+          disabled={disabled || quantity <= 0 || isLoading}
           size="sm"
           className="w-full mt-auto bg-black/40 hover:bg-black/60 border border-gray-700"
         >
-          {actionLabel}
+          {isLoading ? "Processing..." : actionLabel}
         </Button>
       )}
     </div>
