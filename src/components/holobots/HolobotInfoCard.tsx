@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Coins, Plus } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { UserHolobot } from "@/types/user";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 
 interface HolobotInfoCardProps {
   holobotKey: string;
@@ -33,61 +31,11 @@ export const HolobotInfoCard = ({
   const currentXp = userHolobot?.experience || 0;
   const nextLevelXp = userHolobot?.nextLevelExp || 100;
   
-  const { user, updateUser } = useAuth();
-  const { toast } = useToast();
-  
   const calculateProgress = (current: number, total: number) => {
     return Math.min(100, Math.floor((current / total) * 100));
   };
   
   const xpProgress = calculateProgress(currentXp, nextLevelXp);
-
-  const handleBoostAttribute = async (attribute: 'attack' | 'defense' | 'speed' | 'health') => {
-    if (!isOwned || !user) return;
-    
-    try {
-      // Check if user has holobots array
-      if (!user.holobots || !Array.isArray(user.holobots)) {
-        throw new Error("User holobots data is not available");
-      }
-      
-      // Find the holobot to update
-      const updatedHolobots = user.holobots.map(h => {
-        if (h.name.toLowerCase() === holobot.name.toLowerCase()) {
-          // Initialize boostedAttributes if it doesn't exist
-          const boostedAttributes = h.boostedAttributes || {};
-          
-          // Update the specific attribute
-          if (attribute === 'health') {
-            boostedAttributes.health = (boostedAttributes.health || 0) + 10;
-          } else {
-            boostedAttributes[attribute] = (boostedAttributes[attribute] || 0) + 1;
-          }
-          
-          return {
-            ...h,
-            boostedAttributes
-          };
-        }
-        return h;
-      });
-      
-      // Update the user profile
-      await updateUser({ holobots: updatedHolobots });
-      
-      toast({
-        title: "Attribute Boosted",
-        description: `Increased ${attribute} for ${holobot.name}`,
-      });
-    } catch (error) {
-      console.error("Error boosting attribute:", error);
-      toast({
-        title: "Error",
-        description: "Failed to boost attribute",
-        variant: "destructive"
-      });
-    }
-  };
 
   return (
     <div className={`flex flex-col sm:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-3 sm:p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300`}>
@@ -125,10 +73,10 @@ export const HolobotInfoCard = ({
             )}
             
             <div className="space-y-0.5 font-mono text-xs">
-              <p>HP: {holobot.maxHealth + (userHolobot?.boostedAttributes?.health || 0)}</p>
-              <p>Attack: {holobot.attack + (userHolobot?.boostedAttributes?.attack || 0)}</p>
-              <p>Defense: {holobot.defense + (userHolobot?.boostedAttributes?.defense || 0)}</p>
-              <p>Speed: {holobot.speed + (userHolobot?.boostedAttributes?.speed || 0)}</p>
+              <p>HP: {holobot.maxHealth}</p>
+              <p>Attack: {holobot.attack}</p>
+              <p>Defense: {holobot.defense}</p>
+              <p>Speed: {holobot.speed}</p>
               <p className="text-sky-400 text-[10px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                 Special: {holobot.specialMove}
               </p>
@@ -168,28 +116,16 @@ export const HolobotInfoCard = ({
                   Available Boosts
                 </h3>
                 <div className="grid grid-cols-2 gap-1">
-                  <button 
-                    className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors"
-                    onClick={() => handleBoostAttribute('attack')}
-                  >
+                  <button className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
                     +1 ATK
                   </button>
-                  <button 
-                    className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors"
-                    onClick={() => handleBoostAttribute('defense')}
-                  >
+                  <button className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
                     +1 DEF
                   </button>
-                  <button 
-                    className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors"
-                    onClick={() => handleBoostAttribute('speed')}
-                  >
+                  <button className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
                     +1 SPD
                   </button>
-                  <button 
-                    className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors"
-                    onClick={() => handleBoostAttribute('health')}
-                  >
+                  <button className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors">
                     +10 HP
                   </button>
                 </div>
@@ -208,11 +144,6 @@ export const HolobotInfoCard = ({
                 experience: isOwned ? currentXp : undefined,
                 nextLevelExp: isOwned ? nextLevelXp : undefined,
                 name: holobot.name.toUpperCase(),
-                // Apply boosted attributes if owned
-                attack: holobot.attack + (userHolobot?.boostedAttributes?.attack || 0),
-                defense: holobot.defense + (userHolobot?.boostedAttributes?.defense || 0),
-                speed: holobot.speed + (userHolobot?.boostedAttributes?.speed || 0),
-                maxHealth: holobot.maxHealth + (userHolobot?.boostedAttributes?.health || 0),
               }} 
               variant={isOwned ? "blue" : "red"} 
             />

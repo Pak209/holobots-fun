@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { BattleControls } from "./BattleControls";
 import { BattleLog } from "./BattleLog";
@@ -8,9 +7,7 @@ import { BattleSelectors } from "./battle/BattleSelectors";
 import { BattleCards } from "./battle/BattleCards";
 import { ModeSlider } from "./battle/ModeSlider";
 import { HOLOBOT_STATS } from "@/types/holobot";
-import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost, applySpecialAttack, updateHolobotExperience } from "@/utils/battleUtils";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { calculateDamage, calculateExperience, getNewLevel, applyHackBoost, applySpecialAttack } from "@/utils/battleUtils";
 
 interface BattleSceneProps {
   leftHolobot: string;
@@ -27,8 +24,6 @@ export const BattleScene = ({
   cpuLevel = 1,
   onBattleEnd 
 }: BattleSceneProps) => {
-  const { user, updateUser } = useAuth();
-  const { toast } = useToast();
   const [leftHealth, setLeftHealth] = useState(100);
   const [rightHealth, setRightHealth] = useState(100);
   const [leftSpecial, setLeftSpecial] = useState(0);
@@ -43,36 +38,14 @@ export const BattleScene = ({
   const [selectedRightHolobot, setSelectedRightHolobot] = useState(initialRightHolobot);
   const [isBattleStarted, setIsBattleStarted] = useState(false);
   const [battleLog, setBattleLog] = useState<string[]>([]);
-  
-  // Current XP that is shown to the user but not saved until battle end
-  const [displayLeftXp, setDisplayLeftXp] = useState(0);
-  const [displayRightXp, setRightXp] = useState(0);
-  
-  // Accumulated XP during battle (not shown in UI)
-  const [pendingXpGained, setPendingXpGained] = useState(0);
-  
-  // Original left holobot level and XP from user data
   const [leftXp, setLeftXp] = useState(0);
+  const [rightXp, setRightXp] = useState(0);
   const [leftLevel, setLeftLevel] = useState(1);
   const [rightLevel, setRightLevel] = useState(1);
   const [leftFatigue, setLeftFatigue] = useState(0);
   const [rightFatigue, setRightFatigue] = useState(0);
   const [isDefenseMode, setIsDefenseMode] = useState(false);
   const [defenseModeRounds, setDefenseModeRounds] = useState(0);
-
-  // Initialize levels from user data if available
-  useEffect(() => {
-    if (user && user.holobots && Array.isArray(user.holobots)) {
-      const leftUserHolobot = user.holobots.find(h => 
-        h.name.toLowerCase() === selectedLeftHolobot.toLowerCase());
-      
-      if (leftUserHolobot) {
-        setLeftLevel(leftUserHolobot.level || 1);
-        setLeftXp(leftUserHolobot.experience || 0);
-        setDisplayLeftXp(leftUserHolobot.experience || 0);
-      }
-    }
-  }, [user, selectedLeftHolobot]);
 
   const addToBattleLog = (message: string) => {
     setBattleLog(prev => [...prev, message]);
@@ -108,7 +81,6 @@ export const BattleScene = ({
       return;
     }
     
-    // Reset all battle-related states at start
     setIsBattleStarted(true);
     setLeftHealth(100);
     setRightHealth(100);
@@ -116,13 +88,6 @@ export const BattleScene = ({
     setRightSpecial(0);
     setLeftHack(0);
     setRightHack(0);
-    
-    // Reset the pending XP gained to 0 at the start of a battle
-    setPendingXpGained(0);
-    
-    // Display current XP from saved data, not battle progress
-    setDisplayLeftXp(leftXp);
-    
     setBattleLog(["Battle started!"]);
   };
 
@@ -138,94 +103,28 @@ export const BattleScene = ({
     }
   };
 
-  // Save battle results to user profile
-  const saveBattleResults = async (winner: string) => {
-    try {
-      if (!user) return;
-
-      // Only save if the user's holobot won
-      if (winner === selectedLeftHolobot) {
-        // Apply the accumulated XP to the saved XP
-        const newTotalXp = leftXp + pendingXpGained;
-        
-        // Check for level up based on the new total XP
-        const newLevel = getNewLevel(newTotalXp, leftLevel);
-        
-        const updatedHolobots = updateHolobotExperience(
-          user.holobots,
-          HOLOBOT_STATS[selectedLeftHolobot].name,
-          newTotalXp,
-          newLevel
-        );
-        
-        console.log("Updating user holobots with:", updatedHolobots);
-        
-        // Update user's holobots and stats in database
-        await updateUser({ 
-          holobots: updatedHolobots,
-          stats: {
-            wins: (user.stats?.wins || 0) + 1,
-            losses: user.stats?.losses || 0
-          }
-        });
-        
-        // Show level up toast if the level changed
-        if (newLevel > leftLevel) {
-          toast({
-            title: "Level Up!",
-            description: `${HOLOBOT_STATS[selectedLeftHolobot].name} is now level ${newLevel}!`,
-          });
-        } else {
-          toast({
-            title: "Battle Progress Saved",
-            description: `${HOLOBOT_STATS[selectedLeftHolobot].name} gained ${pendingXpGained} XP!`,
-          });
-        }
-      } else {
-        // Update losses if the user's holobot lost
-        await updateUser({ 
-          stats: {
-            wins: user.stats?.wins || 0,
-            losses: (user.stats?.losses || 0) + 1
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Error saving battle results:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save battle progress",
-        variant: "destructive"
-      });
-    }
-  };
-
   useEffect(() => {
     if (!isBattleStarted) return;
 
     const interval = setInterval(() => {
       if (leftHealth <= 0 || rightHealth <= 0) {
         setIsBattleStarted(false);
-        const winner = leftHealth > 0 ? selectedLeftHolobot : selectedRightHolobot;
-        const winnerName = HOLOBOT_STATS[winner].name;
-        const loser = leftHealth > 0 ? selectedRightHolobot : selectedLeftHolobot;
-        const loserName = HOLOBOT_STATS[loser].name;
+        const winner = leftHealth > 0 ? HOLOBOT_STATS[selectedLeftHolobot].name : HOLOBOT_STATS[selectedRightHolobot].name;
+        const loser = leftHealth > 0 ? HOLOBOT_STATS[selectedRightHolobot].name : HOLOBOT_STATS[selectedLeftHolobot].name;
         
         // Update intelligence based on battle result
         if (leftHealth > 0) {
           HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedLeftHolobot].intelligence + 1);
           HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedRightHolobot].intelligence - 1);
           onBattleEnd?.('victory');
-          saveBattleResults(selectedLeftHolobot);
         } else {
           HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedLeftHolobot].intelligence - 1);
           HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedRightHolobot].intelligence + 1);
           onBattleEnd?.('defeat');
-          saveBattleResults(selectedRightHolobot);
         }
         
-        addToBattleLog(`Battle ended! ${winnerName} is victorious!`);
-        addToBattleLog(`${winnerName}'s intelligence increased! ${loserName}'s intelligence decreased!`);
+        addToBattleLog(`Battle ended! ${winner} is victorious!`);
+        addToBattleLog(`${winner}'s intelligence increased! ${loser}'s intelligence decreased!`);
         clearInterval(interval);
         return;
       }
@@ -277,19 +176,15 @@ export const BattleScene = ({
               addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} used their special move!`);
             }
             
-            // Don't update the actual XP until battle ends
-            // Instead, accumulate the pending XP
-            const damageXp = Math.floor(damage * 2);
-            setPendingXpGained(prev => prev + damageXp);
-            
-            // Update the display XP (visual only)
-            setDisplayLeftXp(leftXp + pendingXpGained + damageXp);
-            
-            // Check if visual level up would occur based on display XP
-            const newDisplayLevel = getNewLevel(displayLeftXp + damageXp, leftLevel);
-            if (newDisplayLevel > leftLevel) {
-              addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} is close to level ${newDisplayLevel}!`);
-            }
+            setLeftXp(prev => {
+              const newXp = prev + Math.floor(damage * 2);
+              const newLevel = getNewLevel(newXp, leftLevel);
+              if (newLevel > leftLevel) {
+                setLeftLevel(newLevel);
+                addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} reached level ${newLevel}!`);
+              }
+              return newXp;
+            });
             
             addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} attacks for ${damage} damage!`);
           } else {
@@ -324,7 +219,6 @@ export const BattleScene = ({
               addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} used their special move!`);
             }
             
-            // Update enemy XP (doesn't need to be delayed since it's not saved)
             setRightXp(prev => {
               const newXp = prev + Math.floor(damage * 2);
               const newLevel = getNewLevel(newXp, rightLevel);
@@ -351,7 +245,7 @@ export const BattleScene = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth, isDefenseMode, leftXp, pendingXpGained, displayLeftXp]);
+  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth, isDefenseMode]);
 
   return (
     <div className="flex flex-col gap-1">
@@ -387,8 +281,8 @@ export const BattleScene = ({
           selectedRightHolobot={selectedRightHolobot}
           leftLevel={leftLevel}
           rightLevel={rightLevel}
-          leftXp={displayLeftXp}
-          rightXp={displayRightXp}
+          leftXp={leftXp}
+          rightXp={rightXp}
         />
         
         <div className="relative w-full max-w-3xl mx-auto h-20 md:h-32 bg-cyberpunk-background rounded-lg overflow-hidden border-2 border-cyberpunk-border shadow-neon">

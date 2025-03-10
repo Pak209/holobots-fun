@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS } from "@/types/holobot";
@@ -8,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card";
 import { Battery, Swords, Trophy, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { calculateBattleExperience, updateHolobotExperience } from "@/utils/battleUtils";
+import { calculateBattleExperience } from "@/utils/battleUtils";
 
 // CPU difficulty levels
 const DIFFICULTY_LEVELS = {
@@ -40,7 +39,7 @@ const Training = () => {
   // Find the selected holobot from user's holobots array
   const getSelectedHolobotObject = () => {
     if (!user?.holobots || !selectedHolobot) return null;
-    return user.holobots.find(h => h.name.toLowerCase() === HOLOBOT_STATS[selectedHolobot].name.toLowerCase());
+    return user.holobots.find(h => h.name.toLowerCase() === selectedHolobot.toLowerCase());
   };
 
   // Get the holobot key from HOLOBOT_STATS based on name
@@ -92,32 +91,23 @@ const Training = () => {
 
       const won = Math.random() > 0.4; // 60% win rate in training
       const baseXp = calculateBattleExperience(
-        playerHolobot.level || 1,
+        playerHolobot.level,
         DIFFICULTY_LEVELS[selectedDifficulty].level
       );
       const xpGained = Math.floor(baseXp * difficulty.xpMultiplier);
 
       // Update XP for the holobot if won
       if (won && user) {
-        const currentExperience = playerHolobot.experience || 0;
-        const newExperience = currentExperience + xpGained;
-        const nextLevelExp = playerHolobot.nextLevelExp || 100;
-        
-        // Check if holobot leveled up
-        let newLevel = playerHolobot.level || 1;
-        if (newExperience >= nextLevelExp) {
-          newLevel += 1;
-        }
-        
-        // Use the shared helper function to update holobots
-        const updatedHolobots = updateHolobotExperience(
-          user.holobots,
-          playerHolobot.name,
-          newExperience,
-          newLevel
-        );
-        
-        console.log("Updating holobots after training:", updatedHolobots);
+        const updatedHolobots = user.holobots.map(h => {
+          if (h.name.toLowerCase() === playerHolobot.name.toLowerCase()) {
+            const newExperience = (h.experience || 0) + xpGained;
+            return {
+              ...h,
+              experience: newExperience
+            };
+          }
+          return h;
+        });
         
         await updateUser({ holobots: updatedHolobots });
       }

@@ -12,54 +12,27 @@ export default function Auth() {
   const [username, setUsername] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      setCheckingSession(true);
-      try {
-        console.log("Checking session...");
-        const { data, error } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        // Check if the user has holobots before redirecting
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('holobots')
+          .eq('id', data.session.user.id)
+          .maybeSingle();
         
-        if (error) {
-          console.error("Session check error:", error);
-          setCheckingSession(false);
-          return;
-        }
-        
-        if (data.session) {
-          console.log("Session found, checking profile...");
-          // Check if the user has holobots before redirecting
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('holobots')
-            .eq('id', data.session.user.id)
-            .maybeSingle();
-          
-          if (profileError) {
-            console.error("Profile fetch error:", profileError);
-            setCheckingSession(false);
-            return;
-          }
-          
-          // If user has holobots, redirect to dashboard, otherwise to mint page
-          if (profile && profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
-            console.log("User has holobots, redirecting to dashboard");
-            navigate('/dashboard');
-          } else {
-            console.log("User has no holobots, redirecting to mint");
-            navigate('/mint');
-          }
+        // If user has holobots, redirect to dashboard, otherwise to mint page
+        if (profile && profile.holobots && profile.holobots.length > 0) {
+          navigate('/dashboard');
         } else {
-          console.log("No session found");
-          setCheckingSession(false);
+          navigate('/mint');
         }
-      } catch (err) {
-        console.error("Session check failed:", err);
-        setCheckingSession(false);
       }
     };
     
@@ -68,8 +41,6 @@ export default function Auth() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loading) return; // Prevent multiple submissions
-    
     setLoading(true);
 
     try {
@@ -131,23 +102,16 @@ export default function Auth() {
         });
 
         // Check if the user has holobots before redirecting
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('holobots')
           .eq('id', data.user.id)
           .maybeSingle();
         
-        if (profileError) {
-          console.error("Profile fetch error after login:", profileError);
-          throw profileError;
-        }
-        
         // If user has holobots, redirect to dashboard, otherwise to mint page
-        if (profile && profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
-          console.log("User has holobots, redirecting to dashboard");
+        if (profile && profile.holobots && profile.holobots.length > 0) {
           navigate('/dashboard');
         } else {
-          console.log("User has no holobots, redirecting to mint");
           navigate('/mint');
         }
       }
@@ -162,18 +126,6 @@ export default function Auth() {
       setLoading(false);
     }
   };
-
-  if (checkingSession) {
-    return (
-      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center">
-          <div className="bg-blue-200 text-blue-800 p-4 rounded-lg">
-            <p>Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
@@ -198,7 +150,6 @@ export default function Auth() {
                 required
                 className="w-full"
                 placeholder="Choose a username"
-                disabled={loading}
               />
             </div>
           )}
@@ -214,7 +165,6 @@ export default function Auth() {
               required
               className="w-full"
               placeholder={isSignUp ? "Enter your email" : "Enter your email or username"}
-              disabled={loading}
             />
           </div>
 
@@ -228,7 +178,6 @@ export default function Auth() {
               className="w-full"
               placeholder="Enter your password"
               minLength={6}
-              disabled={loading}
             />
           </div>
 
@@ -246,7 +195,6 @@ export default function Auth() {
             variant="link"
             onClick={() => setIsSignUp(!isSignUp)}
             className="text-holobots-accent hover:text-holobots-hover"
-            disabled={loading}
           >
             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
           </Button>

@@ -1,4 +1,3 @@
-
 export interface UserHolobot {
   name: string;
   level: number;
