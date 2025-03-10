@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
 
 export default function Auth() {
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -20,12 +19,19 @@ export default function Auth() {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
+      setCheckingSession(true);
       try {
-        setCheckingSession(true);
-        const { data } = await supabase.auth.getSession();
+        console.log("Checking session...");
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session check error:", error);
+          setCheckingSession(false);
+          return;
+        }
         
         if (data.session) {
-          console.log("User is already logged in, checking profile data");
+          console.log("Session found, checking profile...");
           // Check if the user has holobots before redirecting
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -34,24 +40,25 @@ export default function Auth() {
             .maybeSingle();
           
           if (profileError) {
-            console.error("Error fetching profile:", profileError);
-            // Continue with the auth page if there's an error fetching the profile
+            console.error("Profile fetch error:", profileError);
             setCheckingSession(false);
             return;
           }
           
           // If user has holobots, redirect to dashboard, otherwise to mint page
           if (profile && profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
+            console.log("User has holobots, redirecting to dashboard");
             navigate('/dashboard');
           } else {
+            console.log("User has no holobots, redirecting to mint");
             navigate('/mint');
           }
         } else {
-          console.log("No active session found");
+          console.log("No session found");
           setCheckingSession(false);
         }
-      } catch (error) {
-        console.error("Error checking session:", error);
+      } catch (err) {
+        console.error("Session check failed:", err);
         setCheckingSession(false);
       }
     };
@@ -61,6 +68,8 @@ export default function Auth() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // Prevent multiple submissions
+    
     setLoading(true);
 
     try {
@@ -129,16 +138,16 @@ export default function Auth() {
           .maybeSingle();
         
         if (profileError) {
-          console.error("Error fetching profile after login:", profileError);
-          // Default to mint page if there's an error
-          navigate('/mint');
-          return;
+          console.error("Profile fetch error after login:", profileError);
+          throw profileError;
         }
         
         // If user has holobots, redirect to dashboard, otherwise to mint page
         if (profile && profile.holobots && Array.isArray(profile.holobots) && profile.holobots.length > 0) {
+          console.log("User has holobots, redirecting to dashboard");
           navigate('/dashboard');
         } else {
+          console.log("User has no holobots, redirecting to mint");
           navigate('/mint');
         }
       }
@@ -154,13 +163,13 @@ export default function Auth() {
     }
   };
 
-  // Show loading indicator while checking session
   if (checkingSession) {
     return (
       <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
-        <div className="flex flex-col items-center justify-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-holobots-accent" />
-          <p className="text-holobots-text dark:text-holobots-dark-text">Checking authentication...</p>
+        <div className="w-full max-w-md text-center">
+          <div className="bg-blue-200 text-blue-800 p-4 rounded-lg">
+            <p>Loading...</p>
+          </div>
         </div>
       </div>
     );
@@ -228,12 +237,7 @@ export default function Auth() {
             className="w-full bg-holobots-accent hover:bg-holobots-hover"
             disabled={loading}
           >
-            {loading ? (
-              <div className="flex items-center justify-center">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                <span>Processing...</span>
-              </div>
-            ) : isSignUp ? "Create Account" : "Sign In"}
+            {loading ? "Loading..." : isSignUp ? "Create Account" : "Sign In"}
           </Button>
         </form>
 
