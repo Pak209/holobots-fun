@@ -1,3 +1,4 @@
+
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
@@ -11,8 +12,12 @@ export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) 
     return 0;
   }
 
-  const attackWithFatigue = Math.max(1, attacker.attack - (attacker.fatigue || 0));
-  const damage = Math.max(1, attackWithFatigue - (defender.defense * 0.5));
+  // Consider boosted attributes if available
+  const attackerAttack = attacker.attack + (attacker.boostedAttributes?.attack || 0);
+  const defenderDefense = defender.defense + (defender.boostedAttributes?.defense || 0);
+  
+  const attackWithFatigue = Math.max(1, attackerAttack - (attacker.fatigue || 0));
+  const damage = Math.max(1, attackWithFatigue - (defenderDefense * 0.5));
   
   return Math.floor(damage);
 };
@@ -135,11 +140,14 @@ export const incrementComboChain = (stats: HolobotStats): HolobotStats => {
 };
 
 export const generateArenaOpponent = (currentRound: number) => {
-  const holobotKeys = ['ace', 'kuma', 'shadow', 'era', 'nova'];
+  // Expand the pool of opponents for more variety
+  const holobotKeys = ['ace', 'kuma', 'shadow', 'era', 'ken', 'wolf', 'tsuin', 'hare', 'tora', 'wake', 'gama', 'kurai'];
   
+  // Use a more random selection method to avoid repeating opponents
   const randomIndex = Math.floor(Math.random() * holobotKeys.length);
   const holobotKey = holobotKeys[randomIndex];
   
+  // Scale level and other attributes based on round
   const baseLevel = Math.max(1, Math.min(50, Math.floor(currentRound * 1.5)));
   const attackMod = 1 + (currentRound * 0.1);
   const defenseMod = 1 + (currentRound * 0.05);
