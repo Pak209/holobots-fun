@@ -1,4 +1,3 @@
-
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
@@ -91,11 +90,10 @@ export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
     specialAttackThreshold: 5,
     syncPoints: 0,
     comboChain: 0, // Add combo chain tracking
-    maxComboChain: stats.intelligence > 5 ? 8 : 5 // Max combo based on intelligence
+    maxComboChain: stats.intelligence && stats.intelligence > 5 ? 8 : 5 // Max combo based on intelligence
   };
 };
 
-// Update holobot experience and level without changing the base stats
 export const updateHolobotExperience = (holobots, holobotName, newExperience, newLevel) => {
   if (!holobots || !Array.isArray(holobots)) {
     return [];
@@ -114,7 +112,6 @@ export const updateHolobotExperience = (holobots, holobotName, newExperience, ne
   });
 };
 
-// Reset combo chain after battle
 export const resetComboChain = (stats: HolobotStats): HolobotStats => {
   return {
     ...stats,
@@ -122,10 +119,9 @@ export const resetComboChain = (stats: HolobotStats): HolobotStats => {
   };
 };
 
-// Increment combo chain with intelligence-based limit
 export const incrementComboChain = (stats: HolobotStats): HolobotStats => {
-  const maxCombo = stats.intelligence > 5 ? 8 : 5;
-  let newComboChain = (stats.comboChain || 0) + 1;
+  const maxCombo = stats.intelligence && stats.intelligence > 5 ? 8 : 5;
+  let newComboChain = ((stats.comboChain || 0) + 1);
   
   // Reset if max reached
   if (newComboChain > maxCombo) {
@@ -138,16 +134,12 @@ export const incrementComboChain = (stats: HolobotStats): HolobotStats => {
   };
 };
 
-// Generate random arena opponents based on progress
 export const generateArenaOpponent = (currentRound: number) => {
-  // List of possible holobot keys
   const holobotKeys = ['ace', 'kuma', 'shadow', 'era', 'nova'];
   
-  // Randomly select a holobot
   const randomIndex = Math.floor(Math.random() * holobotKeys.length);
   const holobotKey = holobotKeys[randomIndex];
   
-  // Scale difficulty based on current round
   const baseLevel = Math.max(1, Math.min(50, Math.floor(currentRound * 1.5)));
   const attackMod = 1 + (currentRound * 0.1);
   const defenseMod = 1 + (currentRound * 0.05);
