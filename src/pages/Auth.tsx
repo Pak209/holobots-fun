@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,32 +12,10 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Simple session check without WebSocket subscriptions
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        setCheckingSession(true);
-        const { data } = await supabase.auth.getSession();
-        
-        if (data.session) {
-          // If user is logged in, redirect to dashboard
-          navigate('/dashboard');
-        } else {
-          setCheckingSession(false);
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-        setCheckingSession(false);
-      }
-    };
-    
-    checkSession();
-  }, [navigate]);
-
+  // Handle auth (sign up or sign in)
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -62,7 +40,7 @@ export default function Auth() {
           setIsSignUp(false);
         }
       } else {
-        // Handle sign in - simplified without username conversion
+        // Handle sign in
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -92,18 +70,6 @@ export default function Auth() {
       setLoading(false);
     }
   };
-
-  // Show loading indicator while checking session
-  if (checkingSession) {
-    return (
-      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
-        <div className="flex flex-col items-center justify-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-holobots-accent" />
-          <p className="text-holobots-text dark:text-holobots-dark-text">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">

@@ -5,7 +5,8 @@ import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
 import { Web3ReactHooks, initializeConnector } from '@web3-react/core';
 import { MetaMask } from '@web3-react/metamask';
 
-const projectId = 'YOUR_WALLETCONNECT_PROJECT_ID';
+// Use a placeholder or empty string instead of invalid project ID
+const projectId = '';
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [mainnet, polygon],
@@ -13,7 +14,7 @@ const { chains, publicClient, webSocketPublicClient } = configureChains(
 );
 
 export const wagmiConfig = createConfig({
-  autoConnect: true,
+  autoConnect: false, // Disable auto-connect to prevent WebSocket errors
   connectors: w3mConnectors({ 
     projectId,
     chains
