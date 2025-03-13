@@ -167,3 +167,19 @@ export function getRank(level: number): string {
     if (level >= 2) return "Starter";
     return "Rookie";
 }
+
+export const BLUEPRINT_TIERS = {
+    common: { level: 1, pieces: 5, name: "Common" },
+    champion: { level: 11, pieces: 10, name: "Champion" },
+    rare: { level: 21, pieces: 25, name: "Rare" },
+    elite: { level: 31, pieces: 50, name: "Elite" },
+    legendary: { level: 41, pieces: 100, name: "Legendary" }
+};
+
+export function getHighestPossibleTier(pieces: number): { tier: keyof typeof BLUEPRINT_TIERS, level: number } {
+    if (pieces >= BLUEPRINT_TIERS.legendary.pieces) return { tier: 'legendary', level: BLUEPRINT_TIERS.legendary.level };
+    if (pieces >= BLUEPRINT_TIERS.elite.pieces) return { tier: 'elite', level: BLUEPRINT_TIERS.elite.level };
+    if (pieces >= BLUEPRINT_TIERS.rare.pieces) return { tier: 'rare', level: BLUEPRINT_TIERS.rare.level };
+    if (pieces >= BLUEPRINT_TIERS.champion.pieces) return { tier: 'champion', level: BLUEPRINT_TIERS.champion.level };
+    return { tier: 'common', level: BLUEPRINT_TIERS.common.level };
+}
