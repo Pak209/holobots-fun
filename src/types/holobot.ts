@@ -1,25 +1,23 @@
+
 export interface HolobotStats {
     name: string;
+    maxHealth: number;
     attack: number;
     defense: number;
     speed: number;
-    hp?: number;
-    maxHealth?: number;
-    level?: number;
-    specialMove?: string;
-    intelligence?: number;
+    intelligence: number;
+    specialMove: string;
+    level: number;
+    experience?: number;
+    nextLevelExp?: number;
+    abilityDescription?: string;
+    abilityStats?: string;
     fatigue?: number;
     gasTokens?: number;
     hackUsed?: boolean;
     specialAttackGauge?: number;
     specialAttackThreshold?: number;
     syncPoints?: number;
-    comboChain?: number;
-    maxComboChain?: number;
-    experience?: number;
-    nextLevelExp?: number;
-    abilityDescription?: string;
-    abilityStats?: string;
 }
 
 export const HOLOBOT_STATS: Record<string, HolobotStats> = {
