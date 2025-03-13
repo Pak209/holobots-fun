@@ -8,7 +8,7 @@ import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotCard } from "@/components/HolobotCard";
 import { ExperienceBar } from "@/components/ExperienceBar";
 import { getExperienceProgress } from "@/utils/battleUtils";
-import { Gem, Ticket, Award } from "lucide-react";
+import { Gem, Award } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ArenaPrebattleMenuProps {
@@ -33,25 +33,26 @@ export const ArenaPrebattleMenu = ({
       
       // Auto-select the first holobot if available
       if (user.holobots.length > 0 && !selectedHolobot) {
-        setSelectedHolobot(user.holobots[0].key || user.holobots[0].name.toLowerCase());
+        const firstHolobot = user.holobots[0];
+        const holobotKey = getHolobotKeyByName(firstHolobot.name);
+        setSelectedHolobot(holobotKey);
+        onHolobotSelect(holobotKey); // Automatically notify parent of selection
       }
     }
-  }, [user, selectedHolobot]);
+  }, [user, selectedHolobot, onHolobotSelect]);
+
+  // Get the holobot key from HOLOBOT_STATS based on name
+  const getHolobotKeyByName = (name: string): string => {
+    const lowerName = name.toLowerCase();
+    const key = Object.keys(HOLOBOT_STATS).find(
+      k => HOLOBOT_STATS[k].name.toLowerCase() === lowerName
+    );
+    return key || Object.keys(HOLOBOT_STATS)[0]; // fallback to first holobot if not found
+  };
 
   const handleHolobotSelect = (holobotKey: string) => {
     setSelectedHolobot(holobotKey);
-  };
-
-  const handleConfirmSelection = () => {
-    if (!selectedHolobot) {
-      toast({
-        title: "No Holobot Selected",
-        description: "Please select a Holobot to enter the arena.",
-        variant: "destructive"
-      });
-      return;
-    }
-    onHolobotSelect(selectedHolobot);
+    onHolobotSelect(holobotKey); // Notify parent component about the selection
   };
 
   const handlePayWithTokens = () => {
@@ -89,7 +90,7 @@ export const ArenaPrebattleMenu = ({
             <div className="flex flex-wrap gap-2 justify-center p-1">
               {userHolobots.length > 0 ? (
                 userHolobots.map((holobot, index) => {
-                  const holobotKey = holobot.key || holobot.name.toLowerCase();
+                  const holobotKey = getHolobotKeyByName(holobot.name);
                   const isSelected = selectedHolobot === holobotKey;
                   const baseStats = HOLOBOT_STATS[holobotKey] || HOLOBOT_STATS.ace;
                   
@@ -106,7 +107,7 @@ export const ArenaPrebattleMenu = ({
                             level: holobot.level || 1,
                             name: holobot.name
                           }} 
-                          variant={isSelected ? "blue" : "gray"} 
+                          variant={isSelected ? "blue" : "blue"} // Always blue, varying the opacity instead
                         />
                         {isSelected && (
                           <ExperienceBar 
