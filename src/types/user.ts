@@ -30,6 +30,9 @@ export interface UserProfile {
   exp_boosters?: number;
   energy_refills?: number;
   rank_skips?: number;
+  blueprintPieces?: {
+    [key: string]: number;
+  };
 }
 
 export interface AuthState {
@@ -59,7 +62,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       arena_passes: dbProfile.arena_passes || 0,
       exp_boosters: dbProfile.exp_boosters || 0,
       energy_refills: dbProfile.energy_refills || 0,
-      rank_skips: dbProfile.rank_skips || 0
+      rank_skips: dbProfile.rank_skips || 0,
+      blueprintPieces: dbProfile.blueprint_pieces || { ace: 100 } // Adding 100 Ace pieces for testing
     };
   } else {
     // This is from the users table
@@ -80,7 +84,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       arena_passes: 0,
       exp_boosters: 0,
       energy_refills: 0,
-      rank_skips: 0
+      rank_skips: 0,
+      blueprintPieces: { ace: 100 } // Adding 100 Ace pieces for testing
     };
   }
 }
