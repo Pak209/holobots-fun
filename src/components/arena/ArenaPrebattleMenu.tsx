@@ -8,8 +8,14 @@ import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotCard } from "@/components/HolobotCard";
 import { ExperienceBar } from "@/components/ExperienceBar";
 import { getExperienceProgress } from "@/utils/battleUtils";
-import { Gem, Ticket, Award } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Gem, Award, ChevronLeft, ChevronRight } from "lucide-react";
+import { 
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious
+} from "@/components/ui/carousel";
 
 interface ArenaPrebattleMenuProps {
   onHolobotSelect: (holobotKey: string) => void;
@@ -33,25 +39,27 @@ export const ArenaPrebattleMenu = ({
       
       // Auto-select the first holobot if available
       if (user.holobots.length > 0 && !selectedHolobot) {
-        setSelectedHolobot(user.holobots[0].key || user.holobots[0].name.toLowerCase());
+        const firstHolobot = user.holobots[0];
+        const holobotKey = getHolobotKeyByName(firstHolobot.name);
+        setSelectedHolobot(holobotKey);
+        onHolobotSelect(holobotKey); // Automatically notify parent of selection
       }
     }
-  }, [user, selectedHolobot]);
+  }, [user, selectedHolobot, onHolobotSelect]);
 
-  const handleHolobotSelect = (holobotKey: string) => {
-    setSelectedHolobot(holobotKey);
+  // Get the holobot key from HOLOBOT_STATS based on name
+  const getHolobotKeyByName = (name: string): string => {
+    const lowerName = name.toLowerCase();
+    const key = Object.keys(HOLOBOT_STATS).find(
+      k => HOLOBOT_STATS[k].name.toLowerCase() === lowerName
+    );
+    return key || Object.keys(HOLOBOT_STATS)[0]; // fallback to first holobot if not found
   };
 
-  const handleConfirmSelection = () => {
-    if (!selectedHolobot) {
-      toast({
-        title: "No Holobot Selected",
-        description: "Please select a Holobot to enter the arena.",
-        variant: "destructive"
-      });
-      return;
-    }
-    onHolobotSelect(selectedHolobot);
+  const handleHolobotSelect = (holobotKey: string) => {
+    console.log("Selecting holobot:", holobotKey);
+    setSelectedHolobot(holobotKey);
+    onHolobotSelect(holobotKey); // Notify parent component about the selection
   };
 
   const handlePayWithTokens = () => {
@@ -84,47 +92,50 @@ export const ArenaPrebattleMenu = ({
         <CardTitle className="text-center text-xl text-white">Choose Your Champion</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="mb-4">
-          <ScrollArea className="h-60 rounded-md">
-            <div className="flex flex-wrap gap-2 justify-center p-1">
-              {userHolobots.length > 0 ? (
-                userHolobots.map((holobot, index) => {
-                  const holobotKey = holobot.key || holobot.name.toLowerCase();
+        <div className="mb-4 relative">
+          {userHolobots.length > 0 ? (
+            <Carousel className="w-full">
+              <CarouselContent className="px-2">
+                {userHolobots.map((holobot, index) => {
+                  const holobotKey = getHolobotKeyByName(holobot.name);
                   const isSelected = selectedHolobot === holobotKey;
                   const baseStats = HOLOBOT_STATS[holobotKey] || HOLOBOT_STATS.ace;
                   
                   return (
-                    <div 
-                      key={index} 
-                      className={`cursor-pointer transition-all duration-200 transform ${isSelected ? 'scale-105 ring-2 ring-holobots-accent' : 'opacity-70 hover:opacity-100'}`}
-                      onClick={() => handleHolobotSelect(holobotKey)}
-                    >
-                      <div className="w-[120px] sm:w-[150px]">
-                        <HolobotCard 
-                          stats={{
-                            ...baseStats,
-                            level: holobot.level || 1,
-                            name: holobot.name
-                          }} 
-                          variant={isSelected ? "blue" : "gray"} 
-                        />
-                        {isSelected && (
-                          <ExperienceBar 
-                            {...getExperienceProgress(holobot.experience || 0, holobot.level || 1)}
-                            level={holobot.level || 1}
+                    <CarouselItem key={index} className="basis-1/3 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 pl-1 pr-1">
+                      <div 
+                        className={`cursor-pointer transition-all duration-200 transform ${isSelected ? 'scale-105 ring-2 ring-holobots-accent' : 'opacity-70 hover:opacity-100'}`}
+                        onClick={() => handleHolobotSelect(holobotKey)}
+                      >
+                        <div className="w-full">
+                          <HolobotCard 
+                            stats={{
+                              ...baseStats,
+                              level: holobot.level || 1,
+                              name: holobot.name
+                            }} 
+                            variant={isSelected ? "blue" : "blue"} // Always blue, varying the opacity instead
                           />
-                        )}
+                          {isSelected && (
+                            <ExperienceBar 
+                              {...getExperienceProgress(holobot.experience || 0, holobot.level || 1)}
+                              level={holobot.level || 1}
+                            />
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    </CarouselItem>
                   );
-                })
-              ) : (
-                <div className="text-center p-4 text-gray-400">
-                  You don't have any Holobots yet. Visit the Gacha page to get some!
-                </div>
-              )}
+                })}
+              </CarouselContent>
+              <CarouselPrevious className="left-0 bg-holobots-accent hover:bg-holobots-hover text-white" />
+              <CarouselNext className="right-0 bg-holobots-accent hover:bg-holobots-hover text-white" />
+            </Carousel>
+          ) : (
+            <div className="text-center p-4 text-gray-400">
+              You don't have any Holobots yet. Visit the Gacha page to get some!
             </div>
-          </ScrollArea>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 w-full mt-4">

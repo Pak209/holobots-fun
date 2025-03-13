@@ -1,4 +1,3 @@
-
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,8 +22,13 @@ const Index = () => {
 
   // Generate a new opponent when the round changes
   useEffect(() => {
-    setCurrentOpponent(generateArenaOpponent(currentRound));
-  }, [currentRound]);
+    let newOpponent;
+    do {
+      newOpponent = generateArenaOpponent(currentRound);
+    } while (newOpponent.name === currentOpponent.name);
+    
+    setCurrentOpponent(newOpponent);
+  }, [currentRound, currentOpponent.name]);
 
   const payEntryFee = async () => {
     try {
@@ -85,6 +89,7 @@ const Index = () => {
   };
 
   const handleHolobotSelect = (holobotKey: string) => {
+    console.log("Selected holobot:", holobotKey);
     setSelectedHolobot(holobotKey);
   };
 
@@ -158,7 +163,6 @@ const Index = () => {
       setVictories(prev => prev + 1);
       if (currentRound < maxRounds) {
         setCurrentRound(prev => prev + 1);
-        setCurrentOpponent(generateArenaOpponent(currentRound + 1));
       } else {
         distributeRewards();
         setCurrentRound(1);
