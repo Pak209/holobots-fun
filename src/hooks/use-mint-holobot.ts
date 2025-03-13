@@ -5,20 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { UserHolobot } from "@/types/user";
 import { HOLOBOT_STATS } from "@/types/holobot";
 
-export interface MintTier {
-  level: number;
-  piecesRequired: number;
-  rankName: string;
-}
-
-export const MINT_TIERS: Record<string, MintTier> = {
-  common: { level: 1, piecesRequired: 5, rankName: "Common" },
-  champion: { level: 11, piecesRequired: 10, rankName: "Champion" },
-  rare: { level: 21, piecesRequired: 25, rankName: "Rare" },
-  elite: { level: 31, piecesRequired: 50, rankName: "Elite" },
-  legendary: { level: 41, piecesRequired: 100, rankName: "Legendary" }
-};
-
 export const useMintHolobot = () => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
@@ -36,31 +22,8 @@ export const useMintHolobot = () => {
   }, [justMinted]);
 
   // Handle minting a new holobot
-  const handleMintHolobot = async (holobotName: string, tier: string = "common") => {
+  const handleMintHolobot = async (holobotName: string) => {
     if (!user) return;
-    
-    const selectedTier = MINT_TIERS[tier];
-    if (!selectedTier) {
-      toast({
-        title: "Invalid Tier",
-        description: "The selected tier is not valid.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Check if user has enough blueprint pieces
-    const blueprintKey = holobotName.toLowerCase();
-    const userPieces = user.blueprintPieces?.[blueprintKey] || 0;
-    
-    if (userPieces < selectedTier.piecesRequired) {
-      toast({
-        title: "Insufficient Blueprint Pieces",
-        description: `You need ${selectedTier.piecesRequired} ${holobotName} blueprint pieces to mint this tier.`,
-        variant: "destructive"
-      });
-      return;
-    }
     
     // Check if user has enough tokens
     if (user.holosTokens < 100) {
@@ -79,32 +42,27 @@ export const useMintHolobot = () => {
       const baseStats = HOLOBOT_STATS[holobotName.toLowerCase()];
       const newHolobot: UserHolobot = {
         name: baseStats.name,
-        level: selectedTier.level,
+        level: 1,
         experience: 0,
         nextLevelExp: 100,
         boostedAttributes: {}
       };
       
-      // Add to user's holobots and deduct tokens and blueprint pieces
+      // Add to user's holobots and deduct tokens
       const updatedHolobots = [...user.holobots, newHolobot];
       const updatedHolosTokens = user.holosTokens - 100;
       
-      // Update blueprint pieces
-      const updatedBlueprintPieces = { ...(user.blueprintPieces || {}) };
-      updatedBlueprintPieces[blueprintKey] = userPieces - selectedTier.piecesRequired;
-      
       await updateUser({
         holobots: updatedHolobots,
-        holosTokens: updatedHolosTokens,
-        blueprintPieces: updatedBlueprintPieces
+        holosTokens: updatedHolosTokens
       });
       
       // Set justMinted to display immediate feedback
       setJustMinted(holobotName);
       
       toast({
-        title: `${selectedTier.rankName} Holobot Minted!`,
-        description: `Level ${selectedTier.level} ${holobotName} has been added to your collection.`,
+        title: "Holobot Minted!",
+        description: `${holobotName} has been added to your collection.`,
       });
     } catch (error) {
       toast({
