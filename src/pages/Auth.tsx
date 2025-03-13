@@ -133,6 +133,9 @@ export default function Auth() {
           description: "Redirecting you to the dashboard",
         });
 
+        // Ensure loading is false before redirect
+        setLoading(false);
+
         // Check if the user has holobots before redirecting
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -153,6 +156,7 @@ export default function Auth() {
         } else {
           navigate('/mint');
         }
+        return; // Exit early after successful navigation
       }
     } catch (error) {
       console.error('Auth error:', error);
@@ -162,7 +166,7 @@ export default function Auth() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setLoading(false); // Ensure loading state is reset even on error
     }
   };
 
