@@ -17,8 +17,8 @@ export const supabase = createClient<Database>(
       detectSessionInUrl: false // Disable auto detection to prevent redirect issues
     },
     realtime: {
-      // Completely disable real-time features to prevent WebSocket errors
-      enable: false
+      // Use correct property to disable realtime features
+      enabled: false
     }
   }
 );

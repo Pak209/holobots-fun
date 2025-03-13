@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
@@ -38,8 +37,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      // If user exists but has 0 tokens, give them 500 tokens
-      if (profile && profile.holos_tokens === 0) {
+      // Fix: Check if profile is not null and has the holos_tokens property
+      if (profile && 'holos_tokens' in profile && profile.holos_tokens === 0) {
         console.log("Giving welcome gift of 500 Holos tokens to new user");
         
         const { error: updateError } = await supabase
