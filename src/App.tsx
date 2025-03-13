@@ -39,7 +39,7 @@ const wallets = [
 
 function App() {
   return (
-    <Web3ReactProvider connectors={web3Connectors as any}>
+    <Web3ReactProvider connectors={web3Connectors as any} key="web3-react-provider">
       <WagmiConfig config={wagmiConfig}>
         <ConnectionProvider endpoint="https://api.mainnet-beta.solana.com">
           <WalletProvider wallets={wallets} autoConnect={false}>

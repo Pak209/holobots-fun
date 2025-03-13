@@ -23,42 +23,39 @@ export default function Auth() {
     try {
       if (isSignUp) {
         // Handle sign up
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
         });
 
         if (signUpError) throw signUpError;
 
-        if (signUpData.user) {
-          toast({
-            title: "Account created!",
-            description: "You can now sign in with your credentials.",
-          });
-          
-          // Switch to sign in view after successful signup
-          setIsSignUp(false);
-        }
-      } else {
-        // Handle sign in
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
-          console.error("Login error:", error);
-          throw error;
-        }
-
         toast({
-          title: "Login successful",
-          description: "Redirecting you to the dashboard",
+          title: "Account created!",
+          description: "Please check your email to verify your account, then sign in.",
         });
+        
+        // Switch to sign in view after successful signup
+        setIsSignUp(false);
+        setLoading(false);
+        return;
+      } 
+      
+      // Handle sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-        // Redirect directly to dashboard after login
-        navigate('/dashboard');
-      }
+      if (signInError) throw signInError;
+
+      toast({
+        title: "Login successful",
+        description: "Redirecting you to the dashboard",
+      });
+
+      // Redirect to dashboard after login
+      navigate('/dashboard');
     } catch (error) {
       console.error('Auth error:', error);
       toast({
@@ -73,19 +70,19 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-holobots-text dark:text-holobots-dark-text">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {isSignUp ? "Create Account" : "Welcome Back"}
           </h1>
-          <p className="text-holobots-text/60 dark:text-holobots-dark-text/60">
+          <p className="text-gray-600 dark:text-gray-400">
             {isSignUp ? "Sign up to start your journey" : "Sign in to continue"}
           </p>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
             <Input
               type="email"
               value={email}
@@ -98,7 +95,7 @@ export default function Auth() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
             <Input
               type="password"
               value={password}
@@ -113,7 +110,7 @@ export default function Auth() {
 
           <Button
             type="submit"
-            className="w-full bg-holobots-accent hover:bg-holobots-hover"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md"
             disabled={loading}
           >
             {loading ? (
@@ -129,7 +126,7 @@ export default function Auth() {
           <Button
             variant="link"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-holobots-accent hover:text-holobots-hover"
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
             disabled={loading}
           >
             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}

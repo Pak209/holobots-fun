@@ -5,22 +5,26 @@ import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
 import { Web3ReactHooks, initializeConnector } from '@web3-react/core';
 import { MetaMask } from '@web3-react/metamask';
 
-// Use a placeholder or empty string instead of invalid project ID
+// Use empty string for project ID to avoid any connections
 const projectId = '';
 
-const { chains, publicClient, webSocketPublicClient } = configureChains(
+// Configure chains with transport: http to avoid WebSockets
+const { chains, publicClient } = configureChains(
   [mainnet, polygon],
-  [w3mProvider({ projectId })]
+  [w3mProvider({ projectId })],
+  { 
+    pollingInterval: 10000, // Use polling instead of WebSockets
+  }
 );
 
 export const wagmiConfig = createConfig({
-  autoConnect: false, // Disable auto-connect to prevent WebSocket errors
+  autoConnect: false,
   connectors: w3mConnectors({ 
     projectId,
     chains
   }),
   publicClient,
-  webSocketPublicClient,
+  // Remove webSocketPublicClient to avoid WebSocket connections
 });
 
 export const ethereumClient = new EthereumClient(wagmiConfig, chains);
@@ -30,6 +34,7 @@ const [metaMask, metaMaskHooks] = initializeConnector<MetaMask>(
   (actions) => new MetaMask({ actions })
 );
 
-export const web3Connectors: [MetaMask, Web3ReactHooks][] = [
-  [metaMask, metaMaskHooks],
+// Export connectors as a constant to make them referentially static
+export const web3Connectors = [
+  [metaMask, metaMaskHooks]
 ];
