@@ -85,7 +85,6 @@ const Index = () => {
   };
 
   const handleHolobotSelect = (holobotKey: string) => {
-    console.log("Selected holobot:", holobotKey);
     setSelectedHolobot(holobotKey);
   };
 
