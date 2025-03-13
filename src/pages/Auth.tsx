@@ -17,10 +17,11 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if user is already logged in
+  // Check if user is already logged in - simplified to avoid WebSocket connections
   useEffect(() => {
     const checkSession = async () => {
       try {
+        // Use getSession instead of any real-time subscription
         const { data } = await supabase.auth.getSession();
         
         if (data.session) {
@@ -64,7 +65,7 @@ export default function Auth() {
         // Switch to login mode after successful signup
         setIsSignUp(false);
       } else {
-        // Login flow
+        // Login flow - simplified to just use email/password
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -77,6 +78,7 @@ export default function Auth() {
           description: "Redirecting to dashboard",
         });
 
+        // Direct navigation without any additional checks that might cause WebSocket connections
         navigate('/dashboard');
       }
     } catch (error) {
