@@ -1,3 +1,4 @@
+
 export interface UserHolobot {
   name: string;
   level: number;
@@ -29,7 +30,6 @@ export interface UserProfile {
   exp_boosters?: number;
   energy_refills?: number;
   rank_skips?: number;
-  blueprintPieces?: Record<string, number>; // Add blueprint pieces tracking
 }
 
 export interface AuthState {
@@ -38,6 +38,7 @@ export interface AuthState {
   error: string | null;
 }
 
+// Add database profile mapping helper
 export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
   if (dbProfile.username) {
     // This is from the profiles table
@@ -58,8 +59,7 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       arena_passes: dbProfile.arena_passes || 0,
       exp_boosters: dbProfile.exp_boosters || 0,
       energy_refills: dbProfile.energy_refills || 0,
-      rank_skips: dbProfile.rank_skips || 0,
-      blueprintPieces: dbProfile.blueprint_pieces || {}
+      rank_skips: dbProfile.rank_skips || 0
     };
   } else {
     // This is from the users table
@@ -80,8 +80,7 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       arena_passes: 0,
       exp_boosters: 0,
       energy_refills: 0,
-      rank_skips: 0,
-      blueprintPieces: {}
+      rank_skips: 0
     };
   }
 }

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { UserHolobot } from "@/types/user";
-import { HOLOBOT_STATS, BLUEPRINT_TIERS } from "@/types/holobot";
+import { HOLOBOT_STATS } from "@/types/holobot";
 
 export const useMintHolobot = () => {
   const { user, updateUser } = useAuth();
@@ -21,8 +21,8 @@ export const useMintHolobot = () => {
     }
   }, [justMinted]);
 
-  // Handle minting a new holobot, optionally with a specific level from blueprint
-  const handleMintHolobot = async (holobotName: string, level?: number) => {
+  // Handle minting a new holobot
+  const handleMintHolobot = async (holobotName: string) => {
     if (!user) return;
     
     // Check if user has enough tokens
@@ -40,40 +40,21 @@ export const useMintHolobot = () => {
     try {
       // Create a new holobot
       const baseStats = HOLOBOT_STATS[holobotName.toLowerCase()];
-      const holobotKey = holobotName.toLowerCase();
-      
       const newHolobot: UserHolobot = {
         name: baseStats.name,
-        level: level || 1, // Use provided level or default to 1
+        level: 1,
         experience: 0,
-        nextLevelExp: level ? Math.floor(100 * Math.pow(level, 2)) : 100, // Scale next level experience
+        nextLevelExp: 100,
         boostedAttributes: {}
       };
       
-      // Calculate blueprint pieces needed if level is provided
-      let blueprintPiecesConsumed = 0;
-      if (level) {
-        // Find which tier this level corresponds to
-        const tier = Object.values(BLUEPRINT_TIERS).find(t => t.level === level);
-        if (tier) {
-          blueprintPiecesConsumed = tier.pieces;
-        }
-      }
-      
-      // Add to user's holobots and deduct tokens and blueprint pieces if used
+      // Add to user's holobots and deduct tokens
       const updatedHolobots = [...user.holobots, newHolobot];
       const updatedHolosTokens = user.holosTokens - 100;
       
-      // Update blueprint pieces if any were used
-      let updatedBlueprintPieces = { ...(user.blueprintPieces || {}) };
-      if (blueprintPiecesConsumed > 0) {
-        updatedBlueprintPieces[holobotKey] = Math.max(0, (updatedBlueprintPieces[holobotKey] || 0) - blueprintPiecesConsumed);
-      }
-      
       await updateUser({
         holobots: updatedHolobots,
-        holosTokens: updatedHolosTokens,
-        blueprintPieces: updatedBlueprintPieces
+        holosTokens: updatedHolosTokens
       });
       
       // Set justMinted to display immediate feedback
@@ -81,9 +62,7 @@ export const useMintHolobot = () => {
       
       toast({
         title: "Holobot Minted!",
-        description: level ? 
-          `Level ${level} ${holobotName} has been added to your collection using blueprints.` : 
-          `${holobotName} has been added to your collection.`,
+        description: `${holobotName} has been added to your collection.`,
       });
     } catch (error) {
       toast({

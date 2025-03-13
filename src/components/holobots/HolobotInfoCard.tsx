@@ -1,16 +1,13 @@
 
 import { useState } from "react";
 import { HolobotCard } from "@/components/HolobotCard";
-import { HOLOBOT_STATS, getRank, BLUEPRINT_TIERS, getHighestPossibleTier } from "@/types/holobot";
+import { HOLOBOT_STATS, getRank } from "@/types/holobot";
 import { Button } from "@/components/ui/button";
-import { Coins, Plus, Sparkles } from "lucide-react";
+import { Coins, Plus } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { UserHolobot } from "@/types/user";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 
 interface HolobotInfoCardProps {
   holobotKey: string;
@@ -19,7 +16,7 @@ interface HolobotInfoCardProps {
   userTokens: number;
   isMinting: boolean;
   justMinted: boolean;
-  onMint: (holobotName: string, level?: number) => void;
+  onMint: (holobotName: string) => void;
 }
 
 export const HolobotInfoCard = ({
@@ -38,19 +35,12 @@ export const HolobotInfoCard = ({
   
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
-  const [selectedTier, setSelectedTier] = useState<keyof typeof BLUEPRINT_TIERS>('common');
   
   const calculateProgress = (current: number, total: number) => {
     return Math.min(100, Math.floor((current / total) * 100));
   };
   
   const xpProgress = calculateProgress(currentXp, nextLevelXp);
-
-  // Get available blueprint pieces for this holobot
-  const blueprintPieces = user?.blueprintPieces?.[holobotKey.toLowerCase()] || 0;
-  
-  // Get highest possible tier with current pieces
-  const highestPossibleTier = getHighestPossibleTier(blueprintPieces);
 
   const handleBoostAttribute = async (attribute: 'attack' | 'defense' | 'speed' | 'health') => {
     if (!isOwned || !user) return;
@@ -97,12 +87,6 @@ export const HolobotInfoCard = ({
         variant: "destructive"
       });
     }
-  };
-
-  const handleMintWithTier = () => {
-    // Get the level from the selected tier
-    const level = BLUEPRINT_TIERS[selectedTier].level;
-    onMint(holobot.name, level);
   };
 
   return (
@@ -153,81 +137,22 @@ export const HolobotInfoCard = ({
           
           <div className="mt-1.5 pt-1 border-t border-holobots-border dark:border-holobots-dark-border">
             {!isOwned && !justMinted && (
-              <>
-                {/* Blueprint pieces counter */}
-                <div className="mb-2 text-center">
-                  <span className="text-xs">Blueprint Pieces: </span>
-                  <span className="text-sm font-bold text-yellow-400">{blueprintPieces}</span>
-                </div>
-                
-                {/* Blueprint mint button with tier selection */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button 
-                      disabled={isMinting || userTokens < 100 || blueprintPieces < 5}
-                      className="w-full py-0 h-6 text-xs bg-holobots-accent hover:bg-holobots-accent/80 text-black font-semibold"
-                    >
-                      {isMinting ? (
-                        "Minting..."
-                      ) : (
-                        <>
-                          <Sparkles size={10} className="mr-0.5" />
-                          Mint with Blueprints
-                        </>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-72 p-3 bg-black/80 border border-holobots-accent">
-                    <div className="space-y-3">
-                      <h3 className="text-sm font-bold text-holobots-accent">Select Mint Tier</h3>
-                      <RadioGroup value={selectedTier} onValueChange={(value) => setSelectedTier(value as keyof typeof BLUEPRINT_TIERS)}>
-                        {Object.entries(BLUEPRINT_TIERS).map(([key, tier]) => (
-                          <div key={key} className={`flex items-center space-x-2 p-1.5 rounded ${blueprintPieces >= tier.pieces ? 'opacity-100' : 'opacity-50'}`}>
-                            <RadioGroupItem value={key} id={key} disabled={blueprintPieces < tier.pieces || isMinting} />
-                            <Label htmlFor={key} className={`text-xs cursor-pointer flex-1 ${blueprintPieces >= tier.pieces ? 'text-white' : 'text-gray-500'}`}>
-                              {tier.name} (Lv. {tier.level})
-                            </Label>
-                            <span className={`text-xs ${blueprintPieces >= tier.pieces ? 'text-yellow-400' : 'text-gray-500'}`}>
-                              {tier.pieces} pieces
-                            </span>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                      <div className="flex justify-between items-center pt-2 border-t border-holobots-border">
-                        <div className="text-xs">
-                          <span>Cost: </span>
-                          <span className="text-yellow-400">100 HOLOS</span>
-                        </div>
-                        <Button 
-                          onClick={handleMintWithTier}
-                          disabled={isMinting || userTokens < 100 || blueprintPieces < BLUEPRINT_TIERS[selectedTier].pieces}
-                          className="py-0 h-6 text-xs bg-holobots-accent hover:bg-holobots-accent/80 text-black font-semibold"
-                        >
-                          {isMinting ? "Minting..." : "Mint Holobot"}
-                        </Button>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-                
-                {/* Regular mint button without blueprints */}
-                <Button 
-                  onClick={() => onMint(holobot.name)}
-                  disabled={isMinting || userTokens < 100}
-                  className="w-full py-0 h-6 text-xs bg-slate-600 hover:bg-slate-500 text-white font-semibold mt-1"
-                >
-                  {isMinting ? (
-                    "Minting..."
-                  ) : (
-                    <>
-                      <Plus size={10} className="mr-0.5" />
-                      Regular Mint
-                      <Coins size={10} className="ml-0.5 mr-0.5" />
-                      <span>100</span>
-                    </>
-                  )}
-                </Button>
-              </>
+              <Button 
+                onClick={() => onMint(holobot.name)}
+                disabled={isMinting || userTokens < 100}
+                className="w-full py-0 h-6 text-xs bg-holobots-accent hover:bg-holobots-accent/80 text-black font-semibold"
+              >
+                {isMinting ? (
+                  "Minting..."
+                ) : (
+                  <>
+                    <Plus size={10} className="mr-0.5" />
+                    Mint
+                    <Coins size={10} className="ml-0.5 mr-0.5" />
+                    <span>100</span>
+                  </>
+                )}
+              </Button>
             )}
             
             {justMinted && (
