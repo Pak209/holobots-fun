@@ -1,3 +1,4 @@
+
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
@@ -11,8 +12,15 @@ export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) 
     return 0;
   }
 
-  const attackWithFatigue = Math.max(1, attacker.attack - (attacker.fatigue || 0));
-  const damage = Math.max(1, attackWithFatigue - (defender.defense * 0.5));
+  // Apply boosted attributes to attack
+  const boostedAttack = attacker.boostedAttributes?.attack || 0;
+  const attackWithFatigue = Math.max(1, (attacker.attack + boostedAttack) - (attacker.fatigue || 0));
+  
+  // Apply boosted attributes to defense
+  const boostedDefense = defender.boostedAttributes?.defense || 0;
+  const defense = defender.defense + boostedDefense;
+  
+  const damage = Math.max(1, attackWithFatigue - (defense * 0.5));
   
   return Math.floor(damage);
 };
@@ -90,7 +98,8 @@ export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
     specialAttackThreshold: 5,
     syncPoints: 0,
     comboChain: 0, // Add combo chain tracking
-    maxComboChain: stats.intelligence && stats.intelligence > 5 ? 8 : 5 // Max combo based on intelligence
+    maxComboChain: stats.intelligence && stats.intelligence > 5 ? 8 : 5, // Max combo based on intelligence
+    boostedAttributes: stats.boostedAttributes || {}
   };
 };
 

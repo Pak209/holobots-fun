@@ -37,8 +37,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      // Fix: Check if profile is not null and has the holos_tokens property
-      if (profile && 'holos_tokens' in profile && profile.holos_tokens === 0) {
+      // If user exists but has 0 tokens, give them 500 tokens
+      if (profile && profile.holos_tokens === 0) {
         console.log("Giving welcome gift of 500 Holos tokens to new user");
         
         const { error: updateError } = await supabase
@@ -72,16 +72,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       
       try {
-        // Use getSession instead of subscription
-        const { data } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (data.session?.user) {
-          console.log("Found session with user:", data.session.user.id);
-          
+        if (session?.user) {
+          console.log("Found session with user:", session.user.id);
+          // Use maybeSingle to get profile
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', data.session.user.id as any)
+            .eq('id', session.user.id as any)
             .maybeSingle();
           
           if (profileError) {
@@ -92,11 +91,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Successfully found profile
             console.log("Found user profile:", profile);
             const mappedProfile = mapDatabaseToUserProfile(profile);
+            console.log("Mapped profile:", mappedProfile);
             setCurrentUser(mappedProfile);
             
             // Ensure new users get their welcome gift of 500 Holos tokens
-            await ensureWelcomeGift(data.session.user.id);
+            await ensureWelcomeGift(session.user.id);
           } else {
+            // User in auth but not in profiles (rare case)
             console.log("User exists in auth but not in profiles");
             setCurrentUser(null);
           }
@@ -115,32 +116,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     checkUser();
     
-    // Set up an event listener for sign in/out
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id as any)
-            .maybeSingle();
+        // Use maybeSingle to get profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id as any)
+          .maybeSingle();
         
-          if (profileError) {
-            console.error("Error fetching profile:", profileError);
-            setCurrentUser(null);
-            setError(profileError.message);
-          } else if (profile) {
-            console.log("Setting user from auth state change:", profile);
-            const mappedProfile = mapDatabaseToUserProfile(profile);
-            setCurrentUser(mappedProfile);
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          setCurrentUser(null);
+          setError(profileError.message);
+        } else if (profile) {
+          console.log("Setting user from auth state change:", profile);
+          const mappedProfile = mapDatabaseToUserProfile(profile);
+          setCurrentUser(mappedProfile);
           
-            // Ensure new users get their welcome gift of 500 Holos tokens
-            await ensureWelcomeGift(session.user.id);
-          }
-        } catch (err) {
-          console.error("Error handling sign-in:", err);
+          // Ensure new users get their welcome gift of 500 Holos tokens
+          await ensureWelcomeGift(session.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
         setCurrentUser(null);
@@ -152,13 +149,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Simple login function without error-prone real-time subscriptions
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
       });
@@ -171,8 +167,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         title: "Login Successful",
         description: "You have been logged in",
       });
-      
-      return;
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Login failed");
@@ -223,7 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
