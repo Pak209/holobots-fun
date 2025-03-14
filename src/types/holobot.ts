@@ -1,3 +1,4 @@
+
 export interface HolobotStats {
     name: string;
     attack: number;
@@ -20,6 +21,12 @@ export interface HolobotStats {
     nextLevelExp?: number;
     abilityDescription?: string;
     abilityStats?: string;
+    boostedAttributes?: {
+        attack?: number;
+        defense?: number;
+        speed?: number;
+        health?: number;
+    };
 }
 
 export const HOLOBOT_STATS: Record<string, HolobotStats> = {
