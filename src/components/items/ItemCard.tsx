@@ -16,6 +16,7 @@ const itemCardVariants = cva(
         "energy-refill": "bg-gradient-to-br from-blue-900/60 to-blue-950/90 border-blue-500 shadow-neon-blue hover:shadow-neon-blue/50", 
         "exp-booster": "bg-gradient-to-br from-green-900/60 to-green-950/90 border-green-500 shadow-neon-green hover:shadow-neon-green/50",
         "rank-skip": "bg-gradient-to-br from-red-900/60 to-red-950/90 border-red-500 shadow-neon-red hover:shadow-neon-red/50",
+        "attribute-boost": "bg-gradient-to-br from-orange-900/60 to-orange-950/90 border-orange-500 shadow-neon-orange hover:shadow-neon-orange/50",
       },
     },
     defaultVariants: {
@@ -29,11 +30,12 @@ export interface ItemCardProps extends VariantProps<typeof itemCardVariants> {
   name: string;
   description: string;
   quantity: number;
-  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip";
+  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost";
   onClick?: () => void;
   actionLabel?: string;
   disabled?: boolean;
   isLoading?: boolean;
+  attribute?: string;
 }
 
 export const ItemCard = ({
@@ -45,6 +47,7 @@ export const ItemCard = ({
   actionLabel,
   disabled = false,
   isLoading = false,
+  attribute,
 }: ItemCardProps) => {
   return (
     <div className={cn(itemCardVariants({ type }))}>
@@ -63,6 +66,11 @@ export const ItemCard = ({
           </div>
           
           <p className="text-xs text-gray-300">{description}</p>
+          {attribute && (
+            <p className="text-xs text-orange-300 mt-1">
+              Boosts {attribute}
+            </p>
+          )}
         </div>
       </div>
       
