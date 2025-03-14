@@ -3,10 +3,9 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { Web3Modal } from '@web3modal/react';
 import { WagmiConfig } from 'wagmi';
 import { Web3ReactProvider } from '@web3-react/core';
-import { wagmiConfig, ethereumClient, web3Connectors } from '@/lib/web3Config';
+import { wagmiConfig, web3Connectors } from '@/lib/web3Config';
 import {
   ConnectionProvider,
   WalletProvider
@@ -40,10 +39,10 @@ const wallets = [
 
 function App() {
   return (
-    <Web3ReactProvider connectors={web3Connectors as any}>
+    <Web3ReactProvider connectors={web3Connectors as any} key="web3-react-provider">
       <WagmiConfig config={wagmiConfig}>
         <ConnectionProvider endpoint="https://api.mainnet-beta.solana.com">
-          <WalletProvider wallets={wallets} autoConnect>
+          <WalletProvider wallets={wallets} autoConnect={false}>
             <ThemeProvider defaultTheme="dark" enableSystem>
               <Router>
                 <AuthProvider>
@@ -72,7 +71,7 @@ function App() {
           </WalletProvider>
         </ConnectionProvider>
       </WagmiConfig>
-      <Web3Modal projectId="YOUR_WALLETCONNECT_PROJECT_ID" ethereumClient={ethereumClient} />
+      {/* Removed Web3Modal to prevent errors */}
     </Web3ReactProvider>
   );
 }

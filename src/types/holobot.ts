@@ -17,16 +17,10 @@ export interface HolobotStats {
     syncPoints?: number;
     comboChain?: number;
     maxComboChain?: number;
-    experience?: number;
-    nextLevelExp?: number;
     abilityDescription?: string;
     abilityStats?: string;
-    boostedAttributes?: {
-        attack?: number;
-        defense?: number;
-        speed?: number;
-        health?: number;
-    };
+    experience?: number;
+    nextLevelExp?: number;
 }
 
 export const HOLOBOT_STATS: Record<string, HolobotStats> = {
