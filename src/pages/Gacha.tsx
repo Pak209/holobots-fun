@@ -14,17 +14,13 @@ interface GachaItem {
   name: string;
   rarity: "common" | "rare" | "extremely-rare";
   chance: number;
-  type: "energy-refill" | "exp-booster" | "rank-skip" | "arena-pass" | "gacha-ticket" | "attribute-boost";
-  attribute?: "attack" | "defense" | "speed" | "health"; // For attribute boosts
 }
 
 const ITEMS: GachaItem[] = [
-  { name: "Daily Energy Refill", rarity: "common", chance: 0.50, type: "energy-refill" },
-  { name: "Exp Battle Booster", rarity: "rare", chance: 0.10, type: "exp-booster" },
-  { name: "Attack Boost", rarity: "rare", chance: 0.15, type: "attribute-boost", attribute: "attack" },
-  { name: "Defense Boost", rarity: "rare", chance: 0.15, type: "attribute-boost", attribute: "defense" },
-  { name: "Speed Boost", rarity: "rare", chance: 0.075, type: "attribute-boost", attribute: "speed" },
-  { name: "Rank Skip", rarity: "extremely-rare", chance: 0.025, type: "rank-skip" }
+  { name: "Daily Energy Refill", rarity: "common", chance: 0.597 },
+  { name: "Exp Battle Booster", rarity: "rare", chance: 0.1015 },
+  { name: "Temporary Attribute Boost", rarity: "rare", chance: 0.1015 },
+  { name: "Rank Skip", rarity: "extremely-rare", chance: 0.002 }
 ];
 
 const SINGLE_PULL_COST = 50;
@@ -41,13 +37,14 @@ export default function Gacha() {
   const { toast } = useToast();
 
   const isDailyPullAvailable = 
-    !user?.lastEnergyRefresh || 
-    (user?.holobots?.length > 0 && 
-     new Date(user.lastEnergyRefresh).getTime() + (DAILY_COOLDOWN_HOURS * 60 * 60 * 1000) < Date.now());
+    !user.lastEnergyRefresh || 
+    (user.holobots.length > 0 && 
+     (!user.lastEnergyRefresh || 
+      new Date(user.lastEnergyRefresh).getTime() + (DAILY_COOLDOWN_HOURS * 60 * 60 * 1000) < Date.now()));
 
   useEffect(() => {
     const updateCooldown = () => {
-      if (!user?.lastEnergyRefresh) {
+      if (!user.lastEnergyRefresh) {
         setTimeUntilNextDailyPull(null);
         setCooldownProgress(100);
         return;
@@ -74,13 +71,13 @@ export default function Gacha() {
     const interval = setInterval(updateCooldown, 60000);
     
     return () => clearInterval(interval);
-  }, [user?.lastEnergyRefresh]);
+  }, [user.lastEnergyRefresh]);
 
-  const pullGacha = async (amount: number, isPaidPull: boolean = true) => {
+  const pullGacha = (amount: number, isPaidPull: boolean = true) => {
     if (isPaidPull) {
       const cost = amount === 1 ? SINGLE_PULL_COST : MULTI_PULL_COST;
       
-      if (!user || user.holosTokens < cost) {
+      if (user.holosTokens < cost) {
         toast({
           title: "Insufficient Holos",
           description: `You need ${cost} Holos tokens to perform this pull.`,
@@ -88,22 +85,9 @@ export default function Gacha() {
         });
         return;
       }
-      
-      // Deduct tokens BEFORE the pull
-      try {
-        await updateUser({ holosTokens: user.holosTokens - cost });
-      } catch (error) {
-        console.error("Error deducting tokens:", error);
-        toast({
-          title: "Error",
-          description: "Failed to deduct tokens. Please try again.",
-          variant: "destructive"
-        });
-        return;
-      }
     } else {
       if (!isDailyPullAvailable) {
-        if (user?.holobots?.length === 0) {
+        if (user.holobots.length === 0) {
           toast({
             title: "Mint a Holobot First",
             description: "You need to mint at least one Holobot to use the daily free pull.",
@@ -116,19 +100,6 @@ export default function Gacha() {
             variant: "destructive"
           });
         }
-        return;
-      }
-      
-      // Update the last energy refresh time to now for daily pull
-      try {
-        await updateUser({ lastEnergyRefresh: new Date().toISOString() });
-      } catch (error) {
-        console.error("Error updating last energy refresh:", error);
-        toast({
-          title: "Error",
-          description: "Failed to use daily pull. Please try again.",
-          variant: "destructive"
-        });
         return;
       }
     }
@@ -149,6 +120,13 @@ export default function Gacha() {
       }
     }
 
+    if (isPaidPull) {
+      const cost = amount === 1 ? SINGLE_PULL_COST : MULTI_PULL_COST;
+      updateUser({ holosTokens: user.holosTokens - cost });
+    } else {
+      updateUser({ lastEnergyRefresh: new Date().toISOString() });
+    }
+
     setTimeout(() => {
       setPulls(newPulls);
       setIsAnimating(false);
@@ -158,9 +136,7 @@ export default function Gacha() {
     }, 1000);
   };
 
-  const handleItemsFromPulls = async (newPulls: GachaItem[]) => {
-    if (!user) return;
-    
+  const handleItemsFromPulls = (newPulls: GachaItem[]) => {
     // Count occurrences of each item type
     const itemCounts = {
       "energy-refill": 0,
@@ -170,64 +146,18 @@ export default function Gacha() {
       "gacha-ticket": 0
     };
     
-    // Track attribute boosts to apply
-    const attributeBoosts: Record<string, number> = {};
-    let hasAttributeBoosts = false;
-    
     newPulls.forEach(pull => {
-      if (pull.type === "attribute-boost" && pull.attribute) {
-        hasAttributeBoosts = true;
-        attributeBoosts[pull.attribute] = (attributeBoosts[pull.attribute] || 0) + 1;
-      } else if (pull.type in itemCounts) {
-        itemCounts[pull.type as keyof typeof itemCounts]++;
-      }
+      if (pull.name === "Daily Energy Refill") itemCounts["energy-refill"]++;
+      if (pull.name === "Exp Battle Booster") itemCounts["exp-booster"]++;
+      if (pull.name === "Rank Skip") itemCounts["rank-skip"]++;
     });
     
-    try {
-      // Update user's inventory with regular items
-      const updates: Partial<any> = {
-        energy_refills: (user.energy_refills || 0) + itemCounts["energy-refill"],
-        exp_boosters: (user.exp_boosters || 0) + itemCounts["exp-booster"],
-        rank_skips: (user.rank_skips || 0) + itemCounts["rank-skip"]
-      };
-      
-      // If we have attribute boosts, we need to apply them to the active Holobot
-      if (hasAttributeBoosts && user.holobots && user.holobots.length > 0) {
-        // Get the first (active) Holobot
-        const activeHolobot = user.holobots[0];
-        const boostedAttributes = activeHolobot.boostedAttributes || {};
-        
-        // Apply attribute boosts
-        Object.entries(attributeBoosts).forEach(([attribute, count]) => {
-          boostedAttributes[attribute] = (boostedAttributes[attribute] || 0) + count;
-        });
-        
-        // Update the Holobot with the new boosted attributes
-        const updatedHolobots = [...user.holobots];
-        updatedHolobots[0] = {
-          ...activeHolobot,
-          boostedAttributes
-        };
-        
-        updates.holobots = updatedHolobots;
-        
-        // Show toast for attribute boosts
-        toast({
-          title: "Attribute Boost Applied",
-          description: `Your active Holobot received attribute boosts!`,
-        });
-      }
-      
-      // Update user profile with all changes
-      await updateUser(updates);
-    } catch (error) {
-      console.error("Error updating user inventory:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update inventory with received items.",
-        variant: "destructive"
-      });
-    }
+    // Update user's inventory
+    updateUser({
+      energy_refills: (user.energy_refills || 0) + itemCounts["energy-refill"],
+      exp_boosters: (user.exp_boosters || 0) + itemCounts["exp-booster"],
+      rank_skips: (user.rank_skips || 0) + itemCounts["rank-skip"]
+    });
   };
 
   const handleUseItem = async (type: string) => {
@@ -439,11 +369,11 @@ export default function Gacha() {
                 <div className="bg-holobots-card dark:bg-holobots-dark-card p-2 rounded-lg shadow-neon-border">
                   <div className="flex items-center gap-2">
                     <Ticket className="w-4 h-4 text-yellow-500" />
-                    <span className="text-holobots-accent">Tickets: {user?.gachaTickets || 0}</span>
+                    <span className="text-holobots-accent">Tickets: {user.gachaTickets}</span>
                   </div>
                 </div>
                 <div className="bg-holobots-card dark:bg-holobots-dark-card p-2 rounded-lg shadow-neon-border">
-                  <span className="text-holobots-accent">Holos: {user?.holosTokens || 0}</span>
+                  <span className="text-holobots-accent">Holos: {user.holosTokens}</span>
                 </div>
               </div>
             </div>
@@ -452,12 +382,8 @@ export default function Gacha() {
               <div className="flex flex-col items-center gap-2 mb-2">
                 <Button
                   onClick={() => pullGacha(1, false)}
-                  disabled={isAnimating || !isDailyPullAvailable || !user}
-                  className={`w-full max-w-xs ${
-                    isDailyPullAvailable 
-                      ? "bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white" 
-                      : "bg-gray-500 text-gray-300 cursor-not-allowed"
-                  }`}
+                  disabled={isAnimating || !isDailyPullAvailable}
+                  className="w-full max-w-xs bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white"
                   size="lg"
                 >
                   {isDailyPullAvailable ? (
@@ -468,7 +394,7 @@ export default function Gacha() {
                   ) : (
                     <>
                       <Clock className="mr-2 h-5 w-5" />
-                      {timeUntilNextDailyPull || "Loading..."}
+                      {timeUntilNextDailyPull}
                     </>
                   )}
                 </Button>
@@ -484,20 +410,20 @@ export default function Gacha() {
             <div className="flex justify-center gap-2 mb-8">
               <Button
                 onClick={() => pullGacha(1)}
-                disabled={isAnimating || !user || (user && user.holosTokens < SINGLE_PULL_COST)}
+                disabled={isAnimating || user.holosTokens < SINGLE_PULL_COST}
                 className="w-5/12 bg-holobots-accent hover:bg-holobots-hover text-white"
               >
                 <Package className="mr-1 h-4 w-4" />
-                1x Pull ({SINGLE_PULL_COST})
+                1x Pull (50)
               </Button>
               
               <Button
                 onClick={() => pullGacha(10)}
-                disabled={isAnimating || !user || (user && user.holosTokens < MULTI_PULL_COST)}
+                disabled={isAnimating || user.holosTokens < MULTI_PULL_COST}
                 className="w-5/12 bg-holobots-accent hover:bg-holobots-hover text-white"
               >
                 <Package className="mr-1 h-4 w-4" />
-                10x Pull ({MULTI_PULL_COST})
+                10x Pull (500)
               </Button>
             </div>
 
@@ -518,11 +444,6 @@ export default function Gacha() {
                   <p className="text-sm text-holobots-text dark:text-holobots-dark-text capitalize">
                     {item.rarity}
                   </p>
-                  {item.type === "attribute-boost" && item.attribute && (
-                    <p className="text-xs text-holobots-accent mt-1">
-                      Boosts {item.attribute} for your active Holobot
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
