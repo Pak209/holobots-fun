@@ -89,8 +89,8 @@ export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
     specialAttackGauge: 0,
     specialAttackThreshold: 5,
     syncPoints: 0,
-    comboChain: 0, // Add combo chain tracking
-    maxComboChain: stats.intelligence && stats.intelligence > 5 ? 8 : 5 // Max combo based on intelligence
+    comboChain: 0,
+    maxComboChain: stats.intelligence && stats.intelligence > 5 ? 8 : 5
   };
 };
 
@@ -123,7 +123,6 @@ export const incrementComboChain = (stats: HolobotStats): HolobotStats => {
   const maxCombo = stats.intelligence && stats.intelligence > 5 ? 8 : 5;
   let newComboChain = ((stats.comboChain || 0) + 1);
   
-  // Reset if max reached
   if (newComboChain > maxCombo) {
     newComboChain = 0;
   }
@@ -154,4 +153,23 @@ export const generateArenaOpponent = (currentRound: number) => {
       speed: speedMod
     }
   };
+};
+
+export const calculateSquadMemberXp = (
+  holobotLevel: number, 
+  bossLevel: number, 
+  baseXp: number, 
+  multiplier: number = 1
+): number => {
+  const levelDiff = holobotLevel - bossLevel;
+  let xpModifier = 1;
+  
+  if (levelDiff < 0) {
+    xpModifier = Math.min(2, 1 + (Math.abs(levelDiff) * 0.05));
+  } 
+  else if (levelDiff > 10) {
+    xpModifier = Math.max(0.2, 1 - (levelDiff * 0.05));
+  }
+  
+  return Math.floor(baseXp * xpModifier * multiplier);
 };

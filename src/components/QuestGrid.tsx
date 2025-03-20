@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame } from "lucide-react";
+import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star } from "lucide-react";
 import { Progress } from "./ui/progress";
+import { supabase } from "@/integrations/supabase/client";
 
 // Quest difficulty tiers
 const EXPLORATION_TIERS = {
@@ -45,7 +46,8 @@ const BOSS_TIERS = {
       blueprintPieces: 5,
       holosTokens: 1000,
       gachaTickets: 5,
-      xpMultiplier: 1
+      xpMultiplier: 1,
+      squadXp: 50 // Base XP for each squad member
     }
   },
   tier2: { 
@@ -55,7 +57,8 @@ const BOSS_TIERS = {
       blueprintPieces: 10,
       holosTokens: 2500,
       gachaTickets: 10,
-      xpMultiplier: 2
+      xpMultiplier: 2,
+      squadXp: 100 // Base XP for each squad member
     }
   },
   tier3: { 
@@ -65,7 +68,8 @@ const BOSS_TIERS = {
       blueprintPieces: 15,
       holosTokens: 5000,
       gachaTickets: 15,
-      xpMultiplier: 3
+      xpMultiplier: 3,
+      squadXp: 200 // Base XP for each squad member
     }
   }
 };
@@ -263,7 +267,7 @@ export const QuestGrid = () => {
 
     const tier = BOSS_TIERS[selectedBossTier];
     
-    if (user?.dailyEnergy < tier.energyCost) {
+    if (!user || user.dailyEnergy < tier.energyCost) {
       toast({
         title: "Not Enough Energy",
         description: `You need ${tier.energyCost} energy for this quest`,
@@ -295,39 +299,49 @@ export const QuestGrid = () => {
       const isSuccess = Math.random() < successChance;
       
       if (isSuccess) {
+        // Update XP for all Holobots in the squad
+        const updatedHolobots = await updateSquadExperience(bossHolobots, tier.rewards.squadXp, tier.rewards.xpMultiplier);
+        
         // Update user's tokens, tickets, and energy
         if (user) {
           await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
             holosTokens: user.holosTokens + tier.rewards.holosTokens,
-            gachaTickets: user.gachaTickets + tier.rewards.gachaTickets
+            gachaTickets: user.gachaTickets + tier.rewards.gachaTickets,
+            holobots: updatedHolobots // Update with new XP values
           });
         }
         
         toast({
           title: "Boss Defeated!",
-          description: `Gained ${tier.rewards.holosTokens} Holos, ${tier.rewards.blueprintPieces} Blueprint Pieces, and ${tier.rewards.gachaTickets} Gacha Tickets!`,
+          description: `Gained ${tier.rewards.holosTokens} Holos, ${tier.rewards.blueprintPieces} Blueprint Pieces, and ${tier.rewards.gachaTickets} Gacha Tickets! All squad Holobots gained XP!`,
         });
       } else {
+        // Even on failure, Holobots gain some experience (half of success amount)
+        const failureXp = Math.floor(tier.rewards.squadXp * 0.5);
+        const updatedHolobots = await updateSquadExperience(bossHolobots, failureXp, 1);
+        
         // Set all squad holobots on cooldown
         bossHolobots.forEach(holobotKey => {
           setHolobotOnCooldown(holobotKey);
         });
         
-        // Update user's energy
+        // Update user's energy and holobots
         if (user) {
           await updateUser({
-            dailyEnergy: user.dailyEnergy - tier.energyCost
+            dailyEnergy: user.dailyEnergy - tier.energyCost,
+            holobots: updatedHolobots // Update with new XP values
           });
         }
         
         toast({
           title: "Boss Quest Failed",
-          description: `Your Holobots were defeated and need to recharge for ${COOLDOWN_MINUTES} minutes.`,
+          description: `Your Holobots were defeated and need to recharge for ${COOLDOWN_MINUTES} minutes. They gained some XP from the battle.`,
           variant: "destructive"
         });
       }
     } catch (error) {
+      console.error("Error during boss quest:", error);
       toast({
         title: "Error",
         description: "An error occurred during the boss quest",
@@ -337,6 +351,99 @@ export const QuestGrid = () => {
       setIsBossQuesting(false);
       setBossHolobots([]);
     }
+  };
+
+  // New function to update experience for all Holobots in the squad
+  const updateSquadExperience = async (squadHolobotKeys, baseXp, multiplier = 1) => {
+    if (!user?.holobots || !Array.isArray(user.holobots)) {
+      return [];
+    }
+    
+    // Create a copy of holobots to update
+    const updatedHolobots = [...user.holobots];
+    
+    // Track XP gained messages for toast
+    const xpMessages = [];
+    
+    // Update each Holobot in the squad
+    for (const holobotKey of squadHolobotKeys) {
+      const holobotName = HOLOBOT_STATS[holobotKey].name;
+      
+      // Find the Holobot in the user's collection
+      const holobotIndex = updatedHolobots.findIndex(
+        h => h.name.toLowerCase() === holobotName.toLowerCase()
+      );
+      
+      if (holobotIndex === -1) continue;
+      
+      const holobot = updatedHolobots[holobotIndex];
+      
+      // Calculate XP gain based on level difference to boss
+      const levelDiff = holobot.level - BOSS_TIERS[selectedBossTier].level;
+      let xpModifier = 1;
+      
+      // Lower level Holobots get more XP
+      if (levelDiff < 0) {
+        // Up to 2x XP for Holobots with much lower level than the boss
+        xpModifier = Math.min(2, 1 + (Math.abs(levelDiff) * 0.05));
+      } else if (levelDiff > 10) {
+        // Reduced XP for much higher level Holobots
+        xpModifier = Math.max(0.2, 1 - (levelDiff * 0.05));
+      }
+      
+      // Calculate final XP with all modifiers
+      const xpGained = Math.floor(baseXp * xpModifier * multiplier);
+      
+      // Update the Holobot's experience
+      const newTotalXp = (holobot.experience || 0) + xpGained;
+      const newLevel = getNewLevel(newTotalXp, holobot.level);
+      
+      // Track level up for messaging
+      const didLevelUp = newLevel > holobot.level;
+      
+      // Update the Holobot
+      updatedHolobots[holobotIndex] = {
+        ...holobot,
+        experience: newTotalXp,
+        level: newLevel,
+        nextLevelExp: calculateExperience(newLevel)
+      };
+      
+      // Add to XP messages
+      xpMessages.push({
+        name: holobotName,
+        xp: xpGained,
+        levelUp: didLevelUp,
+        newLevel: newLevel
+      });
+    }
+    
+    // Show toast with XP information
+    xpMessages.forEach(msg => {
+      if (msg.levelUp) {
+        toast({
+          title: `${msg.name} Leveled Up!`,
+          description: `Gained ${msg.xp} XP and reached level ${msg.newLevel}!`,
+          variant: "default"
+        });
+      }
+    });
+    
+    return updatedHolobots;
+  };
+
+  // Helper function to calculate required XP for level
+  const calculateExperience = (level) => {
+    return Math.floor(100 * Math.pow(level, 2));
+  };
+  
+  // Helper function to determine if level up occurs
+  const getNewLevel = (currentXp, currentLevel) => {
+    const requiredXp = calculateExperience(currentLevel);
+    if (currentXp >= requiredXp && currentLevel < 50) {
+      return currentLevel + 1;
+    }
+    return currentLevel;
   };
 
   const availableHolobots = getAvailableHolobots();
