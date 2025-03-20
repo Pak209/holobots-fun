@@ -30,6 +30,7 @@ import Leaderboard from "@/pages/Leaderboard";
 import { MobileLayout } from "@/components/MobileLayout";
 import Bytepaper from "./pages/Bytepaper";
 import Mint from "@/pages/Mint";
+import Fitness from "@/pages/Fitness";
 
 const network = WalletAdapterNetwork.Mainnet;
 const wallets = [
@@ -62,6 +63,7 @@ function App() {
                     <Route path="/user-items" element={<MobileLayout><UserItems /></MobileLayout>} />
                     <Route path="/marketplace" element={<MobileLayout><Marketplace /></MobileLayout>} />
                     <Route path="/leaderboard" element={<MobileLayout><Leaderboard /></MobileLayout>} />
+                    <Route path="/fitness" element={<MobileLayout><Fitness /></MobileLayout>} />
                     <Route path="/bytepaper" element={<Bytepaper />} />
                   </Routes>
                   <Toaster />
@@ -71,7 +73,6 @@ function App() {
           </WalletProvider>
         </ConnectionProvider>
       </WagmiConfig>
-      {/* Removed Web3Modal to prevent errors */}
     </Web3ReactProvider>
   );
 }
