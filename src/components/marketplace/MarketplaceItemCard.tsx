@@ -12,7 +12,7 @@ interface MarketplaceItemCardProps {
   seller: string;
   quantity?: number;
   onBuy?: () => void;
-  type?: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip";
+  type?: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost";
 }
 
 export const MarketplaceItemCard = ({
@@ -39,13 +39,14 @@ export const MarketplaceItemCard = ({
   };
 
   // Map item name to type if not provided
-  const determineType = (): "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" => {
+  const determineType = (): "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" => {
     const nameLower = name.toLowerCase();
     if (nameLower.includes("arena") || nameLower.includes("pass")) return "arena-pass";
     if (nameLower.includes("gacha") || nameLower.includes("ticket")) return "gacha-ticket";
     if (nameLower.includes("energy") || nameLower.includes("refill")) return "energy-refill";
     if (nameLower.includes("exp") || nameLower.includes("booster")) return "exp-booster";
     if (nameLower.includes("rank") || nameLower.includes("skip")) return "rank-skip";
+    if (nameLower.includes("attribute") || nameLower.includes("boost")) return "attribute-boost";
     return type;
   };
 

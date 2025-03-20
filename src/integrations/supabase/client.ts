@@ -18,7 +18,9 @@ export const supabase = createClient<Database>(
     },
     realtime: {
       // Use correct property to disable realtime features
-      enabled: false
+      params: {
+        eventsPerSecond: 0
+      }
     }
   }
 );
