@@ -3,11 +3,12 @@ import { useState } from "react";
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS, getRank } from "@/types/holobot";
 import { Button } from "@/components/ui/button";
-import { Coins, Plus } from "lucide-react";
+import { Coins, Plus, Crown } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { UserHolobot } from "@/types/user";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface HolobotInfoCardProps {
   holobotKey: string;
@@ -32,6 +33,7 @@ export const HolobotInfoCard = ({
   const level = userHolobot?.level || holobot.level;
   const currentXp = userHolobot?.experience || 0;
   const nextLevelXp = userHolobot?.nextLevelExp || 100;
+  const holobotRank = userHolobot?.rank || "Common";
   
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
@@ -41,6 +43,18 @@ export const HolobotInfoCard = ({
   };
   
   const xpProgress = calculateProgress(currentXp, nextLevelXp);
+
+  // Get background color based on rank
+  const getRankColor = (rank: string) => {
+    switch(rank) {
+      case "Legendary": return "bg-orange-600/20 border-orange-500 text-orange-400";
+      case "Elite": return "bg-yellow-600/20 border-yellow-500 text-yellow-400";
+      case "Rare": return "bg-purple-600/20 border-purple-500 text-purple-400";
+      case "Champion": return "bg-green-600/20 border-green-500 text-green-400";
+      case "Common":
+      default: return "bg-blue-600/20 border-blue-500 text-blue-400";
+    }
+  };
 
   const handleBoostAttribute = async (attribute: 'attack' | 'defense' | 'speed' | 'health') => {
     if (!isOwned || !user) return;
@@ -118,8 +132,15 @@ export const HolobotInfoCard = ({
                   <span>{currentXp}/{nextLevelXp}</span>
                 </div>
                 <Progress value={xpProgress} className="h-1" />
-                <div className="text-[9px] text-right text-holobots-accent">
-                  Rank: {getRank(level)}
+                <div className="flex justify-between text-[9px]">
+                  <span className="text-right text-holobots-accent">
+                    Rank: {getRank(level)}
+                  </span>
+                  {userHolobot?.rank && (
+                    <Badge className={`text-[8px] py-0 px-1 h-4 ${getRankColor(holobotRank)}`}>
+                      <Crown className="h-2 w-2 mr-0.5" /> {holobotRank}
+                    </Badge>
+                  )}
                 </div>
               </div>
             )}

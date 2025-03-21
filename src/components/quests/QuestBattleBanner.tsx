@@ -1,204 +1,212 @@
 
 import { useState, useEffect } from "react";
-import { HOLOBOT_STATS } from "@/types/holobot";
-import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 import { Progress } from "@/components/ui/progress";
-import { Cross } from "lucide-react";
+import { HOLOBOT_STATS } from "@/types/holobot";
+import { ShieldAlert, Swords } from "lucide-react";
+import { UserHolobot } from "@/types/user";
 
 interface QuestBattleBannerProps {
-  isVisible: boolean;
-  isBossQuest: boolean;
-  squadHolobotKeys: string[];
-  bossHolobotKey: string;
-  onComplete: () => void;
+  playerHolobots: UserHolobot[];
+  bossHolobot: string;
+  onBattleComplete?: () => void;
+  difficulty?: string;
 }
 
-export const QuestBattleBanner = ({
-  isVisible,
-  isBossQuest,
-  squadHolobotKeys,
-  bossHolobotKey,
-  onComplete
+export const QuestBattleBanner = ({ 
+  playerHolobots, 
+  bossHolobot,
+  onBattleComplete,
+  difficulty = "normal"
 }: QuestBattleBannerProps) => {
-  const [animation, setAnimation] = useState<"entering" | "active" | "exiting" | "hidden">("hidden");
-  const [squadHealth, setSquadHealth] = useState(100);
+  // Battle simulation states
+  const [isVisible, setIsVisible] = useState(true);
+  const [battlePhase, setBattlePhase] = useState<'intro' | 'battle' | 'result'>('intro');
+  const [battleText, setBattleText] = useState<string>("");
+  const [playerHealth, setPlayerHealth] = useState(100);
   const [bossHealth, setBossHealth] = useState(100);
+  const [battleRound, setBattleRound] = useState(0);
+  const [battleResult, setBattleResult] = useState<'win' | 'loss' | null>(null);
+
+  // Get boss stats
+  const boss = HOLOBOT_STATS[bossHolobot.toLowerCase()];
   
-  useEffect(() => {
-    if (isVisible) {
-      // Start the animation sequence
-      setAnimation("entering");
-      setSquadHealth(100);
-      setBossHealth(100);
-      
-      // After the entrance animation, start the battle
-      const entranceTimer = setTimeout(() => {
-        setAnimation("active");
-        simulateBattle();
-      }, 1000);
-      
-      return () => clearTimeout(entranceTimer);
-    } else {
-      setAnimation("hidden");
+  // Calculate team combined stats
+  const teamStats = playerHolobots.reduce((stats, holobot) => {
+    const baseStats = HOLOBOT_STATS[holobot.name.toLowerCase()];
+    stats.attack += baseStats.attack + (holobot.boostedAttributes?.attack || 0);
+    stats.defense += baseStats.defense + (holobot.boostedAttributes?.defense || 0);
+    stats.health += baseStats.maxHealth + (holobot.boostedAttributes?.health || 0);
+    stats.speed += baseStats.speed + (holobot.boostedAttributes?.speed || 0);
+    return stats;
+  }, { attack: 0, defense: 0, health: 0, speed: 0 });
+  
+  // Adjust boss stats based on difficulty
+  const getDifficultyMultiplier = () => {
+    switch (difficulty) {
+      case "easy": return 0.8;
+      case "normal": return 1;
+      case "hard": return 1.3;
+      case "elite": return 1.6;
+      case "champion": return 2;
+      default: return 1;
     }
-  }, [isVisible]);
-  
-  // Simulate the battle with health changes
-  const simulateBattle = () => {
-    let currentSquadHealth = 100;
-    let currentBossHealth = 100;
-    let battleEnded = false;
-    
-    // Create a battle simulation that updates health every 300ms
-    const battleInterval = setInterval(() => {
-      if (battleEnded) {
-        clearInterval(battleInterval);
-        return;
-      }
-      
-      // Boss attacks squad
-      currentSquadHealth -= Math.floor(Math.random() * 15) + 5;
-      setSquadHealth(Math.max(0, currentSquadHealth));
-      
-      // Squad attacks boss
-      currentBossHealth -= Math.floor(Math.random() * 20) + 5;
-      setBossHealth(Math.max(0, currentBossHealth));
-      
-      // Check if battle is over
-      if (currentSquadHealth <= 0 || currentBossHealth <= 0) {
-        battleEnded = true;
-        
-        // Trigger exit animation
-        setAnimation("exiting");
-        
-        // Complete after exit animation
-        setTimeout(() => {
-          onComplete();
-          setAnimation("hidden");
-        }, 1000);
-      }
-    }, 300);
-    
-    // Safety timeout to end battle after 5 seconds if it hasn't ended yet
-    setTimeout(() => {
-      if (!battleEnded) {
-        clearInterval(battleInterval);
-        setAnimation("exiting");
-        
-        setTimeout(() => {
-          onComplete();
-          setAnimation("hidden");
-        }, 1000);
-      }
-    }, 5000);
   };
   
-  if (animation === "hidden") return null;
+  const bossMultiplier = getDifficultyMultiplier();
+  const adjustedBossStats = {
+    attack: boss.attack * bossMultiplier,
+    defense: boss.defense * bossMultiplier,
+    health: boss.maxHealth * bossMultiplier,
+    speed: boss.speed * bossMultiplier,
+  };
+  
+  // Battle simulation
+  useEffect(() => {
+    let battleTimer: ReturnType<typeof setTimeout>;
+    
+    if (battlePhase === 'intro') {
+      setBattleText(`Battle with ${boss.name} is starting!`);
+      battleTimer = setTimeout(() => {
+        setBattlePhase('battle');
+        setBattleRound(1);
+        setBattleText("Round 1 begins!");
+      }, 2000);
+    } else if (battlePhase === 'battle') {
+      if (battleRound > 0 && battleRound <= 5) {
+        battleTimer = setTimeout(() => {
+          // Simplified battle calculation
+          const playerFastAttack = teamStats.speed > adjustedBossStats.speed;
+          
+          let newBossHealth = bossHealth;
+          let newPlayerHealth = playerHealth;
+          
+          if (playerFastAttack) {
+            // Player attacks first
+            const playerDamage = Math.max(5, teamStats.attack - (adjustedBossStats.defense * 0.5));
+            newBossHealth = Math.max(0, bossHealth - (playerDamage / adjustedBossStats.health * 100));
+            setBattleText(`Your team attacks for ${playerDamage.toFixed(0)} damage!`);
+            
+            // If boss still alive, boss attacks
+            if (newBossHealth > 0) {
+              setTimeout(() => {
+                const bossDamage = Math.max(5, adjustedBossStats.attack - (teamStats.defense * 0.4));
+                newPlayerHealth = Math.max(0, playerHealth - (bossDamage / teamStats.health * 100));
+                setBattleText(`${boss.name} counters for ${bossDamage.toFixed(0)} damage!`);
+                setPlayerHealth(newPlayerHealth);
+              }, 1000);
+            }
+          } else {
+            // Boss attacks first
+            const bossDamage = Math.max(5, adjustedBossStats.attack - (teamStats.defense * 0.4));
+            newPlayerHealth = Math.max(0, playerHealth - (bossDamage / teamStats.health * 100));
+            setBattleText(`${boss.name} attacks for ${bossDamage.toFixed(0)} damage!`);
+            
+            // If player still alive, player attacks
+            if (newPlayerHealth > 0) {
+              setTimeout(() => {
+                const playerDamage = Math.max(5, teamStats.attack - (adjustedBossStats.defense * 0.5));
+                newBossHealth = Math.max(0, bossHealth - (playerDamage / adjustedBossStats.health * 100));
+                setBattleText(`Your team counters for ${playerDamage.toFixed(0)} damage!`);
+                setBossHealth(newBossHealth);
+              }, 1000);
+            }
+          }
+          
+          setBossHealth(newBossHealth);
+          setPlayerHealth(newPlayerHealth);
+          
+          // Check for battle end
+          if (newBossHealth <= 0 || newPlayerHealth <= 0) {
+            setTimeout(() => {
+              if (newBossHealth <= 0) {
+                setBattleText(`Victory! You defeated ${boss.name}!`);
+                setBattleResult('win');
+              } else {
+                setBattleText(`Defeat! ${boss.name} was too powerful!`);
+                setBattleResult('loss');
+              }
+              setBattlePhase('result');
+            }, 1500);
+          } else {
+            // Continue to next round
+            setTimeout(() => {
+              setBattleRound(prevRound => prevRound + 1);
+              setBattleText(`Round ${battleRound + 1} begins!`);
+            }, 1500);
+          }
+        }, 1000);
+      }
+    } else if (battlePhase === 'result') {
+      // Battle complete
+      battleTimer = setTimeout(() => {
+        setIsVisible(false);
+        if (onBattleComplete) onBattleComplete();
+      }, 2000);
+    }
+    
+    return () => clearTimeout(battleTimer);
+  }, [battlePhase, battleRound, bossHealth, playerHealth]);
+  
+  if (!isVisible) return null;
   
   return (
-    <div className={`fixed inset-0 flex items-center justify-center z-50 bg-black/70 backdrop-blur-sm
-      ${animation === "entering" ? "animate-fadeIn" : 
-        animation === "exiting" ? "animate-fadeOut" : ""}`}>
-      <div className="max-w-4xl w-full mx-auto p-6">
-        <div className="bg-holobots-card rounded-lg border-2 border-holobots-accent p-4 shadow-neon relative">
-          <button 
-            onClick={() => {
-              setAnimation("exiting");
-              setTimeout(() => {
-                onComplete();
-                setAnimation("hidden");
-              }, 500);
-            }}
-            className="absolute top-2 right-2 text-gray-400 hover:text-white"
-          >
-            <Cross className="h-5 w-5" />
-          </button>
-          
-          <h2 className="text-xl font-bold text-center text-holobots-accent mb-4">
-            {isBossQuest ? "BOSS BATTLE" : "EXPLORATION BATTLE"}
-          </h2>
-          
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            {/* Squad Side */}
-            <div className="flex-1 flex flex-col items-center">
-              <h3 className="text-lg font-bold mb-2">YOUR SQUAD</h3>
-              
-              <div className="flex flex-col space-y-2 w-full max-w-xs">
-                {/* Squad health bar */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span>Squad Health</span>
-                    <span>{squadHealth}%</span>
-                  </div>
-                  <Progress value={squadHealth} className="h-2 bg-gray-700" 
-                    indicatorClassName="bg-green-500" />
-                </div>
-                
-                {/* Squad Holobots */}
-                <div className="grid grid-cols-3 gap-2">
-                  {squadHolobotKeys.map((holobotKey, index) => (
-                    <div key={index} className="flex flex-col items-center">
-                      <div className="w-16 h-16 rounded-full bg-holobots-dark-background border-2 border-holobots-accent overflow-hidden">
-                        <img 
-                          src={getHolobotImagePath(HOLOBOT_STATS[holobotKey]?.name || "UNKNOWN")} 
-                          alt={HOLOBOT_STATS[holobotKey]?.name || "Unknown Holobot"} 
-                          className="w-full h-full object-contain" 
-                        />
-                      </div>
-                      <span className="text-xs mt-1">
-                        {HOLOBOT_STATS[holobotKey]?.name || "Unknown"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+      <div className="w-full max-w-md p-4 bg-holobots-card rounded-lg border border-holobots-accent shadow-neon-lg">
+        <div className="mb-4 text-center">
+          <h2 className="text-xl font-bold text-holobots-accent">{battleText}</h2>
+          <div className="text-xs text-gray-400 mt-1">Round {battleRound}/5</div>
+        </div>
+        
+        {/* Team Health Bar */}
+        <div className="mb-6 space-y-1">
+          <div className="flex justify-between text-sm">
+            <div className="flex items-center">
+              <ShieldAlert className="w-4 h-4 mr-1 text-blue-400" />
+              <span>Your Team</span>
             </div>
-            
-            {/* VS Icon */}
-            <div className="text-2xl font-bold text-red-500">VS</div>
-            
-            {/* Boss Side */}
-            <div className="flex-1 flex flex-col items-center">
-              <h3 className="text-lg font-bold mb-2">
-                {isBossQuest ? "BOSS HOLOBOT" : "ENEMY HOLOBOT"}
-              </h3>
-              
-              <div className="flex flex-col items-center space-y-2 w-full max-w-xs">
-                {/* Boss health bar */}
-                <div className="space-y-1 w-full">
-                  <div className="flex justify-between text-xs">
-                    <span>Boss Health</span>
-                    <span>{bossHealth}%</span>
-                  </div>
-                  <Progress value={bossHealth} className="h-2 bg-gray-700" 
-                    indicatorClassName="bg-red-500" />
-                </div>
-                
-                {/* Boss Holobot */}
-                <div className="flex flex-col items-center">
-                  <div className="w-24 h-24 rounded-full bg-holobots-dark-background border-2 border-red-500 overflow-hidden">
-                    <img 
-                      src={getHolobotImagePath(HOLOBOT_STATS[bossHolobotKey]?.name || "UNKNOWN")} 
-                      alt={HOLOBOT_STATS[bossHolobotKey]?.name || "Unknown Boss"} 
-                      className="w-full h-full object-contain" 
-                    />
-                  </div>
-                  <span className="text-sm mt-2 font-bold text-red-400">
-                    {HOLOBOT_STATS[bossHolobotKey]?.name || "Unknown Boss"}
-                  </span>
-                </div>
-              </div>
-            </div>
+            <span>{Math.max(0, Math.round(playerHealth))}%</span>
           </div>
-          
-          <div className="mt-4 text-center text-sm">
-            <p className={`animate-pulse text-${squadHealth > bossHealth ? 'green' : 'red'}-400`}>
-              {squadHealth > bossHealth ? 
-                "Your squad is winning!" : 
-                "The enemy is dealing heavy damage!"}
-            </p>
+          <Progress 
+            value={playerHealth} 
+            className="h-3 bg-gray-700"
+          />
+          <div className="grid grid-cols-3 gap-1 mt-1">
+            {playerHolobots.map((holobot, idx) => (
+              <div key={idx} className="text-[10px] text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
+                {holobot.name}
+              </div>
+            ))}
           </div>
         </div>
+        
+        {/* Boss Health Bar */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-sm">
+            <div className="flex items-center">
+              <Swords className="w-4 h-4 mr-1 text-red-400" />
+              <span>{boss.name}</span>
+            </div>
+            <span>{Math.max(0, Math.round(bossHealth))}%</span>
+          </div>
+          <Progress 
+            value={bossHealth} 
+            className="h-3 bg-gray-700"
+          />
+          <div className="text-[10px] text-center mt-1 bg-red-900/30 rounded px-1 py-0.5">
+            {difficulty.toUpperCase()} BOSS
+          </div>
+        </div>
+        
+        {/* Battle result indicator */}
+        {battleResult && (
+          <div className={`mt-4 text-center p-2 rounded ${
+            battleResult === 'win' ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'
+          }`}>
+            {battleResult === 'win' 
+              ? '✨ VICTORY! ✨' 
+              : '❌ DEFEAT! Try a stronger team or lower difficulty ❌'}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ export interface UserHolobot {
     speed?: number;
     health?: number;
   };
+  rank?: string; // Add rank property to track holobot tier
 }
 
 export interface UserProfile {
