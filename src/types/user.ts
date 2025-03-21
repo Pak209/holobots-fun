@@ -1,4 +1,3 @@
-
 export interface UserHolobot {
   name: string;
   level: number;
@@ -11,6 +10,7 @@ export interface UserHolobot {
     health?: number;
   };
   rank?: string; // Add rank property to track holobot tier
+  attributePoints?: number; // Add attributePoints for tracking available boost points
 }
 
 export interface UserProfile {

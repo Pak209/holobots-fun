@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -14,16 +13,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Define the blueprint redemption tiers
 export const BLUEPRINT_TIERS = {
   common: { required: 5, name: "Common", color: "blue", startLevel: 1 },
-  champion: { required: 10, name: "Champion", color: "green", startLevel: 11 }, // Fixed: Level 11 for Champion
-  rare: { required: 20, name: "Rare", color: "purple", startLevel: 21 }, // Updated to level 21
-  elite: { required: 40, name: "Elite", color: "yellow", startLevel: 31 }, // Updated to level 31
-  legendary: { required: 80, name: "Legendary", color: "orange", startLevel: 41 } // Updated to level 41
+  champion: { required: 10, name: "Champion", color: "green", startLevel: 11 },
+  rare: { required: 20, name: "Rare", color: "purple", startLevel: 21 },
+  elite: { required: 40, name: "Elite", color: "yellow", startLevel: 31 },
+  legendary: { required: 80, name: "Legendary", color: "orange", startLevel: 41 }
 };
 
-// Helper to determine background color based on tier
 const getTierColor = (tierName: string) => {
   switch(tierName) {
     case "Common": return "bg-blue-600";
@@ -35,25 +32,21 @@ const getTierColor = (tierName: string) => {
   }
 };
 
-// Helper to calculate the tier a holobot would mint at based on blueprint count
 const calculateMintTier = (blueprintCount: number) => {
-  // From highest to lowest to get the best possible tier
   if (blueprintCount >= BLUEPRINT_TIERS.legendary.required) return BLUEPRINT_TIERS.legendary;
   if (blueprintCount >= BLUEPRINT_TIERS.elite.required) return BLUEPRINT_TIERS.elite;
   if (blueprintCount >= BLUEPRINT_TIERS.rare.required) return BLUEPRINT_TIERS.rare;
   if (blueprintCount >= BLUEPRINT_TIERS.champion.required) return BLUEPRINT_TIERS.champion;
   if (blueprintCount >= BLUEPRINT_TIERS.common.required) return BLUEPRINT_TIERS.common;
-  return null; // Not enough blueprints for any tier
+  return null;
 };
 
-// Function to calculate progress to next tier
 const getNextTierProgress = (blueprintCount: number) => {
   const currentTier = calculateMintTier(blueprintCount);
   let nextTierRequired = BLUEPRINT_TIERS.common.required;
   let progress = 0;
   
   if (!currentTier) {
-    // Progress toward common tier
     progress = (blueprintCount / BLUEPRINT_TIERS.common.required) * 100;
   } else if (currentTier.name === "Common") {
     progress = ((blueprintCount - BLUEPRINT_TIERS.common.required) / 
@@ -72,7 +65,6 @@ const getNextTierProgress = (blueprintCount: number) => {
                 (BLUEPRINT_TIERS.legendary.required - BLUEPRINT_TIERS.elite.required)) * 100;
     nextTierRequired = BLUEPRINT_TIERS.legendary.required;
   } else {
-    // Already at legendary tier
     progress = 100;
     nextTierRequired = BLUEPRINT_TIERS.legendary.required;
   }
@@ -93,46 +85,36 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
   const [selectedTab, setSelectedTab] = useState("new");
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   
-  // Get blueprint count for this holobot
   const blueprintCount = user?.blueprints?.[holobotKey] || 0;
-  
-  // Determine current mint tier based on blueprint count
   const currentTier = calculateMintTier(blueprintCount);
-  
-  // Calculate progress to next tier
   const { progress, nextTierRequired } = getNextTierProgress(blueprintCount);
   
-  // Check if user already owns this holobot
   const userHolobot = user?.holobots.find(h => h.name.toLowerCase() === holobotName.toLowerCase());
   const userOwnsHolobot = !!userHolobot;
   
-  // Handle blueprint redemption for new holobot
   const handleRedeemBlueprints = async () => {
     if (!user || !currentTier || (userOwnsHolobot && selectedTab === "new")) return;
     
     try {
       setIsRedeeming(true);
       
-      // Create a new holobot at the specified tier
       const newHolobot = {
         name: holobotName,
         level: currentTier.startLevel,
         experience: 0,
         nextLevelExp: 100,
-        boostedAttributes: {}, // Add 10 attribute points for the user to distribute
-        rank: currentTier.name
+        boostedAttributes: {},
+        rank: currentTier.name,
+        attributePoints: 10
       };
       
-      // Update user's holobots array and reduce blueprint count
       const updatedHolobots = [...(user.holobots || []), newHolobot];
       
-      // Calculate remaining blueprints after redemption
       const updatedBlueprints = {
         ...(user.blueprints || {}),
         [holobotKey]: blueprintCount - currentTier.required
       };
       
-      // Update user profile
       await updateUser({
         holobots: updatedHolobots,
         blueprints: updatedBlueprints
@@ -154,7 +136,6 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
     }
   };
   
-  // Handle blueprint upgrade for existing holobot
   const handleUpgradeHolobot = async () => {
     if (!user || !userHolobot || !selectedTier) return;
     
@@ -164,7 +145,6 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
     try {
       setIsUpgrading(true);
       
-      // Check if user has enough blueprints
       if (blueprintCount < selectedTierInfo.required) {
         toast({
           title: "Not Enough Blueprints",
@@ -174,7 +154,6 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
         return;
       }
       
-      // Update the holobot with new level and rank
       const updatedHolobots = user.holobots.map(h => {
         if (h.name.toLowerCase() === holobotName.toLowerCase()) {
           return {
@@ -183,20 +162,18 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
             rank: selectedTier,
             experience: 0,
             nextLevelExp: 100,
-            // Add boostedAttributes if it doesn't exist
-            boostedAttributes: h.boostedAttributes || {}
+            boostedAttributes: h.boostedAttributes || {},
+            attributePoints: (h.attributePoints || 0) + 10
           };
         }
         return h;
       });
       
-      // Calculate remaining blueprints after upgrade
       const updatedBlueprints = {
         ...(user.blueprints || {}),
         [holobotKey]: blueprintCount - selectedTierInfo.required
       };
       
-      // Update user profile
       await updateUser({
         holobots: updatedHolobots,
         blueprints: updatedBlueprints
@@ -219,7 +196,6 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
     }
   };
   
-  // Calculate starting level based on tier
   const calculateHolobotStartLevel = (tierName: string) => {
     const tier = Object.values(BLUEPRINT_TIERS).find(t => t.name === tierName);
     return tier ? tier.startLevel : 1;
@@ -260,7 +236,6 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
               <span className="text-sm font-bold">{blueprintCount}</span>
             </div>
             
-            {/* Show tier progress bar */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
                 <span>Progress to {currentTier ? "Next Tier" : "Common Tier"}</span>
@@ -269,7 +244,6 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
               <Progress value={progress} className="h-2" />
             </div>
             
-            {/* Redemption tiers */}
             <div className="mt-3 grid grid-cols-5 gap-1 text-center">
               {Object.entries(BLUEPRINT_TIERS).map(([key, tier]) => (
                 <div 
@@ -286,7 +260,6 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
             </div>
           </div>
           
-          {/* Tabs for New Holobot vs Upgrade */}
           {currentTier && (
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
@@ -415,7 +388,6 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
   );
 };
 
-// Helper function to get tier number from name
 const getTierNumber = (tierName: string): number => {
   switch(tierName) {
     case "Legendary": return 5;

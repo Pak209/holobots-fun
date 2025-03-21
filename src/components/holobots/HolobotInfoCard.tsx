@@ -3,7 +3,7 @@ import { useState } from "react";
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS, getRank } from "@/types/holobot";
 import { Button } from "@/components/ui/button";
-import { Coins, Plus, Crown } from "lucide-react";
+import { Coins, Plus, Crown, Zap } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { UserHolobot } from "@/types/user";
 import { useAuth } from "@/contexts/auth";
@@ -34,6 +34,7 @@ export const HolobotInfoCard = ({
   const currentXp = userHolobot?.experience || 0;
   const nextLevelXp = userHolobot?.nextLevelExp || 100;
   const holobotRank = userHolobot?.rank || "Common";
+  const attributePoints = userHolobot?.attributePoints || 0;
   
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
@@ -65,6 +66,17 @@ export const HolobotInfoCard = ({
         throw new Error("User holobots data is not available");
       }
       
+      // Check if user has attribute points to spend
+      const targetHolobot = user.holobots.find(h => h.name.toLowerCase() === holobot.name.toLowerCase());
+      if (!targetHolobot || !(targetHolobot.attributePoints && targetHolobot.attributePoints > 0)) {
+        toast({
+          title: "No Attribute Points",
+          description: "You don't have any attribute points to spend.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       // Find the holobot to update
       const updatedHolobots = user.holobots.map(h => {
         if (h.name.toLowerCase() === holobot.name.toLowerCase()) {
@@ -80,7 +92,8 @@ export const HolobotInfoCard = ({
           
           return {
             ...h,
-            boostedAttributes
+            boostedAttributes,
+            attributePoints: (h.attributePoints || 0) - 1
           };
         }
         return h;
@@ -185,31 +198,38 @@ export const HolobotInfoCard = ({
             {/* Attribute Boost Section - Only show for owned holobots with compact layout */}
             {isOwned && (
               <div>
-                <h3 className="text-[9px] font-bold mb-0.5 text-holobots-accent">
-                  Available Boosts
+                <h3 className="text-[9px] font-bold mb-0.5 text-holobots-accent flex items-center justify-between">
+                  <span>Available Boosts</span>
+                  <Badge variant="outline" className="bg-blue-500/20 border-blue-500 text-blue-400 text-[8px] py-0 px-1 h-4 flex items-center">
+                    <Zap className="h-2 w-2 mr-0.5" /> {attributePoints}
+                  </Badge>
                 </h3>
                 <div className="grid grid-cols-2 gap-1">
                   <button 
-                    className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors"
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
                     onClick={() => handleBoostAttribute('attack')}
+                    disabled={attributePoints === 0}
                   >
                     +1 ATK
                   </button>
                   <button 
-                    className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors"
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
                     onClick={() => handleBoostAttribute('defense')}
+                    disabled={attributePoints === 0}
                   >
                     +1 DEF
                   </button>
                   <button 
-                    className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors"
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
                     onClick={() => handleBoostAttribute('speed')}
+                    disabled={attributePoints === 0}
                   >
                     +1 SPD
                   </button>
                   <button 
-                    className="px-1 py-0.5 text-[8px] bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent rounded hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover transition-colors"
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
                     onClick={() => handleBoostAttribute('health')}
+                    disabled={attributePoints === 0}
                   >
                     +10 HP
                   </button>
