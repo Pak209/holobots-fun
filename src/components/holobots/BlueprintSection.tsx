@@ -72,6 +72,17 @@ const getNextTierProgress = (blueprintCount: number) => {
   return { progress: Math.min(100, Math.max(0, progress)), nextTierRequired };
 };
 
+const getAttributePointsForTier = (tierName: string): number => {
+  switch(tierName) {
+    case "Legendary": return 40;
+    case "Elite": return 30;
+    case "Rare": return 20;
+    case "Champion": return 10;
+    case "Common":
+    default: return 10;
+  }
+};
+
 interface BlueprintSectionProps {
   holobotKey: string;
   holobotName: string;
@@ -98,6 +109,8 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
     try {
       setIsRedeeming(true);
       
+      const attributePoints = getAttributePointsForTier(currentTier.name);
+      
       const newHolobot = {
         name: holobotName,
         level: currentTier.startLevel,
@@ -105,7 +118,7 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
         nextLevelExp: 100,
         boostedAttributes: {},
         rank: currentTier.name,
-        attributePoints: 10
+        attributePoints
       };
       
       const updatedHolobots = [...(user.holobots || []), newHolobot];
@@ -122,7 +135,7 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
       
       toast({
         title: `${currentTier.name} ${holobotName} Obtained!`,
-        description: `Successfully redeemed ${currentTier.required} blueprint pieces. You have 10 attribute points to distribute.`,
+        description: `Successfully redeemed ${currentTier.required} blueprint pieces. You have ${attributePoints} attribute points to distribute.`,
       });
     } catch (error) {
       console.error("Error redeeming blueprint:", error);
@@ -154,6 +167,8 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
         return;
       }
       
+      const attributePoints = getAttributePointsForTier(selectedTier);
+      
       const updatedHolobots = user.holobots.map(h => {
         if (h.name.toLowerCase() === holobotName.toLowerCase()) {
           return {
@@ -163,7 +178,7 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
             experience: 0,
             nextLevelExp: 100,
             boostedAttributes: h.boostedAttributes || {},
-            attributePoints: (h.attributePoints || 0) + 10
+            attributePoints: (h.attributePoints || 0) + attributePoints
           };
         }
         return h;
@@ -181,7 +196,7 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
       
       toast({
         title: `${holobotName} Upgraded!`,
-        description: `Successfully upgraded to ${selectedTier} rank (Level ${selectedTierInfo.startLevel}). You have 10 attribute points to distribute.`,
+        description: `Successfully upgraded to ${selectedTier} rank (Level ${selectedTierInfo.startLevel}). You have ${attributePoints} attribute points to distribute.`,
       });
     } catch (error) {
       console.error("Error upgrading holobot:", error);
