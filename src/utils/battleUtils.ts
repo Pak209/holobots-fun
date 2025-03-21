@@ -1,3 +1,4 @@
+
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
@@ -134,9 +135,12 @@ export const incrementComboChain = (stats: HolobotStats): HolobotStats => {
 };
 
 export const generateArenaOpponent = (currentRound: number) => {
-  const holobotKeys = ['ace', 'kuma', 'shadow', 'era', 'nova'];
+  const holobotKeys = ['ace', 'kuma', 'shadow', 'era', 'nova', 'wolf', 'tsuin', 'ken', 'gama', 'kurai', 'tora', 'wake', 'hare'];
   
-  const randomIndex = Math.floor(Math.random() * holobotKeys.length);
+  // Ensure we get a different opponent by using round number as a seed
+  // Different round numbers will result in different opponents
+  const seed = currentRound + Date.now() % 1000;
+  const randomIndex = Math.floor((seed * 13) % holobotKeys.length);
   const holobotKey = holobotKeys[randomIndex];
   
   const baseLevel = Math.max(1, Math.min(50, Math.floor(currentRound * 1.5)));
@@ -172,4 +176,40 @@ export const calculateSquadMemberXp = (
   }
   
   return Math.floor(baseXp * xpModifier * multiplier);
+};
+
+export const calculateArenaRewards = (round: number, victoriesCount: number) => {
+  // Base rewards values that scale with round and victories
+  const baseTokens = 20 * round * (victoriesCount + 1);
+  const baseGachaTickets = Math.floor(victoriesCount / 2);
+  
+  // Blueprint pieces have a chance based on round and victories
+  const blueprintChance = 0.3 + (round * 0.1) + (victoriesCount * 0.05);
+  const blueprintAmount = victoriesCount > 0 ? Math.ceil(victoriesCount * round / 2) : 0;
+  
+  // Additional arena pass has a chance based on victories
+  const arenaPassChance = 0.2 + (victoriesCount * 0.05);
+  const arenaPass = Math.random() < arenaPassChance ? 1 : 0;
+  
+  // Determine if blueprints will be awarded based on chance
+  const hasBlueprintReward = Math.random() < blueprintChance;
+  
+  // If blueprint is awarded, determine which holobot blueprints
+  let blueprintReward = null;
+  if (hasBlueprintReward && blueprintAmount > 0) {
+    const holobots = ['ace', 'kuma', 'shadow', 'era', 'nova', 'wolf', 'tsuin', 'ken', 'gama', 'kurai', 'tora', 'wake', 'hare'];
+    const selectedHolobot = holobots[Math.floor(Math.random() * holobots.length)];
+    
+    blueprintReward = {
+      holobotKey: selectedHolobot,
+      amount: blueprintAmount
+    };
+  }
+  
+  return {
+    holosTokens: baseTokens,
+    gachaTickets: baseGachaTickets,
+    blueprintReward,
+    arenaPass
+  };
 };

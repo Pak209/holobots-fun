@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { ItemCard } from "@/components/items/ItemCard";
 import { ArenaPrebattleMenu } from "@/components/arena/ArenaPrebattleMenu";
-import { generateArenaOpponent } from "@/utils/battleUtils";
+import { generateArenaOpponent, calculateArenaRewards } from "@/utils/battleUtils";
+import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);
@@ -16,6 +17,8 @@ const Index = () => {
   const [hasEntryFee, setHasEntryFee] = useState(false);
   const [selectedHolobot, setSelectedHolobot] = useState("ace"); // Default holobot
   const [currentOpponent, setCurrentOpponent] = useState(generateArenaOpponent(1));
+  const [showResults, setShowResults] = useState(false);
+  const [arenaResults, setArenaResults] = useState<any>(null);
   const maxRounds = 3;
   const entryFee = 50;
   const { toast } = useToast();
@@ -97,53 +100,87 @@ const Index = () => {
     }
   };
 
+  const calculateExperienceRewards = (victoryCount: number) => {
+    // Find the selected holobot in user's collection
+    if (!user?.holobots || !Array.isArray(user.holobots)) {
+      return [];
+    }
+    
+    const holobot = user.holobots.find(h => 
+      h.name.toLowerCase() === HOLOBOT_STATS[selectedHolobot].name.toLowerCase()
+    );
+    
+    if (!holobot) return [];
+    
+    const currentLevel = holobot.level || 1;
+    const currentXp = holobot.experience || 0;
+    
+    // Calculate XP gained based on victories and rounds
+    const xpGained = victoryCount * 100 * currentRound;
+    const totalXp = currentXp + xpGained;
+    
+    // Check if level up occurred
+    const requiredXpForNextLevel = Math.floor(100 * Math.pow(currentLevel, 2));
+    const leveledUp = totalXp >= requiredXpForNextLevel;
+    const newLevel = leveledUp ? currentLevel + 1 : currentLevel;
+    
+    return [{
+      name: HOLOBOT_STATS[selectedHolobot].name,
+      xp: xpGained,
+      levelUp: leveledUp,
+      newLevel: newLevel
+    }];
+  }
+
   const distributeRewards = async () => {
     try {
       if (!user) return;
       
-      const baseReward = 100;
-      const holosTokens = victories * baseReward * currentRound;
-      const gachaTickets = Math.floor(victories / 2);
-      const blueprintPieces = victories * currentRound;
-      const arenaPass = Math.random() > 0.7 ? 1 : 0; // 30% chance to get arena pass as reward
-
+      // Calculate rewards based on current round and victories
+      const rewards = calculateArenaRewards(currentRound, victories);
+      
+      // Calculate experience for the holobot
+      const experienceRewards = calculateExperienceRewards(victories);
+      const selectedHolobotName = HOLOBOT_STATS[selectedHolobot].name;
+      
+      // Update user with rewards
       const updates: any = {
-        holosTokens: user.holosTokens + holosTokens,
-        gachaTickets: user.gachaTickets + gachaTickets
+        holosTokens: user.holosTokens + rewards.holosTokens,
+        gachaTickets: user.gachaTickets + rewards.gachaTickets
       };
       
-      if (arenaPass > 0) {
-        updates.arena_passes = (user.arena_passes || 0) + arenaPass;
+      if (rewards.arenaPass > 0) {
+        updates.arena_passes = (user.arena_passes || 0) + rewards.arenaPass;
       }
       
+      // Update holobot experience
+      if (experienceRewards.length > 0) {
+        const updatedHolobots = updateHolobotExperience(
+          user.holobots,
+          selectedHolobotName,
+          (user.holobots.find(h => h.name.toLowerCase() === selectedHolobotName.toLowerCase())?.experience || 0) + experienceRewards[0].xp,
+          experienceRewards[0].newLevel
+        );
+        
+        updates.holobots = updatedHolobots;
+      }
+      
+      // Save all the updates to the user
       await updateUser(updates);
       
-      toast({
-        title: "Arena Rewards!",
-        description: (
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <Gem className="w-4 h-4 text-purple-500" />
-              <span>{holosTokens} Holos Tokens</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Ticket className="w-4 h-4 text-yellow-500" />
-              <span>{gachaTickets} Gacha Tickets</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-blue-500" />
-              <span>{blueprintPieces} Blueprint Pieces</span>
-            </div>
-            {arenaPass > 0 && (
-              <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-purple-500" />
-                <span>{arenaPass} Arena Pass</span>
-              </div>
-            )}
-          </div>
-        ),
-        duration: 5000,
+      // Save the results to show in the results screen
+      setArenaResults({
+        isSuccess: victories > 0,
+        squadHolobotKeys: [selectedHolobot],
+        squadHolobotExp: experienceRewards,
+        blueprintRewards: rewards.blueprintReward,
+        holosRewards: rewards.holosTokens,
+        gachaTickets: rewards.gachaTickets,
+        arenaPass: rewards.arenaPass
       });
+      
+      // Show the results screen
+      setShowResults(true);
     } catch (error) {
       console.error("Error distributing rewards:", error);
       toast({
@@ -168,11 +205,17 @@ const Index = () => {
         setCurrentOpponent(generateArenaOpponent(1));
       }
     } else {
+      distributeRewards();
       setCurrentRound(1);
       setVictories(0);
       setHasEntryFee(false);
       setCurrentOpponent(generateArenaOpponent(1));
     }
+  };
+
+  const handleResultsClose = () => {
+    setShowResults(false);
+    setArenaResults(null);
   };
 
   if (!hasEntryFee) {
@@ -218,6 +261,19 @@ const Index = () => {
         cpuLevel={currentOpponent.level}
         onBattleEnd={handleBattleEnd}
       />
+
+      {/* Results screen */}
+      {showResults && arenaResults && (
+        <QuestResultsScreen
+          isVisible={showResults}
+          isSuccess={arenaResults.isSuccess}
+          squadHolobotKeys={arenaResults.squadHolobotKeys}
+          squadHolobotExp={arenaResults.squadHolobotExp}
+          blueprintRewards={arenaResults.blueprintRewards}
+          holosRewards={arenaResults.holosRewards}
+          onClose={handleResultsClose}
+        />
+      )}
     </div>
   );
 };

@@ -18,7 +18,7 @@ export const supabase = createClient<Database>(
     },
     realtime: {
       params: {
-        eventsPerSecond: 0
+        eventsPerSecond: 10 // Increase events per second for better realtime updates
       }
     }
   }
