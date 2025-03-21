@@ -4,22 +4,37 @@ import { Progress } from "@/components/ui/progress";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { ShieldAlert, Swords } from "lucide-react";
 import { UserHolobot } from "@/types/user";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface QuestBattleBannerProps {
-  playerHolobots: UserHolobot[];
-  bossHolobot: string;
+  playerHolobots?: UserHolobot[];
+  bossHolobot?: string;
   onBattleComplete?: () => void;
   difficulty?: string;
+  // New props to match what's being passed in QuestGrid.tsx
+  isVisible?: boolean;
+  isBossQuest?: boolean;
+  squadHolobotKeys?: string[];
+  bossHolobotKey?: string;
+  onComplete?: () => void;
 }
 
 export const QuestBattleBanner = ({ 
-  playerHolobots, 
+  playerHolobots,
   bossHolobot,
   onBattleComplete,
-  difficulty = "normal"
+  difficulty = "normal",
+  // Handle new props
+  isVisible = true,
+  isBossQuest = false,
+  squadHolobotKeys = [],
+  bossHolobotKey = "",
+  onComplete
 }: QuestBattleBannerProps) => {
+  const { user } = useAuth();
+  
   // Battle simulation states
-  const [isVisible, setIsVisible] = useState(true);
+  const [visible, setVisible] = useState(isVisible);
   const [battlePhase, setBattlePhase] = useState<'intro' | 'battle' | 'result'>('intro');
   const [battleText, setBattleText] = useState<string>("");
   const [playerHealth, setPlayerHealth] = useState(100);
@@ -27,16 +42,35 @@ export const QuestBattleBanner = ({
   const [battleRound, setBattleRound] = useState(0);
   const [battleResult, setBattleResult] = useState<'win' | 'loss' | null>(null);
 
+  // Process squad holobots from keys
+  const actualPlayerHolobots = playerHolobots || 
+    (user?.holobots?.filter(holobot => 
+      squadHolobotKeys.some(key => 
+        HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
+      )
+    ) || []);
+  
+  // Use provided boss key or fallback to the prop
+  const actualBossHolobot = bossHolobotKey || bossHolobot || "";
+  
   // Get boss stats
-  const boss = HOLOBOT_STATS[bossHolobot.toLowerCase()];
+  const boss = HOLOBOT_STATS[actualBossHolobot.toLowerCase()] || { 
+    name: "Unknown Boss", 
+    attack: 50,
+    defense: 50,
+    maxHealth: 100,
+    speed: 50
+  };
   
   // Calculate team combined stats
-  const teamStats = playerHolobots.reduce((stats, holobot) => {
+  const teamStats = actualPlayerHolobots.reduce((stats, holobot) => {
     const baseStats = HOLOBOT_STATS[holobot.name.toLowerCase()];
-    stats.attack += baseStats.attack + (holobot.boostedAttributes?.attack || 0);
-    stats.defense += baseStats.defense + (holobot.boostedAttributes?.defense || 0);
-    stats.health += baseStats.maxHealth + (holobot.boostedAttributes?.health || 0);
-    stats.speed += baseStats.speed + (holobot.boostedAttributes?.speed || 0);
+    if (baseStats) {
+      stats.attack += baseStats.attack + (holobot.boostedAttributes?.attack || 0);
+      stats.defense += baseStats.defense + (holobot.boostedAttributes?.defense || 0);
+      stats.health += baseStats.maxHealth + (holobot.boostedAttributes?.health || 0);
+      stats.speed += baseStats.speed + (holobot.boostedAttributes?.speed || 0);
+    }
     return stats;
   }, { attack: 0, defense: 0, health: 0, speed: 0 });
   
@@ -60,8 +94,23 @@ export const QuestBattleBanner = ({
     speed: boss.speed * bossMultiplier,
   };
   
+  // Reset state when visibility changes
+  useEffect(() => {
+    setVisible(isVisible);
+    if (isVisible) {
+      setBattlePhase('intro');
+      setPlayerHealth(100);
+      setBossHealth(100);
+      setBattleRound(0);
+      setBattleResult(null);
+      setBattleText(`Battle with ${boss.name} is starting!`);
+    }
+  }, [isVisible, boss.name]);
+  
   // Battle simulation
   useEffect(() => {
+    if (!visible) return;
+    
     let battleTimer: ReturnType<typeof setTimeout>;
     
     if (battlePhase === 'intro') {
@@ -139,15 +188,19 @@ export const QuestBattleBanner = ({
     } else if (battlePhase === 'result') {
       // Battle complete
       battleTimer = setTimeout(() => {
-        setIsVisible(false);
-        if (onBattleComplete) onBattleComplete();
+        setVisible(false);
+        if (onComplete) {
+          onComplete();
+        } else if (onBattleComplete) {
+          onBattleComplete();
+        }
       }, 2000);
     }
     
     return () => clearTimeout(battleTimer);
-  }, [battlePhase, battleRound, bossHealth, playerHealth]);
+  }, [battlePhase, battleRound, bossHealth, playerHealth, visible]);
   
-  if (!isVisible) return null;
+  if (!visible) return null;
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -171,11 +224,25 @@ export const QuestBattleBanner = ({
             className="h-3 bg-gray-700"
           />
           <div className="grid grid-cols-3 gap-1 mt-1">
-            {playerHolobots.map((holobot, idx) => (
+            {actualPlayerHolobots.map((holobot, idx) => (
               <div key={idx} className="text-[10px] text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
                 {holobot.name}
               </div>
             ))}
+            {squadHolobotKeys.map((key, idx) => {
+              // Only show if not already in actualPlayerHolobots
+              const holobotName = HOLOBOT_STATS[key]?.name;
+              const alreadyDisplayed = actualPlayerHolobots.some(h => 
+                h.name.toLowerCase() === holobotName?.toLowerCase()
+              );
+              if (alreadyDisplayed || !holobotName) return null;
+              
+              return (
+                <div key={`key-${idx}`} className="text-[10px] text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
+                  {holobotName}
+                </div>
+              );
+            })}
           </div>
         </div>
         
@@ -193,7 +260,7 @@ export const QuestBattleBanner = ({
             className="h-3 bg-gray-700"
           />
           <div className="text-[10px] text-center mt-1 bg-red-900/30 rounded px-1 py-0.5">
-            {difficulty.toUpperCase()} BOSS
+            {isBossQuest ? "BOSS QUEST" : "EXPLORATION"} - {difficulty.toUpperCase()}
           </div>
         </div>
         
