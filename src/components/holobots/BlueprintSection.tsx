@@ -17,10 +17,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // Define the blueprint redemption tiers
 export const BLUEPRINT_TIERS = {
   common: { required: 5, name: "Common", color: "blue", startLevel: 1 },
-  champion: { required: 10, name: "Champion", color: "green", startLevel: 5 },
-  rare: { required: 20, name: "Rare", color: "purple", startLevel: 10 },
-  elite: { required: 40, name: "Elite", color: "yellow", startLevel: 20 },
-  legendary: { required: 80, name: "Legendary", color: "orange", startLevel: 30 }
+  champion: { required: 10, name: "Champion", color: "green", startLevel: 11 }, // Fixed: Level 11 for Champion
+  rare: { required: 20, name: "Rare", color: "purple", startLevel: 21 }, // Updated to level 21
+  elite: { required: 40, name: "Elite", color: "yellow", startLevel: 31 }, // Updated to level 31
+  legendary: { required: 80, name: "Legendary", color: "orange", startLevel: 41 } // Updated to level 41
 };
 
 // Helper to determine background color based on tier
@@ -116,10 +116,10 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
       // Create a new holobot at the specified tier
       const newHolobot = {
         name: holobotName,
-        level: calculateHolobotStartLevel(currentTier.name),
+        level: currentTier.startLevel,
         experience: 0,
         nextLevelExp: 100,
-        boostedAttributes: {},
+        boostedAttributes: {}, // Add 10 attribute points for the user to distribute
         rank: currentTier.name
       };
       
@@ -140,7 +140,7 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
       
       toast({
         title: `${currentTier.name} ${holobotName} Obtained!`,
-        description: `Successfully redeemed ${currentTier.required} blueprint pieces.`,
+        description: `Successfully redeemed ${currentTier.required} blueprint pieces. You have 10 attribute points to distribute.`,
       });
     } catch (error) {
       console.error("Error redeeming blueprint:", error);
@@ -182,7 +182,9 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
             level: selectedTierInfo.startLevel,
             rank: selectedTier,
             experience: 0,
-            nextLevelExp: 100
+            nextLevelExp: 100,
+            // Add boostedAttributes if it doesn't exist
+            boostedAttributes: h.boostedAttributes || {}
           };
         }
         return h;
@@ -202,7 +204,7 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
       
       toast({
         title: `${holobotName} Upgraded!`,
-        description: `Successfully upgraded to ${selectedTier} rank (Level ${selectedTierInfo.startLevel}).`,
+        description: `Successfully upgraded to ${selectedTier} rank (Level ${selectedTierInfo.startLevel}). You have 10 attribute points to distribute.`,
       });
     } catch (error) {
       console.error("Error upgrading holobot:", error);
@@ -235,7 +237,7 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
             <TooltipContent>
               <p className="text-xs max-w-xs">
                 Collect blueprint pieces from quests and redeem them to mint Holobots of various ranks.
-                Higher ranks start at higher levels!
+                Higher ranks start at higher levels: Champion (11), Rare (21), Elite (31), Legendary (41).
               </p>
             </TooltipContent>
           </Tooltip>
