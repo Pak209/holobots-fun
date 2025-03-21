@@ -56,7 +56,10 @@ export const QuestBattleBanner = ({
   };
   
   const teamStats = actualPlayerHolobots.reduce((stats, holobot) => {
-    const baseStats = HOLOBOT_STATS[holobot.name.toLowerCase()];
+    const baseStats = HOLOBOT_STATS[Object.keys(HOLOBOT_STATS).find(
+      key => HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
+    ) || 'ace'];
+    
     if (baseStats) {
       stats.attack += baseStats.attack + (holobot.boostedAttributes?.attack || 0);
       stats.defense += baseStats.defense + (holobot.boostedAttributes?.defense || 0);

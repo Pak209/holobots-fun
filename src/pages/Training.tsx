@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS } from "@/types/holobot";
@@ -50,6 +49,19 @@ const Training = () => {
       k => HOLOBOT_STATS[k].name.toLowerCase() === lowerName
     );
     return key || Object.keys(HOLOBOT_STATS)[0]; // fallback to first holobot if not found
+  };
+
+  // Apply attribute boosts from user's holobot
+  const applyAttributeBoosts = (baseStats, userHolobot) => {
+    if (!userHolobot || !userHolobot.boostedAttributes) return baseStats;
+    
+    return {
+      ...baseStats,
+      attack: baseStats.attack + (userHolobot.boostedAttributes.attack || 0),
+      defense: baseStats.defense + (userHolobot.boostedAttributes.defense || 0),
+      speed: baseStats.speed + (userHolobot.boostedAttributes.speed || 0),
+      maxHealth: baseStats.maxHealth + (userHolobot.boostedAttributes.health || 0)
+    };
   };
 
   const handleStartTraining = async () => {
@@ -151,6 +163,17 @@ const Training = () => {
     }
   };
 
+  // Get the user's holobot with boosted attributes
+  const userHolobot = getSelectedHolobotObject();
+  
+  // Get base stats for the selected holobot
+  const baseStats = selectedHolobot ? HOLOBOT_STATS[selectedHolobot] : null;
+  
+  // Apply attribute boosts if available
+  const boostedStats = baseStats && userHolobot 
+    ? applyAttributeBoosts(baseStats, userHolobot)
+    : baseStats;
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto pt-16 px-4">
@@ -195,12 +218,12 @@ const Training = () => {
 
             {selectedHolobot && (
               <div className="mt-4 flex justify-center">
-                {getSelectedHolobotObject() && (
+                {userHolobot && boostedStats && (
                   <HolobotCard 
                     stats={{
-                      ...HOLOBOT_STATS[selectedHolobot],
-                      name: getSelectedHolobotObject()?.name || '',
-                      level: getSelectedHolobotObject()?.level || 1,
+                      ...boostedStats,
+                      name: userHolobot.name || '',
+                      level: userHolobot.level || 1,
                     }}
                     variant="blue"
                   />
