@@ -32,10 +32,12 @@ export const BlueprintCard = ({
   // Determine background color based on tier
   const getTierColor = () => {
     switch(tier) {
-      case 3: return "from-yellow-500 to-yellow-700";
-      case 2: return "from-purple-500 to-purple-700";
+      case 5: return "from-orange-500 to-orange-700"; // legendary
+      case 4: return "from-yellow-500 to-yellow-700"; // elite
+      case 3: return "from-purple-500 to-purple-700"; // rare
+      case 2: return "from-green-500 to-green-700";   // champion
       case 1:
-      default: return "from-blue-500 to-blue-700";
+      default: return "from-blue-500 to-blue-700";    // common
     }
   };
 

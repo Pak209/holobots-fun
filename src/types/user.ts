@@ -30,6 +30,7 @@ export interface UserProfile {
   exp_boosters?: number;
   energy_refills?: number;
   rank_skips?: number;
+  blueprints?: Record<string, number>; // Add blueprints field to store blueprint pieces per holobot
 }
 
 export interface AuthState {
@@ -59,7 +60,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       arena_passes: dbProfile.arena_passes || 0,
       exp_boosters: dbProfile.exp_boosters || 0,
       energy_refills: dbProfile.energy_refills || 0,
-      rank_skips: dbProfile.rank_skips || 0
+      rank_skips: dbProfile.rank_skips || 0,
+      blueprints: dbProfile.blueprints || {}
     };
   } else {
     // This is from the users table
@@ -80,7 +82,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       arena_passes: 0,
       exp_boosters: 0,
       energy_refills: 0,
-      rank_skips: 0
+      rank_skips: 0,
+      blueprints: {}
     };
   }
 }

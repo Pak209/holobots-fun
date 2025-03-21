@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -9,6 +8,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star } from "lucide-react";
 import { Progress } from "./ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { QuestBattleBanner } from "@/components/quests/QuestBattleBanner";
+import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 
 // Quest difficulty tiers
 const EXPLORATION_TIERS = {
@@ -92,6 +93,19 @@ export const QuestGrid = () => {
   
   // Cooldown state for holobots
   const [holobotCooldowns, setHolobotCooldowns] = useState<Record<string, Date>>({});
+  
+  // Battle UI states
+  const [showBattleBanner, setShowBattleBanner] = useState(false);
+  const [isBossBattle, setIsBossBattle] = useState(false);
+  const [currentBattleHolobots, setCurrentBattleHolobots] = useState<string[]>([]);
+  const [currentBossHolobot, setCurrentBossHolobot] = useState<string>("");
+  
+  // Results screen states
+  const [showResultsScreen, setShowResultsScreen] = useState(false);
+  const [battleSuccess, setBattleSuccess] = useState(false);
+  const [squadExpResults, setSquadExpResults] = useState<Array<{name: string, xp: number, levelUp: boolean, newLevel: number}>>([]);
+  const [blueprintReward, setBlueprintReward] = useState<{holobotKey: string, amount: number} | undefined>();
+  const [holosReward, setHolosReward] = useState(0);
 
   // Get the user's holobots that are not on cooldown
   const getAvailableHolobots = () => {
@@ -180,9 +194,18 @@ export const QuestGrid = () => {
 
     setIsExplorationQuesting(true);
     
+    // Set up battle banner
+    setIsBossBattle(false);
+    setCurrentBattleHolobots([explorationHolobot]);
+    
+    // For exploration, randomly select an opponent
+    const randomOpponentKey = Object.keys(HOLOBOT_STATS)[Math.floor(Math.random() * Object.keys(HOLOBOT_STATS).length)];
+    setCurrentBossHolobot(randomOpponentKey);
+    setShowBattleBanner(true);
+    
     try {
-      // Simulate quest duration
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for battle banner to complete
+      await new Promise(resolve => setTimeout(resolve, 4000));
       
       // Determine success (70% success rate)
       const isSuccess = Math.random() < 0.7;
@@ -190,16 +213,39 @@ export const QuestGrid = () => {
       if (isSuccess) {
         // Update user's tokens and energy
         if (user) {
+          // Add blueprints rewards - random selection of holobot for exploration
+          const randomHolobotKey = randomOpponentKey;
+          
+          // Get current blueprints or initialize empty object
+          const currentBlueprints = user.blueprints || {};
+          
+          // Update the blueprint count for the random holobot
+          const updatedBlueprints = {
+            ...currentBlueprints,
+            [randomHolobotKey]: (currentBlueprints[randomHolobotKey] || 0) + tier.rewards.blueprintPieces
+          };
+          
           await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
-            holosTokens: user.holosTokens + tier.rewards.holosTokens
+            holosTokens: user.holosTokens + tier.rewards.holosTokens,
+            blueprints: updatedBlueprints
           });
+          
+          // Set up results screen data
+          setBattleSuccess(true);
+          setSquadExpResults([{
+            name: HOLOBOT_STATS[explorationHolobot].name,
+            xp: 0, // No XP for exploration currently
+            levelUp: false,
+            newLevel: user.holobots.find(h => h.name === HOLOBOT_STATS[explorationHolobot].name)?.level || 1
+          }]);
+          setBlueprintReward({
+            holobotKey: randomHolobotKey,
+            amount: tier.rewards.blueprintPieces
+          });
+          setHolosReward(tier.rewards.holosTokens);
+          setShowResultsScreen(true);
         }
-        
-        toast({
-          title: "Exploration Successful!",
-          description: `Gained ${tier.rewards.holosTokens} Holos and ${tier.rewards.blueprintPieces} Blueprint ${tier.rewards.blueprintPieces > 1 ? 'Pieces' : 'Piece'}!`,
-        });
       } else {
         // Set holobot on cooldown
         setHolobotOnCooldown(explorationHolobot);
@@ -211,11 +257,17 @@ export const QuestGrid = () => {
           });
         }
         
-        toast({
-          title: "Exploration Failed",
-          description: `Your Holobot was defeated and needs to recharge for ${COOLDOWN_MINUTES} minutes.`,
-          variant: "destructive"
-        });
+        // Set up results screen for failure
+        setBattleSuccess(false);
+        setSquadExpResults([{
+          name: HOLOBOT_STATS[explorationHolobot].name,
+          xp: 0,
+          levelUp: false,
+          newLevel: user.holobots.find(h => h.name === HOLOBOT_STATS[explorationHolobot].name)?.level || 1
+        }]);
+        setBlueprintReward(undefined);
+        setHolosReward(0);
+        setShowResultsScreen(true);
       }
     } catch (error) {
       toast({
@@ -278,9 +330,15 @@ export const QuestGrid = () => {
 
     setIsBossQuesting(true);
     
+    // Set up battle banner
+    setIsBossBattle(true);
+    setCurrentBattleHolobots([...bossHolobots]);
+    setCurrentBossHolobot(selectedBoss);
+    setShowBattleBanner(true);
+    
     try {
-      // Simulate quest duration
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Wait for battle banner to complete
+      await new Promise(resolve => setTimeout(resolve, 4000));
       
       // Calculate squad power (simplified)
       const squadPower = bossHolobots.reduce((power, holobotKey) => {
@@ -302,24 +360,50 @@ export const QuestGrid = () => {
         // Update XP for all Holobots in the squad
         const updatedHolobots = await updateSquadExperience(bossHolobots, tier.rewards.squadXp, tier.rewards.xpMultiplier);
         
+        // Get current blueprints or initialize empty object
+        const currentBlueprints = user.blueprints || {};
+        
+        // Update the blueprint count for the boss holobot
+        const updatedBlueprints = {
+          ...currentBlueprints,
+          [selectedBoss]: (currentBlueprints[selectedBoss] || 0) + tier.rewards.blueprintPieces
+        };
+        
         // Update user's tokens, tickets, and energy
         if (user) {
           await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
             holosTokens: user.holosTokens + tier.rewards.holosTokens,
             gachaTickets: user.gachaTickets + tier.rewards.gachaTickets,
-            holobots: updatedHolobots // Update with new XP values
+            holobots: updatedHolobots, // Update with new XP values
+            blueprints: updatedBlueprints
           });
         }
         
-        toast({
-          title: "Boss Defeated!",
-          description: `Gained ${tier.rewards.holosTokens} Holos, ${tier.rewards.blueprintPieces} Blueprint Pieces, and ${tier.rewards.gachaTickets} Gacha Tickets! All squad Holobots gained XP!`,
+        // Set up results screen data
+        setBattleSuccess(true);
+        setBlueprintReward({
+          holobotKey: selectedBoss,
+          amount: tier.rewards.blueprintPieces
         });
+        setHolosReward(tier.rewards.holosTokens);
+        setShowResultsScreen(true);
       } else {
         // Even on failure, Holobots gain some experience (half of success amount)
         const failureXp = Math.floor(tier.rewards.squadXp * 0.5);
         const updatedHolobots = await updateSquadExperience(bossHolobots, failureXp, 1);
+        
+        // Grant a reduced amount of blueprint pieces even on failure (25% of normal)
+        const failureBlueprintPieces = Math.max(1, Math.floor(tier.rewards.blueprintPieces * 0.25));
+        
+        // Get current blueprints or initialize empty object
+        const currentBlueprints = user.blueprints || {};
+        
+        // Update the blueprint count for the boss holobot
+        const updatedBlueprints = {
+          ...currentBlueprints,
+          [selectedBoss]: (currentBlueprints[selectedBoss] || 0) + failureBlueprintPieces
+        };
         
         // Set all squad holobots on cooldown
         bossHolobots.forEach(holobotKey => {
@@ -330,15 +414,19 @@ export const QuestGrid = () => {
         if (user) {
           await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
-            holobots: updatedHolobots // Update with new XP values
+            holobots: updatedHolobots, // Update with new XP values
+            blueprints: updatedBlueprints
           });
         }
         
-        toast({
-          title: "Boss Quest Failed",
-          description: `Your Holobots were defeated and need to recharge for ${COOLDOWN_MINUTES} minutes. They gained some XP from the battle.`,
-          variant: "destructive"
+        // Set up results screen for failure
+        setBattleSuccess(false);
+        setBlueprintReward({
+          holobotKey: selectedBoss,
+          amount: failureBlueprintPieces
         });
+        setHolosReward(0);
+        setShowResultsScreen(true);
       }
     } catch (error) {
       console.error("Error during boss quest:", error);
@@ -353,7 +441,7 @@ export const QuestGrid = () => {
     }
   };
 
-  // New function to update experience for all Holobots in the squad
+  // New function to update experience for all Holobots in the squad - update to track XP messages
   const updateSquadExperience = async (squadHolobotKeys, baseXp, multiplier = 1) => {
     if (!user?.holobots || !Array.isArray(user.holobots)) {
       return [];
@@ -362,7 +450,7 @@ export const QuestGrid = () => {
     // Create a copy of holobots to update
     const updatedHolobots = [...user.holobots];
     
-    // Track XP gained messages for toast
+    // Track XP gained messages for results screen
     const xpMessages = [];
     
     // Update each Holobot in the squad
@@ -418,7 +506,10 @@ export const QuestGrid = () => {
       });
     }
     
-    // Show toast with XP information
+    // Set results for results screen
+    setSquadExpResults(xpMessages);
+    
+    // Show toasts for level ups
     xpMessages.forEach(msg => {
       if (msg.levelUp) {
         toast({
@@ -767,6 +858,26 @@ export const QuestGrid = () => {
           </CardContent>
         </Card>
       )}
+      
+      {/* Battle Banner */}
+      <QuestBattleBanner 
+        isVisible={showBattleBanner}
+        isBossQuest={isBossBattle}
+        squadHolobotKeys={currentBattleHolobots}
+        bossHolobotKey={currentBossHolobot}
+        onComplete={() => setShowBattleBanner(false)}
+      />
+      
+      {/* Results Screen */}
+      <QuestResultsScreen 
+        isVisible={showResultsScreen}
+        isSuccess={battleSuccess}
+        squadHolobotKeys={currentBattleHolobots}
+        squadHolobotExp={squadExpResults}
+        blueprintRewards={blueprintReward}
+        holosRewards={holosReward}
+        onClose={() => setShowResultsScreen(false)}
+      />
     </div>
   );
 };

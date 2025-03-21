@@ -2,6 +2,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotInfoCard } from "@/components/holobots/HolobotInfoCard";
+import { BlueprintSection } from "@/components/holobots/BlueprintSection";
 import { useMintHolobot } from "@/hooks/use-mint-holobot";
 
 const HolobotsInfo = () => {
@@ -25,16 +26,23 @@ const HolobotsInfo = () => {
             const userHolobot = findUserHolobot(holobot.name);
             
             return (
-              <HolobotInfoCard 
-                key={key}
-                holobotKey={key}
-                holobot={holobot}
-                userHolobot={userHolobot}
-                userTokens={user?.holosTokens || 0}
-                isMinting={isMinting === holobot.name}
-                justMinted={justMinted === holobot.name}
-                onMint={handleMintHolobot}
-              />
+              <div key={key} className="space-y-4">
+                <HolobotInfoCard 
+                  holobotKey={key}
+                  holobot={holobot}
+                  userHolobot={userHolobot}
+                  userTokens={user?.holosTokens || 0}
+                  isMinting={isMinting === holobot.name}
+                  justMinted={justMinted === holobot.name}
+                  onMint={handleMintHolobot}
+                />
+                
+                {/* Add Blueprint Section */}
+                <BlueprintSection 
+                  holobotKey={key}
+                  holobotName={holobot.name}
+                />
+              </div>
             );
           })}
         </div>
