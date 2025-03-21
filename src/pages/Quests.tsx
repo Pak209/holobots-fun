@@ -1,6 +1,6 @@
 
 import { QuestGrid } from "@/components/QuestGrid";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { Trophy, Star, FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BLUEPRINT_TIERS } from "@/components/holobots/BlueprintSection";

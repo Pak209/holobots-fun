@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotInfoCard } from "@/components/holobots/HolobotInfoCard";
 import { BlueprintSection } from "@/components/holobots/BlueprintSection";

@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Trophy, Ticket, Gem, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { ItemCard } from "@/components/items/ItemCard";
 import { ArenaPrebattleMenu } from "@/components/arena/ArenaPrebattleMenu";
 import { generateArenaOpponent, calculateArenaRewards } from "@/utils/battleUtils";

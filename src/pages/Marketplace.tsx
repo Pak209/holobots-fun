@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { MarketplaceFilters, FilterOptions } from "@/components/marketplace/MarketplaceFilters";
 import { MarketplaceHolobotCard } from "@/components/marketplace/MarketplaceHolobotCard";
 import { MarketplaceItemCard } from "@/components/marketplace/MarketplaceItemCard";
@@ -8,16 +7,6 @@ import { BlueprintCard } from "@/components/marketplace/BlueprintCard";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { 
-  PackagePlus, 
-  Gem, 
-  Boxes, 
-  ShoppingBag, 
-  Plus, 
-  Info, 
-  AlertCircle 
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const MARKETPLACE_ITEMS = [
   // Holobots

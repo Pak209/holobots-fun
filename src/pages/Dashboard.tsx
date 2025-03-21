@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { ArrowRight, Bolt, Coins, Sword, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { HolobotCard } from "@/components/HolobotCard";

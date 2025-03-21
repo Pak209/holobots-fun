@@ -1,18 +1,13 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
-import { AuthState, UserProfile, mapDatabaseToUserProfile } from "@/types/user";
+import { AuthContextType } from "./types";
+import { UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { ensureWelcomeGift } from "./authUtils";
 
-interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  signup: (email: string, password: string, username: string) => Promise<void>;
-  updateUser: (updates: Partial<UserProfile>) => Promise<void>;
-  searchPlayers: (query: string) => Promise<UserProfile[]>;
-  getUserProfile: (userId: string) => Promise<UserProfile | null>;
-}
-
+// Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -21,51 +16,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  // Ensure new users get 500 Holos tokens when they sign up
-  const ensureWelcomeGift = async (userId: string): Promise<void> => {
-    try {
-      // Get the current user profile
-      const { data: profile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('holos_tokens')
-        .eq('id', userId as any)
-        .maybeSingle();
-      
-      if (fetchError) {
-        console.error("Error fetching profile for welcome gift:", fetchError);
-        return;
-      }
-      
-      // Fix: Check if profile is not null and has the holos_tokens property
-      if (profile && 'holos_tokens' in profile && profile.holos_tokens === 0) {
-        console.log("Giving welcome gift of 500 Holos tokens to new user");
-        
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            holos_tokens: 500 
-          } as any)
-          .eq('id', userId as any);
-        
-        if (updateError) {
-          console.error("Error giving welcome gift:", updateError);
-        } else {
-          console.log("Welcome gift of 500 Holos tokens successfully given");
-          
-          // Update local state if this is the current user
-          if (currentUser && currentUser.id === userId) {
-            setCurrentUser({
-              ...currentUser,
-              holosTokens: 500
-            });
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Error in ensureWelcomeGift:", err);
-    }
-  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -95,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setCurrentUser(mappedProfile);
             
             // Ensure new users get their welcome gift of 500 Holos tokens
-            await ensureWelcomeGift(data.session.user.id);
+            await ensureWelcomeGift(data.session.user.id, currentUser, setCurrentUser);
           } else {
             console.log("User exists in auth but not in profiles");
             setCurrentUser(null);
@@ -137,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setCurrentUser(mappedProfile);
           
             // Ensure new users get their welcome gift of 500 Holos tokens
-            await ensureWelcomeGift(session.user.id);
+            await ensureWelcomeGift(session.user.id, currentUser, setCurrentUser);
           }
         } catch (err) {
           console.error("Error handling sign-in:", err);
@@ -152,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Simple login function without error-prone real-time subscriptions
+  // Login function
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
@@ -187,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Logout function
   const logout = async () => {
     setLoading(true);
     setError(null);
@@ -218,6 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Signup function
   const signup = async (email: string, password: string, username: string) => {
     setLoading(true);
     setError(null);
@@ -255,6 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Update user function
   const updateUser = async (updates: Partial<UserProfile>): Promise<void> => {
     if (!currentUser) {
       toast({
@@ -318,6 +271,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Search players function
   const searchPlayers = async (query: string): Promise<UserProfile[]> => {
     try {
       const { data, error } = await supabase
@@ -342,6 +296,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Get user profile function
   const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
       const { data, error } = await supabase
@@ -361,27 +316,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const state: AuthState = {
-    user: currentUser, 
+  // Create the context value
+  const contextValue: AuthContextType = {
+    user: currentUser,
     loading,
     error,
+    login,
+    logout,
+    signup,
+    updateUser,
+    searchPlayers,
+    getUserProfile
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      ...state, 
-      login, 
-      logout, 
-      signup, 
-      updateUser,
-      searchPlayers,
-      getUserProfile
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 }
 
+// Custom hook to use the auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

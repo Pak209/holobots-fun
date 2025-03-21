@@ -1,7 +1,7 @@
 
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { ItemCard } from "@/components/items/ItemCard";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function UserItems() {
