@@ -23,3 +23,36 @@ export const supabase = createClient<Database>(
     }
   }
 );
+
+// Helper functions
+export const updateHolobotExperience = (holobots: any[], holobotName: string, newExperience: number, newLevel: number) => {
+  if (!holobots || !Array.isArray(holobots)) {
+    return [];
+  }
+  
+  return holobots.map(holobot => {
+    if (holobot.name.toLowerCase() === holobotName.toLowerCase()) {
+      return {
+        ...holobot,
+        level: newLevel,
+        experience: newExperience,
+        nextLevelExp: calculateExperience(newLevel)
+      };
+    }
+    return holobot;
+  });
+};
+
+export const calculateExperience = (level: number) => {
+  const BASE_XP = 100;
+  return Math.floor(BASE_XP * Math.pow(level, 2));
+};
+
+// Constants for use in other files
+export const HOLOBOT_STATS = {
+  MAX_LEVEL: 50,
+  BASE_HEALTH: 100,
+  BASE_ATTACK: 10,
+  BASE_DEFENSE: 5,
+  BASE_SPEED: 8
+};

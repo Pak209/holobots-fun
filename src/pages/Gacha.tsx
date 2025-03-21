@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { ItemCard } from "@/components/items/ItemCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { useSearchParams } from "react-router-dom";
 
 interface GachaItem {
   name: string;
@@ -35,6 +35,15 @@ export default function Gacha() {
   const [cooldownProgress, setCooldownProgress] = useState(0);
   const [isUsingItem, setIsUsingItem] = useState(false);
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "gacha");
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "items") {
+      setActiveTab("items");
+    }
+  }, [searchParams]);
 
   const isDailyPullAvailable = 
     !user.lastEnergyRefresh || 
@@ -131,13 +140,49 @@ export default function Gacha() {
       setPulls(newPulls);
       setIsAnimating(false);
       
-      // Update user's items based on pulls
       handleItemsFromPulls(newPulls);
     }, 1000);
   };
 
+  const useGachaTicket = () => {
+    if ((user.gachaTickets || 0) <= 0) {
+      toast({
+        title: "No Gacha Tickets",
+        description: "You don't have any Gacha Tickets to use.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAnimating(true);
+    const rand = Math.random();
+    let cumulative = 0;
+    const newPull: GachaItem[] = [];
+    
+    for (const item of ITEMS) {
+      cumulative += item.chance;
+      if (rand <= cumulative) {
+        newPull.push(item);
+        break;
+      }
+    }
+
+    updateUser({ gachaTickets: (user.gachaTickets || 0) - 1 });
+
+    setTimeout(() => {
+      setPulls(newPull);
+      setIsAnimating(false);
+      
+      handleItemsFromPulls(newPull);
+
+      toast({
+        title: "Ticket Used",
+        description: "You've used a Gacha Ticket and received an item!",
+      });
+    }, 1000);
+  };
+
   const handleItemsFromPulls = (newPulls: GachaItem[]) => {
-    // Count occurrences of each item type
     const itemCounts = {
       "energy-refill": 0,
       "exp-booster": 0,
@@ -152,7 +197,6 @@ export default function Gacha() {
       if (pull.name === "Rank Skip") itemCounts["rank-skip"]++;
     });
     
-    // Update user's inventory
     updateUser({
       energy_refills: (user.energy_refills || 0) + itemCounts["energy-refill"],
       exp_boosters: (user.exp_boosters || 0) + itemCounts["exp-booster"],
@@ -199,7 +243,6 @@ export default function Gacha() {
             gachaTickets: user.gachaTickets - 1 
           });
           
-          // Perform a special ticket pull
           const specialPull: GachaItem[] = [];
           const rand = Math.random();
           let cumulative = 0;
@@ -314,7 +357,6 @@ export default function Gacha() {
     }
   };
 
-  // User items to display
   const userItems = [
     {
       type: "arena-pass" as const,
@@ -351,7 +393,7 @@ export default function Gacha() {
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
       <div className="container mx-auto px-4 py-8 pt-16">
-        <Tabs defaultValue="gacha" className="w-full">
+        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="gacha">Gacha Machine</TabsTrigger>
             <TabsTrigger value="items">Your Items</TabsTrigger>
@@ -379,11 +421,11 @@ export default function Gacha() {
             </div>
 
             <div className="mb-6">
-              <div className="flex flex-col items-center gap-2 mb-2">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-2">
                 <Button
                   onClick={() => pullGacha(1, false)}
                   disabled={isAnimating || !isDailyPullAvailable}
-                  className="w-full max-w-xs bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white"
+                  className="w-full sm:w-auto max-w-xs bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white"
                   size="lg"
                 >
                   {isDailyPullAvailable ? (
@@ -399,12 +441,22 @@ export default function Gacha() {
                   )}
                 </Button>
                 
-                {!isDailyPullAvailable && (
-                  <div className="w-full max-w-xs">
-                    <Progress value={cooldownProgress} className="h-2" />
-                  </div>
-                )}
+                <Button 
+                  onClick={useGachaTicket}
+                  disabled={isAnimating || (user.gachaTickets || 0) <= 0}
+                  className="w-full sm:w-auto max-w-xs bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  size="lg"
+                >
+                  <Ticket className="mr-2 h-5 w-5" />
+                  Use Ticket ({user.gachaTickets || 0})
+                </Button>
               </div>
+              
+              {!isDailyPullAvailable && (
+                <div className="w-full max-w-xs mx-auto">
+                  <Progress value={cooldownProgress} className="h-2" />
+                </div>
+              )}
             </div>
 
             <div className="flex justify-center gap-2 mb-8">

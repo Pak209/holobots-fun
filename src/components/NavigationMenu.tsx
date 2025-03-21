@@ -10,12 +10,13 @@ import {
   Database,
   BarChart4,
   Wheat,
-  Award
+  Award,
+  Package
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -123,10 +124,10 @@ export const NavigationMenu = () => {
           </DropdownMenuItem>
         </Link>
         
-        <Link to="/marketplace">
+        <Link to="/gacha?tab=items">
           <DropdownMenuItem className="cursor-pointer">
-            <ShoppingBag className="mr-2 h-4 w-4" />
-            <span>Marketplace</span>
+            <Package className="mr-2 h-4 w-4" />
+            <span>Your Items</span>
           </DropdownMenuItem>
         </Link>
         
