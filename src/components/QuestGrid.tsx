@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { HOLOBOT_STATS } from "@/types/holobot";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star } from "lucide-react";
 import { Progress } from "./ui/progress";

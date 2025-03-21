@@ -18,7 +18,7 @@ import {
   resetComboChain,
   incrementComboChain
 } from "@/utils/battleUtils";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface BattleSceneProps {

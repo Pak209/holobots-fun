@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Package, Ticket, Clock, Plus } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { formatDistanceToNow } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { ItemCard } from "@/components/items/ItemCard";
