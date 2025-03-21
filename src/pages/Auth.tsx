@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Web3ModalLogin } from "@/components/auth/Web3ModalLogin";
+import { SolanaWalletLogin } from "@/components/auth/SolanaWalletLogin";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -14,6 +17,7 @@ export default function Auth() {
   const [username, setUsername] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -64,6 +68,10 @@ export default function Auth() {
       const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          // Set session persistence based on rememberMe checkbox
+          persistSession: rememberMe
+        }
       });
 
       if (signInError) throw signInError;
@@ -147,6 +155,26 @@ export default function Auth() {
             />
           </div>
 
+          {!isSignUp && (
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="rememberMe" 
+                checked={rememberMe} 
+                onCheckedChange={(checked) => {
+                  if (typeof checked === 'boolean') {
+                    setRememberMe(checked);
+                  }
+                }}
+              />
+              <Label 
+                htmlFor="rememberMe" 
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                Remember me
+              </Label>
+            </div>
+          )}
+
           <Button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md"
@@ -160,6 +188,11 @@ export default function Auth() {
             ) : isSignUp ? "Create Account" : "Sign In"}
           </Button>
         </form>
+
+        <div className="mt-6 space-y-3">
+          <Web3ModalLogin isLoading={loading} />
+          <SolanaWalletLogin isLoading={loading} />
+        </div>
 
         <div className="mt-4 text-center">
           <Button
