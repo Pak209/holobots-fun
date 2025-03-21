@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Ticket, Clock } from "lucide-react";
+import { Package, Ticket, Clock, Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { Progress } from "@/components/ui/progress";
@@ -144,40 +145,44 @@ export default function Gacha() {
     }, 1000);
   };
 
-  const useGachaTicket = () => {
-    if ((user.gachaTickets || 0) <= 0) {
+  const useGachaTicket = (amount: number = 1) => {
+    if ((user.gachaTickets || 0) < amount) {
       toast({
-        title: "No Gacha Tickets",
-        description: "You don't have any Gacha Tickets to use.",
+        title: "Not Enough Gacha Tickets",
+        description: `You need ${amount} Gacha Tickets to use this option.`,
         variant: "destructive"
       });
       return;
     }
 
     setIsAnimating(true);
-    const rand = Math.random();
-    let cumulative = 0;
-    const newPull: GachaItem[] = [];
+    const newPulls: GachaItem[] = [];
     
-    for (const item of ITEMS) {
-      cumulative += item.chance;
-      if (rand <= cumulative) {
-        newPull.push(item);
-        break;
+    for (let i = 0; i < amount; i++) {
+      const rand = Math.random();
+      let cumulative = 0;
+      
+      for (const item of ITEMS) {
+        cumulative += item.chance;
+        if (rand <= cumulative) {
+          newPulls.push(item);
+          break;
+        }
       }
     }
 
-    updateUser({ gachaTickets: (user.gachaTickets || 0) - 1 });
+    // Important fix: Actually deduct the tickets from the user
+    updateUser({ gachaTickets: (user.gachaTickets || 0) - amount });
 
     setTimeout(() => {
-      setPulls(newPull);
+      setPulls(newPulls);
       setIsAnimating(false);
       
-      handleItemsFromPulls(newPull);
+      handleItemsFromPulls(newPulls);
 
       toast({
-        title: "Ticket Used",
-        description: "You've used a Gacha Ticket and received an item!",
+        title: "Tickets Used",
+        description: `You've used ${amount} Gacha Ticket${amount > 1 ? 's' : ''} and received items!`,
       });
     }, 1000);
   };
@@ -442,13 +447,24 @@ export default function Gacha() {
                 </Button>
                 
                 <Button 
-                  onClick={useGachaTicket}
+                  onClick={() => useGachaTicket(1)}
                   disabled={isAnimating || (user.gachaTickets || 0) <= 0}
                   className="w-full sm:w-auto max-w-xs bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
                   size="lg"
                 >
                   <Ticket className="mr-2 h-5 w-5" />
                   Use Ticket ({user.gachaTickets || 0})
+                </Button>
+                
+                <Button 
+                  onClick={() => useGachaTicket(10)}
+                  disabled={isAnimating || (user.gachaTickets || 0) < 10}
+                  className="w-full sm:w-auto max-w-xs bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
+                  size="lg"
+                >
+                  <Plus className="mr-1 h-4 w-4" />
+                  <Ticket className="mr-1 h-4 w-4" />
+                  10x Tickets
                 </Button>
               </div>
               
