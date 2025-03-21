@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Coins, Plus, Crown } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { UserHolobot } from "@/types/user";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 

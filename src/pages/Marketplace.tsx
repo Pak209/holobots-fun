@@ -7,6 +7,16 @@ import { BlueprintCard } from "@/components/marketplace/BlueprintCard";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { 
+  ShoppingBag, 
+  Boxes, 
+  AlertCircle, 
+  Gem, 
+  PackagePlus, 
+  Info, 
+  Plus 
+} from "lucide-react";
 
 const MARKETPLACE_ITEMS = [
   // Holobots
