@@ -10,6 +10,9 @@ import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Web3ModalLogin } from "@/components/auth/Web3ModalLogin";
 import { SolanaWalletLogin } from "@/components/auth/SolanaWalletLogin";
+import { WagmiConfig } from "wagmi";
+import { Web3Modal } from "@web3modal/react";
+import { wagmiConfig, ethereumClient } from "@/lib/web3Config";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -68,10 +71,6 @@ export default function Auth() {
       const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          // Set session persistence based on rememberMe checkbox
-          persistSession: rememberMe
-        }
       });
 
       if (signInError) throw signInError;
@@ -190,7 +189,9 @@ export default function Auth() {
         </form>
 
         <div className="mt-6 space-y-3">
-          <Web3ModalLogin isLoading={loading} />
+          <WagmiConfig config={wagmiConfig}>
+            <Web3ModalLogin isLoading={loading} />
+          </WagmiConfig>
           <SolanaWalletLogin isLoading={loading} />
         </div>
 
@@ -205,6 +206,9 @@ export default function Auth() {
           </Button>
         </div>
       </div>
+      
+      {/* Add Web3Modal provider outside the component tree */}
+      <Web3Modal projectId="" ethereumClient={ethereumClient} />
     </div>
   );
 }
