@@ -8,11 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Web3ModalLogin } from "@/components/auth/Web3ModalLogin";
-import { SolanaWalletLogin } from "@/components/auth/SolanaWalletLogin";
-import { WagmiConfig } from "wagmi";
-import { Web3Modal } from "@web3modal/react";
-import { wagmiConfig, ethereumClient } from "@/lib/web3Config";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -188,13 +183,6 @@ export default function Auth() {
           </Button>
         </form>
 
-        <div className="mt-6 space-y-3">
-          <WagmiConfig config={wagmiConfig}>
-            <Web3ModalLogin isLoading={loading} />
-          </WagmiConfig>
-          <SolanaWalletLogin isLoading={loading} />
-        </div>
-
         <div className="mt-4 text-center">
           <Button
             variant="link"
@@ -206,9 +194,6 @@ export default function Auth() {
           </Button>
         </div>
       </div>
-      
-      {/* Add Web3Modal provider outside the component tree */}
-      <Web3Modal projectId="" ethereumClient={ethereumClient} />
     </div>
   );
 }
