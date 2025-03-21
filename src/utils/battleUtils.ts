@@ -1,10 +1,17 @@
-
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
 const LEVEL_SCALING_FACTOR = 10; // k factor for XP scaling
 
 export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) => {
+  // Log the actual values for debugging
+  console.log("Battle damage calculation:", {
+    attackerStats: attacker,
+    defenderStats: defender,
+    attackValue: attacker.attack,
+    defenseValue: defender.defense
+  });
+
   const evasionChance = (defender.speed - attacker.speed) * 0.05;
   const willEvade = Math.random() < Math.max(0, Math.min(0.25, evasionChance));
 
@@ -13,9 +20,24 @@ export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) 
   }
 
   const attackWithFatigue = Math.max(1, attacker.attack - (attacker.fatigue || 0));
-  const damage = Math.max(1, attackWithFatigue - (defender.defense * 0.5));
   
-  return Math.floor(damage);
+  // Use a higher multiplier for defense reduction to make attacks more effective
+  const defenseReduction = defender.defense * 0.3; // Reduced from 0.5 to make attacks more powerful
+  const damage = Math.max(1, attackWithFatigue - defenseReduction);
+  
+  // Apply level scaling to damage calculation
+  const levelFactor = attacker.level ? (1 + (attacker.level * 0.05)) : 1;
+  const scaledDamage = Math.floor(damage * levelFactor);
+  
+  console.log("Final damage calculation:", {
+    attackWithFatigue,
+    defenseReduction,
+    baseDamage: damage,
+    levelFactor,
+    finalDamage: scaledDamage
+  });
+  
+  return scaledDamage;
 };
 
 export const calculateExperience = (level: number) => {

@@ -56,11 +56,15 @@ export const QuestBattleBanner = ({
   };
   
   const teamStats = actualPlayerHolobots.reduce((stats, holobot) => {
-    const baseStats = HOLOBOT_STATS[Object.keys(HOLOBOT_STATS).find(
+    const baseStatsKey = Object.keys(HOLOBOT_STATS).find(
       key => HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
-    ) || 'ace'];
+    );
     
-    if (baseStats) {
+    if (baseStatsKey) {
+      const baseStats = HOLOBOT_STATS[baseStatsKey];
+      
+      console.log(`Applying boosts for ${holobot.name}:`, holobot.boostedAttributes);
+      
       stats.attack += baseStats.attack + (holobot.boostedAttributes?.attack || 0);
       stats.defense += baseStats.defense + (holobot.boostedAttributes?.defense || 0);
       stats.health += baseStats.maxHealth + (holobot.boostedAttributes?.health || 0);
@@ -68,6 +72,8 @@ export const QuestBattleBanner = ({
     }
     return stats;
   }, { attack: 0, defense: 0, health: 0, speed: 0 });
+  
+  console.log("Team stats with boosts:", teamStats);
   
   const getDifficultyMultiplier = () => {
     switch (difficulty) {
