@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { Web3ModalLogin } from "@/components/auth/Web3ModalLogin";
-import { SolanaWalletLogin } from "@/components/auth/SolanaWalletLogin";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -20,11 +18,16 @@ export default function Auth() {
   const { toast } = useToast();
 
   // Check if user is already logged in
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session) {
-      navigate('/dashboard');
-    }
-  });
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate('/dashboard');
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   // Handle auth (sign up or sign in)
   const handleAuth = async (e: React.FormEvent) => {
@@ -157,22 +160,6 @@ export default function Auth() {
             ) : isSignUp ? "Create Account" : "Sign In"}
           </Button>
         </form>
-
-        <div className="mt-6 space-y-4">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <Web3ModalLogin isLoading={loading} />
-            <SolanaWalletLogin isLoading={loading} />
-          </div>
-        </div>
 
         <div className="mt-4 text-center">
           <Button

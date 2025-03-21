@@ -6,7 +6,7 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://pfpidggrdnmfgrbncpyl.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmcGlkZ2dyZG5tZmdyYm5jcHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA3ODM5ODcsImV4cCI6MjA1NjM1OTk4N30.fyR2E6WWCGmBTK322Tre7RRMh65I55kaPHF5RYJKGgo";
 
-// Create the Supabase client with real-time disabled
+// Create the Supabase client
 export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
@@ -17,7 +17,6 @@ export const supabase = createClient<Database>(
       detectSessionInUrl: false // Disable auto detection to prevent redirect issues
     },
     realtime: {
-      // Use correct property to disable realtime features
       params: {
         eventsPerSecond: 0
       }
