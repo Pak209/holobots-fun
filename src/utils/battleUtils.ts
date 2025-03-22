@@ -22,11 +22,11 @@ export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) 
   const attackWithFatigue = Math.max(1, attacker.attack - (attacker.fatigue || 0));
   
   // Use a higher multiplier for defense reduction to make attacks more effective
-  const defenseReduction = defender.defense * 0.3; // Reduced from 0.5 to make attacks more powerful
+  const defenseReduction = defender.defense * 0.25; // Further reduced from 0.3 to make attacks more powerful
   const damage = Math.max(1, attackWithFatigue - defenseReduction);
   
-  // Apply level scaling to damage calculation
-  const levelFactor = attacker.level ? (1 + (attacker.level * 0.05)) : 1;
+  // Apply level scaling to damage calculation - scale higher for high level holobots
+  const levelFactor = attacker.level ? (1 + (attacker.level * 0.08)) : 1; // Increased from 0.05 to 0.08
   const scaledDamage = Math.floor(damage * levelFactor);
   
   console.log("Final damage calculation:", {
@@ -85,6 +85,10 @@ export const applySpecialAttack = (stats: HolobotStats): HolobotStats => {
       break;
     case "Sharp Claws":
       newStats.attack += 5;
+      break;
+    case "Dark Veil":
+      newStats.defense += 4;
+      newStats.attack += 3;
       break;
     default:
       newStats.attack += 2;

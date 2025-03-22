@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/auth";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotInfoCard } from "@/components/holobots/HolobotInfoCard";
@@ -6,6 +5,7 @@ import { BlueprintSection } from "@/components/holobots/BlueprintSection";
 import { useMintHolobot } from "@/hooks/use-mint-holobot";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { calculateExperience } from "@/utils/battleUtils";
 
 const HolobotsInfo = () => {
   const { user, updateUser } = useAuth();
@@ -16,6 +16,57 @@ const HolobotsInfo = () => {
   const findUserHolobot = (name: string) => {
     return user?.holobots.find(h => h.name.toLowerCase() === name.toLowerCase());
   };
+
+  // Fix for Kurai level reset issue
+  useEffect(() => {
+    if (user && user.holobots && user.holobots.length > 0) {
+      const kurai = user.holobots.find(h => h.name.toLowerCase() === "kurai");
+      
+      // Check if Kurai exists but is not at the right level
+      if (kurai && kurai.level < 41) {
+        // Found Kurai with incorrect level - restore to level 41
+        const updatedHolobots = user.holobots.map(holobot => {
+          if (holobot.name.toLowerCase() === "kurai") {
+            // Calculate XP needed for level 41
+            const level41XP = calculateExperience(41);
+            
+            // Preserve attribute boosts if they exist
+            const boostedAttributes = holobot.boostedAttributes || {};
+            
+            return {
+              ...holobot,
+              level: 41,
+              experience: level41XP,
+              nextLevelExp: calculateExperience(42),
+              rank: "Legendary",
+              // Keep the boosted attributes from the current instance
+              boostedAttributes,
+              // Restore attribute points if they were reset
+              attributePoints: Math.max(holobot.attributePoints || 0, 40)
+            };
+          }
+          return holobot;
+        });
+        
+        // Update user profile with restored Kurai data
+        updateUser({ holobots: updatedHolobots })
+          .then(() => {
+            toast({
+              title: "Kurai Restored!",
+              description: "Kurai has been restored to level 41 Legendary rank.",
+            });
+          })
+          .catch(err => {
+            console.error("Failed to restore Kurai:", err);
+            toast({
+              title: "Error",
+              description: "Failed to restore Kurai. Please try again.",
+              variant: "destructive"
+            });
+          });
+      }
+    }
+  }, [user, updateUser, toast]);
 
   // Apply one-time legendary bonus for Kurai
   useEffect(() => {
