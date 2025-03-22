@@ -44,7 +44,7 @@ export const BattleCards = ({
     h => h.name.toUpperCase() === normalizedRightKey
   );
   
-  // Find user's holobot to apply attribute boosts
+  // Find user's holobot to apply attribute boosts - use exact name match
   const userLeftHolobot = user?.holobots?.find(h => 
     h.name.toLowerCase() === (leftHolobotStats?.name || '').toLowerCase()
   );
@@ -69,9 +69,6 @@ export const BattleCards = ({
       availableNames: Object.values(HOLOBOT_STATS).map(h => h.name).join(", ")
     });
   }
-  
-  console.log(`Left holobot: ${normalizedLeftKey}, Found stats: ${!!leftHolobotStats}`);
-  console.log(`Right holobot: ${normalizedRightKey}, Found stats: ${!!rightHolobotStats}`);
   
   // Apply attribute boosts from user's holobot
   const applyAttributeBoosts = (baseStats, userHolobot) => {
@@ -100,7 +97,7 @@ export const BattleCards = ({
     userLeftHolobot
   );
   
-  // Always use the user's holobot level if available
+  // Always prioritize the user's holobot level if available
   const effectiveLeftLevel = userLeftHolobot?.level || leftLevel;
   
   return (
@@ -111,7 +108,7 @@ export const BattleCards = ({
             stats={{
               ...boostedLeftStats, 
               level: effectiveLeftLevel,
-              name: normalizedLeftKey // Ensure name is passed in uppercase
+              name: normalizedLeftKey
             }} 
             variant="blue" 
           />
@@ -130,7 +127,7 @@ export const BattleCards = ({
             stats={{
               ...(rightHolobotStats || HOLOBOT_STATS.ace), 
               level: rightLevel,
-              name: normalizedRightKey // Ensure name is passed in uppercase
+              name: normalizedRightKey
             }} 
             variant="red" 
           />
