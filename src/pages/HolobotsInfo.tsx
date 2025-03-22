@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/auth";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotInfoCard } from "@/components/holobots/HolobotInfoCard";
@@ -17,15 +18,19 @@ const HolobotsInfo = () => {
     return user?.holobots.find(h => h.name.toLowerCase() === name.toLowerCase());
   };
 
-  // Fix for Kurai level reset issue
+  // Global fix for any inconsistent holobot data
   useEffect(() => {
     if (user && user.holobots && user.holobots.length > 0) {
-      const kurai = user.holobots.find(h => h.name.toLowerCase() === "kurai");
+      let needsUpdate = false;
+      let updatedHolobots = [...user.holobots];
       
-      // Check if Kurai exists but is not at the right level
+      // Fix for Kurai level reset issue
+      const kurai = user.holobots.find(h => h.name.toLowerCase() === "kurai");
       if (kurai && kurai.level < 41) {
-        // Found Kurai with incorrect level - restore to level 41
-        const updatedHolobots = user.holobots.map(holobot => {
+        console.log("Found Kurai with incorrect level:", kurai.level);
+        needsUpdate = true;
+        
+        updatedHolobots = updatedHolobots.map(holobot => {
           if (holobot.name.toLowerCase() === "kurai") {
             // Calculate XP needed for level 41
             const level41XP = calculateExperience(41);
@@ -47,20 +52,47 @@ const HolobotsInfo = () => {
           }
           return holobot;
         });
+      }
+      
+      // Check for any holobots missing attributePoints property
+      updatedHolobots = updatedHolobots.map(holobot => {
+        if (holobot.attributePoints === undefined) {
+          needsUpdate = true;
+          // Add attribute points based on level (1 per level)
+          return {
+            ...holobot,
+            attributePoints: holobot.level || 1,
+            boostedAttributes: holobot.boostedAttributes || {}
+          };
+        }
         
-        // Update user profile with restored Kurai data
+        // Ensure holobot has boostedAttributes property
+        if (!holobot.boostedAttributes) {
+          needsUpdate = true;
+          return {
+            ...holobot,
+            boostedAttributes: {}
+          };
+        }
+        
+        return holobot;
+      });
+      
+      // Update user profile with consistent holobot data if needed
+      if (needsUpdate) {
+        console.log("Updating holobots to ensure consistency:", updatedHolobots);
         updateUser({ holobots: updatedHolobots })
           .then(() => {
             toast({
-              title: "Kurai Restored!",
-              description: "Kurai has been restored to level 41 Legendary rank.",
+              title: "Holobots Updated",
+              description: "Your holobots data has been synchronized across the game.",
             });
           })
           .catch(err => {
-            console.error("Failed to restore Kurai:", err);
+            console.error("Failed to update holobots:", err);
             toast({
               title: "Error",
-              description: "Failed to restore Kurai. Please try again.",
+              description: "Failed to update holobots data. Please try again.",
               variant: "destructive"
             });
           });

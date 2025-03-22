@@ -1,3 +1,4 @@
+
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
@@ -121,6 +122,7 @@ export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
   };
 };
 
+// Updated to ensure attribute points are given when holobots level up
 export const updateHolobotExperience = (holobots, holobotName, newExperience, newLevel) => {
   if (!holobots || !Array.isArray(holobots)) {
     return [];
@@ -128,11 +130,19 @@ export const updateHolobotExperience = (holobots, holobotName, newExperience, ne
   
   return holobots.map(holobot => {
     if (holobot.name.toLowerCase() === holobotName.toLowerCase()) {
+      // Add 1 attribute point for each level gained
+      const levelGained = newLevel - (holobot.level || 1);
+      const currentAttributePoints = holobot.attributePoints || 0;
+      const newAttributePoints = levelGained > 0 ? currentAttributePoints + levelGained : currentAttributePoints;
+      
+      console.log(`Holobot ${holobotName} leveled up by ${levelGained} levels, new attribute points: ${newAttributePoints}`);
+      
       return {
         ...holobot,
         level: newLevel,
         experience: newExperience,
-        nextLevelExp: calculateExperience(newLevel)
+        nextLevelExp: calculateExperience(newLevel),
+        attributePoints: newAttributePoints
       };
     }
     return holobot;

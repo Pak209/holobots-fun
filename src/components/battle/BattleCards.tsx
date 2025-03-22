@@ -49,6 +49,15 @@ export const BattleCards = ({
     h.name.toLowerCase() === (leftHolobotStats?.name || '').toLowerCase()
   );
   
+  // Log to check if we found the user's holobot
+  console.log("Found user's holobot?", {
+    leftHolobotStats: leftHolobotStats?.name,
+    userLeftHolobot: userLeftHolobot?.name,
+    userLeftLevel: userLeftHolobot?.level,
+    propLevel: leftLevel,
+    boostedAttributes: userLeftHolobot?.boostedAttributes
+  });
+  
   if (!leftHolobotStats || !rightHolobotStats) {
     console.error("Missing holobot stats", { 
       leftKey: selectedLeftHolobot, 
@@ -68,6 +77,14 @@ export const BattleCards = ({
   const applyAttributeBoosts = (baseStats, userHolobot) => {
     if (!userHolobot || !userHolobot.boostedAttributes) return baseStats;
     
+    // Log the attribute boost application
+    console.log("Applying boosts:", {
+      baseStats,
+      boosts: userHolobot.boostedAttributes,
+      holobotName: userHolobot.name,
+      holobotLevel: userHolobot.level
+    });
+    
     return {
       ...baseStats,
       attack: baseStats.attack + (userHolobot.boostedAttributes.attack || 0),
@@ -83,6 +100,9 @@ export const BattleCards = ({
     userLeftHolobot
   );
   
+  // Always use the user's holobot level if available
+  const effectiveLeftLevel = userLeftHolobot?.level || leftLevel;
+  
   return (
     <div className="flex justify-center gap-2 mb-2">
       <div className="flex flex-col items-center">
@@ -90,15 +110,15 @@ export const BattleCards = ({
           <HolobotCard 
             stats={{
               ...boostedLeftStats, 
-              level: leftLevel,
+              level: effectiveLeftLevel,
               name: normalizedLeftKey // Ensure name is passed in uppercase
             }} 
             variant="blue" 
           />
         </div>
         <ExperienceBar 
-          {...getExperienceProgress(leftXp, leftLevel)}
-          level={leftLevel}
+          {...getExperienceProgress(leftXp, effectiveLeftLevel)}
+          level={effectiveLeftLevel}
         />
       </div>
       <div className="flex items-center">

@@ -50,6 +50,19 @@ export const ArenaPrebattleMenu = ({
     return key || Object.keys(HOLOBOT_STATS)[0]; // fallback to first holobot if not found
   };
 
+  // Apply attribute boosts to base stats
+  const applyAttributeBoosts = (baseStats, userHolobot) => {
+    if (!userHolobot || !userHolobot.boostedAttributes) return baseStats;
+    
+    return {
+      ...baseStats,
+      attack: baseStats.attack + (userHolobot.boostedAttributes.attack || 0),
+      defense: baseStats.defense + (userHolobot.boostedAttributes.defense || 0),
+      speed: baseStats.speed + (userHolobot.boostedAttributes.speed || 0),
+      maxHealth: baseStats.maxHealth + (userHolobot.boostedAttributes.health || 0)
+    };
+  };
+
   const handleHolobotSelect = (holobotKey: string) => {
     setSelectedHolobot(holobotKey);
     onHolobotSelect(holobotKey); // Notify parent component about the selection
@@ -94,6 +107,9 @@ export const ArenaPrebattleMenu = ({
                   const isSelected = selectedHolobot === holobotKey;
                   const baseStats = HOLOBOT_STATS[holobotKey] || HOLOBOT_STATS.ace;
                   
+                  // Apply attribute boosts
+                  const boostedStats = applyAttributeBoosts(baseStats, holobot);
+                  
                   return (
                     <div 
                       key={index} 
@@ -103,7 +119,7 @@ export const ArenaPrebattleMenu = ({
                       <div className="w-[120px] sm:w-[150px]">
                         <HolobotCard 
                           stats={{
-                            ...baseStats,
+                            ...boostedStats,
                             level: holobot.level || 1,
                             name: holobot.name
                           }} 
