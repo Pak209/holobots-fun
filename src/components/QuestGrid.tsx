@@ -46,8 +46,8 @@ const BOSS_TIERS = {
     energyCost: 40, 
     rewards: { 
       blueprintPieces: 5,
-      holosTokens: 1000,
-      gachaTickets: 5,
+      holosTokens: 250,
+      gachaTickets: 1,
       xpMultiplier: 1,
       squadXp: 50 // Base XP for each squad member
     }
@@ -57,8 +57,8 @@ const BOSS_TIERS = {
     energyCost: 60, 
     rewards: { 
       blueprintPieces: 10,
-      holosTokens: 2500,
-      gachaTickets: 10,
+      holosTokens: 500,
+      gachaTickets: 2,
       xpMultiplier: 2,
       squadXp: 100 // Base XP for each squad member
     }
@@ -68,8 +68,8 @@ const BOSS_TIERS = {
     energyCost: 80, 
     rewards: { 
       blueprintPieces: 15,
-      holosTokens: 5000,
-      gachaTickets: 15,
+      holosTokens: 1000,
+      gachaTickets: 3,
       xpMultiplier: 3,
       squadXp: 200 // Base XP for each squad member
     }
