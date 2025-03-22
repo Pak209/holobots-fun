@@ -1,17 +1,32 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
-import { Activity } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 import { StatusBar } from "@/components/HealthBar";
 import { FitnessStat } from "@/components/fitness/FitnessStat";
 import { WorkoutRewards } from "@/components/fitness/WorkoutRewards";
 import { HolobotSelector } from "@/components/fitness/HolobotSelector";
+import { cn } from "@/lib/utils";
+
+interface HolobotRank {
+  name: string;
+  multiplier: number;
+}
+
+const HOLOBOT_RANKS: Record<string, HolobotRank> = {
+  "Champion": { name: "Champion", multiplier: 0.25 },
+  "Rare": { name: "Rare", multiplier: 0.5 },
+  "Elite": { name: "Elite", multiplier: 1 },
+  "Legendary": { name: "Legendary", multiplier: 2 }
+};
+
+const STEPS_PER_EXP = 10; // 10 steps = 1 EXP point (1000 steps = 100 EXP)
+const STEPS_PER_MILE = 2000; // Approximately 2000 steps per mile
+const HOLOS_PER_MILE = 250; // Base holos per mile
+const TARGET_DAILY_STEPS = 10000; // Target steps per day
+const TARGET_WORKOUT_TIME = 30 * 60; // 30 minutes workout in seconds
 
 export default function Fitness() {
   const { user, updateUser } = useAuth();
@@ -19,7 +34,8 @@ export default function Fitness() {
   const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
   const [isTracking, setIsTracking] = useState(false);
   const [workoutTime, setWorkoutTime] = useState(0);
-  const [distance, setDistance] = useState(0);
+  const [steps, setSteps] = useState(0);
+  const [workoutSteps, setWorkoutSteps] = useState(0);
   const [stamina, setStamina] = useState(100);
   const [rewards, setRewards] = useState({
     exp: 0,
@@ -34,6 +50,36 @@ export default function Fitness() {
     }
   }, [user, selectedHolobot]);
 
+  // Get the current holobot
+  const currentHolobot = user?.holobots?.find(
+    h => h.name.toLowerCase() === selectedHolobot?.toLowerCase()
+  );
+
+  // Determine the holobot's rank multiplier
+  const getHolobotRankMultiplier = (): number => {
+    if (!currentHolobot) return 1;
+    
+    const rank = currentHolobot.rank || "Champion";
+    return HOLOBOT_RANKS[rank]?.multiplier || 1;
+  };
+
+  // Reset steps at midnight
+  useEffect(() => {
+    const checkMidnight = () => {
+      const now = new Date();
+      if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
+        setSteps(0);
+        toast({
+          title: "Daily Steps Reset",
+          description: "Your step counter has been reset for the new day.",
+        });
+      }
+    };
+
+    const interval = setInterval(checkMidnight, 1000);
+    return () => clearInterval(interval);
+  }, [toast]);
+
   // Simulated workout tracking (in real app would use device sensors)
   useEffect(() => {
     let timer: number | null = null;
@@ -43,13 +89,13 @@ export default function Fitness() {
         // Increment workout time (in seconds)
         setWorkoutTime(prev => prev + 1);
         
-        // Simulate distance calculation (would use GPS in real app)
-        setDistance(prev => {
-          const newDistance = prev + 0.01; // Add 10 meters
-          return parseFloat(newDistance.toFixed(2));
-        });
+        // Simulate step counting (would use Health Kit in real app)
+        const stepsIncrement = Math.floor(Math.random() * 5) + 1; // 1-5 steps per second
         
-        // Decrease stamina over time (would integrate with heart rate in real app)
+        setSteps(prev => prev + stepsIncrement);
+        setWorkoutSteps(prev => prev + stepsIncrement);
+        
+        // Decrease stamina over time
         setStamina(prev => {
           const newStamina = Math.max(0, prev - 0.2);
           if (newStamina <= 0) {
@@ -60,19 +106,24 @@ export default function Fitness() {
           return newStamina;
         });
         
-        // Calculate rewards based on time and distance
-        setRewards(prev => ({
-          exp: Math.min(100, prev.exp + 0.2),
-          holos: Math.floor(workoutTime / 10),
-          attributeBoosts: Math.floor(distance / 0.5),
-        }));
+        // Calculate rewards based on steps and time
+        const expEarned = Math.floor(workoutSteps / STEPS_PER_EXP);
+        const milesCompleted = workoutSteps / STEPS_PER_MILE;
+        const rankMultiplier = getHolobotRankMultiplier();
+        const holosEarned = Math.floor(milesCompleted * HOLOS_PER_MILE * rankMultiplier);
+        
+        setRewards({
+          exp: expEarned,
+          holos: holosEarned,
+          attributeBoosts: Math.floor(expEarned / 100), // One boost point per 100 EXP
+        });
       }, 1000);
     }
     
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isTracking, workoutTime, distance]);
+  }, [isTracking, workoutTime, workoutSteps]);
 
   const startWorkout = () => {
     if (!selectedHolobot) {
@@ -85,6 +136,7 @@ export default function Fitness() {
     }
 
     setIsTracking(true);
+    setWorkoutSteps(0); // Reset workout steps counter
     toast({
       title: "Workout Started",
       description: "Your workout session has begun!",
@@ -97,31 +149,45 @@ export default function Fitness() {
   };
 
   const completeWorkout = () => {
-    if (distance > 0 && user) {
-      // Calculate rewards
-      const earnedHolos = Math.floor(distance * 10);
-      const earnedExp = Math.floor(distance * 20);
+    if (workoutSteps > 0 && user && selectedHolobot) {
+      // Calculate final rewards
+      const expEarned = Math.floor(workoutSteps / STEPS_PER_EXP);
+      const milesCompleted = workoutSteps / STEPS_PER_MILE;
+      const rankMultiplier = getHolobotRankMultiplier();
+      const holosEarned = Math.floor(milesCompleted * HOLOS_PER_MILE * rankMultiplier);
       
-      // Give rewards to user
-      updateUser({
-        holosTokens: user.holosTokens + earnedHolos,
-        // Update experience for the selected holobot
-        holobots: user.holobots.map(bot => 
-          bot.name === selectedHolobot 
-            ? { ...bot, experience: bot.experience + earnedExp } 
-            : bot
-        )
-      });
+      // Find the selected holobot
+      const selectedHolobotObj = user.holobots.find(
+        h => h.name.toLowerCase() === selectedHolobot.toLowerCase()
+      );
       
-      // Reset tracking stats
-      setWorkoutTime(0);
-      setDistance(0);
-      setStamina(100);
-      
-      toast({
-        title: "Workout Complete!",
-        description: `You earned ${earnedHolos} Holos and ${earnedExp} EXP!`,
-      });
+      if (selectedHolobotObj) {
+        // Update user with rewards
+        updateUser({
+          holosTokens: user.holosTokens + holosEarned,
+          // Update experience for the selected holobot
+          holobots: user.holobots.map(bot => 
+            bot.name.toLowerCase() === selectedHolobot.toLowerCase()
+              ? { 
+                  ...bot, 
+                  experience: bot.experience + expEarned,
+                  // Add attribute point for the workout (1 per workout completion)
+                  attributePoints: (bot.attributePoints || 0) + 1
+                } 
+              : bot
+          )
+        });
+        
+        // Reset tracking stats
+        setWorkoutTime(0);
+        setWorkoutSteps(0);
+        setStamina(100);
+        
+        toast({
+          title: "Workout Complete!",
+          description: `You earned ${holosEarned} Holos and ${expEarned} EXP!`,
+        });
+      }
     }
   };
 
@@ -177,19 +243,19 @@ export default function Fitness() {
           {/* Workout stats */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <FitnessStat 
-              icon="distance" 
-              label="DISTANCE"
-              value={`${distance.toFixed(2)}KM`} 
-              subValue={`TARGET: 5.0KM`}
-              progress={distance / 5 * 100}
+              icon="steps" 
+              label="STEPS"
+              value={`${steps.toLocaleString()}`} 
+              subValue={`TARGET: ${TARGET_DAILY_STEPS.toLocaleString()}`}
+              progress={steps / TARGET_DAILY_STEPS * 100}
             />
             
             <FitnessStat 
               icon="time" 
-              label="TIME"
+              label="WORKOUT"
               value={formatTime(workoutTime)} 
               subValue="TARGET: 30:00"
-              progress={workoutTime / 1800 * 100}
+              progress={workoutTime / TARGET_WORKOUT_TIME * 100}
             />
           </div>
           
@@ -209,6 +275,18 @@ export default function Fitness() {
           
           {/* Workout rewards */}
           <WorkoutRewards rewards={rewards} />
+          
+          {/* Holobot rank multiplier indicator */}
+          {currentHolobot && (
+            <div className="mt-4 bg-black/40 rounded-lg p-3 border border-purple-500/20">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-purple-400">RANK BONUS</span>
+                <span className="text-sm font-bold text-purple-400">
+                  {currentHolobot.rank || "Champion"} (×{getHolobotRankMultiplier()})
+                </span>
+              </div>
+            </div>
+          )}
           
           {/* Action button */}
           <div className="flex justify-center mt-8">
@@ -242,11 +320,10 @@ export default function Fitness() {
                         +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.attack || 0}
                       </span>
                     </div>
-                    <Slider 
-                      defaultValue={[user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.attack || 0]} 
+                    <Progress 
+                      value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.attack || 0} 
                       max={100}
-                      disabled
-                      className="h-1.5"
+                      className="h-1.5 bg-gray-800"
                     />
                   </div>
                   
@@ -257,11 +334,10 @@ export default function Fitness() {
                         +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.defense || 0}
                       </span>
                     </div>
-                    <Slider 
-                      defaultValue={[user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.defense || 0]} 
+                    <Progress 
+                      value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.defense || 0} 
                       max={100}
-                      disabled
-                      className="h-1.5"
+                      className="h-1.5 bg-gray-800"
                     />
                   </div>
                   
@@ -272,11 +348,10 @@ export default function Fitness() {
                         +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.speed || 0}
                       </span>
                     </div>
-                    <Slider 
-                      defaultValue={[user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.speed || 0]} 
+                    <Progress 
+                      value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.speed || 0} 
                       max={100}
-                      disabled
-                      className="h-1.5"
+                      className="h-1.5 bg-gray-800"
                     />
                   </div>
                   
@@ -287,12 +362,21 @@ export default function Fitness() {
                         +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.health || 0}
                       </span>
                     </div>
-                    <Slider 
-                      defaultValue={[user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.health || 0]} 
+                    <Progress 
+                      value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.health || 0} 
                       max={100}
-                      disabled
-                      className="h-1.5"
+                      className="h-1.5 bg-gray-800"
                     />
+                  </div>
+                  
+                  {/* Show available attribute points */}
+                  <div className="mt-4 pt-4 border-t border-purple-500/20">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-purple-400">AVAILABLE POINTS</span>
+                      <span className="text-sm font-bold text-yellow-400">
+                        {user.holobots.find(bot => bot.name === selectedHolobot)?.attributePoints || 0}
+                      </span>
+                    </div>
                   </div>
                 </>
               )}

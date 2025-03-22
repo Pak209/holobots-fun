@@ -1,9 +1,9 @@
 
-import { Activity, Timer, BarChart4, Zap } from "lucide-react";
+import { Activity, Timer, BarChart4, Zap, Footprints } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
-type FitnessStatIcon = "distance" | "time" | "calories" | "power";
+type FitnessStatIcon = "steps" | "time" | "calories" | "power";
 
 interface FitnessStatProps {
   icon: FitnessStatIcon;
@@ -17,8 +17,8 @@ interface FitnessStatProps {
 export function FitnessStat({ icon, label, value, subValue, progress = 0, className }: FitnessStatProps) {
   const getIcon = () => {
     switch (icon) {
-      case "distance":
-        return <Activity className="h-5 w-5 text-cyan-400" />;
+      case "steps":
+        return <Footprints className="h-5 w-5 text-cyan-400" />;
       case "time":
         return <Timer className="h-5 w-5 text-cyan-400" />;
       case "calories":

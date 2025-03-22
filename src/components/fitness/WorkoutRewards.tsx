@@ -14,7 +14,7 @@ interface WorkoutRewardsProps {
 export function WorkoutRewards({ rewards, className }: WorkoutRewardsProps) {
   return (
     <div className={cn("bg-black/40 rounded-lg p-3 border border-cyan-500/20", className)}>
-      <h3 className="text-xs text-cyan-400 mb-3">REWARDS</h3>
+      <h3 className="text-xs text-cyan-400 mb-3">WORKOUT REWARDS</h3>
       
       <div className="grid grid-cols-3 gap-2">
         <div className="flex flex-col items-center">
@@ -22,7 +22,7 @@ export function WorkoutRewards({ rewards, className }: WorkoutRewardsProps) {
             <Sparkles className="h-5 w-5 text-purple-400" />
           </div>
           <span className="text-xs text-gray-300">EXP</span>
-          <span className="text-sm font-bold">{rewards.exp.toFixed(0)}</span>
+          <span className="text-sm font-bold">{rewards.exp.toLocaleString()}</span>
         </div>
         
         <div className="flex flex-col items-center">
@@ -30,7 +30,7 @@ export function WorkoutRewards({ rewards, className }: WorkoutRewardsProps) {
             <Award className="h-5 w-5 text-yellow-400" />
           </div>
           <span className="text-xs text-gray-300">HOLOS</span>
-          <span className="text-sm font-bold">{rewards.holos}</span>
+          <span className="text-sm font-bold">{rewards.holos.toLocaleString()}</span>
         </div>
         
         <div className="flex flex-col items-center">
