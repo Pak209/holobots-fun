@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { 
   Clock, 
@@ -9,7 +10,8 @@ import {
   Sword, 
   Target,
   Ticket, 
-  FastForward
+  FastForward,
+  Lock
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -824,4 +826,108 @@ export const QuestGrid = () => {
                         <CardDescription>Level {boss.level}</CardDescription>
                       </CardHeader>
                       
-                      <CardContent className="p-3 pt
+                      <CardContent className="p-3 pt-0">
+                        <div className="text-xs">
+                          <div className="flex items-center gap-1 mt-1">
+                            <Coins className="h-3 w-3 text-yellow-400" />
+                            <span>{boss.rewards.holos} Holos</span>
+                          </div>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Star className="h-3 w-3 text-blue-400" />
+                            <span>{boss.rewards.experience} EXP</span>
+                          </div>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Ticket className="h-3 w-3 text-purple-400" />
+                            <span>{boss.rewards.gachaTickets} Gacha Tickets</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          {/* Holobot Squad Selection */}
+          <div className="bg-holobots-card/60 backdrop-blur-sm rounded-lg p-4 border border-holobots-accent/30 mb-6">
+            <h3 className="text-lg font-semibold mb-3">Squad Selection</h3>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {squadHolobots.map(holobot => (
+                <div 
+                  key={holobot.key}
+                  className={`p-2 rounded-lg cursor-pointer transition-all ${
+                    holobot.selected 
+                      ? 'bg-holobots-accent/20 border border-holobots-accent shadow-neon' 
+                      : 'bg-black/30 border border-gray-700 hover:border-holobots-accent/50'
+                  }`}
+                  onClick={() => toggleHolobotSelection(holobot.key)}
+                >
+                  <div className="relative">
+                    <img 
+                      src={`/src/assets/holobots/${holobot.key}.png`} 
+                      alt={holobot.name}
+                      className="w-full h-24 object-contain"
+                    />
+                    {holobot.selected && (
+                      <div className="absolute top-0 right-0 bg-holobots-accent text-black rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                        ✓
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-center mt-2">
+                    <div className="font-semibold text-sm truncate">{holobot.name}</div>
+                    <div className="text-xs text-gray-300">Level {holobot.level}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Battle Button */}
+          <div className="flex flex-col items-center justify-center">
+            <div className="text-center mb-3">
+              <p className="text-sm text-gray-300">
+                Success Chance: <span className="font-bold text-holobots-accent">
+                  {Math.round(calculateBattleSuccessChance() * 100)}%
+                </span>
+              </p>
+            </div>
+            
+            <Button
+              className="bg-holobots-accent hover:bg-holobots-hover text-black w-full max-w-xs"
+              onClick={startBattle}
+              disabled={!isSquadReady || !hasEnoughEnergy}
+            >
+              {!isSquadReady
+                ? `Select ${selectedQuestType === "boss" ? "3" : "at least 1"} Holobots`
+                : !hasEnoughEnergy
+                  ? "Not enough energy"
+                  : "Start Quest"
+              }
+            </Button>
+          </div>
+          
+          {/* Battle Animation */}
+          {isBattleInProgress && (
+            <QuestBattleBanner
+              squadHolobotKeys={squadHolobots.filter(h => h.selected).map(h => h.key)}
+              bossHolobotKey={bossTier ? BOSS_TIERS[bossTier].name.toLowerCase().replace(/\s+/g, "") : ""}
+              progress={battleProgressPercentage}
+            />
+          )}
+          
+          {/* Results Screen */}
+          {showQuestResults && (
+            <QuestResultsScreen
+              success={questSuccess}
+              rewards={questRewards}
+              onClose={handleCloseResults}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
