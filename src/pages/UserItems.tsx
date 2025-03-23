@@ -5,11 +5,15 @@ import { ItemCard } from "@/components/items/ItemCard";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export default function UserItems() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  
   const [activatingBooster, setActivatingBooster] = useState(false);
+  const [showRankSkipDialog, setShowRankSkipDialog] = useState(false);
   
   // Collection of all possible items
   const items = [
@@ -104,15 +108,8 @@ export default function UserItems() {
         
       case "rank-skip":
         if ((user.rank_skips || 0) > 0) {
-          const newLevel = (user.level || 1) + 1;
-          updateUser({ 
-            rank_skips: (user.rank_skips || 0) - 1,
-            level: newLevel
-          });
-          toast({
-            title: `Rank Skip Used!`,
-            description: `You've advanced to level ${newLevel}!`,
-          });
+          // Open the rank skip dialog
+          setShowRankSkipDialog(true);
         }
         break;
         
@@ -132,6 +129,68 @@ export default function UserItems() {
           description: `You have used one ${name}. Effects applied!`,
         });
     }
+  };
+
+  // Handle rank skip for specific holobot
+  const handleRankSkip = (holobotName: string) => {
+    if (!user || (user.rank_skips || 0) <= 0) return;
+    
+    // Find the specific holobot
+    const updatedHolobots = [...user.holobots];
+    const holobotIndex = updatedHolobots.findIndex(h => h.name === holobotName);
+    
+    if (holobotIndex !== -1) {
+      // Get current rank
+      const currentRank = updatedHolobots[holobotIndex].rank || 'Bronze';
+      let newRank = '';
+      
+      // Determine new rank
+      switch (currentRank) {
+        case 'Bronze':
+          newRank = 'Silver';
+          break;
+        case 'Silver':
+          newRank = 'Gold';
+          break;
+        case 'Gold':
+          newRank = 'Platinum';
+          break;
+        case 'Platinum':
+          newRank = 'Diamond';
+          break;
+        case 'Diamond':
+          newRank = 'Master';
+          break;
+        case 'Master':
+          newRank = 'Grandmaster';
+          break;
+        case 'Grandmaster':
+          newRank = 'Legendary';
+          break;
+        default:
+          newRank = 'Legendary';
+      }
+      
+      // Update the holobot with new rank
+      updatedHolobots[holobotIndex] = {
+        ...updatedHolobots[holobotIndex],
+        rank: newRank
+      };
+      
+      // Update user profile
+      updateUser({
+        rank_skips: (user.rank_skips || 0) - 1,
+        holobots: updatedHolobots
+      });
+      
+      toast({
+        title: `Rank Skip Used!`,
+        description: `${holobotName} has advanced to ${newRank} rank!`,
+      });
+    }
+    
+    // Close the dialog
+    setShowRankSkipDialog(false);
   };
 
   return (
@@ -180,6 +239,50 @@ export default function UserItems() {
           ))}
         </div>
       </div>
+      
+      {/* Rank Skip Dialog */}
+      <Dialog open={showRankSkipDialog} onOpenChange={setShowRankSkipDialog}>
+        <DialogContent className="bg-gray-900 border-holobots-accent text-white">
+          <DialogHeader>
+            <DialogTitle>Select Holobot to Rank Up</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Choose a Holobot to advance to the next rank tier
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {user?.holobots.map((holobot) => (
+              <Button
+                key={holobot.name}
+                onClick={() => handleRankSkip(holobot.name)}
+                className="flex flex-col items-center p-4 h-auto bg-black/30 hover:bg-holobots-accent/20 border border-holobots-accent/30"
+              >
+                <div className="w-12 h-12 rounded-full overflow-hidden mb-2 border-2 border-holobots-accent/50">
+                  <img 
+                    src={`/src/assets/holobots/${holobot.name.toLowerCase()}.png`}
+                    alt={holobot.name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="font-bold">{holobot.name}</span>
+                <span className="text-xs text-holobots-accent mt-1">
+                  Current rank: {holobot.rank || 'Bronze'}
+                </span>
+              </Button>
+            ))}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowRankSkipDialog(false)}
+              className="border border-gray-700"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

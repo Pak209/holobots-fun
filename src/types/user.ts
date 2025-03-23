@@ -33,8 +33,8 @@ export interface UserProfile {
   exp_boosters?: number;
   energy_refills?: number;
   rank_skips?: number;
-  boss_quest_passes?: number; // Add boss_quest_passes field
-  blueprints?: Record<string, number>; // Add blueprints field to store blueprint pieces per holobot
+  boss_quest_passes?: number; // Boss quest passes field
+  blueprints?: Record<string, number>; // Blueprint inventory field
 }
 
 export interface AuthState {
