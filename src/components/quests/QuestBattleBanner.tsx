@@ -15,6 +15,7 @@ interface QuestBattleBannerProps {
   squadHolobotKeys?: string[];
   bossHolobotKey?: string;
   onComplete?: () => void;
+  progress?: number;
 }
 
 export const QuestBattleBanner = ({ 
@@ -26,7 +27,8 @@ export const QuestBattleBanner = ({
   isBossQuest = false,
   squadHolobotKeys = [],
   bossHolobotKey = "",
-  onComplete
+  onComplete,
+  progress = 0
 }: QuestBattleBannerProps) => {
   const { user } = useAuth();
   
@@ -199,6 +201,13 @@ export const QuestBattleBanner = ({
           <h2 className="text-xl font-bold text-holobots-accent">{battleText}</h2>
           <div className="text-xs text-gray-400 mt-1">Round {battleRound}/5</div>
         </div>
+        
+        {progress > 0 && (
+          <div className="mb-3">
+            <Progress value={progress} className="h-2" />
+            <div className="text-xs text-center mt-1">Battle in progress...</div>
+          </div>
+        )}
         
         <div className="mb-6 space-y-1">
           <div className="flex justify-between text-sm">

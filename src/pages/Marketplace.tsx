@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MarketplaceFilters, FilterOptions } from "@/components/marketplace/MarketplaceFilters";
@@ -672,6 +671,8 @@ const Marketplace = () => {
                                 ...holobotStats,
                                 level: holobot.level
                               }}
+                              price={0}
+                              seller="You"
                               forSale={false}
                             />
                           );

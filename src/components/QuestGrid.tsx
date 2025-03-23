@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { 
   Clock, 
@@ -218,7 +217,7 @@ export const QuestGrid = () => {
           key,
           name: holobot.name,
           level: holobot.level,
-          image: `/public/lovable-uploads/${HOLOBOT_STATS[key as keyof typeof HOLOBOT_STATS]?.image || 'placeholder.png'}`,
+          image: `/src/assets/holobots/${key}.png`, // Fixed: Don't access image from HOLOBOT_STATS
           selected: false
         };
       });
@@ -825,122 +824,4 @@ export const QuestGrid = () => {
                         <CardDescription>Level {boss.level}</CardDescription>
                       </CardHeader>
                       
-                      <CardContent className="p-3 pt-0">
-                        <p className="text-xs mb-2">Rewards:</p>
-                        <div className="grid grid-cols-2 gap-1 text-xs">
-                          <div className="flex items-center gap-1">
-                            <Zap className="h-3 w-3 text-yellow-400" />
-                            <span>{boss.rewards.holos} HOLOS</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 text-blue-400" />
-                            <span>{boss.rewards.experience} XP</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Ticket className="h-3 w-3 text-purple-400" />
-                            <span>{boss.rewards.gachaTickets} Tickets</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <FastForward className="h-3 w-3 text-blue-400" />
-                            <span>{boss.rewards.expBoosters} EXP Boosters</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          
-          {/* Battle in progress overlay */}
-          {isBattleInProgress && (
-            <QuestBattleBanner
-              questType={selectedQuestType}
-              bossTier={bossTier}
-              progress={battleProgressPercentage}
-            />
-          )}
-          
-          {/* Squad Selection */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-6">
-            {squadHolobots.map(holobot => (
-              <Card 
-                key={holobot.key}
-                className={`border cursor-pointer transition-all ${
-                  holobot.selected
-                    ? 'bg-holobots-accent/20 border-holobots-accent shadow-neon'
-                    : 'bg-holobots-card/60 border-holobots-accent/30 hover:bg-holobots-accent/10'
-                }`}
-                onClick={() => toggleHolobotSelection(holobot.key)}
-              >
-                <div className="flex flex-col items-center p-3">
-                  <div className={`w-16 h-16 rounded-full overflow-hidden mb-2 border-2 ${
-                    holobot.selected ? 'border-holobots-accent' : 'border-transparent'
-                  }`}>
-                    <img 
-                      src={`/src/assets/holobots/${holobot.key}.png`} 
-                      alt={holobot.name} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="font-semibold text-sm">{holobot.name}</h3>
-                  <p className="text-xs text-gray-300">Level {holobot.level}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-          
-          {/* Quest start button */}
-          <div className="flex justify-center">
-            <Button
-              className="bg-holobots-accent hover:bg-holobots-hover text-black font-bold px-8 py-6 text-lg"
-              disabled={!isSquadReady || !hasEnoughEnergy || isBattleInProgress}
-              onClick={startBattle}
-            >
-              {!isSquadReady 
-                ? `Select ${selectedQuestType === "boss" ? "3" : "at least 1"} Holobots` 
-                : !hasEnoughEnergy
-                  ? "Not Enough Energy"
-                  : isBattleInProgress
-                    ? "Battle in Progress..."
-                    : "Start Quest"}
-            </Button>
-          </div>
-        </div>
-      )}
-      
-      {/* Quest Results Screen */}
-      {showQuestResults && (
-        <QuestResultsScreen
-          isVisible={showQuestResults}
-          isSuccess={questSuccess}
-          squadHolobotKeys={squadHolobots.filter(h => h.selected).map(h => h.key)}
-          squadHolobotExp={questRewards.squadHolobotExp}
-          blueprintRewards={questRewards.blueprintRewards}
-          holosRewards={questRewards.holosRewards}
-          expBoosterRewards={questRewards.expBoosterRewards}
-          onClose={handleCloseResults}
-        />
-      )}
-    </div>
-  );
-};
-
-function Lock({ className }: { className?: string }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-    </svg>
-  );
-}
+                      <CardContent className="p-3 pt
