@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MarketplaceFilters, FilterOptions } from "@/components/marketplace/MarketplaceFilters";
@@ -15,9 +16,13 @@ import {
   Gem, 
   PackagePlus, 
   Info, 
-  Plus 
+  Plus,
+  Sparkles,
+  CalendarDays
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+// Item definitions
 const MARKETPLACE_ITEMS = [
   // Holobots
   {
@@ -90,7 +95,7 @@ const MARKETPLACE_ITEMS = [
   {
     id: "i1",
     type: "item",
-    itemType: "energy-refill" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
+    itemType: "energy-refill" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "boss-quest-pass",
     name: "Daily Energy Refill",
     description: "Restores your daily energy to full",
     rarity: "common" as "common" | "rare" | "extremely-rare",
@@ -102,8 +107,8 @@ const MARKETPLACE_ITEMS = [
   {
     id: "i2",
     type: "item",
-    itemType: "exp-booster" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
-    name: "Exp Battle Booster",
+    itemType: "exp-booster" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "boss-quest-pass",
+    name: "EXP Battle Booster",
     description: "Doubles experience gained from battles for 24 hours",
     rarity: "rare" as "common" | "rare" | "extremely-rare",
     price: 750,
@@ -114,7 +119,7 @@ const MARKETPLACE_ITEMS = [
   {
     id: "i3",
     type: "item",
-    itemType: "rank-skip" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
+    itemType: "rank-skip" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "boss-quest-pass",
     name: "Rank Skip",
     description: "Skip to the next rank instantly",
     rarity: "extremely-rare" as "common" | "rare" | "extremely-rare",
@@ -126,11 +131,11 @@ const MARKETPLACE_ITEMS = [
   {
     id: "i4",
     type: "item",
-    itemType: "arena-pass" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
+    itemType: "arena-pass" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "boss-quest-pass",
     name: "Arena Pass",
     description: "Grants entry to one arena battle without costing HOLOS tokens",
     rarity: "rare" as "common" | "rare" | "extremely-rare",
-    price: 50,  // Changed from 1000 to 50
+    price: 50,
     seller: "BattleMaster",
     quantity: 2,
     createdAt: new Date('2023-07-12')
@@ -138,19 +143,71 @@ const MARKETPLACE_ITEMS = [
   {
     id: "i5",
     type: "item",
-    itemType: "gacha-ticket" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
+    itemType: "gacha-ticket" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "boss-quest-pass",
     name: "Gacha Ticket",
     description: "Can be used for one pull in the Gacha system",
     rarity: "rare" as "common" | "rare" | "extremely-rare",
-    price: 50,  // Changed from 850 to 50
+    price: 50,
     seller: "GachaDealer",
     quantity: 3,
     createdAt: new Date('2023-07-16')
+  },
+  {
+    id: "i6",
+    type: "item",
+    itemType: "boss-quest-pass" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "boss-quest-pass",
+    name: "Boss Quest Pass",
+    description: "Challenge bosses without spending energy",
+    rarity: "rare" as "common" | "rare" | "extremely-rare",
+    price: 300,
+    seller: "BossHunter",
+    quantity: 5,
+    createdAt: new Date('2023-07-20')
   }
 ];
 
+// Blueprint daily specials
+const BLUEPRINT_SPECIALS = [
+  { day: 1, holobotName: "ACE", tier: 1, discount: 0.25 },
+  { day: 2, holobotName: "KUMA", tier: 1, discount: 0.25 },
+  { day: 3, holobotName: "WOLF", tier: 1, discount: 0.25 },
+  { day: 4, holobotName: "TORA", tier: 1, discount: 0.25 },
+  { day: 5, holobotName: "HARE", tier: 1, discount: 0.25 },
+  { day: 6, holobotName: "ACE", tier: 2, discount: 0.2 },
+  { day: 0, holobotName: "KUMA", tier: 2, discount: 0.2 },
+];
+
+// Item daily specials
+const ITEM_SPECIALS = [
+  { day: 1, itemType: "energy-refill", discount: 0.5 },
+  { day: 2, itemType: "gacha-ticket", discount: 0.3 },
+  { day: 3, itemType: "arena-pass", discount: 0.4 },
+  { day: 4, itemType: "exp-booster", discount: 0.3 },
+  { day: 5, itemType: "boss-quest-pass", discount: 0.3 },
+  { day: 6, itemType: "rank-skip", discount: 0.15 },
+  { day: 0, itemType: "attribute-boost", discount: 0.25 },
+];
+
+// Base prices for each item type
+const ITEM_BASE_PRICES = {
+  "energy-refill": 200,
+  "gacha-ticket": 150,
+  "arena-pass": 100,
+  "exp-booster": 750,
+  "rank-skip": 5000,
+  "boss-quest-pass": 300,
+  "attribute-boost": 400
+};
+
+// Base prices for blueprints by tier
+const BLUEPRINT_BASE_PRICES = {
+  1: 500,
+  2: 1200,
+  3: 2500
+};
+
 const Marketplace = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("browse");
   const [filters, setFilters] = useState<FilterOptions>({
@@ -159,6 +216,63 @@ const Marketplace = () => {
     sortBy: "newest"
   });
   const [filteredItems, setFilteredItems] = useState(MARKETPLACE_ITEMS);
+  const [dailySpecials, setDailySpecials] = useState<any[]>([]);
+  
+  // Get current day of week (0-6, where 0 is Sunday)
+  const currentDayOfWeek = new Date().getDay();
+  
+  // Daily marketplace specials generation
+  useEffect(() => {
+    const dayItems = [];
+    
+    // Get blueprint special for today
+    const blueprintSpecial = BLUEPRINT_SPECIALS.find(s => s.day === currentDayOfWeek);
+    if (blueprintSpecial) {
+      const basePrice = BLUEPRINT_BASE_PRICES[blueprintSpecial.tier];
+      const discountedPrice = Math.floor(basePrice * (1 - blueprintSpecial.discount));
+      
+      dayItems.push({
+        id: `special-bp-${blueprintSpecial.holobotName}`,
+        type: "blueprint",
+        holobotName: blueprintSpecial.holobotName,
+        tier: blueprintSpecial.tier,
+        price: discountedPrice,
+        originalPrice: basePrice,
+        seller: "Daily Specials",
+        createdAt: new Date(),
+        discount: blueprintSpecial.discount * 100
+      });
+    }
+    
+    // Get item special for today
+    const itemSpecial = ITEM_SPECIALS.find(s => s.day === currentDayOfWeek);
+    if (itemSpecial) {
+      const basePrice = ITEM_BASE_PRICES[itemSpecial.itemType];
+      const discountedPrice = Math.floor(basePrice * (1 - itemSpecial.discount));
+      
+      // Find the name and description for this item type
+      const itemTemplate = MARKETPLACE_ITEMS.find(
+        item => item.type === "item" && item.itemType === itemSpecial.itemType
+      ) as any;
+      
+      dayItems.push({
+        id: `special-item-${itemSpecial.itemType}`,
+        type: "item",
+        itemType: itemSpecial.itemType,
+        name: itemTemplate?.name || `${itemSpecial.itemType.replace("-", " ")}`,
+        description: itemTemplate?.description || "Special offer for today only!",
+        rarity: "rare",
+        price: discountedPrice,
+        originalPrice: basePrice,
+        seller: "Daily Specials",
+        quantity: 1,
+        createdAt: new Date(),
+        discount: itemSpecial.discount * 100
+      });
+    }
+    
+    setDailySpecials(dayItems);
+  }, [currentDayOfWeek]);
   
   useEffect(() => {
     // Apply filters to the marketplace items
@@ -228,7 +342,7 @@ const Marketplace = () => {
     setFilteredItems(results);
   }, [filters]);
   
-  const handleBuy = (itemId: string, itemName: string, price: number) => {
+  const handleBuy = (itemId: string, itemName: string, price: number, itemType?: string) => {
     if (!user) {
       toast({
         title: "Login Required",
@@ -247,7 +361,50 @@ const Marketplace = () => {
       return;
     }
     
-    // In a real app, we would call an API to process the purchase
+    // Update user's holos balance
+    const newHolosBalance = user.holosTokens - price;
+    const updates: any = { holosTokens: newHolosBalance };
+    
+    // Update the appropriate item counter based on item type
+    if (itemType) {
+      switch (itemType) {
+        case 'arena-pass':
+          updates.arena_passes = (user.arena_passes || 0) + 1;
+          break;
+        case 'gacha-ticket':
+          updates.gachaTickets = (user.gachaTickets || 0) + 1;
+          break;
+        case 'energy-refill':
+          updates.energy_refills = (user.energy_refills || 0) + 1;
+          break;
+        case 'exp-booster':
+          updates.exp_boosters = (user.exp_boosters || 0) + 1;
+          break;
+        case 'rank-skip':
+          updates.rank_skips = (user.rank_skips || 0) + 1;
+          break;
+        case 'boss-quest-pass':
+          updates.boss_quest_passes = (user.boss_quest_passes || 0) + 1;
+          break;
+        default:
+          break;
+      }
+    }
+    
+    // Handle blueprint purchases
+    if (itemId.startsWith('b') || itemId.includes('special-bp')) {
+      const bpItem = [...MARKETPLACE_ITEMS, ...dailySpecials].find(i => i.id === itemId);
+      if (bpItem && bpItem.holobotName) {
+        const holobotKey = bpItem.holobotName.toLowerCase();
+        const blueprints = { ...(user.blueprints || {}) };
+        blueprints[holobotKey] = (blueprints[holobotKey] || 0) + 1;
+        updates.blueprints = blueprints;
+      }
+    }
+    
+    // Update user profile
+    updateUser(updates);
+    
     toast({
       title: "Purchase Successful!",
       description: `You have purchased ${itemName} for ${price} HOLOS.`,
@@ -258,6 +415,30 @@ const Marketplace = () => {
     toast({
       title: "Coming Soon",
       description: "The ability to sell items will be available soon!",
+    });
+  };
+  
+  // Handle using a rank skip item
+  const handleUseRankSkip = () => {
+    if (!user || (user.rank_skips || 0) <= 0) {
+      toast({
+        title: "Cannot Use Item",
+        description: "You don't have any Rank Skip items to use.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // For demonstration, we'll just increase the user's level
+    const newLevel = (user.level || 1) + 1;
+    updateUser({
+      level: newLevel,
+      rank_skips: (user.rank_skips || 0) - 1
+    });
+    
+    toast({
+      title: "Rank Skipped!",
+      description: `You've advanced to level ${newLevel}!`,
     });
   };
 
@@ -286,6 +467,62 @@ const Marketplace = () => {
           </TabsList>
           
           <TabsContent value="browse" className="space-y-6">
+            {/* Daily Specials Section */}
+            {dailySpecials.length > 0 && (
+              <div className="mb-8">
+                <Card className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-yellow-500/30">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-yellow-400">
+                      <Sparkles className="h-5 w-5 text-yellow-400" />
+                      Daily Marketplace Specials
+                      <CalendarDays className="h-4 w-4 ml-2 text-gray-400" />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-300 mb-4">
+                      Special discounted items change every day. Don't miss today's deals!
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {dailySpecials.map(item => {
+                        if (item.type === "blueprint") {
+                          return (
+                            <BlueprintCard 
+                              key={item.id}
+                              holobotName={item.holobotName}
+                              tier={item.tier}
+                              price={item.price}
+                              originalPrice={item.originalPrice}
+                              forSale={true}
+                              discounted={true}
+                              onClick={() => handleBuy(item.id, `${item.holobotName} Blueprint (Tier ${item.tier})`, item.price)}
+                            />
+                          );
+                        } else if (item.type === "item") {
+                          return (
+                            <MarketplaceItemCard 
+                              key={item.id}
+                              name={item.name}
+                              description={item.description}
+                              rarity={item.rarity}
+                              price={item.price}
+                              originalPrice={item.originalPrice}
+                              seller={item.seller}
+                              quantity={item.quantity}
+                              type={item.itemType}
+                              discounted={true}
+                              onBuy={() => handleBuy(item.id, item.name, item.price, item.itemType)}
+                            />
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            
             <MarketplaceFilters 
               filters={filters}
               onFilterChange={setFilters}
@@ -380,7 +617,7 @@ const Marketplace = () => {
                             seller={item.seller}
                             quantity={item.quantity}
                             type={item.itemType}
-                            onBuy={() => handleBuy(item.id, item.name, item.price)}
+                            onBuy={() => handleBuy(item.id, item.name, item.price, item.itemType)}
                           />
                         ))}
                     </div>
@@ -415,45 +652,156 @@ const Marketplace = () => {
                   </p>
                 </div>
                 
-                {/* Mock inventory items - would be populated from user data in real app */}
+                {/* User's items display */}
                 <div className="space-y-8">
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Your Holobots</h3>
-                    <p className="text-muted-foreground">No holobots available for sale</p>
+                    {user.holobots && user.holobots.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-4">
+                        {user.holobots.map((holobot, index) => {
+                          const holobotKey = holobot.name.toLowerCase();
+                          const holobotStats = HOLOBOT_STATS[holobotKey];
+                          
+                          if (!holobotStats) return null;
+                          
+                          return (
+                            <MarketplaceHolobotCard
+                              key={index}
+                              holobotKey={holobotKey}
+                              holobotStats={{
+                                ...holobotStats,
+                                level: holobot.level
+                              }}
+                              forSale={false}
+                            />
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">No holobots available for sale</p>
+                    )}
                   </div>
                   
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Your Blueprints</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                      {/* Mock blueprint data - would be dynamically populated in real app */}
-                      <BlueprintCard 
-                        holobotName="ACE"
-                        tier={1}
-                        quantity={2}
-                        forSale={false}
-                      />
-                      <BlueprintCard 
-                        holobotName="KUMA"
-                        tier={2}
-                        quantity={1}
-                        forSale={false}
-                      />
-                    </div>
+                    {user.blueprints && Object.entries(user.blueprints).length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                        {Object.entries(user.blueprints).map(([holobotKey, quantity]) => (
+                          <BlueprintCard 
+                            key={holobotKey}
+                            holobotName={holobotKey.toUpperCase()}
+                            tier={1}
+                            quantity={quantity}
+                            forSale={false}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">No blueprints in your inventory</p>
+                    )}
                   </div>
                   
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Your Items</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {/* Mock item data - would be dynamically populated in real app */}
-                      <MarketplaceItemCard 
-                        name="Daily Energy Refill"
-                        description="Restores your daily energy to full"
-                        rarity="common"
-                        price={200}
-                        seller="You"
-                        quantity={5}
-                        onBuy={handleSell}
-                      />
+                      {/* Arena Passes */}
+                      {(user.arena_passes || 0) > 0 && (
+                        <MarketplaceItemCard 
+                          name="Arena Pass"
+                          description="Grants entry to one arena battle without costing HOLOS tokens"
+                          rarity="rare"
+                          price={100}
+                          seller="You"
+                          quantity={user.arena_passes || 0}
+                          type="arena-pass"
+                          onBuy={handleSell}
+                        />
+                      )}
+                      
+                      {/* Gacha Tickets */}
+                      {(user.gachaTickets || 0) > 0 && (
+                        <MarketplaceItemCard 
+                          name="Gacha Ticket"
+                          description="Can be used for one pull in the Gacha system"
+                          rarity="rare"
+                          price={150}
+                          seller="You"
+                          quantity={user.gachaTickets || 0}
+                          type="gacha-ticket"
+                          onBuy={handleSell}
+                        />
+                      )}
+                      
+                      {/* Energy Refills */}
+                      {(user.energy_refills || 0) > 0 && (
+                        <MarketplaceItemCard 
+                          name="Daily Energy Refill"
+                          description="Restores your daily energy to full"
+                          rarity="common"
+                          price={200}
+                          seller="You"
+                          quantity={user.energy_refills || 0}
+                          type="energy-refill"
+                          onBuy={handleSell}
+                        />
+                      )}
+                      
+                      {/* EXP Boosters */}
+                      {(user.exp_boosters || 0) > 0 && (
+                        <MarketplaceItemCard 
+                          name="EXP Battle Booster"
+                          description="Doubles experience gained from battles for 24 hours"
+                          rarity="rare"
+                          price={750}
+                          seller="You"
+                          quantity={user.exp_boosters || 0}
+                          type="exp-booster"
+                          onBuy={handleSell}
+                        />
+                      )}
+                      
+                      {/* Rank Skips */}
+                      {(user.rank_skips || 0) > 0 && (
+                        <MarketplaceItemCard 
+                          name="Rank Skip"
+                          description="Skip to the next rank instantly"
+                          rarity="extremely-rare"
+                          price={5000}
+                          seller="You"
+                          quantity={user.rank_skips || 0}
+                          type="rank-skip"
+                          onBuy={handleUseRankSkip}
+                        />
+                      )}
+                      
+                      {/* Boss Quest Passes */}
+                      {(user.boss_quest_passes || 0) > 0 && (
+                        <MarketplaceItemCard 
+                          name="Boss Quest Pass"
+                          description="Challenge bosses without spending energy"
+                          rarity="rare"
+                          price={300}
+                          seller="You"
+                          quantity={user.boss_quest_passes || 0}
+                          type="boss-quest-pass"
+                          onBuy={handleSell}
+                        />
+                      )}
+                      
+                      {/* Show message if no items */}
+                      {(user.arena_passes || 0) === 0 && 
+                       (user.gachaTickets || 0) === 0 && 
+                       (user.energy_refills || 0) === 0 && 
+                       (user.exp_boosters || 0) === 0 && 
+                       (user.rank_skips || 0) === 0 && 
+                       (user.boss_quest_passes || 0) === 0 && (
+                        <div className="col-span-full text-center py-8">
+                          <p className="text-muted-foreground">
+                            You don't have any items in your inventory.
+                            Purchase items from the marketplace!
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

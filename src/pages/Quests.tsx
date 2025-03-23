@@ -1,7 +1,7 @@
 
 import { QuestGrid } from "@/components/QuestGrid";
 import { useAuth } from "@/contexts/auth";
-import { Trophy, Star, FileText, Flame } from "lucide-react";
+import { Trophy, Star, FileText, Flame, Target } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BLUEPRINT_TIERS } from "@/components/holobots/BlueprintSection";
 
@@ -34,7 +34,7 @@ const Quests = () => {
           </div>
           
           {/* Stats Info */}
-          <div className="mt-4 max-w-md mx-auto grid grid-cols-2 gap-4">
+          <div className="mt-4 max-w-md mx-auto grid grid-cols-3 gap-4">
             {/* Blueprint Info Card */}
             <Card className="glass-morphism border-holobots-accent/30 bg-black/20">
               <CardHeader className="py-3">
@@ -79,6 +79,26 @@ const Quests = () => {
                 </p>
                 <p className="mt-1 text-[10px] text-gray-400">
                   Earn boosters from Boss Quests!
+                </p>
+              </CardContent>
+            </Card>
+            
+            {/* Boss Quest Passes Info Card */}
+            <Card className="glass-morphism border-holobots-accent/30 bg-black/20">
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Target className="h-4 w-4 text-amber-400" />
+                  Boss Quest Passes
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="py-2 text-xs">
+                <p className="mb-2">Available Passes: <span className="text-amber-400 font-bold">{user?.boss_quest_passes || 0}</span></p>
+                
+                <p className="text-[10px] text-gray-400">
+                  Boss Quest Passes allow you to challenge bosses without spending energy.
+                </p>
+                <p className="mt-1 text-[10px] text-gray-400">
+                  Buy passes from the Marketplace!
                 </p>
               </CardContent>
             </Card>
