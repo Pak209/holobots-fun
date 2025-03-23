@@ -20,8 +20,8 @@ import {
   CalendarDays
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
-// Item definitions
 const MARKETPLACE_ITEMS = [
   // Holobots
   {
@@ -165,7 +165,6 @@ const MARKETPLACE_ITEMS = [
   }
 ];
 
-// Blueprint daily specials
 const BLUEPRINT_SPECIALS = [
   { day: 1, holobotName: "ACE", tier: 1, discount: 0.25 },
   { day: 2, holobotName: "KUMA", tier: 1, discount: 0.25 },
@@ -176,7 +175,6 @@ const BLUEPRINT_SPECIALS = [
   { day: 0, holobotName: "KUMA", tier: 2, discount: 0.2 },
 ];
 
-// Item daily specials
 const ITEM_SPECIALS = [
   { day: 1, itemType: "energy-refill", discount: 0.5 },
   { day: 2, itemType: "gacha-ticket", discount: 0.3 },
@@ -187,7 +185,6 @@ const ITEM_SPECIALS = [
   { day: 0, itemType: "attribute-boost", discount: 0.25 },
 ];
 
-// Base prices for each item type
 const ITEM_BASE_PRICES = {
   "energy-refill": 200,
   "gacha-ticket": 150,
@@ -198,7 +195,6 @@ const ITEM_BASE_PRICES = {
   "attribute-boost": 400
 };
 
-// Base prices for blueprints by tier
 const BLUEPRINT_BASE_PRICES = {
   1: 500,
   2: 1200,
@@ -217,14 +213,14 @@ const Marketplace = () => {
   const [filteredItems, setFilteredItems] = useState(MARKETPLACE_ITEMS);
   const [dailySpecials, setDailySpecials] = useState<any[]>([]);
   
-  // Get current day of week (0-6, where 0 is Sunday)
+  const [showRankSkipDialog, setShowRankSkipDialog] = useState(false);
+  const [selectedHolobotForRankSkip, setSelectedHolobotForRankSkip] = useState<string | null>(null);
+  
   const currentDayOfWeek = new Date().getDay();
   
-  // Daily marketplace specials generation
   useEffect(() => {
     const dayItems = [];
     
-    // Get blueprint special for today
     const blueprintSpecial = BLUEPRINT_SPECIALS.find(s => s.day === currentDayOfWeek);
     if (blueprintSpecial) {
       const basePrice = BLUEPRINT_BASE_PRICES[blueprintSpecial.tier];
@@ -243,13 +239,11 @@ const Marketplace = () => {
       });
     }
     
-    // Get item special for today
     const itemSpecial = ITEM_SPECIALS.find(s => s.day === currentDayOfWeek);
     if (itemSpecial) {
       const basePrice = ITEM_BASE_PRICES[itemSpecial.itemType];
       const discountedPrice = Math.floor(basePrice * (1 - itemSpecial.discount));
       
-      // Find the name and description for this item type
       const itemTemplate = MARKETPLACE_ITEMS.find(
         item => item.type === "item" && item.itemType === itemSpecial.itemType
       ) as any;
@@ -274,15 +268,12 @@ const Marketplace = () => {
   }, [currentDayOfWeek]);
   
   useEffect(() => {
-    // Apply filters to the marketplace items
     let results = [...MARKETPLACE_ITEMS];
     
-    // Filter by type
     if (filters.type !== 'all') {
       results = results.filter(item => item.type === filters.type);
     }
     
-    // Filter by search query
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase();
       results = results.filter(item => 
@@ -292,7 +283,6 @@ const Marketplace = () => {
       );
     }
     
-    // Filter by price range
     if (filters.minPrice !== undefined) {
       results = results.filter(item => item.price >= filters.minPrice!);
     }
@@ -300,7 +290,6 @@ const Marketplace = () => {
       results = results.filter(item => item.price <= filters.maxPrice!);
     }
     
-    // Filter by level range (only for holobots)
     if (filters.minLevel !== undefined) {
       results = results.filter(item => 
         item.type !== 'holobot' || (item.level && item.level >= filters.minLevel!)
@@ -312,7 +301,6 @@ const Marketplace = () => {
       );
     }
     
-    // Apply sorting
     results.sort((a, b) => {
       switch (filters.sortBy) {
         case 'newest':
@@ -360,11 +348,9 @@ const Marketplace = () => {
       return;
     }
     
-    // Update user's holos balance
     const newHolosBalance = user.holosTokens - price;
     const updates: any = { holosTokens: newHolosBalance };
     
-    // Update the appropriate item counter based on item type
     if (itemType) {
       switch (itemType) {
         case 'arena-pass':
@@ -390,7 +376,6 @@ const Marketplace = () => {
       }
     }
     
-    // Handle blueprint purchases
     if (itemId.startsWith('b') || itemId.includes('special-bp')) {
       const bpItem = [...MARKETPLACE_ITEMS, ...dailySpecials].find(i => i.id === itemId);
       if (bpItem && bpItem.holobotName) {
@@ -401,7 +386,6 @@ const Marketplace = () => {
       }
     }
     
-    // Update user profile
     updateUser(updates);
     
     toast({
@@ -417,7 +401,6 @@ const Marketplace = () => {
     });
   };
   
-  // Handle using a rank skip item
   const handleUseRankSkip = () => {
     if (!user || (user.rank_skips || 0) <= 0) {
       toast({
@@ -428,17 +411,68 @@ const Marketplace = () => {
       return;
     }
     
-    // For demonstration, we'll just increase the user's level
-    const newLevel = (user.level || 1) + 1;
-    updateUser({
-      level: newLevel,
-      rank_skips: (user.rank_skips || 0) - 1
-    });
+    setShowRankSkipDialog(true);
+  };
+
+  const handleRankSkipConfirm = (holobotName: string) => {
+    if (!user || (user.rank_skips || 0) <= 0) return;
     
-    toast({
-      title: "Rank Skipped!",
-      description: `You've advanced to level ${newLevel}!`,
-    });
+    const updatedHolobots = [...user.holobots];
+    const holobotIndex = updatedHolobots.findIndex(h => h.name === holobotName);
+    
+    if (holobotIndex !== -1) {
+      const currentRank = updatedHolobots[holobotIndex].rank || 'Bronze';
+      let newRank = '';
+      
+      switch (currentRank) {
+        case 'Bronze':
+          newRank = 'Silver';
+          break;
+        case 'Silver':
+          newRank = 'Gold';
+          break;
+        case 'Gold':
+          newRank = 'Platinum';
+          break;
+        case 'Platinum':
+          newRank = 'Diamond';
+          break;
+        case 'Diamond':
+          newRank = 'Master';
+          break;
+        case 'Master':
+          newRank = 'Grandmaster';
+          break;
+        case 'Grandmaster':
+          newRank = 'Legendary';
+          break;
+        default:
+          newRank = 'Legendary';
+      }
+      
+      let attributePointsToAdd = 1;
+      if (newRank === 'Gold' || newRank === 'Platinum') attributePointsToAdd = 2;
+      if (newRank === 'Diamond' || newRank === 'Master') attributePointsToAdd = 3;
+      if (newRank === 'Grandmaster' || newRank === 'Legendary') attributePointsToAdd = 5;
+      
+      updatedHolobots[holobotIndex] = {
+        ...updatedHolobots[holobotIndex],
+        rank: newRank,
+        attributePoints: (updatedHolobots[holobotIndex].attributePoints || 0) + attributePointsToAdd
+      };
+      
+      updateUser({
+        rank_skips: (user.rank_skips || 0) - 1,
+        holobots: updatedHolobots
+      });
+      
+      toast({
+        title: `Rank Skip Used!`,
+        description: `${holobotName} has advanced to ${newRank} rank with ${attributePointsToAdd} new attribute points to spend!`,
+      });
+    }
+    
+    setShowRankSkipDialog(false);
   };
 
   return (
@@ -466,7 +500,6 @@ const Marketplace = () => {
           </TabsList>
           
           <TabsContent value="browse" className="space-y-6">
-            {/* Daily Specials Section */}
             {dailySpecials.length > 0 && (
               <div className="mb-8">
                 <Card className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-yellow-500/30">
@@ -537,7 +570,6 @@ const Marketplace = () => {
               </div>
             ) : (
               <div className="space-y-8">
-                {/* Holobots section */}
                 {filteredItems.some(item => item.type === 'holobot') && (
                   <div>
                     <h2 className="text-xl font-semibold mb-4 flex items-center">
@@ -572,7 +604,6 @@ const Marketplace = () => {
                   </div>
                 )}
                 
-                {/* Blueprints section */}
                 {filteredItems.some(item => item.type === 'blueprint') && (
                   <div>
                     <h2 className="text-xl font-semibold mb-4 flex items-center">
@@ -596,7 +627,6 @@ const Marketplace = () => {
                   </div>
                 )}
                 
-                {/* Items section */}
                 {filteredItems.some(item => item.type === 'item') && (
                   <div>
                     <h2 className="text-xl font-semibold mb-4 flex items-center">
@@ -651,7 +681,6 @@ const Marketplace = () => {
                   </p>
                 </div>
                 
-                {/* User's items display */}
                 <div className="space-y-8">
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Your Holobots</h3>
@@ -705,7 +734,6 @@ const Marketplace = () => {
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Your Items</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {/* Arena Passes */}
                       {(user.arena_passes || 0) > 0 && (
                         <MarketplaceItemCard 
                           name="Arena Pass"
@@ -719,7 +747,6 @@ const Marketplace = () => {
                         />
                       )}
                       
-                      {/* Gacha Tickets */}
                       {(user.gachaTickets || 0) > 0 && (
                         <MarketplaceItemCard 
                           name="Gacha Ticket"
@@ -733,7 +760,6 @@ const Marketplace = () => {
                         />
                       )}
                       
-                      {/* Energy Refills */}
                       {(user.energy_refills || 0) > 0 && (
                         <MarketplaceItemCard 
                           name="Daily Energy Refill"
@@ -747,7 +773,6 @@ const Marketplace = () => {
                         />
                       )}
                       
-                      {/* EXP Boosters */}
                       {(user.exp_boosters || 0) > 0 && (
                         <MarketplaceItemCard 
                           name="EXP Battle Booster"
@@ -761,7 +786,6 @@ const Marketplace = () => {
                         />
                       )}
                       
-                      {/* Rank Skips */}
                       {(user.rank_skips || 0) > 0 && (
                         <MarketplaceItemCard 
                           name="Rank Skip"
@@ -775,7 +799,6 @@ const Marketplace = () => {
                         />
                       )}
                       
-                      {/* Boss Quest Passes */}
                       {(user.boss_quest_passes || 0) > 0 && (
                         <MarketplaceItemCard 
                           name="Boss Quest Pass"
@@ -789,7 +812,6 @@ const Marketplace = () => {
                         />
                       )}
                       
-                      {/* Show message if no items */}
                       {(user.arena_passes || 0) === 0 && 
                        (user.gachaTickets || 0) === 0 && 
                        (user.energy_refills || 0) === 0 && 
@@ -811,6 +833,52 @@ const Marketplace = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <Dialog open={showRankSkipDialog} onOpenChange={setShowRankSkipDialog}>
+        <DialogContent className="bg-gray-900 border-holobots-accent text-white">
+          <DialogHeader>
+            <DialogTitle>Select Holobot to Rank Up</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Choose a Holobot to advance to the next rank tier and gain attribute points
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {user?.holobots.map((holobot) => (
+              <Button
+                key={holobot.name}
+                onClick={() => handleRankSkipConfirm(holobot.name)}
+                className="flex flex-col items-center p-4 h-auto bg-black/30 hover:bg-holobots-accent/20 border border-holobots-accent/30"
+              >
+                <div className="w-12 h-12 rounded-full overflow-hidden mb-2 border-2 border-holobots-accent/50">
+                  <img 
+                    src={`/src/assets/holobots/${holobot.name.toLowerCase()}.png`}
+                    alt={holobot.name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="font-bold">{holobot.name}</span>
+                <span className="text-xs text-holobots-accent mt-1">
+                  Current rank: {holobot.rank || 'Bronze'}
+                </span>
+                <span className="text-xs text-gray-400 mt-1">
+                  Attribute points: {holobot.attributePoints || 0}
+                </span>
+              </Button>
+            ))}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowRankSkipDialog(false)}
+              className="border border-gray-700"
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
