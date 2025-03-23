@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { HOLOBOT_STATS } from "@/types/holobot";
@@ -43,7 +44,7 @@ export const QuestBattleBanner = ({
   const actualPlayerHolobots = playerHolobots || 
     (user?.holobots?.filter(holobot => 
       squadHolobotKeys.some(key => 
-        HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
+        HOLOBOT_STATS[key]?.name.toLowerCase() === holobot.name.toLowerCase()
       )
     ) || []);
   
