@@ -1,7 +1,7 @@
 
 import { QuestGrid } from "@/components/QuestGrid";
 import { useAuth } from "@/contexts/auth";
-import { Trophy, Star, FileText, Flame, Target } from "lucide-react";
+import { Trophy, Star, FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BLUEPRINT_TIERS } from "@/components/holobots/BlueprintSection";
 
@@ -33,9 +33,8 @@ const Quests = () => {
             <Star className="h-4 w-4 text-yellow-400" />
           </div>
           
-          {/* Stats Info */}
-          <div className="mt-4 max-w-md mx-auto grid grid-cols-3 gap-4">
-            {/* Blueprint Info Card */}
+          {/* Blueprint Info Card */}
+          <div className="mt-4 max-w-md mx-auto">
             <Card className="glass-morphism border-holobots-accent/30 bg-black/20">
               <CardHeader className="py-3">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -59,46 +58,6 @@ const Quests = () => {
                 
                 <p className="mt-2 text-[10px] text-gray-400">
                   Collect blueprints from Quests to mint new Holobots!
-                </p>
-              </CardContent>
-            </Card>
-            
-            {/* EXP Boosters Info Card */}
-            <Card className="glass-morphism border-holobots-accent/30 bg-black/20">
-              <CardHeader className="py-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Flame className="h-4 w-4 text-blue-400" />
-                  EXP Battle Boosters
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="py-2 text-xs">
-                <p className="mb-2">Available Boosters: <span className="text-blue-400 font-bold">{user?.exp_boosters || 0}</span></p>
-                
-                <p className="text-[10px] text-gray-400">
-                  EXP Battle Boosters double experience gained from battles for 24 hours.
-                </p>
-                <p className="mt-1 text-[10px] text-gray-400">
-                  Earn boosters from Boss Quests!
-                </p>
-              </CardContent>
-            </Card>
-            
-            {/* Boss Quest Passes Info Card */}
-            <Card className="glass-morphism border-holobots-accent/30 bg-black/20">
-              <CardHeader className="py-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Target className="h-4 w-4 text-amber-400" />
-                  Boss Quest Passes
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="py-2 text-xs">
-                <p className="mb-2">Available Passes: <span className="text-amber-400 font-bold">{user?.boss_quest_passes || 0}</span></p>
-                
-                <p className="text-[10px] text-gray-400">
-                  Boss Quest Passes allow you to challenge bosses without spending energy.
-                </p>
-                <p className="mt-1 text-[10px] text-gray-400">
-                  Buy passes from the Marketplace!
                 </p>
               </CardContent>
             </Card>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { HOLOBOT_STATS } from "@/types/holobot";
@@ -16,7 +15,6 @@ interface QuestBattleBannerProps {
   squadHolobotKeys?: string[];
   bossHolobotKey?: string;
   onComplete?: () => void;
-  progress?: number;
 }
 
 export const QuestBattleBanner = ({ 
@@ -28,8 +26,7 @@ export const QuestBattleBanner = ({
   isBossQuest = false,
   squadHolobotKeys = [],
   bossHolobotKey = "",
-  onComplete,
-  progress = 0
+  onComplete
 }: QuestBattleBannerProps) => {
   const { user } = useAuth();
   
@@ -44,7 +41,7 @@ export const QuestBattleBanner = ({
   const actualPlayerHolobots = playerHolobots || 
     (user?.holobots?.filter(holobot => 
       squadHolobotKeys.some(key => 
-        HOLOBOT_STATS[key]?.name.toLowerCase() === holobot.name.toLowerCase()
+        HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
       )
     ) || []);
   
@@ -202,13 +199,6 @@ export const QuestBattleBanner = ({
           <h2 className="text-xl font-bold text-holobots-accent">{battleText}</h2>
           <div className="text-xs text-gray-400 mt-1">Round {battleRound}/5</div>
         </div>
-        
-        {progress > 0 && (
-          <div className="mb-3">
-            <Progress value={progress} className="h-2" />
-            <div className="text-xs text-center mt-1">Battle in progress...</div>
-          </div>
-        )}
         
         <div className="mb-6 space-y-1">
           <div className="flex justify-between text-sm">

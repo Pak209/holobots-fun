@@ -3,20 +3,12 @@ import { useState } from "react";
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS, getRank } from "@/types/holobot";
 import { Button } from "@/components/ui/button";
-import { Coins, Plus, Crown, Zap, ArrowUpCircle } from "lucide-react";
+import { Coins, Plus, Crown, Zap } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { UserHolobot } from "@/types/user";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog";
 
 interface HolobotInfoCardProps {
   holobotKey: string;
@@ -41,12 +33,11 @@ export const HolobotInfoCard = ({
   const level = userHolobot?.level || holobot.level;
   const currentXp = userHolobot?.experience || 0;
   const nextLevelXp = userHolobot?.nextLevelExp || 100;
-  const holobotRank = userHolobot?.rank || "Rookie";
+  const holobotRank = userHolobot?.rank || "Common";
   const attributePoints = userHolobot?.attributePoints || 0;
   
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
-  const [showRankSkipDialog, setShowRankSkipDialog] = useState(false);
   
   const calculateProgress = (current: number, total: number) => {
     return Math.min(100, Math.floor((current / total) * 100));
@@ -61,34 +52,8 @@ export const HolobotInfoCard = ({
       case "Elite": return "bg-yellow-600/20 border-yellow-500 text-yellow-400";
       case "Rare": return "bg-purple-600/20 border-purple-500 text-purple-400";
       case "Champion": return "bg-green-600/20 border-green-500 text-green-400";
-      case "Starter": return "bg-blue-600/20 border-blue-500 text-blue-400";
-      case "Rookie":
-      default: return "bg-gray-600/20 border-gray-500 text-gray-400";
-    }
-  };
-
-  // Return the next rank in sequence
-  const getNextRank = (currentRank: string): string => {
-    const rankOrder = ["Rookie", "Starter", "Champion", "Rare", "Elite", "Legendary"];
-    const currentIndex = rankOrder.indexOf(currentRank);
-    
-    if (currentIndex === -1 || currentIndex === rankOrder.length - 1) {
-      return currentRank; // Return unchanged if not found or already at highest rank
-    }
-    
-    return rankOrder[currentIndex + 1];
-  };
-
-  // Determine the required level for a specific rank
-  const getLevelForRank = (rank: string): number => {
-    switch(rank) {
-      case "Legendary": return 41;
-      case "Elite": return 31;
-      case "Rare": return 21;
-      case "Champion": return 11;
-      case "Starter": return 2;
-      case "Rookie":
-      default: return 1;
+      case "Common":
+      default: return "bg-blue-600/20 border-blue-500 text-blue-400";
     }
   };
 
@@ -150,79 +115,6 @@ export const HolobotInfoCard = ({
       });
     }
   };
-
-  // Handle Rank Skip for this holobot
-  const handleRankSkip = async () => {
-    if (!isOwned || !user || (user.rank_skips || 0) <= 0) {
-      toast({
-        title: "Cannot Use Rank Skip",
-        description: user && (user.rank_skips || 0) <= 0 
-          ? "You don't have any Rank Skips available" 
-          : "Error accessing holobot data",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      // Get current rank and determine the next rank
-      const currentRank = holobotRank || 'Rookie';
-      const newRank = getNextRank(currentRank);
-      
-      // If already at max rank, notify user
-      if (newRank === currentRank && currentRank === "Legendary") {
-        toast({
-          title: "Maximum Rank",
-          description: `${holobot.name} is already at Legendary rank!`,
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Calculate new level based on the next rank
-      const newLevel = getLevelForRank(newRank);
-      
-      // Update the holobot with new rank and level
-      const updatedHolobots = user.holobots.map(h => {
-        if (h.name.toLowerCase() === holobot.name.toLowerCase()) {
-          // Add attribute points based on level increase
-          const levelIncrease = Math.max(0, newLevel - h.level);
-          const newAttributePoints = (h.attributePoints || 0) + levelIncrease;
-          
-          return {
-            ...h,
-            rank: newRank,
-            level: newLevel,
-            attributePoints: newAttributePoints
-          };
-        }
-        return h;
-      });
-      
-      // Update user profile
-      await updateUser({
-        rank_skips: (user.rank_skips || 0) - 1,
-        holobots: updatedHolobots
-      });
-      
-      toast({
-        title: `Rank Skip Used!`,
-        description: `${holobot.name} has advanced to ${newRank} rank!`,
-      });
-      
-      setShowRankSkipDialog(false);
-    } catch (error) {
-      console.error("Error using rank skip:", error);
-      toast({
-        title: "Error",
-        description: "Failed to apply rank skip",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Check if user has rank skips available
-  const hasRankSkips = user && (user.rank_skips || 0) > 0;
 
   return (
     <div className={`flex flex-col sm:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-3 sm:p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300`}>
@@ -305,61 +197,41 @@ export const HolobotInfoCard = ({
             
             {/* Attribute Boost Section - Only show for owned holobots with compact layout */}
             {isOwned && (
-              <div className="space-y-2">
-                <div>
-                  <h3 className="text-[9px] font-bold mb-0.5 text-holobots-accent flex items-center justify-between">
-                    <span>Available Boosts</span>
-                    <Badge variant="outline" className="bg-blue-500/20 border-blue-500 text-blue-400 text-[8px] py-0 px-1 h-4 flex items-center">
-                      <Zap className="h-2 w-2 mr-0.5" /> {attributePoints}
-                    </Badge>
-                  </h3>
-                  <div className="grid grid-cols-2 gap-1">
-                    <button 
-                      className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
-                      onClick={() => handleBoostAttribute('attack')}
-                      disabled={attributePoints === 0}
-                    >
-                      +1 ATK
-                    </button>
-                    <button 
-                      className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
-                      onClick={() => handleBoostAttribute('defense')}
-                      disabled={attributePoints === 0}
-                    >
-                      +1 DEF
-                    </button>
-                    <button 
-                      className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
-                      onClick={() => handleBoostAttribute('speed')}
-                      disabled={attributePoints === 0}
-                    >
-                      +1 SPD
-                    </button>
-                    <button 
-                      className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
-                      onClick={() => handleBoostAttribute('health')}
-                      disabled={attributePoints === 0}
-                    >
-                      +10 HP
-                    </button>
-                  </div>
-                </div>
-
-                {/* Rank Skip Button */}
-                <div>
-                  <h3 className="text-[9px] font-bold mb-0.5 text-holobots-accent flex items-center justify-between">
-                    <span>Rank Skip</span>
-                    <Badge variant="outline" className="bg-red-500/20 border-red-500 text-red-400 text-[8px] py-0 px-1 h-4 flex items-center">
-                      <ArrowUpCircle className="h-2 w-2 mr-0.5" /> {user?.rank_skips || 0}
-                    </Badge>
-                  </h3>
+              <div>
+                <h3 className="text-[9px] font-bold mb-0.5 text-holobots-accent flex items-center justify-between">
+                  <span>Available Boosts</span>
+                  <Badge variant="outline" className="bg-blue-500/20 border-blue-500 text-blue-400 text-[8px] py-0 px-1 h-4 flex items-center">
+                    <Zap className="h-2 w-2 mr-0.5" /> {attributePoints}
+                  </Badge>
+                </h3>
+                <div className="grid grid-cols-2 gap-1">
                   <button 
-                    className={`w-full px-1 py-1 text-[9px] flex items-center justify-center gap-1 ${hasRankSkips ? 'bg-red-900/20 border border-red-500/50 hover:bg-red-800/30 text-red-300' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
-                    onClick={() => setShowRankSkipDialog(true)}
-                    disabled={!hasRankSkips || holobotRank === 'Legendary'}
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
+                    onClick={() => handleBoostAttribute('attack')}
+                    disabled={attributePoints === 0}
                   >
-                    <ArrowUpCircle className="h-3 w-3" />
-                    {holobotRank === 'Legendary' ? 'MAX RANK' : 'SKIP TO NEXT RANK'}
+                    +1 ATK
+                  </button>
+                  <button 
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
+                    onClick={() => handleBoostAttribute('defense')}
+                    disabled={attributePoints === 0}
+                  >
+                    +1 DEF
+                  </button>
+                  <button 
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
+                    onClick={() => handleBoostAttribute('speed')}
+                    disabled={attributePoints === 0}
+                  >
+                    +1 SPD
+                  </button>
+                  <button 
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
+                    onClick={() => handleBoostAttribute('health')}
+                    disabled={attributePoints === 0}
+                  >
+                    +10 HP
                   </button>
                 </div>
               </div>
@@ -388,74 +260,6 @@ export const HolobotInfoCard = ({
           </div>
         </div>
       </div>
-
-      {/* Rank Skip Confirmation Dialog */}
-      <Dialog open={showRankSkipDialog} onOpenChange={setShowRankSkipDialog}>
-        <DialogContent className="bg-gray-900 border-holobots-accent text-white">
-          <DialogHeader>
-            <DialogTitle>Confirm Rank Skip</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Are you sure you want to upgrade {holobot.name}'s rank?
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="my-4 p-4 bg-black/30 rounded-lg border border-holobots-accent/30">
-            <div className="flex items-center mb-2">
-              <div className="w-10 h-10 rounded-full overflow-hidden mr-3 border-2 border-holobots-accent/50">
-                <img 
-                  src={`/src/assets/holobots/${holobotKey}.png`}
-                  alt={holobot.name} 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <h3 className="font-bold">{holobot.name}</h3>
-                <p className="text-xs text-gray-400">Level {level}</p>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center bg-black/30 p-2 rounded-md">
-              <div className="flex items-center">
-                <Badge className={`mr-2 ${getRankColor(holobotRank)}`}>
-                  <Crown className="h-3 w-3 mr-1" /> {holobotRank}
-                </Badge>
-                <span className="text-white">Current Rank</span>
-              </div>
-              <ArrowUpCircle className="h-5 w-5 text-red-400 mx-2" />
-              <div className="flex items-center">
-                <Badge className={`mr-2 ${getRankColor(getNextRank(holobotRank))}`}>
-                  <Crown className="h-3 w-3 mr-1" /> {getNextRank(holobotRank)}
-                </Badge>
-                <span className="text-white">New Rank</span>
-              </div>
-            </div>
-            
-            <div className="mt-3 p-2 bg-blue-900/20 border border-blue-500/30 rounded-md">
-              <p className="text-xs text-blue-300">
-                <Zap className="h-3 w-3 inline mr-1" />
-                Level will be increased to {getLevelForRank(getNextRank(holobotRank))}, with additional attribute points.
-              </p>
-            </div>
-          </div>
-          
-          <DialogFooter className="flex space-x-2">
-            <Button 
-              variant="ghost" 
-              onClick={() => setShowRankSkipDialog(false)}
-              className="border border-gray-700"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleRankSkip}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              <ArrowUpCircle className="h-4 w-4 mr-2" />
-              Apply Rank Skip
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
