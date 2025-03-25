@@ -1,181 +1,87 @@
-import { HolobotStats, getRank } from "@/types/holobot";
-import { getHolobotImagePath } from "@/utils/holobotImageUtils";
+
+import { HolobotStats } from "@/types/holobot";
+import { getRank } from "@/types/holobot";
 
 interface HolobotCardProps {
   stats: HolobotStats;
-  variant?: "blue" | "red";
+  variant?: "blue" | "red" | "neutral";
+  size?: "sm" | "md" | "lg";
+  isCompact?: boolean;
 }
 
-const getRankColor = (level: number): string => {
-  if (level >= 41) return "bg-yellow-900/80 border-yellow-400"; // Legendary
-  if (level >= 31) return "bg-purple-900/80 border-purple-400"; // Elite
-  if (level >= 21) return "bg-blue-900/80 border-blue-400";     // Rare
-  if (level >= 11) return "bg-green-900/80 border-green-400";   // Champion
-  return "bg-gray-900/80 border-gray-400";                      // Rookie
-};
-
-export const HolobotCard = ({
-  stats,
-  variant = "blue"
+export const HolobotCard = ({ 
+  stats, 
+  variant = "blue",
+  size = "md",
+  isCompact = false
 }: HolobotCardProps) => {
-  const holobotName = stats.name?.toUpperCase();
-  const imagePath = getHolobotImagePath(holobotName);
-  const rankColor = getRankColor(stats.level || 1);
-  
-  console.log(`Rendering HolobotCard for ${holobotName} with image path: ${imagePath}`);
-  
+  const cardVariantClasses = {
+    blue: "from-blue-900 to-blue-950 border-blue-500",
+    red: "from-red-900 to-red-950 border-red-500",
+    neutral: "from-gray-800 to-gray-950 border-gray-500",
+  };
+
+  const sizeClasses = {
+    sm: "max-w-[140px]",
+    md: "max-w-[180px]",
+    lg: "max-w-[220px]",
+  };
+
   return (
-    <div className={`w-[130px] md:w-[180px] h-auto rounded-lg ${
-      variant === "red" ? "bg-red-900/80 border-red-400" : rankColor
-    } border-2 p-1.5 flex flex-col font-mono text-[8px] transition-all duration-300 hover:scale-105 shadow-lg`}>
-      <div className="flex items-center justify-between mb-1 bg-black/40 px-1.5 py-0.5 rounded-md border border-white/20">
-        <span className="font-bold italic text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-          HOLOBOTS
-        </span>
-        <div className="flex items-center gap-2">
-          <span className={`font-bold ${
-            variant === "red" ? "text-red-200" : "text-cyan-200"
-          }`}>
-            {holobotName || "UNKNOWN"}
-          </span>
-          <span className="text-yellow-300">Lv.{stats.level || 1}</span>
-        </div>
-      </div>
+    <div className={`
+      relative rounded-md overflow-hidden 
+      border-2 shadow-lg transform hover:scale-102 transition-transform
+      ${cardVariantClasses[variant]}
+      ${sizeClasses[size]}
+      ${isCompact ? 'scale-90 transform-origin-top' : ''}
+    `}>
+      {/* Card background */}
+      <div className={`absolute inset-0 bg-gradient-to-b ${cardVariantClasses[variant]} opacity-70`}></div>
       
-      <div className="aspect-square bg-black/40 rounded-lg mb-1 flex items-center justify-center border border-white/20 hover:border-blue-400/50 transition-colors duration-300 p-1">
-        <img 
-          src={imagePath}
-          alt={holobotName || "Unknown Holobot"} 
-          className="w-full h-full object-contain hover:animate-pulse"
-          style={{ imageRendering: 'pixelated' }}
-          loading="eager"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            console.error(`Failed to load image for holobot: ${holobotName}`, {
-              attempted: target.src,
-              holobotName
-            });
-            
-            if (!target.src.includes('placeholder')) {
-              if (holobotName?.toUpperCase() === 'ACE') {
-                const acePath = "/lovable-uploads/7223a5e5-abcb-4911-8436-bddbbd851ae2.png";
-                console.log(`Using direct ACE path: ${acePath}`);
-                target.src = acePath;
-                return;
-              }
-              
-              if (holobotName?.toUpperCase() === 'ERA') {
-                const eraPath = "/lovable-uploads/c2cd6b0a-0e49-4ede-9507-e55d05aa608d.png";
-                console.log(`Using direct ERA path: ${eraPath}`);
-                target.src = eraPath;
-                return;
-              }
-              
-              if (holobotName?.toUpperCase() === 'SHADOW') {
-                const shadowPath = "/lovable-uploads/ef60f626-b571-46ba-9d37-6045b020669a.png";
-                console.log(`Using direct SHADOW path: ${shadowPath}`);
-                target.src = shadowPath;
-                return;
-              }
-              
-              if (holobotName?.toUpperCase() === 'KUMA') {
-                const kumaPath = "/lovable-uploads/78f2c37a-43a3-4cce-a767-bc3f614e7a80.png";
-                console.log(`Using direct KUMA path: ${kumaPath}`);
-                target.src = kumaPath;
-                return;
-              }
-              
-              if (holobotName?.toUpperCase() === 'GAMA') {
-                const gamaPath = "/lovable-uploads/4af336bd-2825-4faf-9b2c-58cc86354b14.png";
-                console.log(`Using direct GAMA path: ${gamaPath}`);
-                target.src = gamaPath;
-                return;
-              }
-              
-              if (holobotName?.toUpperCase() === 'HARE') {
-                const harePath = "/lovable-uploads/4ad952b3-4337-4120-9542-ed14ca1051d5.png";
-                console.log(`Using direct HARE path: ${harePath}`);
-                target.src = harePath;
-                return;
-              }
-              
-              if (holobotName?.toUpperCase() === 'KEN') {
-                const kenPath = "/lovable-uploads/58e4110e-07f8-44ab-983e-b6caa5098cc3.png";
-                console.log(`Using direct KEN path: ${kenPath}`);
-                target.src = kenPath;
-                return;
-              }
-              
-              if (holobotName?.toUpperCase() === 'KURAI') {
-                const kuraiPath = "/lovable-uploads/a2ce9d10-b01e-4b86-b52b-74f196b39a6c.png";
-                console.log(`Using direct KURAI path: ${kuraiPath}`);
-                target.src = kuraiPath;
-                return;
-              }
-              
-              if (holobotName?.toUpperCase() === 'TORA') {
-                const toraPath = "/lovable-uploads/e79a5ab6-4577-4e0e-a2b9-32cafd91a212.png";
-                console.log(`Using direct TORA path: ${toraPath}`);
-                target.src = toraPath;
-                return;
-              }
-              
-              if (holobotName?.toUpperCase() === 'TSUIN') {
-                const tsuinPath = "/lovable-uploads/e6982da0-9c53-4d62-a2b8-7ede52d89ca7.png";
-                console.log(`Using direct TSUIN path: ${tsuinPath}`);
-                target.src = tsuinPath;
-                return;
-              }
-              
-              if (holobotName?.toUpperCase() === 'WAKE') {
-                const wakePath = "/lovable-uploads/e8128616-6ab5-4995-91b8-2989d18a0508.png";
-                console.log(`Using direct WAKE path: ${wakePath}`);
-                target.src = wakePath;
-                return;
-              }
-              
-              if (holobotName?.toUpperCase() === 'WOLF') {
-                const wolfPath = "/lovable-uploads/46001c5e-b6c6-4c4d-8006-5926b85c13d9.png";
-                console.log(`Using direct WOLF path: ${wolfPath}`);
-                target.src = wolfPath;
-                return;
-              }
-              
-              const altPath = `/lovable-uploads/${holobotName?.toLowerCase()}.png`;
-              console.log(`Trying alternative path for ${holobotName}: ${altPath}`);
-              target.src = altPath;
-              
-              target.onerror = () => {
-                console.error(`Alternative path also failed for ${holobotName}, using placeholder`);
-                target.src = "/placeholder.svg";
-                target.onerror = null;
-              };
-            }
-          }}
-        />
-      </div>
-      
-      <div className="bg-black/40 rounded-lg p-1.5 mb-1 border border-white/20">
-        <div className="font-bold text-white mb-0.5 text-[6px] md:text-[8px]">
-          Ability: {stats.specialMove || "None"}
+      {/* Card content */}
+      <div className="relative p-2 text-white">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-1">
+          <div className="flex flex-col">
+            <h3 className="font-bold text-sm drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+              {stats.name}
+            </h3>
+            <span className="text-xs text-gray-300 opacity-80">
+              {getRank(stats.level || 1)}
+            </span>
+          </div>
+          <div className="bg-black/30 px-1.5 py-0.5 rounded-sm">
+            <span className="text-xs font-bold text-yellow-300">
+              LV{stats.level || 1}
+            </span>
+          </div>
         </div>
-        <div className="text-[5px] md:text-[7px] text-gray-300 leading-tight">
-          {stats.abilityDescription || "No ability description available."}
+        
+        {/* Image placeholder */}
+        <div className="w-full aspect-square bg-black/20 rounded-sm mb-2 flex items-center justify-center overflow-hidden">
+          <div className="text-[10px] text-center text-gray-400 p-1">HOLOBOT</div>
         </div>
-      </div>
-      
-      <div className="bg-black/40 rounded-lg p-1.5 border border-white/20">
-        <div className="grid grid-cols-4 gap-1 text-white text-[5px] md:text-[7px]">
-          <div>HP:{stats.maxHealth || 0}</div>
-          <div>A:{stats.attack || 0}</div>
-          <div>D:{stats.defense || 0}</div>
-          <div>S:{stats.speed || 0}</div>
+        
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-x-1 gap-y-0.5">
+          <div className="col-span-2 bg-black/30 px-1.5 py-0.5 rounded-sm mb-1">
+            <p className="text-[10px] text-center text-gray-200">
+              {stats.specialMove || "Special Move"}
+            </p>
+          </div>
+          <div className="bg-black/20 px-1 py-0.5 rounded-sm">
+            <p className="text-[10px]">HP: <span className="text-red-300">{stats.maxHealth}</span></p>
+          </div>
+          <div className="bg-black/20 px-1 py-0.5 rounded-sm">
+            <p className="text-[10px]">ATK: <span className="text-blue-300">{stats.attack}</span></p>
+          </div>
+          <div className="bg-black/20 px-1 py-0.5 rounded-sm">
+            <p className="text-[10px]">DEF: <span className="text-green-300">{stats.defense}</span></p>
+          </div>
+          <div className="bg-black/20 px-1 py-0.5 rounded-sm">
+            <p className="text-[10px]">SPD: <span className="text-yellow-300">{stats.speed}</span></p>
+          </div>
         </div>
-      </div>
-      
-      <div className="flex justify-between text-[5px] md:text-[7px] mt-0.5">
-        <div className="text-white font-bold">LV.{stats.level || 1}</div>
-        <div className="text-yellow-300 font-bold">Rank:{getRank(stats.level || 1)}</div>
       </div>
     </div>
   );

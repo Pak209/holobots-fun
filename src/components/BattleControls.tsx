@@ -1,3 +1,4 @@
+
 import { Button } from "./ui/button";
 import { Rocket, Zap } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -8,6 +9,7 @@ interface BattleControlsProps {
   onHack: (type: 'attack' | 'speed' | 'heal') => void;
   isBattleStarted: boolean;
   hackGauge: number;
+  hackEnabled?: boolean;
 }
 
 export const BattleControls = ({
@@ -15,7 +17,8 @@ export const BattleControls = ({
   onHypeUp,
   onHack,
   isBattleStarted,
-  hackGauge
+  hackGauge,
+  hackEnabled = false
 }: BattleControlsProps) => {
   return (
     <div className="flex gap-1.5">
@@ -36,8 +39,15 @@ export const BattleControls = ({
       >
         <Rocket className="w-3 h-3 md:w-4 md:h-4" /> Hype
       </Button>
-      <Select onValueChange={(value) => onHack(value as 'attack' | 'speed' | 'heal')} disabled={hackGauge < 100 || !isBattleStarted}>
-        <SelectTrigger className="h-9 bg-red-500 hover:bg-red-600 text-white border-none text-xs shadow-neon">
+      <Select 
+        onValueChange={(value) => onHack(value as 'attack' | 'speed' | 'heal')} 
+        disabled={hackGauge < 100 || !isBattleStarted || !hackEnabled}
+      >
+        <SelectTrigger 
+          className={`h-9 text-white border-none text-xs shadow-neon ${
+            hackEnabled ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-500 hover:bg-gray-600'
+          }`}
+        >
           <Zap className="w-3 h-3 md:w-4 md:h-4" /> Hack ({Math.floor(hackGauge)}%)
         </SelectTrigger>
         <SelectContent className="bg-holobots-card border-holobots-border">

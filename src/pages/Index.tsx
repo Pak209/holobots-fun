@@ -2,7 +2,7 @@
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Trophy, Ticket, Gem, Award } from "lucide-react";
+import { Trophy, Ticket, Gem, Award, Shield, Swords, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth";
@@ -12,6 +12,71 @@ import { generateArenaOpponent, calculateArenaRewards } from "@/utils/battleUtil
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { updateHolobotExperience, calculateExperience } from "@/integrations/supabase/client";
+import { ArenaModeTier } from "@/components/arena/ArenaModeTier";
+
+// Define arena difficulty tiers
+const ARENA_TIERS = {
+  bronze: {
+    name: "Bronze Arena",
+    levelRange: [1, 5],
+    description: "Entry-level arena for rookie Holobots",
+    maxRounds: 2,
+    rewards: {
+      baseHolos: 50,
+      expMultiplier: 1,
+      blueprintChance: 0.3,
+      itemTypes: ["arena-pass", "energy-refill"]
+    }
+  },
+  silver: {
+    name: "Silver Arena",
+    levelRange: [5, 15],
+    description: "Intermediate challenge with stronger opponents",
+    maxRounds: 3,
+    rewards: {
+      baseHolos: 150,
+      expMultiplier: 1.5,
+      blueprintChance: 0.5,
+      itemTypes: ["arena-pass", "energy-refill", "exp-booster"]
+    }
+  },
+  gold: {
+    name: "Gold Arena",
+    levelRange: [15, 30],
+    description: "Advanced competition with strategic battles",
+    maxRounds: 4,
+    rewards: {
+      baseHolos: 300,
+      expMultiplier: 2,
+      blueprintChance: 0.7,
+      itemTypes: ["arena-pass", "energy-refill", "exp-booster", "gacha-ticket"]
+    }
+  },
+  platinum: {
+    name: "Platinum Arena",
+    levelRange: [30, 50],
+    description: "Elite arena for legendary Holobots",
+    maxRounds: 5,
+    rewards: {
+      baseHolos: 500,
+      expMultiplier: 3,
+      blueprintChance: 1, // Guaranteed blueprint
+      itemTypes: ["arena-pass", "energy-refill", "exp-booster", "gacha-ticket", "rank-skip"]
+    }
+  }
+};
+
+const getAvailableArenaTiers = (holobotLevel: number) => {
+  const availableTiers = [];
+  
+  for (const [key, tier] of Object.entries(ARENA_TIERS)) {
+    if (holobotLevel >= tier.levelRange[0]) {
+      availableTiers.push(key);
+    }
+  }
+  
+  return availableTiers;
+};
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);
@@ -21,15 +86,27 @@ const Index = () => {
   const [currentOpponent, setCurrentOpponent] = useState(generateArenaOpponent(1));
   const [showResults, setShowResults] = useState(false);
   const [arenaResults, setArenaResults] = useState<any>(null);
-  const maxRounds = 3;
+  const [selectedTier, setSelectedTier] = useState<string | null>(null);
+  const [facedOpponents, setFacedOpponents] = useState<string[]>([]);
+  
   const entryFee = 50;
   const { toast } = useToast();
   const { user, updateUser } = useAuth();
+  
+  const maxRounds = selectedTier ? ARENA_TIERS[selectedTier as keyof typeof ARENA_TIERS].maxRounds : 3;
 
   // Generate a new opponent when the round changes
   useEffect(() => {
-    setCurrentOpponent(generateArenaOpponent(currentRound));
-  }, [currentRound]);
+    if (hasEntryFee && currentRound > 0) {
+      const newOpponent = generateArenaOpponent(
+        currentRound, 
+        selectedTier ? ARENA_TIERS[selectedTier as keyof typeof ARENA_TIERS].levelRange : [1, 5]
+      );
+      setCurrentOpponent(newOpponent);
+      // Add to faced opponents list for blueprint rewards later
+      setFacedOpponents(prev => [...prev, newOpponent.name]);
+    }
+  }, [currentRound, hasEntryFee, selectedTier]);
 
   const payEntryFee = async () => {
     try {
@@ -94,6 +171,11 @@ const Index = () => {
     setSelectedHolobot(holobotKey);
   };
 
+  const handleTierSelect = (tier: string) => {
+    console.log("Selected tier:", tier);
+    setSelectedTier(tier);
+  };
+
   const handleEntryFeeMethod = async (method: 'tokens' | 'pass') => {
     if (method === 'tokens') {
       await payEntryFee();
@@ -117,8 +199,13 @@ const Index = () => {
     const currentLevel = holobot.level || 1;
     const currentXp = holobot.experience || 0;
     
-    // Calculate XP gained based on victories and rounds
-    const xpGained = victoryCount * 100 * currentRound;
+    // Get tier experience multiplier
+    const expMultiplier = selectedTier 
+      ? ARENA_TIERS[selectedTier as keyof typeof ARENA_TIERS].rewards.expMultiplier 
+      : 1;
+    
+    // Calculate XP gained based on victories, rounds and tier
+    const xpGained = Math.floor(victoryCount * 100 * currentRound * expMultiplier);
     const totalXp = currentXp + xpGained;
     
     // Check if level up occurred
@@ -134,25 +221,107 @@ const Index = () => {
     }];
   }
 
+  const selectItemRewards = () => {
+    if (!selectedTier) return {};
+    
+    const tier = ARENA_TIERS[selectedTier as keyof typeof ARENA_TIERS];
+    const itemTypes = tier.rewards.itemTypes;
+    
+    // Randomly select an item type based on arena performance
+    const randomIndex = Math.floor(Math.random() * itemTypes.length);
+    const itemType = itemTypes[randomIndex];
+    
+    // Quantity based on victories (1-3)
+    const quantity = Math.min(victories, 3);
+    
+    const itemRewards = {
+      arena_passes: 0,
+      energy_refills: 0,
+      exp_boosters: 0,
+      gachaTickets: 0,
+      rank_skips: 0
+    };
+    
+    if (itemType === "arena-pass") itemRewards.arena_passes = quantity;
+    if (itemType === "energy-refill") itemRewards.energy_refills = quantity;
+    if (itemType === "exp-booster") itemRewards.exp_boosters = quantity;
+    if (itemType === "gacha-ticket") itemRewards.gachaTickets = quantity;
+    if (itemType === "rank-skip") itemRewards.rank_skips = Math.min(1, quantity); // Max 1 rank skip
+    
+    return itemRewards;
+  };
+
+  const collectBlueprintRewards = () => {
+    // Get blueprint chance based on tier
+    const blueprintChance = selectedTier 
+      ? ARENA_TIERS[selectedTier as keyof typeof ARENA_TIERS].rewards.blueprintChance 
+      : 0.3;
+    
+    // Create arrays for blueprint rewards
+    const blueprintRewards = [];
+    
+    // Only consider unique opponents
+    const uniqueOpponents = [...new Set(facedOpponents)];
+    
+    for (const opponentName of uniqueOpponents) {
+      // Check chance for each opponent
+      if (Math.random() <= blueprintChance) {
+        blueprintRewards.push({
+          holobotKey: opponentName.toLowerCase(),
+          amount: 1
+        });
+      }
+    }
+    
+    return blueprintRewards;
+  };
+
   const distributeRewards = async () => {
     try {
       if (!user) return;
       
-      // Calculate rewards based on current round and victories
-      const rewards = calculateArenaRewards(currentRound, victories);
+      // Calculate base rewards based on arena tier
+      const baseHolos = selectedTier
+        ? ARENA_TIERS[selectedTier as keyof typeof ARENA_TIERS].rewards.baseHolos
+        : 50;
+      
+      // Calculate total rewards based on victories and current round
+      const holosTokens = baseHolos * victories * (currentRound * 0.5);
       
       // Calculate experience for the holobot
       const experienceRewards = calculateExperienceRewards(victories);
       const selectedHolobotName = HOLOBOT_STATS[selectedHolobot].name;
       
+      // Get blueprint rewards from opponents faced
+      const blueprintRewards = collectBlueprintRewards();
+      
+      // Select item rewards based on tier and performance
+      const itemRewards = selectItemRewards();
+      
       // Update user with rewards
       const updates: any = {
-        holosTokens: user.holosTokens + rewards.holosTokens,
-        gachaTickets: user.gachaTickets + rewards.gachaTickets
+        holosTokens: (user.holosTokens || 0) + holosTokens,
       };
       
-      if (rewards.arenaPass > 0) {
-        updates.arena_passes = (user.arena_passes || 0) + rewards.arenaPass;
+      // Add item rewards
+      if (itemRewards.arena_passes > 0) {
+        updates.arena_passes = (user.arena_passes || 0) + itemRewards.arena_passes;
+      }
+      
+      if (itemRewards.energy_refills > 0) {
+        updates.energy_refills = (user.energy_refills || 0) + itemRewards.energy_refills;
+      }
+      
+      if (itemRewards.exp_boosters > 0) {
+        updates.exp_boosters = (user.exp_boosters || 0) + itemRewards.exp_boosters;
+      }
+      
+      if (itemRewards.gachaTickets > 0) {
+        updates.gachaTickets = (user.gachaTickets || 0) + itemRewards.gachaTickets;
+      }
+      
+      if (itemRewards.rank_skips > 0) {
+        updates.rank_skips = (user.rank_skips || 0) + itemRewards.rank_skips;
       }
       
       // Update holobot experience
@@ -167,6 +336,14 @@ const Index = () => {
         updates.holobots = updatedHolobots;
       }
       
+      // Update blueprints
+      const updatedBlueprints = { ...(user.blueprints || {}) };
+      for (const reward of blueprintRewards) {
+        const currentAmount = updatedBlueprints[reward.holobotKey] || 0;
+        updatedBlueprints[reward.holobotKey] = currentAmount + reward.amount;
+      }
+      updates.blueprints = updatedBlueprints;
+      
       // Save all the updates to the user
       await updateUser(updates);
       
@@ -175,10 +352,13 @@ const Index = () => {
         isSuccess: victories > 0,
         squadHolobotKeys: [selectedHolobot],
         squadHolobotExp: experienceRewards,
-        blueprintRewards: rewards.blueprintReward,
-        holosRewards: rewards.holosTokens,
-        gachaTickets: rewards.gachaTickets,
-        arenaPass: rewards.arenaPass
+        blueprintRewards: blueprintRewards,
+        holosRewards: holosTokens,
+        gachaTickets: itemRewards.gachaTickets,
+        arenaPass: itemRewards.arena_passes,
+        expBoosters: itemRewards.exp_boosters,
+        energyRefills: itemRewards.energy_refills,
+        rankSkips: itemRewards.rank_skips
       });
       
       // Show the results screen
@@ -198,21 +378,21 @@ const Index = () => {
       setVictories(prev => prev + 1);
       if (currentRound < maxRounds) {
         setCurrentRound(prev => prev + 1);
-        setCurrentOpponent(generateArenaOpponent(currentRound + 1));
       } else {
         distributeRewards();
-        setCurrentRound(1);
-        setVictories(0);
-        setHasEntryFee(false);
-        setCurrentOpponent(generateArenaOpponent(1));
+        resetArena();
       }
     } else {
       distributeRewards();
-      setCurrentRound(1);
-      setVictories(0);
-      setHasEntryFee(false);
-      setCurrentOpponent(generateArenaOpponent(1));
+      resetArena();
     }
+  };
+
+  const resetArena = () => {
+    setCurrentRound(1);
+    setVictories(0);
+    setHasEntryFee(false);
+    setFacedOpponents([]);
   };
 
   const handleResultsClose = () => {
@@ -226,7 +406,13 @@ const Index = () => {
         <ArenaPrebattleMenu 
           onHolobotSelect={handleHolobotSelect}
           onEntryFeeMethod={handleEntryFeeMethod}
+          onTierSelect={handleTierSelect}
           entryFee={entryFee}
+          availableTiers={user?.holobots.length > 0 
+            ? getAvailableArenaTiers(Math.max(...user.holobots.map(h => h.level))) 
+            : ['bronze']}
+          arenaData={ARENA_TIERS}
+          selectedTier={selectedTier}
         />
       </div>
     );
@@ -236,7 +422,7 @@ const Index = () => {
     <div className="px-2 py-3">
       <div className="mb-4 bg-[#1A1F2C] rounded-lg p-3">
         <div className="text-center mb-2 text-lg font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">
-          ARENA MODE
+          {selectedTier ? ARENA_TIERS[selectedTier as keyof typeof ARENA_TIERS].name : "ARENA MODE"}
         </div>
         <div className="flex justify-between items-center mb-2">
           <div className="bg-black/30 px-3 py-1 rounded-lg">
@@ -262,6 +448,7 @@ const Index = () => {
         isCpuBattle={true}
         cpuLevel={currentOpponent.level}
         onBattleEnd={handleBattleEnd}
+        hackEnabled={true}
       />
 
       {/* Results screen */}

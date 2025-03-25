@@ -2,13 +2,13 @@
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { ItemCard } from "@/components/items/ItemCard";
 import { useAuth } from "@/contexts/auth";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function UserItems() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Mock data for visual appearance (this would come from user profile in reality)
+  // Complete list of all available in-game items
   const items = [
     {
       type: "arena-pass" as const,
@@ -39,6 +39,12 @@ export default function UserItems() {
       name: "Rank Skip",
       description: "Skip to the next rank instantly",
       quantity: user?.rank_skips || 0
+    },
+    {
+      type: "attribute-boost" as const,
+      name: "Attribute Boost",
+      description: "Permanently increases a holobot's attribute by 1 point",
+      quantity: user?.attribute_boosts || 0
     }
   ];
 
@@ -51,6 +57,7 @@ export default function UserItems() {
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
+      <NavigationMenu />
       <div className="container mx-auto px-4 py-16">
         <h1 className="text-3xl font-bold mb-8 text-holobots-text dark:text-holobots-dark-text bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">
           Your Items

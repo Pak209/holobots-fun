@@ -12,6 +12,7 @@ interface BattleCardsProps {
   rightLevel: number;
   leftXp: number;
   rightXp: number;
+  isTcgCompact?: boolean;
 }
 
 export const BattleCards = ({
@@ -20,7 +21,8 @@ export const BattleCards = ({
   leftLevel,
   rightLevel,
   leftXp,
-  rightXp
+  rightXp,
+  isTcgCompact = false
 }: BattleCardsProps) => {
   console.log("BattleCards rendering with:", {
     left: selectedLeftHolobot,
@@ -100,10 +102,12 @@ export const BattleCards = ({
   // Always prioritize the user's holobot level if available
   const effectiveLeftLevel = userLeftHolobot?.level || leftLevel;
   
+  const cardSize = isTcgCompact ? "w-[130px] sm:w-[150px]" : "w-[150px] sm:w-auto";
+  
   return (
     <div className="flex justify-center gap-2 mb-2">
       <div className="flex flex-col items-center">
-        <div className="w-[150px] sm:w-auto">
+        <div className={cardSize}>
           <HolobotCard 
             stats={{
               ...boostedLeftStats, 
@@ -111,6 +115,7 @@ export const BattleCards = ({
               name: normalizedLeftKey
             }} 
             variant="blue" 
+            isCompact={isTcgCompact}
           />
         </div>
         <ExperienceBar 
@@ -122,7 +127,7 @@ export const BattleCards = ({
         <span className="text-holobots-accent font-bold text-xl animate-neon-pulse">VS</span>
       </div>
       <div className="flex flex-col items-center">
-        <div className="w-[150px] sm:w-auto">
+        <div className={cardSize}>
           <HolobotCard 
             stats={{
               ...(rightHolobotStats || HOLOBOT_STATS.ace), 
@@ -130,6 +135,7 @@ export const BattleCards = ({
               name: normalizedRightKey
             }} 
             variant="red" 
+            isCompact={isTcgCompact}
           />
         </div>
       </div>
