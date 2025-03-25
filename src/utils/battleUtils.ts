@@ -49,20 +49,6 @@ export function calculateExperience(level: number): number {
   return Math.floor(100 * Math.pow(level, 2));
 }
 
-export function calculateBattleExperience(playerLevel: number, opponentLevel: number): number {
-  const levelDifference = opponentLevel - playerLevel;
-  
-  let baseXP = 50;
-  
-  if (levelDifference > 0) {
-    baseXP += levelDifference * 10;
-  } else if (levelDifference < 0) {
-    baseXP = Math.max(10, baseXP + levelDifference * 5);
-  }
-  
-  return Math.floor(baseXP);
-}
-
 export function getNewLevel(experience: number, currentLevel: number): number {
   let level = currentLevel;
   let requiredXP = calculateExperience(level);
@@ -118,14 +104,18 @@ export function resetComboChain(): number {
 }
 
 export function generateArenaOpponent(round: number, levelRange: [number, number] = [1, 10]): { name: string, level: number } {
+  // Get all available holobots except ace
   const holobotKeys = Object.keys(HOLOBOT_STATS).filter(key => key !== 'ace');
   
+  // Randomly select an opponent
   const randomIndex = Math.floor(Math.random() * holobotKeys.length);
   const opponentKey = holobotKeys[randomIndex];
   
+  // Calculate level based on round and level range
   const [minLevel, maxLevel] = levelRange;
   const baseLevel = minLevel + Math.floor((maxLevel - minLevel) * 0.4);
   
+  // Increase level with each round
   const levelModifier = round - 1;
   const finalLevel = Math.min(maxLevel, baseLevel + levelModifier);
   
