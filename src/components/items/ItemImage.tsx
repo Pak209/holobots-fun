@@ -1,6 +1,6 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
-import { Zap, Trophy, Ticket, FastForward, Coins, Activity } from "lucide-react";
+import { Zap, Trophy, Ticket, FastForward, Coins, Activity, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const itemImageVariants = cva(
@@ -14,6 +14,7 @@ const itemImageVariants = cva(
         "exp-booster": "bg-gradient-to-br from-green-900/60 via-green-700/40 to-green-950/90 border border-green-500",
         "rank-skip": "bg-gradient-to-br from-red-900/60 via-red-700/40 to-red-950/90 border border-red-500",
         "attribute-boost": "bg-gradient-to-br from-cyan-900/60 via-cyan-700/40 to-cyan-950/90 border border-cyan-500",
+        "boss-quest-pass": "bg-gradient-to-br from-amber-900/60 via-amber-700/40 to-amber-950/90 border border-amber-500",
       },
       size: {
         sm: "w-12 h-12",
@@ -30,7 +31,7 @@ const itemImageVariants = cva(
 );
 
 export interface ItemImageProps extends VariantProps<typeof itemImageVariants> {
-  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost";
+  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "boss-quest-pass";
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
@@ -55,6 +56,7 @@ export const ItemImage = ({ type, size, className }: ItemImageProps) => {
     "exp-booster": <FastForward className={`${iconSize} text-green-700 font-bold`} strokeWidth={2.5} />,
     "rank-skip": <Coins className={`${iconSize} text-red-700 font-bold`} strokeWidth={2.5} />,
     "attribute-boost": <Activity className={`${iconSize} text-cyan-700 font-bold`} strokeWidth={2.5} />,
+    "boss-quest-pass": <Target className={`${iconSize} text-amber-700 font-bold`} strokeWidth={2.5} />,
   };
 
   const shineEffect = "before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-tr before:from-transparent before:via-white/20 before:to-transparent before:opacity-70";

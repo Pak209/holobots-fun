@@ -26,7 +26,6 @@ interface BattleSceneProps {
   isCpuBattle?: boolean;
   cpuLevel?: number;
   onBattleEnd?: (result: 'victory' | 'defeat') => void;
-  hackEnabled?: boolean;
 }
 
 export const BattleScene = ({ 
@@ -34,8 +33,7 @@ export const BattleScene = ({
   rightHolobot: initialRightHolobot,
   isCpuBattle = false,
   cpuLevel = 1,
-  onBattleEnd,
-  hackEnabled = false
+  onBattleEnd 
 }: BattleSceneProps) => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
@@ -109,13 +107,11 @@ export const BattleScene = ({
   };
 
   const handleHack = (type: 'attack' | 'speed' | 'heal') => {
-    if (leftHack >= 100 && hackEnabled) {
+    if (leftHack >= 100) {
       const updatedStats = applyHackBoost(HOLOBOT_STATS[selectedLeftHolobot], type);
       HOLOBOT_STATS[selectedLeftHolobot] = updatedStats;
       setLeftHack(0);
       addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} used hack: ${type}!`);
-    } else if (!hackEnabled) {
-      addToBattleLog("Hack feature is disabled in this battle mode.");
     }
   };
 
@@ -419,7 +415,6 @@ export const BattleScene = ({
             onHack={handleHack}
             isBattleStarted={isBattleStarted}
             hackGauge={leftHack}
-            hackEnabled={hackEnabled}
           />
           <ModeSlider 
             isDefense={isDefenseMode}
@@ -446,7 +441,6 @@ export const BattleScene = ({
           rightLevel={rightLevel}
           leftXp={displayLeftXp}
           rightXp={displayRightXp}
-          isTcgCompact={true}
         />
         
         <div className="relative w-full max-w-3xl mx-auto h-20 md:h-32 bg-cyberpunk-background rounded-lg overflow-hidden border-2 border-cyberpunk-border shadow-neon">

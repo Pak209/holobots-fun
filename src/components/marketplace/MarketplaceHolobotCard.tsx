@@ -67,12 +67,14 @@ export const MarketplaceHolobotCard = ({
       </div>
       
       {/* Seller Info and Buy Button */}
-      <MarketplaceSellerInfo 
-        seller={seller}
-        price={price}
-        onBuy={onBuy}
-        forSale={forSale}
-      />
+      {forSale && (
+        <MarketplaceSellerInfo 
+          seller={seller}
+          price={price}
+          onBuy={onBuy}
+          forSale={forSale}
+        />
+      )}
     </div>
   );
 };

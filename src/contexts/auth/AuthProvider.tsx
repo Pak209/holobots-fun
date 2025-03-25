@@ -229,11 +229,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updates.lastEnergyRefresh) dbUpdates.last_energy_refresh = updates.lastEnergyRefresh;
       if (updates.stats?.wins !== undefined) dbUpdates.wins = updates.stats.wins;
       if (updates.stats?.losses !== undefined) dbUpdates.losses = updates.stats.losses;
+      if (updates.level !== undefined) dbUpdates.level = updates.level;
       
       if (updates.arena_passes !== undefined) dbUpdates.arena_passes = updates.arena_passes;
       if (updates.exp_boosters !== undefined) dbUpdates.exp_boosters = updates.exp_boosters;
       if (updates.energy_refills !== undefined) dbUpdates.energy_refills = updates.energy_refills;
       if (updates.rank_skips !== undefined) dbUpdates.rank_skips = updates.rank_skips;
+      if (updates.boss_quest_passes !== undefined) dbUpdates.boss_quest_passes = updates.boss_quest_passes;
+      
+      if (updates.blueprints) {
+        dbUpdates.blueprints = updates.blueprints;
+      }
       
       if (updates.holobots) {
         dbUpdates.holobots = updates.holobots;

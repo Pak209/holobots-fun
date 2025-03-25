@@ -54,28 +54,42 @@ const HolobotsInfo = () => {
         });
       }
       
-      // Check for any holobots missing attributePoints property
+      // Check for any holobots missing attributePoints property or valid rank property
       updatedHolobots = updatedHolobots.map(holobot => {
-        if (holobot.attributePoints === undefined) {
+        let modified = false;
+        const newHolobot = { ...holobot };
+        
+        // Fix missing attributePoints
+        if (newHolobot.attributePoints === undefined) {
           needsUpdate = true;
-          // Add attribute points based on level (1 per level)
-          return {
-            ...holobot,
-            attributePoints: holobot.level || 1,
-            boostedAttributes: holobot.boostedAttributes || {}
-          };
+          modified = true;
+          newHolobot.attributePoints = newHolobot.level || 1;
         }
         
         // Ensure holobot has boostedAttributes property
-        if (!holobot.boostedAttributes) {
+        if (!newHolobot.boostedAttributes) {
           needsUpdate = true;
-          return {
-            ...holobot,
-            boostedAttributes: {}
-          };
+          modified = true;
+          newHolobot.boostedAttributes = {};
         }
         
-        return holobot;
+        // Fix improper rank values - ensure they match our system
+        const validRanks = ["Rookie", "Starter", "Champion", "Rare", "Elite", "Legendary"];
+        if (!newHolobot.rank || !validRanks.includes(newHolobot.rank)) {
+          needsUpdate = true;
+          modified = true;
+          
+          // Determine correct rank based on level
+          const level = newHolobot.level || 1;
+          if (level >= 41) newHolobot.rank = "Legendary";
+          else if (level >= 31) newHolobot.rank = "Elite";
+          else if (level >= 21) newHolobot.rank = "Rare";
+          else if (level >= 11) newHolobot.rank = "Champion";
+          else if (level >= 2) newHolobot.rank = "Starter";
+          else newHolobot.rank = "Rookie";
+        }
+        
+        return modified ? newHolobot : holobot;
       });
       
       // Update user profile with consistent holobot data if needed

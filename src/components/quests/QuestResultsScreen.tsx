@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 import { Button } from "@/components/ui/button";
-import { XCircle } from "lucide-react";
+import { XCircle, Star } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface QuestResultsScreenProps {
@@ -16,6 +16,7 @@ interface QuestResultsScreenProps {
     amount: number;
   };
   holosRewards: number;
+  expBoosterRewards?: number;
   onClose: () => void;
 }
 
@@ -26,6 +27,7 @@ export const QuestResultsScreen = ({
   squadHolobotExp,
   blueprintRewards,
   holosRewards,
+  expBoosterRewards = 0,
   onClose
 }: QuestResultsScreenProps) => {
   const [animation, setAnimation] = useState<"entering" | "active" | "exiting" | "hidden">("hidden");
@@ -94,6 +96,19 @@ export const QuestResultsScreen = ({
                     <p className="text-md font-bold text-purple-400">
                       {blueprintRewards.amount} {HOLOBOT_STATS[blueprintRewards.holobotKey]?.name || ""}
                     </p>
+                  </div>
+                </div>
+              )}
+              
+              {/* EXP Battle Boosters - only show if there are any */}
+              {expBoosterRewards > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                    <Star className="h-4 w-4 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">EXP Battle Boosters</p>
+                    <p className="text-md font-bold text-blue-400">{expBoosterRewards}</p>
                   </div>
                 </div>
               )}
