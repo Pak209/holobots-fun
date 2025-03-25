@@ -1,3 +1,4 @@
+
 import { HolobotStats, HOLOBOT_STATS } from "@/types/holobot";
 import { UserHolobot } from "@/types/user";
 
@@ -137,4 +138,27 @@ export function calculateArenaRewards(round: number, victories: number) {
   };
   
   return rewards;
+}
+
+// Add the missing calculateBattleExperience function
+export function calculateBattleExperience(playerLevel: number, opponentLevel: number): number {
+  // Base XP value
+  const baseXP = 50;
+  
+  // Calculate level difference modifier
+  const levelDifference = opponentLevel - playerLevel;
+  let levelModifier = 1;
+  
+  if (levelDifference > 0) {
+    // Bonus for defeating higher level opponents
+    levelModifier = 1 + (levelDifference * 0.1);
+  } else if (levelDifference < 0) {
+    // Penalty for defeating lower level opponents
+    levelModifier = Math.max(0.5, 1 + (levelDifference * 0.05));
+  }
+  
+  // Calculate final XP
+  const finalXP = Math.round(baseXP * levelModifier);
+  
+  return finalXP;
 }
