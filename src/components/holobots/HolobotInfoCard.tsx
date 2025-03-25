@@ -41,7 +41,7 @@ export const HolobotInfoCard = ({
   const level = userHolobot?.level || holobot.level;
   const currentXp = userHolobot?.experience || 0;
   const nextLevelXp = userHolobot?.nextLevelExp || 100;
-  const holobotRank = userHolobot?.rank || "Rookie";
+  const holobotRank = userHolobot?.rank || "Common";
   const attributePoints = userHolobot?.attributePoints || 0;
   
   const { user, updateUser } = useAuth();
@@ -61,34 +61,8 @@ export const HolobotInfoCard = ({
       case "Elite": return "bg-yellow-600/20 border-yellow-500 text-yellow-400";
       case "Rare": return "bg-purple-600/20 border-purple-500 text-purple-400";
       case "Champion": return "bg-green-600/20 border-green-500 text-green-400";
-      case "Starter": return "bg-blue-600/20 border-blue-500 text-blue-400";
-      case "Rookie":
-      default: return "bg-gray-600/20 border-gray-500 text-gray-400";
-    }
-  };
-
-  // Return the next rank in sequence
-  const getNextRank = (currentRank: string): string => {
-    const rankOrder = ["Rookie", "Starter", "Champion", "Rare", "Elite", "Legendary"];
-    const currentIndex = rankOrder.indexOf(currentRank);
-    
-    if (currentIndex === -1 || currentIndex === rankOrder.length - 1) {
-      return currentRank; // Return unchanged if not found or already at highest rank
-    }
-    
-    return rankOrder[currentIndex + 1];
-  };
-
-  // Determine the required level for a specific rank
-  const getLevelForRank = (rank: string): number => {
-    switch(rank) {
-      case "Legendary": return 41;
-      case "Elite": return 31;
-      case "Rare": return 21;
-      case "Champion": return 11;
-      case "Starter": return 2;
-      case "Rookie":
-      default: return 1;
+      case "Common":
+      default: return "bg-blue-600/20 border-blue-500 text-blue-400";
     }
   };
 
@@ -165,35 +139,50 @@ export const HolobotInfoCard = ({
     }
 
     try {
-      // Get current rank and determine the next rank
-      const currentRank = holobotRank || 'Rookie';
-      const newRank = getNextRank(currentRank);
+      // Get current rank
+      const currentRank = holobotRank || 'Bronze';
+      let newRank = '';
       
-      // If already at max rank, notify user
-      if (newRank === currentRank && currentRank === "Legendary") {
-        toast({
-          title: "Maximum Rank",
-          description: `${holobot.name} is already at Legendary rank!`,
-          variant: "destructive"
-        });
-        return;
+      // Determine new rank
+      switch (currentRank) {
+        case 'Bronze':
+          newRank = 'Silver';
+          break;
+        case 'Silver':
+          newRank = 'Gold';
+          break;
+        case 'Gold':
+          newRank = 'Platinum';
+          break;
+        case 'Platinum':
+          newRank = 'Diamond';
+          break;
+        case 'Diamond':
+          newRank = 'Master';
+          break;
+        case 'Master':
+          newRank = 'Grandmaster';
+          break;
+        case 'Grandmaster':
+          newRank = 'Legendary';
+          break;
+        case 'Legendary':
+          toast({
+            title: "Maximum Rank",
+            description: `${holobot.name} is already at Legendary rank!`,
+            variant: "destructive"
+          });
+          return;
+        default:
+          newRank = 'Silver';
       }
       
-      // Calculate new level based on the next rank
-      const newLevel = getLevelForRank(newRank);
-      
-      // Update the holobot with new rank and level
+      // Update the holobot with new rank
       const updatedHolobots = user.holobots.map(h => {
         if (h.name.toLowerCase() === holobot.name.toLowerCase()) {
-          // Add attribute points based on level increase
-          const levelIncrease = Math.max(0, newLevel - h.level);
-          const newAttributePoints = (h.attributePoints || 0) + levelIncrease;
-          
           return {
             ...h,
-            rank: newRank,
-            level: newLevel,
-            attributePoints: newAttributePoints
+            rank: newRank
           };
         }
         return h;
@@ -423,18 +412,27 @@ export const HolobotInfoCard = ({
               </div>
               <ArrowUpCircle className="h-5 w-5 text-red-400 mx-2" />
               <div className="flex items-center">
-                <Badge className={`mr-2 ${getRankColor(getNextRank(holobotRank))}`}>
-                  <Crown className="h-3 w-3 mr-1" /> {getNextRank(holobotRank)}
+                <Badge className={`mr-2 ${getRankColor(
+                  holobotRank === 'Bronze' ? 'Silver' :
+                  holobotRank === 'Silver' ? 'Gold' :
+                  holobotRank === 'Gold' ? 'Platinum' :
+                  holobotRank === 'Platinum' ? 'Diamond' :
+                  holobotRank === 'Diamond' ? 'Master' :
+                  holobotRank === 'Master' ? 'Grandmaster' :
+                  holobotRank === 'Grandmaster' ? 'Legendary' : 'Legendary'
+                )}`}>
+                  <Crown className="h-3 w-3 mr-1" /> {
+                    holobotRank === 'Bronze' ? 'Silver' :
+                    holobotRank === 'Silver' ? 'Gold' :
+                    holobotRank === 'Gold' ? 'Platinum' :
+                    holobotRank === 'Platinum' ? 'Diamond' :
+                    holobotRank === 'Diamond' ? 'Master' :
+                    holobotRank === 'Master' ? 'Grandmaster' :
+                    holobotRank === 'Grandmaster' ? 'Legendary' : 'Legendary'
+                  }
                 </Badge>
                 <span className="text-white">New Rank</span>
               </div>
-            </div>
-            
-            <div className="mt-3 p-2 bg-blue-900/20 border border-blue-500/30 rounded-md">
-              <p className="text-xs text-blue-300">
-                <Zap className="h-3 w-3 inline mr-1" />
-                Level will be increased to {getLevelForRank(getNextRank(holobotRank))}, with additional attribute points.
-              </p>
             </div>
           </div>
           
