@@ -370,6 +370,8 @@ export const QuestGrid = () => {
           let newLevel = oldLevel;
           let levelUp = false;
           
+          const nextLevelExp = calculateExperience(oldLevel);
+          
           if (newExp >= nextLevelExp) {
             newLevel = oldLevel + 1;
             levelUp = true;
@@ -444,7 +446,7 @@ export const QuestGrid = () => {
         updatedBlueprints[blueprintReward.holobotKey] = currentAmount + blueprintReward.amount;
       }
       
-      const updatedExpBoosters = user.exp_boosters || 0;
+      let updatedExpBoosters = user.exp_boosters || 0;
       if (expBoosterReward > 0) {
         updatedExpBoosters += expBoosterReward;
         
