@@ -50,3 +50,43 @@ export const ensureWelcomeGift = async (
     console.error("Error in ensureWelcomeGift:", err);
   }
 };
+
+// Fix duplicate auth issue
+export const clearStaleAuthSessions = async () => {
+  try {
+    // Clear session from local storage to force a clean state
+    if (typeof localStorage !== 'undefined') {
+      const keys = Object.keys(localStorage);
+      const supabseKeys = keys.filter(key => key.startsWith('supabase.auth.token'));
+      
+      // If multiple auth tokens exist, clean them up
+      if (supabseKeys.length > 1) {
+        supabseKeys.forEach(key => localStorage.removeItem(key));
+        await supabase.auth.signOut();
+        console.log("Cleared stale auth sessions");
+      }
+    }
+  } catch (err) {
+    console.error("Error clearing stale auth sessions:", err);
+  }
+};
+
+// Refresh token if needed
+export const refreshTokenIfNeeded = async () => {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (data?.session) {
+      // Only refresh if the token is getting close to expiry (e.g., less than 30 minutes)
+      const expiresAt = data.session.expires_at;
+      const now = Math.floor(Date.now() / 1000);
+      const thirtyMinutesInSeconds = 30 * 60;
+      
+      if (expiresAt && expiresAt - now < thirtyMinutesInSeconds) {
+        console.log("Token about to expire, refreshing...");
+        await supabase.auth.refreshSession();
+      }
+    }
+  } catch (err) {
+    console.error("Error refreshing token:", err);
+  }
+};

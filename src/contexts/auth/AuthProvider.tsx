@@ -1,11 +1,10 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType } from "./types";
 import { UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { ensureWelcomeGift } from "./authUtils";
+import { ensureWelcomeGift, clearStaleAuthSessions, refreshTokenIfNeeded } from "./authUtils";
 
 // Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,16 +17,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkUser = async () => {
+    const initAuth = async () => {
       setLoading(true);
       
       try {
-        // Use getSession instead of subscription
+        // Clear any stale auth sessions first
+        await clearStaleAuthSessions();
+        
+        // Check if user has active session
         const { data } = await supabase.auth.getSession();
         
         if (data.session?.user) {
           console.log("Found session with user:", data.session.user.id);
           
+          // Refresh token if needed
+          await refreshTokenIfNeeded();
+          
+          // Get user profile
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -63,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
     
-    checkUser();
+    initAuth();
     
     // Set up an event listener for sign in/out
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -93,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error("Error handling sign-in:", err);
         }
       } else if (event === 'SIGNED_OUT') {
+        console.log("User signed out");
         setCurrentUser(null);
       }
     });
@@ -102,27 +109,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Login function
+  // Login function with improved error handling and retry logic
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      // Try up to 3 times to sign in
+      let retryCount = 0;
+      const maxRetries = 2;
+      let success = false;
       
-      if (signInError) {
-        throw signInError;
+      while (retryCount <= maxRetries && !success) {
+        try {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+          
+          if (signInError) {
+            if (retryCount >= maxRetries) throw signInError;
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            continue;
+          }
+          
+          success = true;
+          toast({
+            title: "Login Successful",
+            description: "You have been logged in",
+          });
+          
+          return;
+        } catch (retryError) {
+          if (retryCount >= maxRetries) throw retryError;
+          retryCount++;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
-      
-      toast({
-        title: "Login Successful",
-        description: "You have been logged in",
-      });
-      
-      return;
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Login failed");
@@ -137,12 +161,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Logout function
+  // Logout function with improved handling
   const logout = async () => {
     setLoading(true);
     setError(null);
     
     try {
+      // Clear all auth related data from localStorage first
+      if (typeof localStorage !== 'undefined') {
+        const keys = Object.keys(localStorage);
+        const supabaseKeys = keys.filter(key => key.startsWith('supabase.auth'));
+        supabaseKeys.forEach(key => localStorage.removeItem(key));
+      }
+      
       const { error: signOutError } = await supabase.auth.signOut();
       
       if (signOutError) {
@@ -237,6 +268,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (updates.holobots) {
         dbUpdates.holobots = updates.holobots;
+      }
+      
+      if (updates.blueprints) {
+        dbUpdates.blueprints = updates.blueprints;
       }
       
       console.log("Updating user profile with:", dbUpdates);

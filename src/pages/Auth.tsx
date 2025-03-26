@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -15,7 +15,7 @@ export default function Auth() {
   const [username, setUsername] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true); // Default to true for better UX
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -31,7 +31,7 @@ export default function Auth() {
     checkSession();
   }, [navigate]);
 
-  // Handle auth (sign up or sign in)
+  // Enhanced login with better error handling and auto-retry
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -62,22 +62,40 @@ export default function Auth() {
         return;
       } 
       
-      // Handle sign in
-      const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Handle sign in with retry logic
+      let retryCount = 0;
+      const maxRetries = 2;
+      let success = false;
 
-      if (signInError) throw signInError;
+      while (retryCount <= maxRetries && !success) {
+        try {
+          const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
 
-      if (session) {
-        toast({
-          title: "Login successful",
-          description: "Redirecting you to the dashboard",
-        });
+          if (signInError) {
+            if (retryCount >= maxRetries) throw signInError;
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            continue;
+          }
 
-        // Redirect to dashboard after login
-        navigate('/dashboard');
+          if (session) {
+            success = true;
+            toast({
+              title: "Login successful",
+              description: "Redirecting you to the dashboard",
+            });
+
+            // Redirect to dashboard after login
+            navigate('/dashboard');
+          }
+        } catch (retryError) {
+          if (retryCount >= maxRetries) throw retryError;
+          retryCount++;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
     } catch (error) {
       console.error('Auth error:', error);
@@ -89,6 +107,17 @@ export default function Auth() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Demo account auto-login for development - comment out for production
+  const handleDemoLogin = async () => {
+    setEmail("demo@holobots.app");
+    setPassword("demo12345");
+    setTimeout(() => {
+      document.getElementById("auth-form")?.dispatchEvent(
+        new Event("submit", { cancelable: true, bubbles: true })
+      );
+    }, 100);
   };
 
   return (
@@ -103,7 +132,7 @@ export default function Auth() {
           </p>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-4">
+        <form id="auth-form" onSubmit={handleAuth} className="space-y-4">
           {isSignUp && (
             <div>
               <Label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</Label>
@@ -193,6 +222,19 @@ export default function Auth() {
             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
           </Button>
         </div>
+
+        {!isSignUp && (
+          <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+            <Button
+              variant="outline"
+              className="w-full text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+              onClick={handleDemoLogin}
+              disabled={loading}
+            >
+              Demo Login (for testing)
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
