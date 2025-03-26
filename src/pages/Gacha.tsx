@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -47,14 +46,14 @@ export default function Gacha() {
   }, [searchParams]);
 
   const isDailyPullAvailable = 
-    !user.lastEnergyRefresh || 
+    !user || !user.lastEnergyRefresh || 
     (user.holobots.length > 0 && 
      (!user.lastEnergyRefresh || 
       new Date(user.lastEnergyRefresh).getTime() + (DAILY_COOLDOWN_HOURS * 60 * 60 * 1000) < Date.now()));
 
   useEffect(() => {
     const updateCooldown = () => {
-      if (!user.lastEnergyRefresh) {
+      if (!user || !user.lastEnergyRefresh) {
         setTimeUntilNextDailyPull(null);
         setCooldownProgress(100);
         return;
@@ -81,7 +80,7 @@ export default function Gacha() {
     const interval = setInterval(updateCooldown, 60000);
     
     return () => clearInterval(interval);
-  }, [user.lastEnergyRefresh]);
+  }, [user?.lastEnergyRefresh]);
 
   const pullGacha = (amount: number, isPaidPull: boolean = true) => {
     if (isPaidPull) {
@@ -171,7 +170,6 @@ export default function Gacha() {
       }
     }
 
-    // Important fix: Actually deduct the tickets from the user
     updateUser({ gachaTickets: (user.gachaTickets || 0) - amount });
 
     setTimeout(() => {
