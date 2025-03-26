@@ -12,9 +12,7 @@ interface MarketplaceItemCardProps {
   seller: string;
   quantity?: number;
   onBuy?: () => void;
-  type?: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "boss-quest-pass";
-  discounted?: boolean;
-  originalPrice?: number;
+  type?: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost";
 }
 
 export const MarketplaceItemCard = ({
@@ -25,9 +23,7 @@ export const MarketplaceItemCard = ({
   seller,
   quantity = 1,
   onBuy,
-  type = "energy-refill",
-  discounted = false,
-  originalPrice
+  type = "energy-refill"
 }: MarketplaceItemCardProps) => {
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
@@ -43,7 +39,7 @@ export const MarketplaceItemCard = ({
   };
 
   // Map item name to type if not provided
-  const determineType = (): "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "boss-quest-pass" => {
+  const determineType = (): "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" => {
     const nameLower = name.toLowerCase();
     if (nameLower.includes("arena") || nameLower.includes("pass")) return "arena-pass";
     if (nameLower.includes("gacha") || nameLower.includes("ticket")) return "gacha-ticket";
@@ -51,22 +47,13 @@ export const MarketplaceItemCard = ({
     if (nameLower.includes("exp") || nameLower.includes("booster")) return "exp-booster";
     if (nameLower.includes("rank") || nameLower.includes("skip")) return "rank-skip";
     if (nameLower.includes("attribute") || nameLower.includes("boost")) return "attribute-boost";
-    if (nameLower.includes("boss") || nameLower.includes("quest pass")) return "boss-quest-pass";
     return type;
   };
 
   const itemType = determineType();
 
   return (
-    <div className={`p-6 rounded-lg bg-holobots-card dark:bg-holobots-dark-card border border-holobots-accent shadow-neon-border transition-all duration-300 hover:shadow-neon-blue ${
-      discounted ? 'relative overflow-hidden' : ''
-    }`}>
-      {discounted && (
-        <div className="absolute top-0 right-0 bg-red-500 text-white px-4 py-1 rounded-bl-lg font-bold transform translate-x-2 -translate-y-2 rotate-12 shadow-lg">
-          SALE!
-        </div>
-      )}
-      
+    <div className="p-6 rounded-lg bg-holobots-card dark:bg-holobots-dark-card border border-holobots-accent shadow-neon-border transition-all duration-300 hover:shadow-neon-blue">
       <div className="flex gap-4">
         {/* Item Image - Setting a fixed size for consistency across all items */}
         <div className="flex-shrink-0" style={{ width: '80px', height: '120px' }}>
@@ -97,16 +84,7 @@ export const MarketplaceItemCard = ({
       </div>
       
       <div className="flex justify-between items-center pt-3 border-t border-holobots-border dark:border-holobots-dark-border mt-3">
-        <div>
-          {discounted && originalPrice ? (
-            <div className="flex flex-col">
-              <span className="text-gray-400 line-through text-sm">{originalPrice} HOLOS</span>
-              <span className="font-semibold text-yellow-400">{price} HOLOS</span>
-            </div>
-          ) : (
-            <span className="font-semibold text-yellow-400">{price} HOLOS</span>
-          )}
-        </div>
+        <span className="font-semibold text-yellow-400">{price} HOLOS</span>
         <Button 
           size="sm" 
           onClick={onBuy}

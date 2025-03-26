@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress"; // Add this import
 import { useToast } from "@/hooks/use-toast";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 import { StatusBar } from "@/components/HealthBar";

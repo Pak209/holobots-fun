@@ -17,7 +17,6 @@ const itemCardVariants = cva(
         "exp-booster": "bg-gradient-to-br from-green-900/60 to-green-950/90 border-green-500 shadow-neon-green hover:shadow-neon-green/50",
         "rank-skip": "bg-gradient-to-br from-red-900/60 to-red-950/90 border-red-500 shadow-neon-red hover:shadow-neon-red/50",
         "attribute-boost": "bg-gradient-to-br from-cyan-900/60 to-cyan-950/90 border-cyan-500 shadow-neon-cyan hover:shadow-neon-cyan/50",
-        "boss-quest-pass": "bg-gradient-to-br from-amber-900/60 to-amber-950/90 border-amber-500 shadow-neon-amber hover:shadow-neon-amber/50",
       },
     },
     defaultVariants: {
@@ -31,7 +30,7 @@ export interface ItemCardProps extends VariantProps<typeof itemCardVariants> {
   name: string;
   description: string;
   quantity: number;
-  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "boss-quest-pass";
+  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost";
   onClick?: () => void;
   actionLabel?: string;
   disabled?: boolean;
