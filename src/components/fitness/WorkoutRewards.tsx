@@ -1,46 +1,66 @@
 
-import { Sparkles, Award, Zap } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Coins, Star, Award } from "lucide-react";
 
-interface WorkoutRewardsProps {
-  rewards: {
-    exp: number;
-    holos: number;
-    attributeBoosts: number;
-  };
-  className?: string;
+export interface WorkoutRewardsProps {
+  holobotName: string;
+  duration: number;
+  calories: number;
+  exp: number;
+  tokens: number;
+  onClose: () => void;
 }
 
-export function WorkoutRewards({ rewards, className }: WorkoutRewardsProps) {
+export const WorkoutRewards = ({ holobotName, duration, calories, exp, tokens, onClose }: WorkoutRewardsProps) => {
   return (
-    <div className={cn("bg-black/40 rounded-lg p-3 border border-cyan-500/20", className)}>
-      <h3 className="text-xs text-cyan-400 mb-3">WORKOUT REWARDS</h3>
-      
-      <div className="grid grid-cols-3 gap-2">
-        <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center mb-1">
-            <Sparkles className="h-5 w-5 text-purple-400" />
-          </div>
-          <span className="text-xs text-gray-300">EXP</span>
-          <span className="text-sm font-bold">{rewards.exp.toLocaleString()}</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+      <div className="w-[90%] max-w-md p-6 bg-holobots-card border border-holobots-accent rounded-lg shadow-lg animate-slideUp">
+        <h3 className="text-xl font-bold text-center text-holobots-accent mb-4">Workout Complete!</h3>
+        
+        <div className="text-center mb-4">
+          <p className="text-gray-300">Great job training your Holobot!</p>
+          <p className="font-semibold text-white mt-2">{holobotName}</p>
         </div>
         
-        <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center mb-1">
-            <Award className="h-5 w-5 text-yellow-400" />
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-holobots-background/50 p-3 rounded-lg border border-holobots-border/30">
+            <p className="text-sm text-gray-400">Workout Time</p>
+            <p className="font-medium">{duration} min</p>
           </div>
-          <span className="text-xs text-gray-300">HOLOS</span>
-          <span className="text-sm font-bold">{rewards.holos.toLocaleString()}</span>
+          <div className="bg-holobots-background/50 p-3 rounded-lg border border-holobots-border/30">
+            <p className="text-sm text-gray-400">Calories Burned</p>
+            <p className="font-medium">{calories}</p>
+          </div>
         </div>
         
-        <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center mb-1">
-            <Zap className="h-5 w-5 text-green-400" />
+        <div className="bg-gradient-to-r from-holobots-dark-background to-holobots-card p-4 rounded-lg mb-6">
+          <h4 className="text-center text-white font-medium mb-3">Rewards Earned</h4>
+          <div className="flex justify-around">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center mb-1">
+                <Star className="h-5 w-5 text-yellow-400 mr-1" />
+                <span className="font-bold text-white">{exp}</span>
+              </div>
+              <span className="text-xs text-gray-300">EXP</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="flex items-center mb-1">
+                <Coins className="h-5 w-5 text-yellow-400 mr-1" />
+                <span className="font-bold text-white">{tokens}</span>
+              </div>
+              <span className="text-xs text-gray-300">Holos</span>
+            </div>
           </div>
-          <span className="text-xs text-gray-300">BOOSTS</span>
-          <span className="text-sm font-bold">{rewards.attributeBoosts}</span>
         </div>
+        
+        <Button 
+          onClick={onClose}
+          className="w-full bg-holobots-accent hover:bg-holobots-accent/80"
+        >
+          <Award className="mr-2 h-5 w-5" />
+          Claim Rewards
+        </Button>
       </div>
     </div>
   );
-}
+};

@@ -42,6 +42,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/mint" element={<MobileLayout><Mint /></MobileLayout>} />
+            <Route path="/bytepaper" element={<Bytepaper />} />
             
             {/* App routes with mobile layout & auth protection */}
             <Route path="/dashboard" element={
@@ -99,7 +100,6 @@ function App() {
                 <MobileLayout><Fitness /></MobileLayout>
               </RequireAuth>
             } />
-            <Route path="/bytepaper" element={<Bytepaper />} />
           </Routes>
           <Toaster />
         </AuthProvider>
