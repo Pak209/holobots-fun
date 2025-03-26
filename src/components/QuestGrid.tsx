@@ -444,7 +444,7 @@ export const QuestGrid = () => {
         updatedBlueprints[blueprintReward.holobotKey] = currentAmount + blueprintReward.amount;
       }
       
-      const updatedExpBoosters = user.exp_boosters || 0;
+      let updatedExpBoosters = user.exp_boosters || 0;
       if (expBoosterReward > 0) {
         updatedExpBoosters += expBoosterReward;
         
