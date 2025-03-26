@@ -1,109 +1,106 @@
 
-import { useState } from 'react';
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface BlueprintCardProps {
   holobotName: string;
   tier: number;
   quantity?: number;
   price?: number;
+  originalPrice?: number;
   forSale?: boolean;
   onClick?: () => void;
+  discounted?: boolean;
 }
 
-export const BlueprintCard = ({ 
-  holobotName, 
-  tier, 
-  quantity = 1,
+export const BlueprintCard = ({
+  holobotName,
+  tier,
+  quantity = 0,
   price,
+  originalPrice,
   forSale = false,
-  onClick 
+  onClick,
+  discounted = false
 }: BlueprintCardProps) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  // Normalize holobot name for image path
-  const normalizedName = holobotName.toUpperCase();
-  const imagePath = getHolobotImagePath(normalizedName);
-  
-  // Determine background color based on tier
-  const getTierColor = () => {
-    switch(tier) {
-      case 5: return "from-orange-500 to-orange-700"; // legendary
-      case 4: return "from-yellow-500 to-yellow-700"; // elite
-      case 3: return "from-purple-500 to-purple-700"; // rare
-      case 2: return "from-green-500 to-green-700";   // champion
+  const getTierColor = (tier: number) => {
+    switch (tier) {
       case 1:
-      default: return "from-blue-500 to-blue-700";    // common
+        return "border-blue-500 bg-blue-950/30";
+      case 2:
+        return "border-purple-500 bg-purple-950/30";
+      case 3:
+        return "border-yellow-500 bg-yellow-950/30";
+      default:
+        return "border-gray-500 bg-gray-950/30";
     }
   };
-
+  
+  const getTierName = (tier: number) => {
+    switch (tier) {
+      case 1:
+        return "Basic";
+      case 2:
+        return "Advanced";
+      case 3:
+        return "Premium";
+      default:
+        return "Unknown";
+    }
+  };
+  
   return (
-    <div className="flex flex-col items-center">
-      <div 
-        className={cn(
-          "w-32 h-48 relative rounded-lg overflow-hidden cursor-pointer transform transition-all duration-300",
-          isHovered ? "scale-105 shadow-xl" : "shadow-md",
-          forSale ? "border-2 border-holobots-accent" : "border border-holobots-border"
+    <div className={`rounded-lg border p-4 relative overflow-hidden ${getTierColor(tier)} ${
+      discounted ? 'shadow-neon-yellow' : 'hover:shadow-neon hover:border-holobots-accent/50'
+    } transition-all`}>
+      {/* Sale tag for discounted items */}
+      {discounted && (
+        <div className="absolute top-0 right-0 bg-red-500 text-white px-3 py-1 rounded-bl-lg font-bold rotate-12 transform translate-x-1 -translate-y-1 shadow-xl">
+          SALE!
+        </div>
+      )}
+      
+      <div className="flex flex-col items-center">
+        <div className="w-16 h-16 rounded-full bg-holobots-dark-background overflow-hidden border-2 border-holobots-accent mb-2">
+          <img 
+            src={getHolobotImagePath(holobotName.toLowerCase())}
+            alt={holobotName}
+            className="w-full h-full object-contain"
+          />
+        </div>
+        
+        <h3 className="font-bold text-white">{holobotName}</h3>
+        
+        <Badge className="mt-2 mb-1" variant="outline">
+          {getTierName(tier)} Blueprint
+        </Badge>
+        
+        {!forSale && quantity > 0 && (
+          <span className="text-xs text-holobots-accent">Qty: {quantity}</span>
         )}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        {/* Blueprint frame with gradient background */}
-        <div className={`absolute inset-0 bg-gradient-to-b ${getTierColor()} opacity-80`}></div>
         
-        {/* Blueprint image */}
-        <div className="absolute inset-0 flex items-center justify-center p-2">
-          <div className="w-full h-2/3 flex items-center justify-center overflow-hidden">
-            <img 
-              src={imagePath} 
-              alt={`${holobotName} blueprint`} 
-              className="w-3/4 h-3/4 object-contain opacity-50 mix-blend-overlay"
-            />
-          </div>
-        </div>
-        
-        {/* Blueprint info */}
-        <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/50 backdrop-blur-sm">
-          <h3 className="text-xs font-bold text-white truncate">{normalizedName} BLUEPRINT</h3>
-          <div className="flex justify-between items-center mt-1">
-            <Badge variant="outline" className="text-[10px] bg-black/30 text-white">
-              Tier {tier}
-            </Badge>
-            {quantity > 1 && (
-              <span className="text-[10px] text-white">x{quantity}</span>
-            )}
-          </div>
-        </div>
-        
-        {/* Sale indicator */}
         {forSale && (
-          <div className="absolute top-1 right-1 bg-holobots-accent text-black text-[8px] px-1 rounded">
-            FOR SALE
+          <div className="mt-2 w-full text-center">
+            {discounted && originalPrice ? (
+              <>
+                <span className="block text-xs text-gray-400 line-through">{originalPrice} HOLOS</span>
+                <span className="block text-sm font-semibold text-yellow-400">{price} HOLOS</span>
+              </>
+            ) : (
+              <span className="text-sm font-semibold text-yellow-400">{price} HOLOS</span>
+            )}
+            
+            <Button 
+              className="mt-2 w-full text-xs bg-holobots-accent hover:bg-holobots-hover text-black"
+              size="sm"
+              onClick={onClick}
+            >
+              Buy Blueprint
+            </Button>
           </div>
         )}
       </div>
-      
-      {/* Price and buy button below the card */}
-      {forSale && price && (
-        <div className="flex items-center gap-2 mt-2 w-full">
-          <div className="text-sm font-bold text-yellow-400">
-            {price} HOLOS
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-7 bg-holobots-accent hover:bg-holobots-accent/80 text-black border-none ml-auto"
-            onClick={onClick}
-          >
-            <ShoppingCart className="h-3.5 w-3.5 mr-1" />
-            Buy
-          </Button>
-        </div>
-      )}
     </div>
   );
 };

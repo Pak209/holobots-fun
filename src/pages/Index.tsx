@@ -1,3 +1,4 @@
+
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -102,6 +103,7 @@ const Index = () => {
   };
 
   const calculateExperienceRewards = (victoryCount: number) => {
+    // Find the selected holobot in user's collection
     if (!user?.holobots || !Array.isArray(user.holobots)) {
       return [];
     }
@@ -115,9 +117,11 @@ const Index = () => {
     const currentLevel = holobot.level || 1;
     const currentXp = holobot.experience || 0;
     
+    // Calculate XP gained based on victories and rounds
     const xpGained = victoryCount * 100 * currentRound;
     const totalXp = currentXp + xpGained;
     
+    // Check if level up occurred
     const requiredXpForNextLevel = Math.floor(100 * Math.pow(currentLevel, 2));
     const leveledUp = totalXp >= requiredXpForNextLevel;
     const newLevel = leveledUp ? currentLevel + 1 : currentLevel;
@@ -134,11 +138,14 @@ const Index = () => {
     try {
       if (!user) return;
       
+      // Calculate rewards based on current round and victories
       const rewards = calculateArenaRewards(currentRound, victories);
       
+      // Calculate experience for the holobot
       const experienceRewards = calculateExperienceRewards(victories);
       const selectedHolobotName = HOLOBOT_STATS[selectedHolobot].name;
       
+      // Update user with rewards
       const updates: any = {
         holosTokens: user.holosTokens + rewards.holosTokens,
         gachaTickets: user.gachaTickets + rewards.gachaTickets
@@ -148,6 +155,7 @@ const Index = () => {
         updates.arena_passes = (user.arena_passes || 0) + rewards.arenaPass;
       }
       
+      // Update holobot experience
       if (experienceRewards.length > 0) {
         const updatedHolobots = updateHolobotExperience(
           user.holobots,
@@ -159,10 +167,13 @@ const Index = () => {
         updates.holobots = updatedHolobots;
       }
       
+      // Save all the updates to the user
       await updateUser(updates);
       
+      // Save the results to show in the results screen
       setArenaResults({
         isSuccess: victories > 0,
+        squadHolobotKeys: [selectedHolobot],
         squadHolobotExp: experienceRewards,
         blueprintRewards: rewards.blueprintReward,
         holosRewards: rewards.holosTokens,
@@ -170,6 +181,7 @@ const Index = () => {
         arenaPass: rewards.arenaPass
       });
       
+      // Show the results screen
       setShowResults(true);
     } catch (error) {
       console.error("Error distributing rewards:", error);
@@ -252,10 +264,12 @@ const Index = () => {
         onBattleEnd={handleBattleEnd}
       />
 
+      {/* Results screen */}
       {showResults && arenaResults && (
         <QuestResultsScreen
           isVisible={showResults}
           isSuccess={arenaResults.isSuccess}
+          squadHolobotKeys={arenaResults.squadHolobotKeys}
           squadHolobotExp={arenaResults.squadHolobotExp}
           blueprintRewards={arenaResults.blueprintRewards}
           holosRewards={arenaResults.holosRewards}

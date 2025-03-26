@@ -1,10 +1,11 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType } from "./types";
 import { UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { ensureWelcomeGift, clearStaleAuthSessions, refreshTokenIfNeeded } from "./authUtils";
+import { ensureWelcomeGift } from "./authUtils";
 
 // Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,23 +18,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const initAuth = async () => {
+    const checkUser = async () => {
       setLoading(true);
       
       try {
-        // Clear any stale auth sessions first
-        await clearStaleAuthSessions();
-        
-        // Check if user has active session
+        // Use getSession instead of subscription
         const { data } = await supabase.auth.getSession();
         
         if (data.session?.user) {
           console.log("Found session with user:", data.session.user.id);
           
-          // Refresh token if needed
-          await refreshTokenIfNeeded();
-          
-          // Get user profile
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -69,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
     
-    initAuth();
+    checkUser();
     
     // Set up an event listener for sign in/out
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -99,7 +93,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error("Error handling sign-in:", err);
         }
       } else if (event === 'SIGNED_OUT') {
-        console.log("User signed out");
         setCurrentUser(null);
       }
     });
@@ -109,44 +102,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Login function with improved error handling and retry logic
+  // Login function
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      // Try up to 3 times to sign in
-      let retryCount = 0;
-      const maxRetries = 2;
-      let success = false;
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      while (retryCount <= maxRetries && !success) {
-        try {
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password
-          });
-          
-          if (signInError) {
-            if (retryCount >= maxRetries) throw signInError;
-            retryCount++;
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
-            continue;
-          }
-          
-          success = true;
-          toast({
-            title: "Login Successful",
-            description: "You have been logged in",
-          });
-          
-          return;
-        } catch (retryError) {
-          if (retryCount >= maxRetries) throw retryError;
-          retryCount++;
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+      if (signInError) {
+        throw signInError;
       }
+      
+      toast({
+        title: "Login Successful",
+        description: "You have been logged in",
+      });
+      
+      return;
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Login failed");
@@ -161,19 +137,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Logout function with improved handling
+  // Logout function
   const logout = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // Clear all auth related data from localStorage first
-      if (typeof localStorage !== 'undefined') {
-        const keys = Object.keys(localStorage);
-        const supabaseKeys = keys.filter(key => key.startsWith('supabase.auth'));
-        supabaseKeys.forEach(key => localStorage.removeItem(key));
-      }
-      
       const { error: signOutError } = await supabase.auth.signOut();
       
       if (signOutError) {
@@ -260,18 +229,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updates.lastEnergyRefresh) dbUpdates.last_energy_refresh = updates.lastEnergyRefresh;
       if (updates.stats?.wins !== undefined) dbUpdates.wins = updates.stats.wins;
       if (updates.stats?.losses !== undefined) dbUpdates.losses = updates.stats.losses;
+      if (updates.level !== undefined) dbUpdates.level = updates.level;
       
       if (updates.arena_passes !== undefined) dbUpdates.arena_passes = updates.arena_passes;
       if (updates.exp_boosters !== undefined) dbUpdates.exp_boosters = updates.exp_boosters;
       if (updates.energy_refills !== undefined) dbUpdates.energy_refills = updates.energy_refills;
       if (updates.rank_skips !== undefined) dbUpdates.rank_skips = updates.rank_skips;
-      
-      if (updates.holobots) {
-        dbUpdates.holobots = updates.holobots;
-      }
+      if (updates.boss_quest_passes !== undefined) dbUpdates.boss_quest_passes = updates.boss_quest_passes;
       
       if (updates.blueprints) {
         dbUpdates.blueprints = updates.blueprints;
+      }
+      
+      if (updates.holobots) {
+        dbUpdates.holobots = updates.holobots;
       }
       
       console.log("Updating user profile with:", dbUpdates);

@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/auth";
@@ -20,19 +20,6 @@ import Bytepaper from "./pages/Bytepaper";
 import Mint from "@/pages/Mint";
 import Fitness from "@/pages/Fitness";
 
-// Simple auth check component
-const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-  // This is just a simple client-side check
-  // The real auth check is done within the AuthProvider
-  const hasSession = localStorage.getItem("supabase.auth.token") !== null;
-  
-  if (!hasSession) {
-    return <Navigate to="/auth" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" enableSystem>
@@ -42,64 +29,20 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/mint" element={<MobileLayout><Mint /></MobileLayout>} />
-            <Route path="/bytepaper" element={<Bytepaper />} />
             
-            {/* App routes with mobile layout & auth protection */}
-            <Route path="/dashboard" element={
-              <RequireAuth>
-                <MobileLayout><Dashboard /></MobileLayout>
-              </RequireAuth>
-            } />
-            <Route path="/app" element={
-              <RequireAuth>
-                <MobileLayout><Index /></MobileLayout>
-              </RequireAuth>
-            } />
-            <Route path="/training" element={
-              <RequireAuth>
-                <MobileLayout><Training /></MobileLayout>
-              </RequireAuth>
-            } />
-            <Route path="/quests" element={
-              <RequireAuth>
-                <MobileLayout><Quests /></MobileLayout>
-              </RequireAuth>
-            } />
-            <Route path="/holos-farm" element={
-              <RequireAuth>
-                <MobileLayout><HolosFarm /></MobileLayout>
-              </RequireAuth>
-            } />
-            <Route path="/holobots-info" element={
-              <RequireAuth>
-                <MobileLayout><HolobotsInfo /></MobileLayout>
-              </RequireAuth>
-            } />
-            <Route path="/gacha" element={
-              <RequireAuth>
-                <MobileLayout><Gacha /></MobileLayout>
-              </RequireAuth>
-            } />
-            <Route path="/user-items" element={
-              <RequireAuth>
-                <MobileLayout><UserItems /></MobileLayout>
-              </RequireAuth>
-            } />
-            <Route path="/marketplace" element={
-              <RequireAuth>
-                <MobileLayout><Marketplace /></MobileLayout>
-              </RequireAuth>
-            } />
-            <Route path="/leaderboard" element={
-              <RequireAuth>
-                <MobileLayout><Leaderboard /></MobileLayout>
-              </RequireAuth>
-            } />
-            <Route path="/fitness" element={
-              <RequireAuth>
-                <MobileLayout><Fitness /></MobileLayout>
-              </RequireAuth>
-            } />
+            {/* App routes with mobile layout */}
+            <Route path="/dashboard" element={<MobileLayout><Dashboard /></MobileLayout>} />
+            <Route path="/app" element={<MobileLayout><Index /></MobileLayout>} />
+            <Route path="/training" element={<MobileLayout><Training /></MobileLayout>} />
+            <Route path="/quests" element={<MobileLayout><Quests /></MobileLayout>} />
+            <Route path="/holos-farm" element={<MobileLayout><HolosFarm /></MobileLayout>} />
+            <Route path="/holobots-info" element={<MobileLayout><HolobotsInfo /></MobileLayout>} />
+            <Route path="/gacha" element={<MobileLayout><Gacha /></MobileLayout>} />
+            <Route path="/user-items" element={<MobileLayout><UserItems /></MobileLayout>} />
+            <Route path="/marketplace" element={<MobileLayout><Marketplace /></MobileLayout>} />
+            <Route path="/leaderboard" element={<MobileLayout><Leaderboard /></MobileLayout>} />
+            <Route path="/fitness" element={<MobileLayout><Fitness /></MobileLayout>} />
+            <Route path="/bytepaper" element={<Bytepaper />} />
           </Routes>
           <Toaster />
         </AuthProvider>
