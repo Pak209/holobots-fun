@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,13 +6,27 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Wallet } from "lucide-react";
 
-export const SolanaWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
+interface SolanaWalletLoginProps {
+  isLoading: boolean;
+  onStart?: () => void;
+  onSuccess?: () => void;
+  onError?: (error: any) => void;
+}
+
+export const SolanaWalletLogin = ({ 
+  isLoading,
+  onStart,
+  onSuccess,
+  onError
+}: SolanaWalletLoginProps) => {
   const { connect: connectSolana, wallet: solanaWallet } = useWallet();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const signInWithSolana = async () => {
     try {
+      onStart?.();
+
       if (!solanaWallet) {
         await connectSolana();
         return;
@@ -31,7 +46,15 @@ export const SolanaWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
         throw new Error("Wallet does not support message signing");
       }
       
-      const signedMessage = await provider.signMessage!(encodedMessage);
+      // Safely try to sign message
+      let signedMessage;
+      try {
+        signedMessage = await provider.signMessage!(encodedMessage);
+      } catch (signError) {
+        console.error("Signature error:", signError);
+        onError?.(signError);
+        return;
+      }
 
       // Verify signature and create session
       const { data, error } = await supabase.functions.invoke('verify-wallet', {
@@ -51,9 +74,11 @@ export const SolanaWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
         description: "Successfully authenticated with Solana wallet",
       });
       
-      navigate("/");
+      onSuccess?.();
+      navigate("/dashboard");
     } catch (error) {
       console.error("Solana auth error:", error);
+      onError?.(error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to authenticate with Solana wallet",

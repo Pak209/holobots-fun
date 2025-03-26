@@ -1,3 +1,4 @@
+
 import { useWeb3Modal } from '@web3modal/react';
 import { useAccount, useSignMessage } from 'wagmi';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +7,19 @@ import { useToast } from "@/hooks/use-toast";
 import { Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Web3ModalLogin = ({ isLoading }: { isLoading: boolean }) => {
+interface Web3ModalLoginProps {
+  isLoading: boolean;
+  onStart?: () => void;
+  onSuccess?: () => void;
+  onError?: (error: any) => void;
+}
+
+export const Web3ModalLogin = ({ 
+  isLoading,
+  onStart,
+  onSuccess,
+  onError
+}: Web3ModalLoginProps) => {
   const { open } = useWeb3Modal();
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
@@ -15,6 +28,8 @@ export const Web3ModalLogin = ({ isLoading }: { isLoading: boolean }) => {
 
   const handleWeb3Login = async () => {
     try {
+      onStart?.();
+
       if (!isConnected) {
         await open();
         return;
@@ -22,7 +37,16 @@ export const Web3ModalLogin = ({ isLoading }: { isLoading: boolean }) => {
 
       // Generate nonce
       const nonce = `Sign in to Holobots Dapp at ${new Date().toISOString()}`;
-      const signature = await signMessageAsync({ message: nonce });
+      
+      // Safely try to sign message
+      let signature;
+      try {
+        signature = await signMessageAsync({ message: nonce });
+      } catch (signError) {
+        console.error("Signature error:", signError);
+        onError?.(signError);
+        return;
+      }
 
       // Verify signature and create session
       const { data, error } = await supabase.functions.invoke('verify-wallet', {
@@ -42,9 +66,11 @@ export const Web3ModalLogin = ({ isLoading }: { isLoading: boolean }) => {
         description: "Successfully authenticated with Web3",
       });
       
-      navigate("/");
+      onSuccess?.();
+      navigate("/dashboard");
     } catch (error) {
       console.error("Web3 auth error:", error);
+      onError?.(error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to authenticate with Web3",
