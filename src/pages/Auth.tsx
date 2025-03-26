@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Web3Login } from "@/components/Web3Login";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -187,8 +186,6 @@ export default function Auth() {
             ) : isSignUp ? "Create Account" : "Sign In"}
           </Button>
         </form>
-
-        <Web3Login />
 
         <div className="mt-4 text-center">
           <Button
