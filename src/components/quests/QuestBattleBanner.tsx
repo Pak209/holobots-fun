@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { HOLOBOT_STATS } from "@/types/holobot";
@@ -6,7 +5,7 @@ import { ShieldAlert, Swords } from "lucide-react";
 import { UserHolobot } from "@/types/user";
 import { useAuth } from "@/contexts/auth";
 
-export interface QuestBattleBannerProps {
+interface QuestBattleBannerProps {
   playerHolobots?: UserHolobot[];
   bossHolobot?: string;
   onBattleComplete?: () => void;
@@ -16,9 +15,6 @@ export interface QuestBattleBannerProps {
   squadHolobotKeys?: string[];
   bossHolobotKey?: string;
   onComplete?: () => void;
-  questType?: string;
-  bossTier?: string;
-  progress?: number;
 }
 
 export const QuestBattleBanner = ({ 
@@ -30,10 +26,7 @@ export const QuestBattleBanner = ({
   isBossQuest = false,
   squadHolobotKeys = [],
   bossHolobotKey = "",
-  onComplete,
-  questType,
-  bossTier,
-  progress
+  onComplete
 }: QuestBattleBannerProps) => {
   const { user } = useAuth();
   
@@ -256,16 +249,6 @@ export const QuestBattleBanner = ({
           <div className="text-[10px] text-center mt-1 bg-red-900/30 rounded px-1 py-0.5">
             {isBossQuest ? "BOSS QUEST" : "EXPLORATION"} - {difficulty.toUpperCase()}
           </div>
-          
-          {progress !== undefined && (
-            <div className="mt-2">
-              <div className="flex justify-between text-xs mb-1">
-                <span>Battle Progress</span>
-                <span>{Math.floor(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2 bg-gray-700" />
-            </div>
-          )}
         </div>
         
         {battleResult && (
