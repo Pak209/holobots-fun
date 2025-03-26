@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -45,9 +46,10 @@ export default function Gacha() {
     }
   }, [searchParams]);
 
+  // Fix: Add proper null checks for user
   const isDailyPullAvailable = 
     !user || !user.lastEnergyRefresh || 
-    (user.holobots.length > 0 && 
+    (user.holobots?.length > 0 && 
      (!user.lastEnergyRefresh || 
       new Date(user.lastEnergyRefresh).getTime() + (DAILY_COOLDOWN_HOURS * 60 * 60 * 1000) < Date.now()));
 
@@ -83,6 +85,8 @@ export default function Gacha() {
   }, [user?.lastEnergyRefresh]);
 
   const pullGacha = (amount: number, isPaidPull: boolean = true) => {
+    if (!user) return; // Add null check for user
+    
     if (isPaidPull) {
       const cost = amount === 1 ? SINGLE_PULL_COST : MULTI_PULL_COST;
       
@@ -96,7 +100,7 @@ export default function Gacha() {
       }
     } else {
       if (!isDailyPullAvailable) {
-        if (user.holobots.length === 0) {
+        if (!user.holobots || user.holobots.length === 0) {
           toast({
             title: "Mint a Holobot First",
             description: "You need to mint at least one Holobot to use the daily free pull.",
@@ -145,6 +149,8 @@ export default function Gacha() {
   };
 
   const useGachaTicket = (amount: number = 1) => {
+    if (!user) return; // Add null check for user
+    
     if ((user.gachaTickets || 0) < amount) {
       toast({
         title: "Not Enough Gacha Tickets",
@@ -186,6 +192,8 @@ export default function Gacha() {
   };
 
   const handleItemsFromPulls = (newPulls: GachaItem[]) => {
+    if (!user) return; // Add null check for user
+    
     const itemCounts = {
       "energy-refill": 0,
       "exp-booster": 0,
@@ -208,6 +216,8 @@ export default function Gacha() {
   };
 
   const handleUseItem = async (type: string) => {
+    if (!user) return; // Add null check for user
+    
     setIsUsingItem(true);
     
     try {
@@ -414,11 +424,11 @@ export default function Gacha() {
                 <div className="bg-holobots-card dark:bg-holobots-dark-card p-2 rounded-lg shadow-neon-border">
                   <div className="flex items-center gap-2">
                     <Ticket className="w-4 h-4 text-yellow-500" />
-                    <span className="text-holobots-accent">Tickets: {user.gachaTickets}</span>
+                    <span className="text-holobots-accent">Tickets: {user?.gachaTickets || 0}</span>
                   </div>
                 </div>
                 <div className="bg-holobots-card dark:bg-holobots-dark-card p-2 rounded-lg shadow-neon-border">
-                  <span className="text-holobots-accent">Holos: {user.holosTokens}</span>
+                  <span className="text-holobots-accent">Holos: {user?.holosTokens || 0}</span>
                 </div>
               </div>
             </div>
@@ -427,7 +437,7 @@ export default function Gacha() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-2">
                 <Button
                   onClick={() => pullGacha(1, false)}
-                  disabled={isAnimating || !isDailyPullAvailable}
+                  disabled={isAnimating || !isDailyPullAvailable || !user}
                   className="w-full sm:w-auto max-w-xs bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white"
                   size="lg"
                 >
@@ -446,17 +456,17 @@ export default function Gacha() {
                 
                 <Button 
                   onClick={() => useGachaTicket(1)}
-                  disabled={isAnimating || (user.gachaTickets || 0) <= 0}
+                  disabled={isAnimating || !user || (user?.gachaTickets || 0) <= 0}
                   className="w-full sm:w-auto max-w-xs bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
                   size="lg"
                 >
                   <Ticket className="mr-2 h-5 w-5" />
-                  Use Ticket ({user.gachaTickets || 0})
+                  Use Ticket ({user?.gachaTickets || 0})
                 </Button>
                 
                 <Button 
                   onClick={() => useGachaTicket(10)}
-                  disabled={isAnimating || (user.gachaTickets || 0) < 10}
+                  disabled={isAnimating || !user || (user?.gachaTickets || 0) < 10}
                   className="w-full sm:w-auto max-w-xs bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
                   size="lg"
                 >
@@ -476,7 +486,7 @@ export default function Gacha() {
             <div className="flex justify-center gap-2 mb-8">
               <Button
                 onClick={() => pullGacha(1)}
-                disabled={isAnimating || user.holosTokens < SINGLE_PULL_COST}
+                disabled={isAnimating || !user || user.holosTokens < SINGLE_PULL_COST}
                 className="w-5/12 bg-holobots-accent hover:bg-holobots-hover text-white"
               >
                 <Package className="mr-1 h-4 w-4" />
@@ -485,7 +495,7 @@ export default function Gacha() {
               
               <Button
                 onClick={() => pullGacha(10)}
-                disabled={isAnimating || user.holosTokens < MULTI_PULL_COST}
+                disabled={isAnimating || !user || user.holosTokens < MULTI_PULL_COST}
                 className="w-5/12 bg-holobots-accent hover:bg-holobots-hover text-white"
               >
                 <Package className="mr-1 h-4 w-4" />
@@ -535,7 +545,7 @@ export default function Gacha() {
                     type={item.type}
                     onClick={() => handleUseItem(item.type)}
                     actionLabel="Use Item"
-                    disabled={item.quantity <= 0}
+                    disabled={item.quantity <= 0 || !user}
                     isLoading={isUsingItem}
                   />
                 ))}
