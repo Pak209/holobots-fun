@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { 
   Clock, 
@@ -445,8 +444,7 @@ export const QuestGrid = () => {
         updatedBlueprints[blueprintReward.holobotKey] = currentAmount + blueprintReward.amount;
       }
       
-      // Fixed: Changed const to let to allow reassignment
-      let updatedExpBoosters = user.exp_boosters || 0;
+      const updatedExpBoosters = user.exp_boosters || 0;
       if (expBoosterReward > 0) {
         updatedExpBoosters += expBoosterReward;
         
@@ -731,19 +729,14 @@ export const QuestGrid = () => {
           
           {isBattleInProgress ? (
             <QuestBattleBanner 
-              squadHolobotKeys={squadHolobots.filter(h => h.selected).map(h => h.key)}
-              bossHolobotKey={bossTier ? Object.keys(BOSS_TIERS).find(key => key === bossTier) || "" : ""}
+              questType={selectedQuestType}
+              bossTier={bossTier || "tier1"}
               progress={battleProgressPercentage}
             />
           ) : showQuestResults ? (
             <QuestResultsScreen 
-              isVisible={showQuestResults}
               isSuccess={questSuccess}
-              squadHolobotKeys={squadHolobots.filter(h => h.selected).map(h => h.key)}
-              squadHolobotExp={questRewards.squadHolobotExp}
-              blueprintRewards={questRewards.blueprintRewards}
-              holosRewards={questRewards.holosRewards}
-              expBoosterRewards={questRewards.expBoosterRewards}
+              rewards={questRewards}
               onClose={handleCloseResults}
             />
           ) : (

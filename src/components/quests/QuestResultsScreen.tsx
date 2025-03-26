@@ -16,7 +16,7 @@ interface QuestResultsScreenProps {
     amount: number;
   };
   holosRewards: number;
-  expBoosterRewards?: number;
+  expBoosterRewards?: number; // Add optional expBoosterRewards prop
   onClose: () => void;
 }
 
@@ -27,7 +27,7 @@ export const QuestResultsScreen = ({
   squadHolobotExp,
   blueprintRewards,
   holosRewards,
-  expBoosterRewards = 0,
+  expBoosterRewards = 0, // Default to 0
   onClose
 }: QuestResultsScreenProps) => {
   const [animation, setAnimation] = useState<"entering" | "active" | "exiting" | "hidden">("hidden");
