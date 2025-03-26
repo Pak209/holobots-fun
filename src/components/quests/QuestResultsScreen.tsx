@@ -6,28 +6,26 @@ import { Button } from "@/components/ui/button";
 import { XCircle, Star } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
-interface QuestResultsScreenProps {
+export interface QuestResultsScreenProps {
   isVisible: boolean;
   isSuccess: boolean;
-  squadHolobotKeys: string[];
   squadHolobotExp: Array<{name: string, xp: number, levelUp: boolean, newLevel: number}>;
   blueprintRewards?: {
     holobotKey: string;
     amount: number;
   };
   holosRewards: number;
-  expBoosterRewards?: number; // Add optional expBoosterRewards prop
+  expBoosterRewards?: number;
   onClose: () => void;
 }
 
 export const QuestResultsScreen = ({
   isVisible,
   isSuccess,
-  squadHolobotKeys,
   squadHolobotExp,
   blueprintRewards,
   holosRewards,
-  expBoosterRewards = 0, // Default to 0
+  expBoosterRewards = 0,
   onClose
 }: QuestResultsScreenProps) => {
   const [animation, setAnimation] = useState<"entering" | "active" | "exiting" | "hidden">("hidden");

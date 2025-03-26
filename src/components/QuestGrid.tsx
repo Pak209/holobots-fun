@@ -374,20 +374,24 @@ export const QuestGrid = () => {
         
         // Update user's tokens, tickets, exp boosters, and energy
         if (user) {
+          let updatedExpBoosters = (user.exp_boosters || 0);
+          if (tier.rewards.expBoosters > 0) {
+            updatedExpBoosters += tier.rewards.expBoosters;
+            
+            toast({
+              title: "EXP Battle Booster Received!",
+              description: `You gained ${tier.rewards.expBoosters} EXP Battle Booster${tier.rewards.expBoosters > 1 ? 's' : ''}!`,
+              variant: "default"
+            });
+          }
+          
           await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
             holosTokens: user.holosTokens + tier.rewards.holosTokens,
             gachaTickets: user.gachaTickets + tier.rewards.gachaTickets,
-            exp_boosters: (user.exp_boosters || 0) + tier.rewards.expBoosters, // Add exp boosters to user profile
-            holobots: updatedHolobots, // Update with new XP values
+            exp_boosters: updatedExpBoosters,
+            holobots: updatedHolobots,
             blueprints: updatedBlueprints
-          });
-          
-          // Show toast for exp booster reward
-          toast({
-            title: "EXP Battle Booster Received!",
-            description: `You gained ${tier.rewards.expBoosters} EXP Battle Booster${tier.rewards.expBoosters > 1 ? 's' : ''}!`,
-            variant: "default"
           });
         }
         
@@ -801,4 +805,35 @@ export const QuestGrid = () => {
                 </div>
                 <div className="flex items-center gap-1 text-xs">
                   <Star className="h-3 w-3 text-blue-400" />
-                  <span>{BOSS_TIERS[selectedBossTier].rewards
+                  <span>{BOSS_TIERS[selectedBossTier].rewards.squadXp} Squad XP</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <Trophy className="h-3 w-3 text-yellow-400" />
+                  <span>{BOSS_TIERS[selectedBossTier].rewards.expBoosters} EXP Battle Booster{BOSS_TIERS[selectedBossTier].rewards.expBoosters > 1 ? 's' : ''}</span>
+                </div>
+              </div>
+            </div>
+            
+            <Button 
+              className="w-full bg-red-500 hover:bg-red-600 text-white"
+              disabled={isBossQuesting || bossHolobots.length < 3 || !selectedBoss || (user?.dailyEnergy || 0) < BOSS_TIERS[selectedBossTier].energyCost}
+              onClick={handleStartBossQuest}
+            >
+              {isBossQuesting ? (
+                <>
+                  <Target className="animate-pulse mr-2 h-4 w-4" />
+                  Defeating Boss...
+                </>
+              ) : (
+                <>
+                  <Target className="mr-2 h-4 w-4" />
+                  Start Boss Quest
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
