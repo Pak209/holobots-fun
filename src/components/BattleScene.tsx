@@ -180,10 +180,21 @@ export const BattleScene = ({
       if (!user) return;
 
       if (winner === selectedLeftHolobot) {
-        const newTotalXp = leftXp + pendingXpGained;
-        const newLevel = getNewLevel(newTotalXp, leftLevel);
+        const currentHolobot = user.holobots.find(h => 
+          h.name.toLowerCase() === HOLOBOT_STATS[selectedLeftHolobot].name.toLowerCase()
+        );
         
-        if (newLevel > leftLevel) {
+        if (!currentHolobot) {
+          console.error("Could not find holobot in user's collection");
+          return;
+        }
+
+        const currentExperience = currentHolobot.experience || 0;
+        const newTotalExperience = currentExperience + pendingXpGained;
+        const currentLevel = currentHolobot.level || 1;
+        const newLevel = getNewLevel(newTotalExperience, currentLevel);
+        
+        if (newLevel > currentLevel) {
           addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} reached level ${newLevel}!`);
         }
         
@@ -191,10 +202,16 @@ export const BattleScene = ({
           user.holobots,
           HOLOBOT_STATS[selectedLeftHolobot].name,
           pendingXpGained,
-          newLevel
+          Math.max(currentLevel, newLevel)
         );
         
-        console.log("Updating user holobots with:", updatedHolobots);
+        console.log("Updating user holobots with:", {
+          currentLevel,
+          newLevel,
+          currentExperience,
+          pendingXpGained,
+          newTotalExperience
+        });
         
         await updateUser({ 
           holobots: updatedHolobots,
@@ -204,7 +221,7 @@ export const BattleScene = ({
           }
         });
         
-        if (newLevel > leftLevel) {
+        if (newLevel > currentLevel) {
           toast({
             title: "Level Up!",
             description: `${HOLOBOT_STATS[selectedLeftHolobot].name} is now level ${newLevel}!`,
@@ -331,7 +348,8 @@ export const BattleScene = ({
             
             const damageXp = Math.floor(damage * 2);
             setPendingXpGained(prev => prev + damageXp);
-            setDisplayLeftXp(leftXp + pendingXpGained + damageXp);
+            
+            setDisplayLeftXp(prev => prev + damageXp);
             
             addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} attacks for ${Math.floor(damage)} damage!`);
           } else {
