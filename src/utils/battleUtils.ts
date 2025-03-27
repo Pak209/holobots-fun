@@ -1,4 +1,3 @@
-
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
@@ -123,31 +122,45 @@ export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
 };
 
 // Updated to ensure attribute points are given when holobots level up
-export const updateHolobotExperience = (holobots, holobotName, newExperience, newLevel) => {
-  if (!holobots || !Array.isArray(holobots)) {
-    return [];
-  }
-  
-  return holobots.map(holobot => {
-    if (holobot.name.toLowerCase() === holobotName.toLowerCase()) {
-      // Add 1 attribute point for each level gained
-      const levelGained = newLevel - (holobot.level || 1);
+export function updateHolobotExperience(
+  holobots: any[],
+  name: string,
+  newExperience: number,
+  newLevel: number
+): any[] {
+  if (!Array.isArray(holobots)) return [];
+
+  return holobots.map((holobot) => {
+    if (
+      holobot?.name?.toLowerCase?.() === name.toLowerCase()
+    ) {
+      // Merge experience by adding to existing experience
+      const currentExperience = holobot.experience || 0;
+      const mergedExperience = currentExperience + newExperience;
+      
+      // Keep the higher level between current and new
+      const finalLevel = Math.max(holobot.level || 1, newLevel);
+      
+      // Calculate attribute points based on level gained
+      const levelGained = finalLevel - (holobot.level || 1);
       const currentAttributePoints = holobot.attributePoints || 0;
       const newAttributePoints = levelGained > 0 ? currentAttributePoints + levelGained : currentAttributePoints;
       
-      console.log(`Holobot ${holobotName} leveled up by ${levelGained} levels, new attribute points: ${newAttributePoints}`);
+      if (levelGained > 0) {
+        console.log(`Holobot ${name} leveled up by ${levelGained} levels, new attribute points: ${newAttributePoints}`);
+      }
       
       return {
         ...holobot,
-        level: newLevel,
-        experience: newExperience,
-        nextLevelExp: calculateExperience(newLevel),
+        experience: mergedExperience,
+        level: finalLevel,
+        nextLevelExp: calculateExperience(finalLevel + 1),
         attributePoints: newAttributePoints
       };
     }
     return holobot;
   });
-};
+}
 
 export const resetComboChain = (stats: HolobotStats): HolobotStats => {
   return {
