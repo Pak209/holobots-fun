@@ -13,6 +13,11 @@ const HolobotsInfo = () => {
   const { isMinting, justMinted, handleMintHolobot } = useMintHolobot();
   const { toast } = useToast();
   
+  // Log the current blueprints state for debugging
+  useEffect(() => {
+    console.log("[HolobotsInfo] Current user blueprints:", user?.blueprints);
+  }, [user]);
+  
   // Helper function to find user's holobot by name
   const findUserHolobot = (name: string) => {
     return user?.holobots.find(h => h.name.toLowerCase() === name.toLowerCase());
@@ -156,9 +161,10 @@ const HolobotsInfo = () => {
                   onMint={handleMintHolobot}
                 />
                 
-                {/* Add Blueprint Section */}
+                {/* Add Blueprint Section with consistent key props to ensure proper re-rendering */}
                 <BlueprintSection 
-                  holobotKey={key}
+                  key={`blueprint-${key}-${user?.blueprints?.[key.toLowerCase()] || 0}`}
+                  holobotKey={key.toLowerCase()} // Ensure we use lowercase keys consistently
                   holobotName={holobot.name}
                 />
               </div>

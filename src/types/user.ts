@@ -32,7 +32,7 @@ export interface UserProfile {
   exp_boosters?: number;
   energy_refills?: number;
   rank_skips?: number;
-  blueprints?: Record<string, number>; // Add blueprints field to store blueprint pieces per holobot
+  blueprints?: Record<string, number>; // Blueprint pieces per holobot key (lowercase)
 }
 
 export interface AuthState {
@@ -41,7 +41,6 @@ export interface AuthState {
   error: string | null;
 }
 
-// Add database profile mapping helper
 export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
   if (dbProfile.username) {
     // This is from the profiles table

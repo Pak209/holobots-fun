@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Progress } from "@/components/ui/progress";
 
@@ -54,13 +55,14 @@ export const BlueprintSection: React.FC<BlueprintSectionProps> = ({ holobotKey, 
     tierProgress = `${blueprintCount} (Max)`;
   }
 
-  console.log(`Blueprint display for ${holobotName}:`, { 
-    holobotKey, 
-    blueprintCount, 
-    currentTier, 
-    nextTier, 
-    progress 
-  });
+  // Enhanced debugging
+  useEffect(() => {
+    console.log(`[BlueprintSection] Rendering for ${holobotName} (${holobotKey}):`);
+    console.log(`[BlueprintSection] User blueprints:`, user?.blueprints);
+    console.log(`[BlueprintSection] Blueprint count for ${holobotName}:`, blueprintCount);
+    console.log(`[BlueprintSection] Current tier:`, currentTier);
+    console.log(`[BlueprintSection] Next tier:`, nextTier);
+  }, [holobotKey, holobotName, user, blueprintCount]);
   
   return (
     <div className="bg-holobots-card dark:bg-holobots-dark-card rounded-lg border border-holobots-border dark:border-holobots-dark-border p-3 space-y-2">

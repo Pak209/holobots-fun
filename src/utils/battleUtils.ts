@@ -256,3 +256,25 @@ export const calculateArenaRewards = (round: number, victoriesCount: number) => 
     arenaPass
   };
 };
+
+export const updateBlueprintCount = (
+  currentBlueprints: Record<string, number> | undefined, 
+  holobotKey: string, 
+  amount: number
+): Record<string, number> => {
+  const blueprints = currentBlueprints || {};
+  
+  console.log(`[updateBlueprintCount] Before update:`, blueprints);
+  console.log(`[updateBlueprintCount] Adding ${amount} blueprint pieces for ${holobotKey}`);
+  
+  // Ensure we use lowercase holobot keys for consistency
+  const lowerKey = holobotKey.toLowerCase();
+  
+  const updatedBlueprints = {
+    ...blueprints,
+    [lowerKey]: (blueprints[lowerKey] || 0) + amount
+  };
+  
+  console.log(`[updateBlueprintCount] After update:`, updatedBlueprints);
+  return updatedBlueprints;
+};
