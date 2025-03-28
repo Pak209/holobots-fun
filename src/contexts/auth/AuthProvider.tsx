@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType } from "./types";
 import { UserProfile, mapDatabaseToUserProfile } from "@/types/user";
@@ -15,9 +14,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Simplified auth state management
   useEffect(() => {
-    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         fetchUserProfile(session.user.id);
@@ -27,7 +24,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // Auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         fetchUserProfile(session.user.id);
@@ -41,7 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => authListener.subscription.unsubscribe();
   }, [navigate]);
 
-  // Helper function to fetch user profile
   const fetchUserProfile = async (userId: string) => {
     setLoading(true);
     try {
@@ -64,16 +59,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Simplified login function
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       
-      // Profile will be fetched by auth state listener
       toast({ title: "Success", description: "Logged in successfully" });
-      navigate('/dashboard'); // Redirect to dashboard immediately
+      navigate('/dashboard');
     } catch (err) {
       console.error("Login error:", err);
       toast({
@@ -87,7 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Simplified logout function
   const logout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -99,7 +91,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Simplified signup function
   const signup = async (email: string, password: string, username: string) => {
     setLoading(true);
     try {
@@ -127,15 +118,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const contextValue: AuthContextType = {
     user,
     loading,
-    error: null, // Adding this to match the AuthContextType interface
+    error: null,
     login,
     logout,
     signup,
     updateUser: async (updates) => {
       if (!user) return;
-      // Convert from camelCase to snake_case for Supabase
+
       const dbUpdates: any = {};
-      
       if (updates.username) dbUpdates.username = updates.username;
       if (updates.holosTokens !== undefined) dbUpdates.holos_tokens = updates.holosTokens;
       if (updates.gachaTickets !== undefined) dbUpdates.gacha_tickets = updates.gachaTickets;
@@ -149,9 +139,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updates.energy_refills !== undefined) dbUpdates.energy_refills = updates.energy_refills;
       if (updates.rank_skips !== undefined) dbUpdates.rank_skips = updates.rank_skips;
       if (updates.holobots) dbUpdates.holobots = updates.holobots;
-      
+
       const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', user.id);
-      if (!error) setUser({ ...user, ...updates });
+      
+      if (!error) {
+        setUser({
+          ...user,
+          ...updates,
+          blueprints: {
+            ...(user.blueprints || {}),
+            ...(updates.blueprints || {})
+          },
+          holobots: updates.holobots || user.holobots
+        });
+      }
     },
     searchPlayers: async (query) => {
       const { data } = await supabase
