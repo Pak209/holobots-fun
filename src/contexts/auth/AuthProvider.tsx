@@ -150,28 +150,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updates.rank_skips !== undefined) dbUpdates.rank_skips = updates.rank_skips;
       if (updates.holobots) dbUpdates.holobots = updates.holobots;
       
-      // Properly handle blueprints field with deep merge for database
-      if (updates.blueprints) {
-        // Get current blueprints from user state
-        const currentBlueprints = user.blueprints || {};
-        // Create a merged blueprint object for the database
-        const mergedBlueprints = { ...currentBlueprints, ...updates.blueprints };
-        dbUpdates.blueprints = mergedBlueprints;
-      }
-      
       const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', user.id);
-      
-      if (!error) {
-        // Use functional state update with deep merge for blueprints
-        setUser(prev => ({
-          ...prev,
-          ...updates,
-          blueprints: {
-            ...prev?.blueprints,
-            ...updates.blueprints
-          }
-        }));
-      }
+      if (!error) setUser({ ...user, ...updates });
     },
     searchPlayers: async (query) => {
       const { data } = await supabase
