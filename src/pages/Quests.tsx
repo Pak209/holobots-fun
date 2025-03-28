@@ -13,11 +13,6 @@ const Quests = () => {
     ? Object.values(user.blueprints).reduce((sum, count) => sum + count, 0)
     : 0;
   
-  // Get per-holobot blueprint counts
-  const blueprintCounts = user?.blueprints || {};
-  
-  console.log("Quest page - Blueprint data:", blueprintCounts);
-  
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto pt-16 px-4 pb-16">

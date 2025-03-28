@@ -89,11 +89,10 @@ export const BattleScene = ({
         setDisplayLeftXp(userHolobot.experience || 0);
         setLeftLevel(userHolobot.level || 1);
         
-        const tempLeftStats = {...HOLOBOT_STATS[selectedLeftHolobot]};
-        console.log("Initial base stats for battle:", tempLeftStats);
-        
         if (userHolobot.boostedAttributes) {
           console.log("Applying attribute boosts for battle:", userHolobot.boostedAttributes);
+          
+          const tempLeftStats = {...HOLOBOT_STATS[selectedLeftHolobot]};
           
           if (userHolobot.boostedAttributes.attack) {
             tempLeftStats.attack += userHolobot.boostedAttributes.attack;
@@ -105,12 +104,11 @@ export const BattleScene = ({
             tempLeftStats.speed += userHolobot.boostedAttributes.speed;
           }
           if (userHolobot.boostedAttributes.health) {
-            tempLeftStats.maxHealth = (tempLeftStats.maxHealth || 150) + userHolobot.boostedAttributes.health;
+            tempLeftStats.maxHealth += userHolobot.boostedAttributes.health;
           }
+          
+          setLeftBattleStats(tempLeftStats);
         }
-        
-        console.log("Final battle stats after boosts:", tempLeftStats);
-        setLeftBattleStats(tempLeftStats);
       }
     }
   }, [user, selectedLeftHolobot]);
@@ -242,36 +240,7 @@ export const BattleScene = ({
       setLeftComboChain(0);
       setRightComboChain(0);
       setBattleLog(["Ready for a new battle!"]);
-      
-      if (user?.holobots) {
-        const userHolobot = user.holobots.find(h => 
-          h.name.toLowerCase() === HOLOBOT_STATS[selectedLeftHolobot]?.name.toLowerCase()
-        );
-        
-        if (userHolobot && userHolobot.boostedAttributes) {
-          const tempLeftStats = {...HOLOBOT_STATS[selectedLeftHolobot]};
-          
-          if (userHolobot.boostedAttributes.attack) {
-            tempLeftStats.attack += userHolobot.boostedAttributes.attack;
-          }
-          if (userHolobot.boostedAttributes.defense) {
-            tempLeftStats.defense += userHolobot.boostedAttributes.defense;
-          }
-          if (userHolobot.boostedAttributes.speed) {
-            tempLeftStats.speed += userHolobot.boostedAttributes.speed;
-          }
-          if (userHolobot.boostedAttributes.health) {
-            tempLeftStats.maxHealth = (tempLeftStats.maxHealth || 150) + userHolobot.boostedAttributes.health;
-          }
-          
-          setLeftBattleStats(tempLeftStats);
-        } else {
-          setLeftBattleStats({...HOLOBOT_STATS[selectedLeftHolobot]});
-        }
-      } else {
-        setLeftBattleStats({...HOLOBOT_STATS[selectedLeftHolobot]});
-      }
-      
+      setLeftBattleStats({...HOLOBOT_STATS[selectedLeftHolobot]});
       setRightBattleStats({...HOLOBOT_STATS[selectedRightHolobot]});
       onBattleEnd?.('defeat');
       return;
@@ -290,36 +259,7 @@ export const BattleScene = ({
     setDisplayLeftXp(leftXp);
     setBattleLog(["Battle started!"]);
     
-    if (user?.holobots) {
-      const userHolobot = user.holobots.find(h => 
-        h.name.toLowerCase() === HOLOBOT_STATS[selectedLeftHolobot]?.name.toLowerCase()
-      );
-      
-      if (userHolobot && userHolobot.boostedAttributes) {
-        const tempLeftStats = {...HOLOBOT_STATS[selectedLeftHolobot]};
-        
-        if (userHolobot.boostedAttributes.attack) {
-          tempLeftStats.attack += userHolobot.boostedAttributes.attack;
-        }
-        if (userHolobot.boostedAttributes.defense) {
-          tempLeftStats.defense += userHolobot.boostedAttributes.defense;
-        }
-        if (userHolobot.boostedAttributes.speed) {
-          tempLeftStats.speed += userHolobot.boostedAttributes.speed;
-        }
-        if (userHolobot.boostedAttributes.health) {
-          tempLeftStats.maxHealth = (tempLeftStats.maxHealth || 150) + userHolobot.boostedAttributes.health;
-        }
-        
-        setLeftBattleStats(tempLeftStats);
-        console.log("Starting battle with boosted stats:", tempLeftStats);
-      } else {
-        setLeftBattleStats({...HOLOBOT_STATS[selectedLeftHolobot]});
-      }
-    } else {
-      setLeftBattleStats({...HOLOBOT_STATS[selectedLeftHolobot]});
-    }
-    
+    setLeftBattleStats({...HOLOBOT_STATS[selectedLeftHolobot]});
     setRightBattleStats({...HOLOBOT_STATS[selectedRightHolobot]});
   };
 
@@ -619,35 +559,7 @@ export const BattleScene = ({
             selectedRightHolobot={selectedRightHolobot}
             onLeftSelect={(holobot) => {
               setSelectedLeftHolobot(holobot);
-              
-              if (user?.holobots) {
-                const userHolobot = user.holobots.find(h => 
-                  h.name.toLowerCase() === HOLOBOT_STATS[holobot]?.name.toLowerCase()
-                );
-                
-                if (userHolobot && userHolobot.boostedAttributes) {
-                  const tempLeftStats = {...HOLOBOT_STATS[holobot]};
-                  
-                  if (userHolobot.boostedAttributes.attack) {
-                    tempLeftStats.attack += userHolobot.boostedAttributes.attack;
-                  }
-                  if (userHolobot.boostedAttributes.defense) {
-                    tempLeftStats.defense += userHolobot.boostedAttributes.defense;
-                  }
-                  if (userHolobot.boostedAttributes.speed) {
-                    tempLeftStats.speed += userHolobot.boostedAttributes.speed;
-                  }
-                  if (userHolobot.boostedAttributes.health) {
-                    tempLeftStats.maxHealth = (tempLeftStats.maxHealth || 150) + userHolobot.boostedAttributes.health;
-                  }
-                  
-                  setLeftBattleStats(tempLeftStats);
-                } else {
-                  setLeftBattleStats({...HOLOBOT_STATS[holobot]});
-                }
-              } else {
-                setLeftBattleStats({...HOLOBOT_STATS[holobot]});
-              }
+              setLeftBattleStats({...HOLOBOT_STATS[holobot]});
             }}
             onRightSelect={(holobot) => {
               setSelectedRightHolobot(holobot);

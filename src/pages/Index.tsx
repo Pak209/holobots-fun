@@ -1,4 +1,3 @@
-
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -90,7 +89,7 @@ const Index = () => {
   };
 
   const handleHolobotSelect = (holobotKey: string) => {
-    console.log("Selected holobot for arena:", holobotKey);
+    console.log("Selected holobot:", holobotKey);
     setSelectedHolobot(holobotKey);
   };
 
