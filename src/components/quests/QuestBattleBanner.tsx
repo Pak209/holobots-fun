@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { HOLOBOT_STATS } from "@/types/holobot";
@@ -11,7 +12,7 @@ interface QuestBattleBannerProps {
   onBattleComplete?: () => void;
   difficulty?: string;
   isVisible?: boolean;
-  isBossQuest?: boolean;
+  isBossQuest?: boolean; // renamed from isBossBattle to match usage
   squadHolobotKeys?: string[];
   bossHolobotKey?: string;
   onComplete?: () => void;
@@ -23,7 +24,7 @@ export const QuestBattleBanner = ({
   onBattleComplete,
   difficulty = "normal",
   isVisible = true,
-  isBossQuest = false,
+  isBossQuest = false, // renamed from isBossBattle to match usage
   squadHolobotKeys = [],
   bossHolobotKey = "",
   onComplete
@@ -38,15 +39,29 @@ export const QuestBattleBanner = ({
   const [battleRound, setBattleRound] = useState(0);
   const [battleResult, setBattleResult] = useState<'win' | 'loss' | null>(null);
 
+  // Find user holobots based on squad keys
   const actualPlayerHolobots = playerHolobots || 
     (user?.holobots?.filter(holobot => 
-      squadHolobotKeys.some(key => 
-        HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
-      )
+      squadHolobotKeys.some(key => {
+        // Safety check: ensure HOLOBOT_STATS[key] exists
+        if (!HOLOBOT_STATS[key]) {
+          console.warn(`Holobot key not found: ${key}`);
+          return false;
+        }
+        
+        // Safety check: ensure holobot.name exists
+        if (!holobot || !holobot.name) {
+          console.warn("Invalid holobot object:", holobot);
+          return false;
+        }
+        
+        return HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase();
+      })
     ) || []);
   
   const actualBossHolobot = bossHolobotKey || bossHolobot || "";
   
+  // Safety check: ensure actualBossHolobot exists in HOLOBOT_STATS
   const boss = HOLOBOT_STATS[actualBossHolobot.toLowerCase()] || { 
     name: "Unknown Boss", 
     attack: 50,
@@ -56,8 +71,20 @@ export const QuestBattleBanner = ({
   };
   
   const teamStats = actualPlayerHolobots.reduce((stats, holobot) => {
+    if (!holobot || !holobot.name) {
+      console.warn("Invalid holobot object in reduce:", holobot);
+      return stats;
+    }
+  
     const baseStatsKey = Object.keys(HOLOBOT_STATS).find(
-      key => HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
+      key => {
+        // Safety check: ensure HOLOBOT_STATS[key] exists and has name
+        if (!HOLOBOT_STATS[key] || !HOLOBOT_STATS[key].name) {
+          return false;
+        }
+        
+        return HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase();
+      }
     );
     
     if (baseStatsKey) {
@@ -219,9 +246,15 @@ export const QuestBattleBanner = ({
               </div>
             ))}
             {squadHolobotKeys.map((key, idx) => {
+              // Safety check: ensure HOLOBOT_STATS[key] exists and has name
+              if (!HOLOBOT_STATS[key] || !HOLOBOT_STATS[key].name) {
+                return null;
+              }
+              
               const holobotName = HOLOBOT_STATS[key]?.name;
               const alreadyDisplayed = actualPlayerHolobots.some(h => 
-                h.name.toLowerCase() === holobotName?.toLowerCase()
+                h && h.name && holobotName && 
+                h.name.toLowerCase() === holobotName.toLowerCase()
               );
               if (alreadyDisplayed || !holobotName) return null;
               

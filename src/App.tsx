@@ -19,6 +19,7 @@ import { MobileLayout } from "@/components/MobileLayout";
 import Bytepaper from "./pages/Bytepaper";
 import Mint from "@/pages/Mint";
 import Fitness from "@/pages/Fitness";
+import PvPBattle from "@/pages/PvPBattle"; // Import PvPBattle
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
             <Route path="/marketplace" element={<MobileLayout><Marketplace /></MobileLayout>} />
             <Route path="/leaderboard" element={<MobileLayout><Leaderboard /></MobileLayout>} />
             <Route path="/fitness" element={<MobileLayout><Fitness /></MobileLayout>} />
+            <Route path="/pvp-battle" element={<PvPBattle />} /> {/* Add PvPBattle route */}
             <Route path="/bytepaper" element={<Bytepaper />} />
           </Routes>
           <Toaster />
