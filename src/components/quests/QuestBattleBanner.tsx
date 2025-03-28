@@ -39,11 +39,14 @@ export const QuestBattleBanner = ({
   const [battleResult, setBattleResult] = useState<'win' | 'loss' | null>(null);
 
   const actualPlayerHolobots = playerHolobots || 
-    (user?.holobots?.filter(holobot => 
-      squadHolobotKeys.some(key => 
-        HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
-      )
-    ) || []);
+    (user?.holobots?.filter(holobot => {
+      if (!holobot || !holobot.name) return false;
+      
+      return squadHolobotKeys.some(key => {
+        const holobotStats = HOLOBOT_STATS[key];
+        return holobotStats && holobotStats.name.toLowerCase() === holobot.name.toLowerCase();
+      });
+    }) || []);
   
   const actualBossHolobot = bossHolobotKey || bossHolobot || "";
   
@@ -56,9 +59,12 @@ export const QuestBattleBanner = ({
   };
   
   const teamStats = actualPlayerHolobots.reduce((stats, holobot) => {
-    const baseStatsKey = Object.keys(HOLOBOT_STATS).find(
-      key => HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
-    );
+    if (!holobot || !holobot.name) return stats;
+    
+    const baseStatsKey = Object.keys(HOLOBOT_STATS).find(key => {
+      const holobotStats = HOLOBOT_STATS[key];
+      return holobotStats && holobotStats.name.toLowerCase() === holobot.name.toLowerCase();
+    });
     
     if (baseStatsKey) {
       const baseStats = HOLOBOT_STATS[baseStatsKey];
@@ -221,7 +227,7 @@ export const QuestBattleBanner = ({
             {squadHolobotKeys.map((key, idx) => {
               const holobotName = HOLOBOT_STATS[key]?.name;
               const alreadyDisplayed = actualPlayerHolobots.some(h => 
-                h.name.toLowerCase() === holobotName?.toLowerCase()
+                h.name?.toLowerCase() === holobotName?.toLowerCase()
               );
               if (alreadyDisplayed || !holobotName) return null;
               
