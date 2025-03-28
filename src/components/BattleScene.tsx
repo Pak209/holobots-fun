@@ -139,6 +139,7 @@ export const BattleScene = ({
         if (type === 'attack') updatedStats.attack += 2;
         if (type === 'speed') updatedStats.speed += 2;
         if (type === 'defense') updatedStats.defense += 2;
+        
         if (type === 'heal') {
           const healAmount = 35;
           setLeftHealth(prev => Math.min(100, prev + healAmount));
@@ -162,6 +163,12 @@ export const BattleScene = ({
         } else {
           updatedStats = applyHackBoost({...leftBattleStats}, type);
           
+          if (type === 'heal') {
+            const healAmount = 50;
+            setLeftHealth(prev => Math.min(100, prev + healAmount));
+            addToBattleLog(`${leftBattleStats.name} regained ${healAmount}% health with a powerful healing hack!`);
+          }
+          
           const specialDamage = Math.floor(leftBattleStats.attack * 0.3);
           const damagePercentage = (specialDamage / rightBattleStats.maxHealth) * 100;
           setRightHealth(prev => Math.max(0, prev - damagePercentage));
@@ -180,7 +187,7 @@ export const BattleScene = ({
       
       setLeftBattleStats(updatedStats);
       
-      if (type !== 'special' || leftHack < 100) {
+      if (type !== 'heal' && (type !== 'special' || leftHack < 100)) {
         addToBattleLog(`${leftBattleStats.name} used a ${effectivenessMessage} hack: ${type}!`);
       }
     }
@@ -372,6 +379,9 @@ export const BattleScene = ({
 
       if (isDefenseMode) {
         const maxDefenseRounds = leftBattleStats.intelligence >= 7 ? 3 : 2;
+        
+        setLeftHack(prev => Math.min(100, prev + 10));
+        
         setDefenseModeRounds(prev => {
           if (prev >= maxDefenseRounds) {
             setIsDefenseMode(false);
@@ -391,7 +401,7 @@ export const BattleScene = ({
           leftBattleStats,
           rightBattleStats
         );
-
+        
         if (isDefenseMode) {
           damage *= 0.5;
           setLeftSpecial(prev => Math.min(100, prev + 15));
