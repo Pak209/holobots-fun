@@ -139,20 +139,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updates.energy_refills !== undefined) dbUpdates.energy_refills = updates.energy_refills;
       if (updates.rank_skips !== undefined) dbUpdates.rank_skips = updates.rank_skips;
       if (updates.holobots) dbUpdates.holobots = updates.holobots;
-      if (updates.blueprints) dbUpdates.blueprints = updates.blueprints;
 
       const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', user.id);
-
+      
       if (!error) {
-        const { data, error: fetchError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (!fetchError && data) {
-          setUser(mapDatabaseToUserProfile(data));
-        }
+        setUser({
+          ...user,
+          ...updates,
+          blueprints: {
+            ...(user.blueprints || {}),
+            ...(updates.blueprints || {})
+          },
+          holobots: updates.holobots || user.holobots
+        });
       }
     },
     searchPlayers: async (query) => {
