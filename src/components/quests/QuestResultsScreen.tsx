@@ -5,17 +5,19 @@ import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { UserHolobot } from "@/types/user";
 
 interface QuestResultsScreenProps {
   isVisible: boolean;
   isSuccess: boolean;
-  squadHolobotKeys: string[];
+  squadHolobotKeys: UserHolobot[];
   squadHolobotExp: Array<{name: string, xp: number, levelUp: boolean, newLevel: number}>;
   blueprintRewards?: {
     holobotKey: string;
     amount: number;
   };
   holosRewards: number;
+  gachaTickets?: number;
   onClose: () => void;
 }
 
@@ -26,6 +28,7 @@ export const QuestResultsScreen = ({
   squadHolobotExp,
   blueprintRewards,
   holosRewards,
+  gachaTickets = 0,
   onClose
 }: QuestResultsScreenProps) => {
   const [animation, setAnimation] = useState<"entering" | "active" | "exiting" | "hidden">("hidden");
@@ -83,6 +86,18 @@ export const QuestResultsScreen = ({
                   <p className="text-md font-bold text-yellow-400">{holosRewards}</p>
                 </div>
               </div>
+              
+              {gachaTickets > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <span className="text-green-400 text-sm font-bold">G</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Gacha Tickets</p>
+                    <p className="text-md font-bold text-green-400">{gachaTickets}</p>
+                  </div>
+                </div>
+              )}
               
               {blueprintRewards && (
                 <div className="flex items-center gap-2">

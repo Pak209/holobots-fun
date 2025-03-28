@@ -11,7 +11,7 @@ import { Progress } from "./ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { QuestBattleBanner } from "@/components/quests/QuestBattleBanner";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
-import { updateHolobotExperience, calculateExperience, updateBlueprintCount } from "@/utils/battleUtils";
+import { updateHolobotExperience, updateBlueprintCount } from "@/utils/battleUtils";
 
 // Quest difficulty tiers
 const EXPLORATION_TIERS = {
@@ -106,8 +106,9 @@ export const QuestGrid = () => {
   const [showResultsScreen, setShowResultsScreen] = useState(false);
   const [battleSuccess, setBattleSuccess] = useState(false);
   const [squadExpResults, setSquadExpResults] = useState<Array<{name: string, xp: number, levelUp: boolean, newLevel: number}>>([]);
-  const [blueprintReward, setBlueprintReward] = useState<{holobotKey: string, amount: number} | undefined>();
+  const [blueprintRewards, setBlueprintRewards] = useState<{holobotKey: string, amount: number} | undefined>();
   const [holosReward, setHolosReward] = useState(0);
+  const [gachaTicketsReward, setGachaTicketsReward] = useState(0);
 
   // Get the user's holobots that are not on cooldown
   const getAvailableHolobots = () => {
@@ -170,77 +171,6 @@ export const QuestGrid = () => {
     const diffMins = Math.ceil(diffMs / 60000);
     
     return `${diffMins} min${diffMins !== 1 ? 's' : ''}`;
-  };
-
-  const distributeRewards = async () => {
-    try {
-      if (!user) return;
-      
-      // Calculate rewards based on current round and victories
-      const rewards = calculateArenaRewards(currentRound, victories);
-      
-      // Calculate experience for the holobot
-      const experienceRewards = calculateExperienceRewards(victories);
-      const selectedHolobotName = HOLOBOT_STATS[selectedHolobot].name;
-      
-      // Update user with rewards
-      const updates: any = {
-        holosTokens: user.holosTokens + rewards.holosTokens,
-        gachaTickets: user.gachaTickets + rewards.gachaTickets
-      };
-      
-      if (rewards.arenaPass > 0) {
-        updates.arena_passes = (user.arena_passes || 0) + rewards.arenaPass;
-      }
-      
-      // Update holobot experience
-      if (experienceRewards.length > 0) {
-        const updatedHolobots = updateHolobotExperience(
-          user.holobots,
-          selectedHolobotName,
-          experienceRewards[0].xp,
-          experienceRewards[0].newLevel
-        );
-        
-        updates.holobots = updatedHolobots;
-      }
-      
-      // Add blueprints if there's a blueprint reward
-      if (rewards.blueprintReward) {
-        // Use the helper function to update blueprints consistently
-        updates.blueprints = updateBlueprintCount(
-          user.blueprints,
-          rewards.blueprintReward.holobotKey,
-          rewards.blueprintReward.amount
-        );
-      }
-      
-      console.log("[distributeRewards] Updates to apply:", updates);
-      
-      // Save all the updates to the user
-      await updateUser(updates);
-      
-      // Save the results to show in the results screen
-      setArenaResults({
-        isSuccess: victories > 0,
-        squadHolobotKeys: [selectedHolobot],
-        squadHolobotExp: experienceRewards,
-        blueprintRewards: rewards.blueprintReward,
-        holosRewards: rewards.holosTokens,
-        gachaTickets: rewards.gachaTickets,
-        arenaPass: rewards.arenaPass
-      });
-      
-      // Show the results screen
-      setShowResults(true);
-    } catch (error) {
-      console.error("Error distributing rewards:", error);
-      toast({
-        title: "Error",
-        description: "Failed to distribute rewards. Please try again.",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleStartExploration = async () => {
@@ -311,11 +241,12 @@ export const QuestGrid = () => {
             levelUp: false,
             newLevel: user.holobots.find(h => h.name === HOLOBOT_STATS[explorationHolobot].name)?.level || 1
           }]);
-          setBlueprintReward({
+          setBlueprintRewards({
             holobotKey: randomHolobotKey,
             amount: tier.rewards.blueprintPieces
           });
           setHolosReward(tier.rewards.holosTokens);
+          setGachaTicketsReward(0);
           setShowResultsScreen(true);
         }
       } else {
@@ -337,8 +268,9 @@ export const QuestGrid = () => {
           levelUp: false,
           newLevel: user.holobots.find(h => h.name === HOLOBOT_STATS[explorationHolobot].name)?.level || 1
         }]);
-        setBlueprintReward(undefined);
+        setBlueprintRewards(undefined);
         setHolosReward(0);
+        setGachaTicketsReward(0);
         setShowResultsScreen(true);
       }
     } catch (error) {
@@ -458,11 +390,12 @@ export const QuestGrid = () => {
         
         // Set up results screen data
         setBattleSuccess(true);
-        setBlueprintReward({
+        setBlueprintRewards({
           holobotKey: selectedBoss,
           amount: tier.rewards.blueprintPieces
         });
         setHolosReward(tier.rewards.holosTokens);
+        setGachaTicketsReward(tier.rewards.gachaTickets);
         setShowResultsScreen(true);
       } else {
         // Even on failure, Holobots gain some experience (half of success amount)
@@ -499,11 +432,12 @@ export const QuestGrid = () => {
         
         // Set up results screen for failure
         setBattleSuccess(false);
-        setBlueprintReward({
+        setBlueprintRewards({
           holobotKey: selectedBoss,
           amount: failureBlueprintPieces
         });
         setHolosReward(0);
+        setGachaTicketsReward(0);
         setShowResultsScreen(true);
       }
     } catch (error) {
@@ -934,18 +868,24 @@ export const QuestGrid = () => {
       {/* Results Screen */}
       {showResultsScreen && (
         <QuestResultsScreen 
+          isVisible={showResultsScreen}
           isSuccess={battleSuccess}
+          squadHolobotKeys={currentBattleHolobots.map(key => ({
+            name: HOLOBOT_STATS[key]?.name || key,
+            level: user?.holobots.find(h => 
+              h.name.toLowerCase() === (HOLOBOT_STATS[key]?.name || key).toLowerCase()
+            )?.level || 1
+          }))}
           squadHolobotExp={squadExpResults}
-          blueprintReward={blueprintReward && {
-            holobotName: HOLOBOT_STATS[blueprintReward.holobotKey]?.name || blueprintReward.holobotKey,
-            amount: blueprintReward.amount
+          blueprintRewards={blueprintRewards && {
+            holobotKey: blueprintRewards.holobotKey,
+            amount: blueprintRewards.amount
           }}
-          holosTokens={holosReward}
-          gachaTickets={battleSuccess ? BOSS_TIERS[selectedBossTier].rewards.gachaTickets : 0}
+          holosRewards={holosReward}
+          gachaTickets={gachaTicketsReward}
           onClose={() => setShowResultsScreen(false)}
         />
       )}
     </div>
   );
 };
-
