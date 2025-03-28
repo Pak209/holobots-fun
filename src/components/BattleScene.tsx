@@ -75,7 +75,6 @@ export const BattleScene = ({
   const [isDefenseMode, setIsDefenseMode] = useState(false);
   const [defenseModeRounds, setDefenseModeRounds] = useState(0);
 
-  // Add temporary battle stats state
   const [leftBattleStats, setLeftBattleStats] = useState({...HOLOBOT_STATS[initialLeftHolobot]});
   const [rightBattleStats, setRightBattleStats] = useState({...HOLOBOT_STATS[initialRightHolobot]});
 
@@ -90,7 +89,6 @@ export const BattleScene = ({
         setDisplayLeftXp(userHolobot.experience || 0);
         setLeftLevel(userHolobot.level || 1);
         
-        // Update temporary battle stats instead of modifying HOLOBOT_STATS
         if (userHolobot.boostedAttributes) {
           console.log("Applying attribute boosts for battle:", userHolobot.boostedAttributes);
           
@@ -127,11 +125,81 @@ export const BattleScene = ({
   };
 
   const handleHack = (type: 'attack' | 'speed' | 'heal') => {
-    if (leftHack >= 100) {
-      const updatedStats = applyHackBoost({...leftBattleStats}, type);
+    if (leftHack >= 50) {
+      let effectivenessMessage = "";
+      let updatedStats = {...leftBattleStats};
+      
+      if (leftHack < 75) {
+        updatedStats = applyHackBoost({...leftBattleStats}, type);
+        effectivenessMessage = "basic";
+        setLeftHack(0);
+      } else if (leftHack < 100) {
+        updatedStats = applyHackBoost({...leftBattleStats}, type);
+        
+        if (type === 'attack') updatedStats.attack += 2;
+        if (type === 'speed') updatedStats.speed += 2;
+        if (type === 'heal') {
+          const healAmount = 35;
+          setLeftHealth(prev => Math.min(100, prev + healAmount));
+          addToBattleLog(`${leftBattleStats.name} regained ${healAmount}% health with a healing hack!`);
+        }
+        
+        effectivenessMessage = "improved";
+        setLeftHack(0);
+      } else {
+        updatedStats = applyHackBoost({...leftBattleStats}, type);
+        
+        const specialDamage = Math.floor(leftBattleStats.attack * 0.5);
+        const damagePercentage = (specialDamage / rightBattleStats.maxHealth) * 100;
+        setRightHealth(prev => Math.max(0, prev - damagePercentage));
+        setRightIsDamaged(true);
+        
+        setTimeout(() => {
+          setRightIsDamaged(false);
+        }, 250);
+        
+        effectivenessMessage = "powerful";
+        addToBattleLog(`${leftBattleStats.name} launched a special hack attack dealing ${specialDamage} damage!`);
+        setLeftHack(0);
+      }
+      
       setLeftBattleStats(updatedStats);
-      setLeftHack(0);
-      addToBattleLog(`${leftBattleStats.name} used hack: ${type}!`);
+      addToBattleLog(`${leftBattleStats.name} used a ${effectivenessMessage} hack: ${type}!`);
+    }
+  };
+
+  const handlePayToHack = async () => {
+    if (!user || !isBattleStarted) return;
+    
+    if (user.holosTokens >= 100) {
+      try {
+        await updateUser({
+          holosTokens: user.holosTokens - 100
+        });
+        
+        setLeftHack(100);
+        
+        addToBattleLog(`${leftBattleStats.name} paid 100 HOLOS for an instant hack charge!`);
+        
+        toast({
+          title: "Hack Charged",
+          description: "You paid 100 HOLOS to fully charge your Hack meter!",
+        });
+        
+      } catch (error) {
+        console.error("Error processing payment for hack:", error);
+        toast({
+          title: "Payment Failed",
+          description: "Failed to process the HOLOS payment. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      toast({
+        title: "Insufficient Funds",
+        description: "You need 100 HOLOS to use this feature.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -147,7 +215,6 @@ export const BattleScene = ({
       setLeftComboChain(0);
       setRightComboChain(0);
       setBattleLog(["Ready for a new battle!"]);
-      // Reset temporary battle stats
       setLeftBattleStats({...HOLOBOT_STATS[selectedLeftHolobot]});
       setRightBattleStats({...HOLOBOT_STATS[selectedRightHolobot]});
       onBattleEnd?.('defeat');
@@ -167,7 +234,6 @@ export const BattleScene = ({
     setDisplayLeftXp(leftXp);
     setBattleLog(["Battle started!"]);
     
-    // Initialize temporary battle stats
     setLeftBattleStats({...HOLOBOT_STATS[selectedLeftHolobot]});
     setRightBattleStats({...HOLOBOT_STATS[selectedRightHolobot]});
   };
@@ -447,8 +513,10 @@ export const BattleScene = ({
             onStartBattle={handleStartBattle}
             onHypeUp={handleHypeUp}
             onHack={handleHack}
+            onPayToHack={handlePayToHack}
             isBattleStarted={isBattleStarted}
             hackGauge={leftHack}
+            userTokens={user?.holosTokens}
           />
           <ModeSlider 
             isDefense={isDefenseMode}

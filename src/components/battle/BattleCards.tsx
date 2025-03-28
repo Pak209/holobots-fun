@@ -1,3 +1,4 @@
+
 import { HolobotCard } from "../HolobotCard";
 import { ExperienceBar } from "../ExperienceBar";
 import { getExperienceProgress } from "@/utils/battleUtils";
@@ -57,6 +58,10 @@ export const BattleCards = ({
             variant="red" 
           />
         </div>
+        <ExperienceBar 
+          {...getExperienceProgress(rightXp, rightLevel)}
+          level={rightLevel}
+        />
       </div>
     </div>
   );

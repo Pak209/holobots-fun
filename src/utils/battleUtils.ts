@@ -1,3 +1,4 @@
+
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
@@ -68,7 +69,9 @@ export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | '
       newStats.speed += Math.floor(newStats.speed * 0.2);
       break;
     case 'heal':
-      newStats.maxHealth = Math.min(100, newStats.maxHealth + 30);
+      // Healing will be applied directly in the component
+      // This allows different healing amounts based on hack gauge
+      newStats.maxHealth = Math.min(100, newStats.maxHealth + 20);
       break;
   }
   
