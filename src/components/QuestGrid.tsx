@@ -126,7 +126,7 @@ export const QuestGrid = () => {
 
     const tier = EXPLORATION_TIERS[selectedExplorationTier];
     
-    if (user?.dailyEnergy < tier.energyCost) {
+    if (!user || user.dailyEnergy < tier.energyCost) {
       toast({
         title: "Not Enough Energy",
         description: `You need ${tier.energyCost} energy for this quest`,
@@ -206,7 +206,7 @@ export const QuestGrid = () => {
           name: HOLOBOT_STATS[explorationHolobot].name,
           xp: 0,
           levelUp: false,
-          newLevel: user.holobots.find(h => h.name === HOLOBOT_STATS[explorationHolobot].name)?.level || 1
+          newLevel: user?.holobots.find(h => h.name === HOLOBOT_STATS[explorationHolobot].name)?.level || 1
         }]);
         setBlueprintReward(undefined);
         setHolosReward(0);
@@ -236,7 +236,7 @@ export const QuestGrid = () => {
 
     const tier = BOSS_TIERS[selectedBossTier];
     
-    if (user?.dailyEnergy < tier.energyCost) {
+    if (!user || user.dailyEnergy < tier.energyCost) {
       toast({
         title: "Not Enough Energy",
         description: `You need ${tier.energyCost} energy for this quest`,
