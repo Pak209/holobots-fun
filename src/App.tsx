@@ -43,7 +43,7 @@ function App() {
             <Route path="/marketplace" element={<MobileLayout><Marketplace /></MobileLayout>} />
             <Route path="/leaderboard" element={<MobileLayout><Leaderboard /></MobileLayout>} />
             <Route path="/fitness" element={<MobileLayout><Fitness /></MobileLayout>} />
-            <Route path="/pvp-battle" element={<PvPBattle />} /> {/* Add PvPBattle route */}
+            <Route path="/pvp-battle" element={<MobileLayout><PvPBattle /></MobileLayout>} /> {/* Ensure PvPBattle is wrapped with MobileLayout */}
             <Route path="/bytepaper" element={<Bytepaper />} />
           </Routes>
           <Toaster />

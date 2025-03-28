@@ -2,7 +2,7 @@
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { BattleScene } from "@/components/BattleScene";
 import { PlayerSearch } from "@/components/battle/PlayerSearch";
-import { MobileLayout } from "@/components/MobileLayout"; // Import MobileLayout
+import { MobileLayout } from "@/components/MobileLayout"; 
 
 const PvPBattle = () => {
   const defaultLeftHolobot = 'ace';
