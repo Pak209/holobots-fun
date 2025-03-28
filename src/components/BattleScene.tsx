@@ -124,7 +124,7 @@ export const BattleScene = ({
     }
   };
 
-  const handleHack = (type: 'attack' | 'speed' | 'heal') => {
+  const handleHack = (type: 'attack' | 'speed' | 'heal' | 'defense' | 'special') => {
     if (leftHack >= 50) {
       let effectivenessMessage = "";
       let updatedStats = {...leftBattleStats};
@@ -138,6 +138,7 @@ export const BattleScene = ({
         
         if (type === 'attack') updatedStats.attack += 2;
         if (type === 'speed') updatedStats.speed += 2;
+        if (type === 'defense') updatedStats.defense += 2;
         if (type === 'heal') {
           const healAmount = 35;
           setLeftHealth(prev => Math.min(100, prev + healAmount));
@@ -147,24 +148,41 @@ export const BattleScene = ({
         effectivenessMessage = "improved";
         setLeftHack(0);
       } else {
-        updatedStats = applyHackBoost({...leftBattleStats}, type);
-        
-        const specialDamage = Math.floor(leftBattleStats.attack * 0.5);
-        const damagePercentage = (specialDamage / rightBattleStats.maxHealth) * 100;
-        setRightHealth(prev => Math.max(0, prev - damagePercentage));
-        setRightIsDamaged(true);
-        
-        setTimeout(() => {
-          setRightIsDamaged(false);
-        }, 250);
+        if (type === 'special') {
+          const specialDamage = Math.floor(leftBattleStats.attack * 0.8);
+          const damagePercentage = (specialDamage / rightBattleStats.maxHealth) * 100;
+          setRightHealth(prev => Math.max(0, prev - damagePercentage));
+          setRightIsDamaged(true);
+          
+          setTimeout(() => {
+            setRightIsDamaged(false);
+          }, 250);
+          
+          addToBattleLog(`${leftBattleStats.name} unleashed a devastating special hack attack dealing ${specialDamage} damage!`);
+        } else {
+          updatedStats = applyHackBoost({...leftBattleStats}, type);
+          
+          const specialDamage = Math.floor(leftBattleStats.attack * 0.3);
+          const damagePercentage = (specialDamage / rightBattleStats.maxHealth) * 100;
+          setRightHealth(prev => Math.max(0, prev - damagePercentage));
+          setRightIsDamaged(true);
+          
+          setTimeout(() => {
+            setRightIsDamaged(false);
+          }, 250);
+          
+          addToBattleLog(`${leftBattleStats.name} launched a special hack attack dealing ${specialDamage} damage!`);
+        }
         
         effectivenessMessage = "powerful";
-        addToBattleLog(`${leftBattleStats.name} launched a special hack attack dealing ${specialDamage} damage!`);
         setLeftHack(0);
       }
       
       setLeftBattleStats(updatedStats);
-      addToBattleLog(`${leftBattleStats.name} used a ${effectivenessMessage} hack: ${type}!`);
+      
+      if (type !== 'special' || leftHack < 100) {
+        addToBattleLog(`${leftBattleStats.name} used a ${effectivenessMessage} hack: ${type}!`);
+      }
     }
   };
 

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 interface BattleControlsProps {
   onStartBattle: () => void;
   onHypeUp: () => void;
-  onHack: (type: 'attack' | 'speed' | 'heal') => void;
+  onHack: (type: 'attack' | 'speed' | 'heal' | 'defense' | 'special') => void;
   onPayToHack: () => void;
   isBattleStarted: boolean;
   hackGauge: number;
@@ -46,7 +46,7 @@ export const BattleControls = ({
       >
         <Rocket className="w-3 h-3 md:w-4 md:h-4" /> Hype
       </Button>
-      <Select onValueChange={(value) => onHack(value as 'attack' | 'speed' | 'heal')} disabled={!isHackUsable || !isBattleStarted}>
+      <Select onValueChange={(value) => onHack(value as 'attack' | 'speed' | 'heal' | 'defense' | 'special')} disabled={!isHackUsable || !isBattleStarted}>
         <SelectTrigger 
           className={`h-9 ${!isHackUsable ? 'bg-red-500 opacity-70' : 'bg-red-500'} hover:bg-red-600 text-white border-none text-xs shadow-neon`}
         >
@@ -56,7 +56,9 @@ export const BattleControls = ({
         <SelectContent className="bg-holobots-card border-holobots-border">
           <SelectItem value="attack" className="text-holobots-text hover:bg-holobots-accent hover:text-white">Boost Attack</SelectItem>
           <SelectItem value="speed" className="text-holobots-text hover:bg-holobots-accent hover:text-white">Boost Speed</SelectItem>
+          <SelectItem value="defense" className="text-holobots-text hover:bg-holobots-accent hover:text-white">Boost Defense</SelectItem>
           <SelectItem value="heal" className="text-holobots-text hover:bg-holobots-accent hover:text-white">Heal</SelectItem>
+          <SelectItem value="special" className="text-holobots-text hover:bg-holobots-accent hover:text-white" disabled={hackGauge < 100}>Special Attack</SelectItem>
         </SelectContent>
       </Select>
       <Button

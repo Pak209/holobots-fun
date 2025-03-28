@@ -1,4 +1,3 @@
-
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
@@ -58,7 +57,7 @@ export const getNewLevel = (currentXp: number, currentLevel: number) => {
   return currentLevel;
 };
 
-export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | 'heal'): HolobotStats => {
+export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | 'heal' | 'defense' | 'special'): HolobotStats => {
   const newStats = { ...stats };
   
   switch (type) {
@@ -68,10 +67,20 @@ export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | '
     case 'speed':
       newStats.speed += Math.floor(newStats.speed * 0.2);
       break;
+    case 'defense':
+      newStats.defense += Math.floor(newStats.defense * 0.2);
+      break;
     case 'heal':
       // Healing will be applied directly in the component
       // This allows different healing amounts based on hack gauge
       newStats.maxHealth = Math.min(100, newStats.maxHealth + 20);
+      break;
+    case 'special':
+      // Special attack will be handled in the battle component
+      // This gives a temporary boost to all stats
+      newStats.attack += Math.floor(newStats.attack * 0.15);
+      newStats.defense += Math.floor(newStats.defense * 0.15);
+      newStats.speed += Math.floor(newStats.speed * 0.15);
       break;
   }
   
