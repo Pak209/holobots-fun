@@ -370,6 +370,10 @@ export const QuestGrid = () => {
           [selectedBoss]: (currentBlueprints[selectedBoss] || 0) + tier.rewards.blueprintPieces
         };
         
+        console.log("Success! Updating blueprints:", updatedBlueprints);
+        console.log("Selected boss blueprint key:", selectedBoss);
+        console.log("Blueprint pieces to add:", tier.rewards.blueprintPieces);
+        
         // Update user's tokens, tickets, and energy
         if (user) {
           await updateUser({
@@ -405,6 +409,10 @@ export const QuestGrid = () => {
           ...currentBlueprints,
           [selectedBoss]: (currentBlueprints[selectedBoss] || 0) + failureBlueprintPieces
         };
+        
+        console.log("Failure, but still updating blueprints:", updatedBlueprints);
+        console.log("Selected boss blueprint key:", selectedBoss);
+        console.log("Blueprint pieces to add (reduced):", failureBlueprintPieces);
         
         // Set all squad holobots on cooldown
         bossHolobots.forEach(holobotKey => {
