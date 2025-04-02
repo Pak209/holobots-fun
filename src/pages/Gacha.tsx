@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +38,8 @@ export default function Gacha() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "gacha");
+  // Track if payment was already processed to prevent double deduction
+  const [paymentProcessed, setPaymentProcessed] = useState(false);
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
@@ -83,6 +86,9 @@ export default function Gacha() {
   }, [user.lastEnergyRefresh]);
 
   const pullGacha = async (amount: number, isPaidPull: boolean = true) => {
+    // Reset payment processed state for each new pull attempt
+    setPaymentProcessed(false);
+    
     if (isPaidPull) {
       const cost = amount === 1 ? SINGLE_PULL_COST : MULTI_PULL_COST;
       
@@ -96,7 +102,9 @@ export default function Gacha() {
       }
       
       try {
+        // Deduct the cost upfront and set payment as processed
         await updateUser({ holosTokens: user.holosTokens - cost });
+        setPaymentProcessed(true);
       } catch (error) {
         console.error("Error updating user tokens:", error);
         toast({
@@ -125,7 +133,9 @@ export default function Gacha() {
       }
       
       try {
+        // Update the last energy refresh time to mark daily pull as used
         await updateUser({ lastEnergyRefresh: new Date().toISOString() });
+        setPaymentProcessed(true);
       } catch (error) {
         console.error("Error updating energy refresh time:", error);
         toast({
@@ -157,11 +167,17 @@ export default function Gacha() {
       setPulls(newPulls);
       setIsAnimating(false);
       
-      handleItemsFromPulls(newPulls);
+      // Only proceed with handling items if payment was processed
+      if (paymentProcessed) {
+        handleItemsFromPulls(newPulls);
+      }
     }, 1000);
   };
 
   const useGachaTicket = async (amount: number = 1) => {
+    // Reset payment processed state for each new ticket use
+    setPaymentProcessed(false);
+    
     if ((user.gachaTickets || 0) < amount) {
       toast({
         title: "Not Enough Gacha Tickets",
@@ -172,7 +188,9 @@ export default function Gacha() {
     }
 
     try {
+      // Deduct tickets upfront and mark payment as processed
       await updateUser({ gachaTickets: (user.gachaTickets || 0) - amount });
+      setPaymentProcessed(true);
     } catch (error) {
       console.error("Error updating user tickets:", error);
       toast({
@@ -203,7 +221,10 @@ export default function Gacha() {
       setPulls(newPulls);
       setIsAnimating(false);
       
-      handleItemsFromPulls(newPulls);
+      // Only proceed with handling items if payment was processed
+      if (paymentProcessed) {
+        handleItemsFromPulls(newPulls);
+      }
 
       toast({
         title: "Tickets Used",
