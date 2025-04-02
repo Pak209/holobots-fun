@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,6 @@ import { StatusBar } from "@/components/HealthBar";
 import { FitnessStat } from "@/components/fitness/FitnessStat";
 import { WorkoutRewards } from "@/components/fitness/WorkoutRewards";
 import { HolobotSelector } from "@/components/fitness/HolobotSelector";
-import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
 interface HolobotRank {
@@ -43,16 +43,19 @@ export default function Fitness() {
     attributeBoosts: 0,
   });
 
+  // Set initial selected holobot from user's holobots
   useEffect(() => {
     if (user?.holobots && user.holobots.length > 0 && !selectedHolobot) {
       setSelectedHolobot(user.holobots[0].name);
     }
   }, [user, selectedHolobot]);
 
+  // Get the current holobot
   const currentHolobot = user?.holobots?.find(
     h => h.name.toLowerCase() === selectedHolobot?.toLowerCase()
   );
 
+  // Determine the holobot's rank multiplier
   const getHolobotRankMultiplier = (): number => {
     if (!currentHolobot) return 1;
     
@@ -60,6 +63,7 @@ export default function Fitness() {
     return HOLOBOT_RANKS[rank]?.multiplier || 1;
   };
 
+  // Reset steps at midnight
   useEffect(() => {
     const checkMidnight = () => {
       const now = new Date();
@@ -76,29 +80,42 @@ export default function Fitness() {
     return () => clearInterval(interval);
   }, [toast]);
 
+  // Simulated workout tracking (in real app would use device sensors)
   useEffect(() => {
     let timer: number | null = null;
     
     if (isTracking) {
       timer = window.setInterval(() => {
+        // Increment workout time (in seconds)
         setWorkoutTime(prev => prev + 1);
-        const stepsIncrement = Math.floor(Math.random() * 5) + 1;
+        
+        // Simulate step counting (would use Health Kit in real app)
+        const stepsIncrement = Math.floor(Math.random() * 5) + 1; // 1-5 steps per second
+        
         setSteps(prev => prev + stepsIncrement);
         setWorkoutSteps(prev => prev + stepsIncrement);
-        const newStamina = Math.max(0, stamina - 0.2);
-        if (newStamina <= 0) {
-          setIsTracking(false);
-          completeWorkout();
-        }
-        setStamina(newStamina);
+        
+        // Decrease stamina over time
+        setStamina(prev => {
+          const newStamina = Math.max(0, prev - 0.2);
+          if (newStamina <= 0) {
+            // Auto-stop when stamina is depleted
+            setIsTracking(false);
+            completeWorkout();
+          }
+          return newStamina;
+        });
+        
+        // Calculate rewards based on steps and time
         const expEarned = Math.floor(workoutSteps / STEPS_PER_EXP);
         const milesCompleted = workoutSteps / STEPS_PER_MILE;
         const rankMultiplier = getHolobotRankMultiplier();
         const holosEarned = Math.floor(milesCompleted * HOLOS_PER_MILE * rankMultiplier);
+        
         setRewards({
           exp: expEarned,
           holos: holosEarned,
-          attributeBoosts: Math.floor(expEarned / 100),
+          attributeBoosts: Math.floor(expEarned / 100), // One boost point per 100 EXP
         });
       }, 1000);
     }
@@ -119,7 +136,7 @@ export default function Fitness() {
     }
 
     setIsTracking(true);
-    setWorkoutSteps(0);
+    setWorkoutSteps(0); // Reset workout steps counter
     toast({
       title: "Workout Started",
       description: "Your workout session has begun!",
@@ -133,29 +150,35 @@ export default function Fitness() {
 
   const completeWorkout = () => {
     if (workoutSteps > 0 && user && selectedHolobot) {
+      // Calculate final rewards
       const expEarned = Math.floor(workoutSteps / STEPS_PER_EXP);
       const milesCompleted = workoutSteps / STEPS_PER_MILE;
       const rankMultiplier = getHolobotRankMultiplier();
       const holosEarned = Math.floor(milesCompleted * HOLOS_PER_MILE * rankMultiplier);
       
+      // Find the selected holobot
       const selectedHolobotObj = user.holobots.find(
         h => h.name.toLowerCase() === selectedHolobot.toLowerCase()
       );
       
       if (selectedHolobotObj) {
+        // Update user with rewards
         updateUser({
           holosTokens: user.holosTokens + holosEarned,
+          // Update experience for the selected holobot
           holobots: user.holobots.map(bot => 
             bot.name.toLowerCase() === selectedHolobot.toLowerCase()
               ? { 
                   ...bot, 
                   experience: bot.experience + expEarned,
+                  // Add attribute point for the workout (1 per workout completion)
                   attributePoints: (bot.attributePoints || 0) + 1
                 } 
               : bot
           )
         });
         
+        // Reset tracking stats
         setWorkoutTime(0);
         setWorkoutSteps(0);
         setStamina(100);
@@ -168,6 +191,7 @@ export default function Fitness() {
     }
   };
 
+  // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -181,22 +205,30 @@ export default function Fitness() {
           FITNESS SYNC
         </h1>
         
+        {/* Holobot selector */}
         <HolobotSelector 
           holobots={user?.holobots || []}
           selectedHolobot={selectedHolobot}
           onSelect={setSelectedHolobot}
         />
 
+        {/* Main workout interface */}
         <div className="bg-black/30 backdrop-blur-md rounded-xl border border-cyan-500/30 shadow-[0_0_15px_rgba(0,255,255,0.15)] p-4 mb-6">
+          {/* Selected Holobot Display */}
           <div className="relative flex justify-center mb-6">
             {selectedHolobot && (
               <>
+                {/* Circular platform effect */}
                 <div className="absolute bottom-0 w-40 h-10 bg-cyan-500/20 rounded-full blur-md"></div>
+                
+                {/* Holobot image */}
                 <img 
                   src={getHolobotImagePath(selectedHolobot)} 
                   alt={selectedHolobot}
                   className="h-60 object-contain z-10"
                 />
+                
+                {/* Energy ring around holobot */}
                 <div className={cn(
                   "absolute bottom-0 w-40 h-40 rounded-full border-2 border-cyan-400/50",
                   "flex items-center justify-center",
@@ -208,6 +240,7 @@ export default function Fitness() {
             )}
           </div>
           
+          {/* Workout stats */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <FitnessStat 
               icon="steps" 
@@ -226,6 +259,7 @@ export default function Fitness() {
             />
           </div>
           
+          {/* Stamina bar */}
           <div className="mb-6">
             <div className="flex justify-between mb-1">
               <span className="text-xs text-cyan-400">STAMINA</span>
@@ -239,8 +273,10 @@ export default function Fitness() {
             />
           </div>
           
+          {/* Workout rewards */}
           <WorkoutRewards rewards={rewards} />
           
+          {/* Holobot rank multiplier indicator */}
           {currentHolobot && (
             <div className="mt-4 bg-black/40 rounded-lg p-3 border border-purple-500/20">
               <div className="flex justify-between items-center">
@@ -252,6 +288,7 @@ export default function Fitness() {
             </div>
           )}
           
+          {/* Action button */}
           <div className="flex justify-center mt-8">
             <Button
               onClick={isTracking ? stopWorkout : startWorkout}
@@ -267,11 +304,13 @@ export default function Fitness() {
           </div>
         </div>
         
+        {/* Attributes section */}
         <div className="bg-black/30 backdrop-blur-md rounded-xl border border-purple-500/30 shadow-[0_0_15px_rgba(128,0,255,0.15)] p-4 mb-6">
           <h2 className="text-lg font-bold mb-4 text-purple-400">ATTRIBUTES</h2>
           
           {selectedHolobot && user?.holobots ? (
             <div className="space-y-4">
+              {/* Find the selected holobot's data */}
               {user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes && (
                 <>
                   <div className="space-y-1">
@@ -330,6 +369,7 @@ export default function Fitness() {
                     />
                   </div>
                   
+                  {/* Show available attribute points */}
                   <div className="mt-4 pt-4 border-t border-purple-500/20">
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-purple-400">AVAILABLE POINTS</span>
