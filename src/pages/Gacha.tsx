@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -82,7 +83,7 @@ export default function Gacha() {
     return () => clearInterval(interval);
   }, [user.lastEnergyRefresh]);
 
-  const pullGacha = async (amount: number, isPaidPull: boolean = true) => {
+  const pullGacha = (amount: number, isPaidPull: boolean = true) => {
     if (isPaidPull) {
       const cost = amount === 1 ? SINGLE_PULL_COST : MULTI_PULL_COST;
       
@@ -90,18 +91,6 @@ export default function Gacha() {
         toast({
           title: "Insufficient Holos",
           description: `You need ${cost} Holos tokens to perform this pull.`,
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      try {
-        await updateUser({ holosTokens: user.holosTokens - cost });
-      } catch (error) {
-        console.error("Error updating user tokens:", error);
-        toast({
-          title: "Transaction Failed",
-          description: "Failed to update your Holos tokens. Please try again.",
           variant: "destructive"
         });
         return;
@@ -123,18 +112,6 @@ export default function Gacha() {
         }
         return;
       }
-      
-      try {
-        await updateUser({ lastEnergyRefresh: new Date().toISOString() });
-      } catch (error) {
-        console.error("Error updating energy refresh time:", error);
-        toast({
-          title: "Transaction Failed",
-          description: "Failed to use your daily pull. Please try again.",
-          variant: "destructive"
-        });
-        return;
-      }
     }
 
     setIsAnimating(true);
@@ -153,6 +130,13 @@ export default function Gacha() {
       }
     }
 
+    if (isPaidPull) {
+      const cost = amount === 1 ? SINGLE_PULL_COST : MULTI_PULL_COST;
+      updateUser({ holosTokens: user.holosTokens - cost });
+    } else {
+      updateUser({ lastEnergyRefresh: new Date().toISOString() });
+    }
+
     setTimeout(() => {
       setPulls(newPulls);
       setIsAnimating(false);
@@ -161,23 +145,11 @@ export default function Gacha() {
     }, 1000);
   };
 
-  const useGachaTicket = async (amount: number = 1) => {
+  const useGachaTicket = (amount: number = 1) => {
     if ((user.gachaTickets || 0) < amount) {
       toast({
         title: "Not Enough Gacha Tickets",
         description: `You need ${amount} Gacha Tickets to use this option.`,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      await updateUser({ gachaTickets: (user.gachaTickets || 0) - amount });
-    } catch (error) {
-      console.error("Error updating user tickets:", error);
-      toast({
-        title: "Transaction Failed",
-        description: "Failed to use your Gacha Tickets. Please try again.",
         variant: "destructive"
       });
       return;
@@ -198,6 +170,9 @@ export default function Gacha() {
         }
       }
     }
+
+    // Important fix: Actually deduct the tickets from the user
+    updateUser({ gachaTickets: (user.gachaTickets || 0) - amount });
 
     setTimeout(() => {
       setPulls(newPulls);
@@ -212,7 +187,7 @@ export default function Gacha() {
     }, 1000);
   };
 
-  const handleItemsFromPulls = async (newPulls: GachaItem[]) => {
+  const handleItemsFromPulls = (newPulls: GachaItem[]) => {
     const itemCounts = {
       "energy-refill": 0,
       "exp-booster": 0,
@@ -227,20 +202,11 @@ export default function Gacha() {
       if (pull.name === "Rank Skip") itemCounts["rank-skip"]++;
     });
     
-    try {
-      await updateUser({
-        energy_refills: (user.energy_refills || 0) + itemCounts["energy-refill"],
-        exp_boosters: (user.exp_boosters || 0) + itemCounts["exp-booster"],
-        rank_skips: (user.rank_skips || 0) + itemCounts["rank-skip"]
-      });
-    } catch (error) {
-      console.error("Error updating user items:", error);
-      toast({
-        title: "Item Update Failed",
-        description: "Failed to add items to your inventory. Please contact support.",
-        variant: "destructive"
-      });
-    }
+    updateUser({
+      energy_refills: (user.energy_refills || 0) + itemCounts["energy-refill"],
+      exp_boosters: (user.exp_boosters || 0) + itemCounts["exp-booster"],
+      rank_skips: (user.rank_skips || 0) + itemCounts["rank-skip"]
+    });
   };
 
   const handleUseItem = async (type: string) => {

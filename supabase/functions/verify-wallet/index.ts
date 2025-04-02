@@ -23,8 +23,36 @@ serve(async (req) => {
       throw new Error('Missing required fields');
     }
 
-    console.warn("⚠️ Skipping signature verification for now");
+    let isValid = false;
 
+    if (type === 'evm') {
+      try {
+        const recoveredAddress = ethers.verifyMessage(nonce, signature);
+        isValid = recoveredAddress.toLowerCase() === address.toLowerCase();
+        console.log('EVM verification result:', { isValid, recoveredAddress });
+      } catch (error) {
+        console.error('EVM signature verification error:', error);
+        throw new Error('Invalid EVM signature');
+      }
+    } else if (type === 'solana') {
+      try {
+        const message = new TextEncoder().encode(nonce);
+        const signatureUint8 = new Uint8Array(Buffer.from(signature, 'base58'));
+        const publicKeyUint8 = new Uint8Array(Buffer.from(address, 'base58'));
+        
+        isValid = ed25519.verify(signatureUint8, message, publicKeyUint8);
+        console.log('Solana verification result:', { isValid });
+      } catch (error) {
+        console.error('Solana signature verification error:', error);
+        throw new Error('Invalid Solana signature');
+      }
+    } else {
+      throw new Error('Invalid wallet type');
+    }
+
+    if (!isValid) {
+      throw new Error('Invalid signature');
+    }
 
     // Initialize Supabase client with admin privileges
     const supabaseAdmin = createClient(
