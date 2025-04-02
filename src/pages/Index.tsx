@@ -1,3 +1,4 @@
+
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -159,7 +160,7 @@ const Index = () => {
         const updatedHolobots = updateHolobotExperience(
           user.holobots,
           selectedHolobotName,
-          experienceRewards[0].xp,
+          (user.holobots.find(h => h.name.toLowerCase() === selectedHolobotName.toLowerCase())?.experience || 0) + experienceRewards[0].xp,
           experienceRewards[0].newLevel
         );
         

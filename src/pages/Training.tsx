@@ -112,11 +112,12 @@ const Training = () => {
       // Update XP for the holobot if won
       if (won && user) {
         const currentExperience = playerHolobot.experience || 0;
+        const newExperience = currentExperience + xpGained;
         const nextLevelExp = playerHolobot.nextLevelExp || 100;
         
         // Check if holobot leveled up
         let newLevel = playerHolobot.level || 1;
-        if ((currentExperience + xpGained) >= nextLevelExp) {
+        if (newExperience >= nextLevelExp) {
           newLevel += 1;
         }
         
@@ -124,7 +125,7 @@ const Training = () => {
         const updatedHolobots = updateHolobotExperience(
           user.holobots,
           playerHolobot.name,
-          xpGained, // Pass only the new XP gained
+          newExperience,
           newLevel
         );
         

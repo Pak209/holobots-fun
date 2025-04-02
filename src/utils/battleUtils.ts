@@ -1,3 +1,4 @@
+
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
@@ -57,7 +58,7 @@ export const getNewLevel = (currentXp: number, currentLevel: number) => {
   return currentLevel;
 };
 
-export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | 'heal' | 'defense' | 'special'): HolobotStats => {
+export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | 'heal'): HolobotStats => {
   const newStats = { ...stats };
   
   switch (type) {
@@ -67,20 +68,8 @@ export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | '
     case 'speed':
       newStats.speed += Math.floor(newStats.speed * 0.2);
       break;
-    case 'defense':
-      newStats.defense += Math.floor(newStats.defense * 0.2);
-      break;
     case 'heal':
-      // Healing will be applied directly in the component
-      // This allows different healing amounts based on hack gauge
-      newStats.maxHealth = Math.min(100, newStats.maxHealth + 20);
-      break;
-    case 'special':
-      // Special attack will be handled in the battle component
-      // This gives a temporary boost to all stats
-      newStats.attack += Math.floor(newStats.attack * 0.15);
-      newStats.defense += Math.floor(newStats.defense * 0.15);
-      newStats.speed += Math.floor(newStats.speed * 0.15);
+      newStats.maxHealth = Math.min(100, newStats.maxHealth + 30);
       break;
   }
   
@@ -133,23 +122,27 @@ export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
   };
 };
 
-export const updateHolobotExperience = (holobots: any[], holobotName: string, newExperience: number, newLevel: number) => {
+// Updated to ensure attribute points are given when holobots level up
+export const updateHolobotExperience = (holobots, holobotName, newExperience, newLevel) => {
   if (!holobots || !Array.isArray(holobots)) {
     return [];
   }
-
+  
   return holobots.map(holobot => {
     if (holobot.name.toLowerCase() === holobotName.toLowerCase()) {
-      // Calculate total experience by adding new experience to existing
-      const totalExperience = (holobot.experience || 0) + newExperience;
+      // Add 1 attribute point for each level gained
+      const levelGained = newLevel - (holobot.level || 1);
+      const currentAttributePoints = holobot.attributePoints || 0;
+      const newAttributePoints = levelGained > 0 ? currentAttributePoints + levelGained : currentAttributePoints;
+      
+      console.log(`Holobot ${holobotName} leveled up by ${levelGained} levels, new attribute points: ${newAttributePoints}`);
       
       return {
         ...holobot,
         level: newLevel,
-        experience: totalExperience,
+        experience: newExperience,
         nextLevelExp: calculateExperience(newLevel),
-        // Keep current points if already tracked, don't auto-assign
-        attributePoints: holobot.attributePoints || 0
+        attributePoints: newAttributePoints
       };
     }
     return holobot;
