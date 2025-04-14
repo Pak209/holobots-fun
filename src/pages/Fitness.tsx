@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { FitnessStat } from "@/components/fitness/FitnessStat";
 import { WorkoutRewards } from "@/components/fitness/WorkoutRewards";
 import { HolobotSelector } from "@/components/fitness/HolobotSelector";
 import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
 
 interface HolobotRank {
   name: string;
@@ -28,7 +28,7 @@ const HOLOS_PER_MILE = 250; // Base holos per mile
 const TARGET_DAILY_STEPS = 10000; // Target steps per day
 const TARGET_WORKOUT_TIME = 30 * 60; // 30 minutes workout in seconds
 
-export default function Fitness() {
+const Fitness = () => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
@@ -388,4 +388,6 @@ export default function Fitness() {
       </div>
     </div>
   );
-}
+};
+
+export default Fitness;

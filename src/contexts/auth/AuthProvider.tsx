@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType } from "./types";
 import { UserProfile, mapDatabaseToUserProfile } from "@/types/user";
@@ -6,8 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ensureWelcomeGift } from "./authUtils";
+import { AuthResponse, Session } from '@supabase/supabase-js';
 
-// Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -22,16 +21,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       
       try {
-        // Use getSession instead of subscription
-        const { data } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (data.session?.user) {
-          console.log("Found session with user:", data.session.user.id);
+        if (error) throw error;
+        
+        if (session?.user) {
+          console.log("Found session with user:", session.user.id);
           
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', data.session.user.id as any)
+            .eq('id', session.user.id)
             .maybeSingle();
           
           if (profileError) {
@@ -39,13 +39,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setCurrentUser(null);
             setError(profileError.message);
           } else if (profile) {
-            // Successfully found profile
             console.log("Found user profile:", profile);
             const mappedProfile = mapDatabaseToUserProfile(profile);
             setCurrentUser(mappedProfile);
             
-            // Ensure new users get their welcome gift of 500 Holos tokens
-            await ensureWelcomeGift(data.session.user.id, currentUser, setCurrentUser);
+            await ensureWelcomeGift(session.user.id, currentUser, setCurrentUser);
           } else {
             console.log("User exists in auth but not in profiles");
             setCurrentUser(null);
@@ -65,7 +63,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     checkUser();
     
-    // Set up an event listener for sign in/out
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session?.user?.id);
       
@@ -74,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', session.user.id as any)
+            .eq('id', session.user.id)
             .maybeSingle();
         
           if (profileError) {
@@ -86,7 +83,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const mappedProfile = mapDatabaseToUserProfile(profile);
             setCurrentUser(mappedProfile);
           
-            // Ensure new users get their welcome gift of 500 Holos tokens
             await ensureWelcomeGift(session.user.id, currentUser, setCurrentUser);
           }
         } catch (err) {
@@ -102,7 +98,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Login function
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
@@ -137,7 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Logout function
   const logout = async () => {
     setLoading(true);
     setError(null);
@@ -169,7 +163,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Signup function
   const signup = async (email: string, password: string, username: string) => {
     setLoading(true);
     setError(null);
@@ -207,7 +200,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Update user function
   const updateUser = async (updates: Partial<UserProfile>): Promise<void> => {
     if (!currentUser) {
       toast({
@@ -250,11 +242,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw updateError;
       }
       
-      // Update the local user state with the new values
       const updatedUser = { ...currentUser, ...updates };
       setCurrentUser(updatedUser);
       
-      // Log the updated state
       console.log("User profile updated successfully:", updatedUser);
       
       toast({
@@ -271,7 +261,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Search players function
   const searchPlayers = async (query: string): Promise<UserProfile[]> => {
     try {
       const { data, error } = await supabase
@@ -296,7 +285,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Get user profile function
   const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
       const { data, error } = await supabase
@@ -316,7 +304,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Create the context value
   const contextValue: AuthContextType = {
     user: currentUser,
     loading,
@@ -336,7 +323,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Custom hook to use the auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
