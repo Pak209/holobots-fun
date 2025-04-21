@@ -273,6 +273,7 @@ export type Database = {
       profiles: {
         Row: {
           arena_passes: number | null
+          blueprints: Json | null
           created_at: string | null
           daily_energy: number
           energy_refills: number | null
@@ -294,6 +295,7 @@ export type Database = {
         }
         Insert: {
           arena_passes?: number | null
+          blueprints?: Json | null
           created_at?: string | null
           daily_energy?: number
           energy_refills?: number | null
@@ -315,6 +317,7 @@ export type Database = {
         }
         Update: {
           arena_passes?: number | null
+          blueprints?: Json | null
           created_at?: string | null
           daily_energy?: number
           energy_refills?: number | null

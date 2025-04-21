@@ -1,4 +1,3 @@
-
 import { 
   LogOut, 
   User, 
@@ -26,6 +25,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { PlayerRankBadge } from "@/components/PlayerRankBadge";
+import { RankProgressMeter } from "@/components/RankProgressMeter";
 
 export const NavigationMenu = () => {
   const { user, logout } = useAuth();
@@ -64,6 +66,15 @@ export const NavigationMenu = () => {
     );
   }
 
+  // Calculate counts for rank progress
+  const counts = {
+    rare: (user.holobots || []).filter(bot => bot.rank === 'Rare').length,
+    champion: (user.holobots || []).filter(bot => bot.rank === 'Champion').length,
+    elite: (user.holobots || []).filter(bot => bot.rank === 'Elite').length,
+    legendary: (user.holobots || []).filter(bot => bot.rank === 'Legendary').length,
+    prestiged: (user.holobots || []).filter(bot => bot.prestiged).length,
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -77,10 +88,24 @@ export const NavigationMenu = () => {
           <ChevronDown className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border">
+      <DropdownMenuContent align="end" className="w-80 bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border">
         <DropdownMenuLabel className="text-center font-bold">{user.username || 'User'}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         
+        {/* Player Rank Card */}
+        <div className="p-4 mb-2">
+          <Card className="bg-gray-900 text-white p-4 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-400">Player Rank</span>
+              <PlayerRankBadge rank={user.player_rank || 'Rookie'} size="sm" />
+            </div>
+            <RankProgressMeter 
+              currentRank={user.player_rank || 'Rookie'} 
+              counts={counts}
+            />
+          </Card>
+        </div>
+
         <div className="p-2 space-y-2">
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
