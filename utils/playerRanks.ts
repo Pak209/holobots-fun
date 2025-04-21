@@ -1,3 +1,4 @@
+
 import { PlayerRank, playerRankColors, playerRankOrder } from '../constants/playerRanks';
 
 /**
@@ -37,4 +38,4 @@ export const getNextRank = (currentRank: PlayerRank): PlayerRank | null => {
  */
 export const formatRankName = (rank: PlayerRank): string => {
   return rank.charAt(0).toUpperCase() + rank.slice(1).toLowerCase();
-}; 
+};

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { PlayerRank, playerRankRequirements } from '../constants/playerRanks';
@@ -85,4 +86,4 @@ export const RankProgressMeter: React.FC<RankProgressMeterProps> = ({
       </View>
     </View>
   );
-}; 
+};

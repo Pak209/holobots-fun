@@ -1,3 +1,4 @@
+
 -- Create type if not exists
 DO $$ BEGIN
     CREATE TYPE player_rank AS ENUM ('Rookie', 'Scout', 'Champion', 'Elite', 'Legend', 'Mythic');
@@ -53,4 +54,4 @@ BEGIN
         prestige_count = prestiged_count
     WHERE id = user_id;
 END;
-$$ LANGUAGE plpgsql; 
+$$ LANGUAGE plpgsql;

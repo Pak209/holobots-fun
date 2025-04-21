@@ -14,9 +14,12 @@ interface User {
       speed?: number;
       health?: number;
     };
-    rank?: string; // Add rank property to track holobot tier
+    rank?: string; // Holobot tier/rank
+    prestiged?: boolean; // Track if the holobot is prestiged
   }>;
-  blueprints?: Record<string, number>; // Add blueprints field to store blueprint pieces per holobot
+  player_rank?: string; // Player rank based on holobot collection
+  prestige_count?: number; // Total number of prestiged holobots
+  blueprints?: Record<string, number>; // Blueprint pieces per holobot
 }
 
 interface AuthContextType {
@@ -60,4 +63,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = () => useContext(AuthContext); 
+export const useAuth = () => useContext(AuthContext);

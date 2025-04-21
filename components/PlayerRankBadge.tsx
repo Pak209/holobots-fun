@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Text, View } from 'react-native';
 import { PlayerRank } from '../constants/playerRanks';
@@ -66,4 +67,4 @@ export const PlayerRankBadge: React.FC<PlayerRankBadgeProps> = ({
       )}
     </View>
   );
-}; 
+};

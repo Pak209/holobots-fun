@@ -1,3 +1,4 @@
+
 export type PlayerRank = 'Rookie' | 'Scout' | 'Champion' | 'Elite' | 'Legend' | 'Mythic';
 
 export const playerRankColors: Record<PlayerRank, string> = {
@@ -27,4 +28,4 @@ export const playerRankOrder: PlayerRank[] = [
   'Elite',
   'Legend',
   'Mythic',
-] as const; 
+] as const;
