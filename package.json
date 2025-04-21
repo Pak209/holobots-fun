@@ -3,15 +3,16 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start --tunnel",
-    "start-web": "expo start --web --tunnel",
-    "start-web-dev": "DEBUG=expo* expo start --web --tunnel",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
-    "dev": "node scripts/dev.js",
-    "list": "node scripts/dev.js list",
-    "generate": "node scripts/dev.js generate",
-    "parse-prd": "node scripts/dev.js parse-prd"
+  "start": "expo start --tunnel",
+  "start-web": "expo start --web --tunnel",
+  "start-web-dev": "DEBUG=expo* expo start --web --tunnel",
+  "android": "expo run:android",
+  "ios": "expo run:ios",
+  "dev": "node scripts/dev.js",
+  "list": "node scripts/dev.js list",
+  "generate": "node scripts/dev.js generate",
+  "parse-prd": "node scripts/dev.js parse-prd",
+  "build:dev": "vite build --mode development"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
