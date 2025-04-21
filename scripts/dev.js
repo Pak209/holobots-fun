@@ -1,6 +1,5 @@
 
-#!/usr/bin/env node
-
+// Remove shebang and ensure proper module format
 /**
  * dev.js
  * Task Master CLI - AI-driven development task management
