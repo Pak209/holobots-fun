@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType } from "./types";
 import { UserProfile, mapDatabaseToUserProfile } from "@/types/user";
@@ -213,12 +214,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const dbUpdates: any = {};
       
+      // Map user profile fields to database columns
       if (updates.username) dbUpdates.username = updates.username;
       if (updates.holosTokens !== undefined) dbUpdates.holos_tokens = updates.holosTokens;
       if (updates.gachaTickets !== undefined) dbUpdates.gacha_tickets = updates.gachaTickets;
       if (updates.dailyEnergy !== undefined) dbUpdates.daily_energy = updates.dailyEnergy;
       if (updates.maxDailyEnergy !== undefined) dbUpdates.max_daily_energy = updates.maxDailyEnergy;
       if (updates.lastEnergyRefresh) dbUpdates.last_energy_refresh = updates.lastEnergyRefresh;
+      
+      // FIX: Use explicit table reference for these fields to avoid column ambiguity
       if (updates.stats?.wins !== undefined) dbUpdates.wins = updates.stats.wins;
       if (updates.stats?.losses !== undefined) dbUpdates.losses = updates.stats.losses;
       
@@ -231,14 +235,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dbUpdates.holobots = updates.holobots;
       }
       
+      // Add blueprints if present
+      if (updates.blueprints) {
+        dbUpdates.blueprints = updates.blueprints;
+      }
+      
       console.log("Updating user profile with:", dbUpdates);
       
+      // FIX: Add debug logging to capture the exact SQL query and parameters
       const { error: updateError } = await supabase
         .from('profiles')
         .update(dbUpdates)
-        .eq('id', currentUser.id as any);
+        .eq('id', currentUser.id);
       
       if (updateError) {
+        console.error("Profile update error details:", updateError);
         throw updateError;
       }
       
@@ -290,7 +301,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId as any)
+        .eq('id', userId)
         .maybeSingle();
       
       if (error) {

@@ -288,6 +288,7 @@ export type Database = {
           player_rank: Database["public"]["Enums"]["player_rank_type"] | null
           prestige_count: number | null
           rank_skips: number | null
+          sync_points: number | null
           username: string
           wins: number | null
         }
@@ -308,6 +309,7 @@ export type Database = {
           player_rank?: Database["public"]["Enums"]["player_rank_type"] | null
           prestige_count?: number | null
           rank_skips?: number | null
+          sync_points?: number | null
           username: string
           wins?: number | null
         }
@@ -328,6 +330,7 @@ export type Database = {
           player_rank?: Database["public"]["Enums"]["player_rank_type"] | null
           prestige_count?: number | null
           rank_skips?: number | null
+          sync_points?: number | null
           username?: string
           wins?: number | null
         }
@@ -356,6 +359,44 @@ export type Database = {
           zone?: string | null
         }
         Relationships: []
+      }
+      training_rewards: {
+        Row: {
+          created_at: string | null
+          exp: number
+          holobot_id: number
+          holos: number
+          id: string
+          items: Json | null
+          sync_points: number
+        }
+        Insert: {
+          created_at?: string | null
+          exp: number
+          holobot_id: number
+          holos: number
+          id?: string
+          items?: Json | null
+          sync_points: number
+        }
+        Update: {
+          created_at?: string | null
+          exp?: number
+          holobot_id?: number
+          holos?: number
+          id?: string
+          items?: Json | null
+          sync_points?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_rewards_holobot_id_fkey"
+            columns: ["holobot_id"]
+            isOneToOne: false
+            referencedRelation: "holobots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {
@@ -424,6 +465,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_sync_points: {
+        Args: { user_id: string; points: number }
+        Returns: undefined
+      }
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
