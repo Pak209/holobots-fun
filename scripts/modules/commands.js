@@ -1,3 +1,4 @@
+
 const { program } = require('commander');
 const path = require('path');
 const fs = require('fs');
@@ -95,9 +96,10 @@ program
     }
   });
 
-// Export runCLI function
-const runCLI = () => {
-  program.parse(process.argv);
+// Function to run the CLI
+const runCLI = (args) => {
+  program.parse(args);
 };
 
+// Change this line to use the proper CommonJS module.exports
 module.exports = { runCLI };
