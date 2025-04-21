@@ -101,5 +101,5 @@ const runCLI = (args) => {
   program.parse(args);
 };
 
-// Change this line to use the proper CommonJS module.exports
+// Export the runCLI function with CommonJS module.exports
 module.exports = { runCLI };
