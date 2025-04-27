@@ -13,7 +13,7 @@ export const ensureWelcomeGift = async (
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
       .select('holos_tokens')
-      .eq('id', userId as any)
+      .eq('id', userId)
       .maybeSingle();
     
     if (fetchError) {
@@ -29,8 +29,8 @@ export const ensureWelcomeGift = async (
         .from('profiles')
         .update({ 
           holos_tokens: 500 
-        } as any)
-        .eq('id', userId as any);
+        })
+        .eq('id', userId);
       
       if (updateError) {
         console.error("Error giving welcome gift:", updateError);
@@ -48,5 +48,25 @@ export const ensureWelcomeGift = async (
     }
   } catch (err) {
     console.error("Error in ensureWelcomeGift:", err);
+  }
+};
+
+// Helper function to persist auth token
+export const persistAuthToken = async (token: string): Promise<void> => {
+  try {
+    localStorage.setItem('auth_token', token);
+    console.log("Auth token persisted successfully");
+  } catch (err) {
+    console.error("Error persisting auth token:", err);
+  }
+};
+
+// Helper function to get auth token from storage
+export const getPersistedAuthToken = (): string | null => {
+  try {
+    return localStorage.getItem('auth_token');
+  } catch (err) {
+    console.error("Error getting auth token:", err);
+    return null;
   }
 };

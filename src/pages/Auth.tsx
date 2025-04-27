@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/auth";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -15,42 +17,54 @@ export default function Auth() {
   const [username, setUsername] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, signup, user, loading: authLoading, error: authError } = useAuth();
 
   // Check if user is already logged in
   useEffect(() => {
+    console.log("Auth page mounted, checking session...");
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/dashboard');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Session check result:", session ? "Found session" : "No session");
+        
+        if (session) {
+          console.log("User already logged in, redirecting to dashboard");
+          navigate('/dashboard');
+        }
+      } catch (err) {
+        console.error("Error checking session:", err);
+        setErrorMsg("Error checking authentication status");
       }
     };
     
     checkSession();
-  }, [navigate]);
+  }, [navigate, user]);
+
+  // Update error message when auth context error changes
+  useEffect(() => {
+    if (authError) {
+      setErrorMsg(authError);
+    }
+  }, [authError]);
 
   // Handle auth (sign up or sign in)
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
     setLoading(true);
 
     try {
       if (isSignUp) {
         // Handle sign up
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username,
-            }
-          }
-        });
-
-        if (signUpError) throw signUpError;
-
+        if (!username || username.length < 3) {
+          throw new Error("Username must be at least 3 characters");
+        }
+        
+        await signup(email, password, username);
         toast({
           title: "Account created!",
           description: "Please check your email to verify your account, then sign in.",
@@ -58,29 +72,21 @@ export default function Auth() {
         
         // Switch to sign in view after successful signup
         setIsSignUp(false);
-        setLoading(false);
-        return;
-      } 
-      
-      // Handle sign in
-      const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) throw signInError;
-
-      if (session) {
+      } else {
+        // Handle sign in
+        console.log("Attempting login with:", email);
+        await login(email, password);
+        
+        // Login success - redirect handled in AuthProvider
         toast({
           title: "Login successful",
-          description: "Redirecting you to the dashboard",
+          description: "Welcome back!",
         });
-
-        // Redirect to dashboard after login
-        navigate('/dashboard');
       }
     } catch (error) {
       console.error('Auth error:', error);
+      setErrorMsg(error instanceof Error ? error.message : "An error occurred during authentication");
+      
       toast({
         title: "Authentication Error",
         description: error instanceof Error ? error.message : "An error occurred during authentication",
@@ -103,6 +109,13 @@ export default function Auth() {
           </p>
         </div>
 
+        {errorMsg && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{errorMsg}</AlertDescription>
+          </Alert>
+        )}
+
         <form onSubmit={handleAuth} className="space-y-4">
           {isSignUp && (
             <div>
@@ -115,7 +128,7 @@ export default function Auth() {
                 required={isSignUp}
                 className="w-full"
                 placeholder="Choose a username"
-                disabled={loading}
+                disabled={loading || authLoading}
               />
             </div>
           )}
@@ -130,7 +143,8 @@ export default function Auth() {
               required
               className="w-full"
               placeholder="Enter your email"
-              disabled={loading}
+              disabled={loading || authLoading}
+              autoComplete="email"
             />
           </div>
 
@@ -145,7 +159,8 @@ export default function Auth() {
               className="w-full"
               placeholder="Enter your password"
               minLength={6}
-              disabled={loading}
+              disabled={loading || authLoading}
+              autoComplete={isSignUp ? "new-password" : "current-password"}
             />
           </div>
 
@@ -172,9 +187,9 @@ export default function Auth() {
           <Button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md"
-            disabled={loading}
+            disabled={loading || authLoading}
           >
-            {loading ? (
+            {(loading || authLoading) ? (
               <div className="flex items-center justify-center">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 <span>Processing...</span>
@@ -186,9 +201,12 @@ export default function Auth() {
         <div className="mt-4 text-center">
           <Button
             variant="link"
-            onClick={() => setIsSignUp(!isSignUp)}
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setErrorMsg(null);
+            }}
             className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-            disabled={loading}
+            disabled={loading || authLoading}
           >
             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
           </Button>

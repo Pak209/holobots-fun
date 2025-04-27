@@ -13,8 +13,8 @@ if (process.env.DEBUG === '1') {
 	console.error('DEBUG - dev.js received args:', process.argv.slice(2));
 }
 
-// Use CommonJS require instead of ES modules import
-const { runCLI } = require('./modules/commands.js');
+// Use import statement instead of require for ES modules
+import { runCLI } from './modules/commands.js';
 
 // Run the CLI with the process arguments
 runCLI(process.argv);
