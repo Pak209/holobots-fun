@@ -1,0 +1,16 @@
+{
+  "name": "@holobots/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.3"
+  },
+  "devDependencies": {
+    "typescript": "~5.3.3"
+  }
+} 

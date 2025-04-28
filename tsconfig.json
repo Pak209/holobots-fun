@@ -1,15 +1,17 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "baseUrl": ".",
+    "esModuleInterop": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["apps/web/src/*"],
+      "@shared/*": ["packages/shared/*"],
+      "@ui/*": ["packages/ui/*"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx"
-  ]
+  ],
+  "exclude": ["node_modules"]
 }
