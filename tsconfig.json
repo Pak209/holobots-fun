@@ -1,17 +1,19 @@
 {
-  "compilerOptions": {
-    "strict": true,
-    "baseUrl": ".",
-    "esModuleInterop": true,
-    "paths": {
-      "@/*": ["apps/web/src/*"],
-      "@shared/*": ["packages/shared/*"],
-      "@ui/*": ["packages/ui/*"]
-    }
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
   ],
-  "exclude": ["node_modules"]
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "noImplicitAny": false,
+    "noUnusedParameters": false,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "noUnusedLocals": false,
+    "strictNullChecks": false
+  }
 }

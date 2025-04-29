@@ -1,73 +1,69 @@
-# Holobots Monorepo
+# Welcome to your Lovable project
 
-This is a monorepo for the Holobots project, containing both the web and mobile applications.
+## Project info
 
-## Project Structure
+**URL**: https://lovable.dev/projects/58769da3-0d6d-467d-a2fd-abd0ced6793b
 
+## How can I edit this code?
+
+There are several ways of editing your application.
+
+**Use Lovable**
+
+Simply visit the [Lovable Project](https://lovable.dev/projects/58769da3-0d6d-467d-a2fd-abd0ced6793b) and start prompting.
+
+Changes made via Lovable will be committed automatically to this repo.
+
+**Use your preferred IDE**
+
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+Follow these steps:
+
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
 ```
-holobots/
-├── apps/
-│   ├── web/                # Web frontend (React)
-│   │   ├── public/
-│   │   ├── src/
-│   │   └── ...
-│   └── mobile/             # React Native / Expo app
-│       ├── ios/
-│       ├── app/            # Expo Router app
-│       ├── assets/
-│       └── ...
-├── packages/
-│   ├── shared/             # Shared logic
-│   │   ├── constants/
-│   │   ├── supabase/
-│   │   ├── types/
-│   │   └── utils/
-│   └── ui/                 # Shared UI components
-│       └── components/
-├── turbo.json              # Turborepo config
-├── package.json            # Workspaces config
-└── tsconfig.json           # Path aliases, root config
-```
 
-## Getting Started
+**Edit a file directly in GitHub**
 
-1. Install dependencies:
-   ```
-   npm install
-   ```
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-2. Run the development server:
-   ```
-   # Run all projects
-   npm run dev
-   
-   # Run specific project
-   npm run dev:web    # Web app only
-   npm run dev:mobile # Mobile app only
-   ```
+**Use GitHub Codespaces**
 
-3. Build the projects:
-   ```
-   npm run build      # Build all
-   npm run build:web  # Build web only
-   ```
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## Useful Commands
+## What technologies are used for this project?
 
-- `npm run lint`: Run ESLint on all projects
-- `npm run format`: Format code with Prettier
+This project is built with .
 
-## Package Management
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-This monorepo uses npm workspaces for package management. When adding dependencies:
+## How can I deploy this project?
 
-- For root-level dependencies (like build tools): `npm install -D <package>`
-- For specific project: `npm install <package> --workspace=web`
-- For shared packages: `npm install <package> --workspace=shared`
+Simply open [Lovable](https://lovable.dev/projects/58769da3-0d6d-467d-a2fd-abd0ced6793b) and click on Share -> Publish.
 
-## Notes
+## I want to use a custom domain - is that possible?
 
-- The mobile app is an Expo React Native application using Expo Router
-- The web app is a React application using Vite
-- Shared code includes Supabase client, types, and utilities
-- The UI package contains shared components that work on both web and mobile 
+We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
