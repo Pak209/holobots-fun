@@ -21,4 +21,8 @@ export default defineConfig(({ mode }) => ({
       "@ui": path.resolve(__dirname, "../../packages/ui"),
     },
   },
+  build: {
+    outDir: "dist",
+    emptyOutDir: true
+  }
 }));
