@@ -8,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Web3Login } from "@/components/Web3Login";
+import { Separator } from "@/components/ui/separator";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -101,6 +103,14 @@ export default function Auth() {
           <p className="text-gray-600 dark:text-gray-400">
             {isSignUp ? "Sign up to start your journey" : "Sign in to continue"}
           </p>
+        </div>
+
+        <Web3Login />
+        
+        <div className="my-6 flex items-center">
+          <Separator className="flex-1" />
+          <span className="mx-4 text-sm text-gray-500">OR</span>
+          <Separator className="flex-1" />
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">

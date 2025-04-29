@@ -18,7 +18,7 @@ const { chains, publicClient } = configureChains(
 );
 
 export const wagmiConfig = createConfig({
-  autoConnect: false,
+  autoConnect: false, // Ensure web3 doesn't try to autoconnect
   connectors: w3mConnectors({ 
     projectId,
     chains
