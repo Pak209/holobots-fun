@@ -22,9 +22,14 @@ export default function Auth() {
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/dashboard');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log("User is already logged in, redirecting to dashboard");
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
       }
     };
     
@@ -63,14 +68,14 @@ export default function Auth() {
       } 
       
       // Handle sign in
-      const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (signInError) throw signInError;
 
-      if (session) {
+      if (data.session) {
         toast({
           title: "Login successful",
           description: "Redirecting you to the dashboard",
@@ -78,6 +83,8 @@ export default function Auth() {
 
         // Redirect to dashboard after login
         navigate('/dashboard');
+      } else {
+        throw new Error("No session returned from login");
       }
     } catch (error) {
       console.error('Auth error:', error);
@@ -171,7 +178,7 @@ export default function Auth() {
 
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md"
+            className="w-full"
             disabled={loading}
           >
             {loading ? (
@@ -187,7 +194,6 @@ export default function Auth() {
           <Button
             variant="link"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
             disabled={loading}
           >
             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
