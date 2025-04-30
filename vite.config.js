@@ -15,4 +15,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      // Fix for any Node.js compatibility issues
+      define: {
+        global: 'globalThis',
+      },
+    },
+  }
 });

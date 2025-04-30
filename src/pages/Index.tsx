@@ -1,17 +1,16 @@
-
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Trophy, Ticket, Gem, Award } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth";
-import { ItemCard } from "@/components/items/ItemCard";
 import { ArenaPrebattleMenu } from "@/components/arena/ArenaPrebattleMenu";
 import { generateArenaOpponent, calculateArenaRewards } from "@/utils/battleUtils";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 import { HOLOBOT_STATS } from "@/types/holobot";
-import { updateHolobotExperience, calculateExperience } from "@/integrations/supabase/client";
+import { updateHolobotExperience } from "@/integrations/supabase/client";
+import { Trophy, Ticket, Gem, Award } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ItemCard } from "@/components/items/ItemCard";
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);
@@ -269,11 +268,13 @@ const Index = () => {
         <QuestResultsScreen
           isVisible={showResults}
           isSuccess={arenaResults.isSuccess}
-          squadHolobotKeys={arenaResults.squadHolobotKeys}
           squadHolobotExp={arenaResults.squadHolobotExp}
           blueprintRewards={arenaResults.blueprintRewards}
           holosRewards={arenaResults.holosRewards}
           onClose={handleResultsClose}
+          gachaTickets={arenaResults.gachaTickets}
+          arenaPass={arenaResults.arenaPass}
+          squadHolobotKeys={arenaResults.squadHolobotKeys}
         />
       )}
     </div>
