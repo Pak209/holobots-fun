@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
@@ -8,7 +7,12 @@ import { XCircle } from "lucide-react";
 interface QuestResultsScreenProps {
   isVisible: boolean;
   isSuccess: boolean;
-  squadHolobotExp: Array<{name: string, xp: number, levelUp: boolean, newLevel: number}>;
+  squadHolobotExp: Array<{
+    name: string;
+    xp: number;
+    levelUp: boolean;
+    newLevel: number;
+  }>;
   blueprintRewards?: {
     holobotKey: string;
     amount: number;
@@ -17,7 +21,7 @@ interface QuestResultsScreenProps {
   onClose: () => void;
   gachaTickets?: number;
   arenaPass?: number;
-  squadHolobotKeys?: string[];
+  squadHolobotKeys?: string[]; // Added but not used internally
 }
 
 export const QuestResultsScreen = ({
@@ -29,8 +33,9 @@ export const QuestResultsScreen = ({
   onClose,
   gachaTickets,
   arenaPass,
-  squadHolobotKeys
 }: QuestResultsScreenProps) => {
+  if (!isVisible) return null;
+
   const [animation, setAnimation] = useState<"entering" | "active" | "exiting" | "hidden">("hidden");
   
   useEffect(() => {

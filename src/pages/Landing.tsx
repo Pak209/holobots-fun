@@ -30,7 +30,10 @@ export default function Landing() {
       <main className="flex-1 flex flex-col items-center justify-center p-4 z-10">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-            The Future of Digital <WordCycler words={['Combat', 'Collection', 'Training', 'Gaming']} />
+            The Future of Digital <WordCycler 
+              words={['Combat', 'Collection', 'Training', 'Gaming']} 
+              interval={2000}
+            />
           </h1>
           
           <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl mx-auto">

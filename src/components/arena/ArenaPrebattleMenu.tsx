@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,7 +50,7 @@ export const ArenaPrebattleMenu = ({
   };
 
   // Apply attribute boosts to base stats
-  const applyAttributeBoosts = (baseStats, userHolobot) => {
+  const applyUserHolobotBoosts = (baseStats: HolobotStats, userHolobot: any): HolobotStats => {
     if (!userHolobot || !userHolobot.boostedAttributes) return baseStats;
     
     return {
@@ -108,7 +107,7 @@ export const ArenaPrebattleMenu = ({
                   const baseStats = HOLOBOT_STATS[holobotKey] || HOLOBOT_STATS.ace;
                   
                   // Apply attribute boosts
-                  const boostedStats = applyAttributeBoosts(baseStats, holobot);
+                  const boostedStats = applyUserHolobotBoosts(baseStats, holobot);
                   
                   return (
                     <div 

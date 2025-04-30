@@ -23,15 +23,15 @@ export class Holobot {
 
   constructor(stats: HolobotStats) {
     this.name = stats.name;
-    this.maxHealth = stats.maxHealth;
-    this.health = stats.maxHealth;
+    this.maxHealth = stats.maxHealth || 100;
+    this.health = stats.maxHealth || 100;
     this.attack = stats.attack;
     this.baseDefense = stats.defense;
     this.defense = stats.defense;
     this.baseSpeed = stats.speed;
     this.speed = stats.speed;
-    this.specialMove = stats.specialMove;
-    this.level = stats.level;
+    this.specialMove = stats.specialMove || "Basic Attack";
+    this.level = stats.level || 1;
     this.hackGauge = 0;
     this.maxHackGauge = 100;
     this.attackBoost = 0;
@@ -43,8 +43,8 @@ export class Holobot {
     this.maxSpecialAttackGauge = 100;
   }
 
-  calculateEvasionChance(attacker: Holobot): number {
-    const speedDifference = this.speed - attacker.speed;
+  calculateEvasionChance(_attacker: Holobot): number {
+    const speedDifference = this.speed - _attacker.speed;
     const baseEvasion = 0.05;
     const speedBonus = Math.max(0, speedDifference * 0.015);
     return Math.min(0.40, baseEvasion + speedBonus);

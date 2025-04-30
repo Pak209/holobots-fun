@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Separator } from "@/components/ui/separator";
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { SignInForm, SignUpForm } from "@/components/auth/AuthForms";
 

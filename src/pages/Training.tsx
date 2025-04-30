@@ -52,7 +52,7 @@ const Training = () => {
   };
 
   // Apply attribute boosts from user's holobot
-  const applyAttributeBoosts = (baseStats, userHolobot) => {
+  const applyUserHolobotBoosts = (baseStats: HolobotStats, userHolobot: any): HolobotStats => {
     if (!userHolobot || !userHolobot.boostedAttributes) return baseStats;
     
     return {
@@ -171,7 +171,7 @@ const Training = () => {
   
   // Apply attribute boosts if available
   const boostedStats = baseStats && userHolobot 
-    ? applyAttributeBoosts(baseStats, userHolobot)
+    ? applyUserHolobotBoosts(baseStats, userHolobot)
     : baseStats;
 
   return (

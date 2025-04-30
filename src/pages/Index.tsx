@@ -1,4 +1,3 @@
-
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -9,9 +8,6 @@ import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { updateHolobotExperience } from "@/integrations/supabase/client";
 import { Trophy, Ticket, Gem, Award } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ItemCard } from "@/components/items/ItemCard";
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);

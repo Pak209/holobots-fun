@@ -1,4 +1,3 @@
-
 import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
@@ -69,7 +68,9 @@ export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | '
       newStats.speed += Math.floor(newStats.speed * 0.2);
       break;
     case 'heal':
-      newStats.maxHealth = Math.min(100, newStats.maxHealth + 30);
+      if (newStats.maxHealth !== undefined) {
+        newStats.maxHealth = Math.min(100, newStats.maxHealth + 30);
+      }
       break;
   }
   
@@ -123,7 +124,7 @@ export const initializeHolobotStats = (stats: HolobotStats): HolobotStats => {
 };
 
 // Updated to ensure attribute points are given when holobots level up
-export const updateHolobotExperience = (holobots, holobotName, newExperience, newLevel) => {
+export const updateHolobotExperience = (holobots: any[], holobotName: string, newExperience: number, newLevel: number) => {
   if (!holobots || !Array.isArray(holobots)) {
     return [];
   }
