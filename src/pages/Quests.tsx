@@ -75,7 +75,7 @@ const Quests = () => {
           {user && (
             <div className="mt-4 max-w-md mx-auto">
               <PlayerRankCard
-                playerRank={user.rank || "Rookie"}
+                playerRank={(user.rank as keyof typeof playerRankColors) || "Rookie"}
                 holobots={user.holobots || []}
                 prestigeCount={user.prestige_count || 0}
               />
