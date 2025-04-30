@@ -6,9 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star, Calendar } from "lucide-react";
+import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star } from "lucide-react";
 import { Progress } from "./ui/progress";
-import { supabase, safeUpdateUserProfile, getDailyBossRotation } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { QuestBattleBanner } from "@/components/quests/QuestBattleBanner";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 
@@ -46,6 +46,7 @@ const BOSS_TIERS = {
     energyCost: 40, 
     rewards: { 
       blueprintPieces: 5,
+      holosTokens: 1000,
       gachaTickets: 5,
       xpMultiplier: 1,
       squadXp: 50 // Base XP for each squad member
@@ -56,6 +57,7 @@ const BOSS_TIERS = {
     energyCost: 60, 
     rewards: { 
       blueprintPieces: 10,
+      holosTokens: 2500,
       gachaTickets: 10,
       xpMultiplier: 2,
       squadXp: 100 // Base XP for each squad member
@@ -66,6 +68,7 @@ const BOSS_TIERS = {
     energyCost: 80, 
     rewards: { 
       blueprintPieces: 15,
+      holosTokens: 5000,
       gachaTickets: 15,
       xpMultiplier: 3,
       squadXp: 200 // Base XP for each squad member
@@ -88,11 +91,6 @@ export const QuestGrid = () => {
   const [selectedBoss, setSelectedBoss] = useState<string>("");
   const [selectedBossTier, setSelectedBossTier] = useState<keyof typeof BOSS_TIERS>("tier1");
   const [isBossQuesting, setIsBossQuesting] = useState(false);
-  const [availableBosses, setAvailableBosses] = useState<Record<string, string[]>>({
-    tier1: [],
-    tier2: [],
-    tier3: []
-  });
   
   // Cooldown state for holobots
   const [holobotCooldowns, setHolobotCooldowns] = useState<Record<string, Date>>({});
@@ -109,42 +107,6 @@ export const QuestGrid = () => {
   const [squadExpResults, setSquadExpResults] = useState<Array<{name: string, xp: number, levelUp: boolean, newLevel: number}>>([]);
   const [blueprintReward, setBlueprintReward] = useState<{holobotKey: string, amount: number} | undefined>();
   const [holosReward, setHolosReward] = useState(0);
-
-  // Get today's date string for display
-  const getTodayDateString = () => {
-    const date = new Date();
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long',
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
-
-  // Initialize boss rotation on component mount and when date changes
-  useEffect(() => {
-    updateBossRotation();
-    
-    // Check for date change every minute
-    const interval = setInterval(() => {
-      const now = new Date();
-      if (now.getHours() === 0 && now.getMinutes() === 0) {
-        updateBossRotation();
-      }
-    }, 60000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  // Update boss rotation based on the current day
-  const updateBossRotation = () => {
-    const rotation = getDailyBossRotation();
-    setAvailableBosses(rotation);
-    
-    // Set default selected boss if none is selected or current selection is not in today's rotation
-    if (!selectedBoss || !rotation[selectedBossTier].includes(selectedBoss)) {
-      setSelectedBoss(rotation[selectedBossTier][0]);
-    }
-  };
 
   // Get the user's holobots that are not on cooldown
   const getAvailableHolobots = () => {
@@ -264,15 +226,7 @@ export const QuestGrid = () => {
             [randomHolobotKey]: (currentBlueprints[randomHolobotKey] || 0) + tier.rewards.blueprintPieces
           };
           
-          // Use the safe update function instead
-          await safeUpdateUserProfile(user.id, {
-            daily_energy: user.dailyEnergy - tier.energyCost,
-            holos_tokens: user.holosTokens + tier.rewards.holosTokens,
-            blueprints: updatedBlueprints
-          });
-          
-          // Update local state to reflect changes
-          updateUser({
+          await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
             holosTokens: user.holosTokens + tier.rewards.holosTokens,
             blueprints: updatedBlueprints
@@ -299,13 +253,7 @@ export const QuestGrid = () => {
         
         // Update user's energy
         if (user) {
-          // Use the safe update function instead
-          await safeUpdateUserProfile(user.id, {
-            daily_energy: user.dailyEnergy - tier.energyCost
-          });
-          
-          // Update local state to reflect changes
-          updateUser({
+          await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost
           });
         }
@@ -347,15 +295,6 @@ export const QuestGrid = () => {
         description: "You can only select 3 Holobots for the Boss Quest",
         variant: "destructive"
       });
-    }
-  };
-
-  // Handle boss tier change
-  const handleBossTierChange = (tier: keyof typeof BOSS_TIERS) => {
-    setSelectedBossTier(tier);
-    // Set the first boss of the selected tier as the default
-    if (availableBosses[tier] && availableBosses[tier].length > 0) {
-      setSelectedBoss(availableBosses[tier][0]);
     }
   };
 
@@ -431,21 +370,13 @@ export const QuestGrid = () => {
           [selectedBoss]: (currentBlueprints[selectedBoss] || 0) + tier.rewards.blueprintPieces
         };
         
-        // Update user's tickets and energy
+        // Update user's tokens, tickets, and energy
         if (user) {
-          // Use the safe update function instead
-          await safeUpdateUserProfile(user.id, {
-            daily_energy: user.dailyEnergy - tier.energyCost,
-            gacha_tickets: user.gachaTickets + tier.rewards.gachaTickets,
-            holobots: updatedHolobots, // Update with new XP values
-            blueprints: updatedBlueprints
-          });
-          
-          // Update local state to reflect changes
-          updateUser({
+          await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
+            holosTokens: user.holosTokens + tier.rewards.holosTokens,
             gachaTickets: user.gachaTickets + tier.rewards.gachaTickets,
-            holobots: updatedHolobots,
+            holobots: updatedHolobots, // Update with new XP values
             blueprints: updatedBlueprints
           });
         }
@@ -456,7 +387,7 @@ export const QuestGrid = () => {
           holobotKey: selectedBoss,
           amount: tier.rewards.blueprintPieces
         });
-        setHolosReward(0);
+        setHolosReward(tier.rewards.holosTokens);
         setShowResultsScreen(true);
       } else {
         // Even on failure, Holobots gain some experience (half of success amount)
@@ -482,17 +413,9 @@ export const QuestGrid = () => {
         
         // Update user's energy and holobots
         if (user) {
-          // Use the safe update function instead
-          await safeUpdateUserProfile(user.id, {
-            daily_energy: user.dailyEnergy - tier.energyCost,
-            holobots: updatedHolobots,
-            blueprints: updatedBlueprints
-          });
-          
-          // Update local state to reflect changes
-          updateUser({
+          await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
-            holobots: updatedHolobots,
+            holobots: updatedHolobots, // Update with new XP values
             blueprints: updatedBlueprints
           });
         }
@@ -629,37 +552,9 @@ export const QuestGrid = () => {
         <CardContent>
           <ul className="list-disc list-inside space-y-2 text-foreground/80">
             <li>Exploration Quests: Earn Holos tokens and Blueprint Pieces</li>
-            <li>Boss Quests: Team up 3 Holobots to earn blueprints and tickets</li>
+            <li>Boss Quests: Team up 3 Holobots to earn big rewards</li>
             <li>Defeated Holobots need {COOLDOWN_MINUTES} minutes to recharge</li>
           </ul>
-          
-          {/* Today's Rotation */}
-          <div className="mt-4 p-3 bg-black/30 rounded-lg border border-holobots-accent/30">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-holobots-accent font-medium flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Today's Boss Rotation
-              </span>
-              <span className="text-white text-sm">{getTodayDateString()}</span>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
-              {Object.entries(availableBosses).map(([tier, bosses]) => (
-                <div key={tier} className="bg-black/20 rounded p-1 text-center">
-                  <div className="font-medium text-holobots-accent mb-1">
-                    {tier === 'tier1' ? 'Tier 1' : tier === 'tier2' ? 'Tier 2' : 'Tier 3'}
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {bosses.map((boss, idx) => (
-                      <span key={idx} className="text-gray-300 capitalize">
-                        {HOLOBOT_STATS[boss]?.name || boss}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
           
           {/* Energy Display */}
           <div className="mt-4 p-3 bg-black/30 rounded-lg border border-holobots-accent/30">
@@ -838,18 +733,14 @@ export const QuestGrid = () => {
             {/* Boss Selection */}
             <div>
               <div className="text-sm text-holobots-accent mb-2">Select Boss:</div>
-              <Select 
-                value={selectedBoss} 
-                onValueChange={setSelectedBoss}
-                disabled={availableBosses[selectedBossTier].length === 0}
-              >
+              <Select value={selectedBoss} onValueChange={setSelectedBoss}>
                 <SelectTrigger className="border-holobots-accent/50 text-foreground">
                   <SelectValue placeholder="Choose boss" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableBosses[selectedBossTier].map((bossKey) => (
-                    <SelectItem key={bossKey} value={bossKey}>
-                      {HOLOBOT_STATS[bossKey]?.name || bossKey}
+                  {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
+                    <SelectItem key={key} value={key}>
+                      {stats.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -867,7 +758,7 @@ export const QuestGrid = () => {
                     ${selectedBossTier === key ? 'bg-red-600 text-white' : 'bg-black/40 text-red-400'}
                     border-red-800/30 hover:border-red-500
                   `}
-                  onClick={() => handleBossTierChange(key)}
+                  onClick={() => setSelectedBossTier(key)}
                 >
                   <div className="flex flex-col items-center gap-1">
                     <span className="capitalize font-medium">{key.replace('tier', 'T')}</span>
@@ -890,10 +781,14 @@ export const QuestGrid = () => {
                   <span>{BOSS_TIERS[selectedBossTier].rewards.blueprintPieces} Blueprint Pieces</span>
                 </div>
                 <div className="flex items-center gap-1 text-xs">
+                  <span className="text-yellow-400">+</span>
+                  <span>{BOSS_TIERS[selectedBossTier].rewards.holosTokens} Holos</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
                   <Ticket className="h-3 w-3 text-green-400" />
                   <span>{BOSS_TIERS[selectedBossTier].rewards.gachaTickets} Gacha Tickets</span>
                 </div>
-                <div className="flex items-center gap-1 text-xs col-span-2">
+                <div className="flex items-center gap-1 text-xs">
                   <Swords className="h-3 w-3 text-blue-400" />
                   <span>x{BOSS_TIERS[selectedBossTier].rewards.xpMultiplier} XP Boost</span>
                 </div>

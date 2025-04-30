@@ -6,66 +6,23 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ensureWelcomeGift } from "./authUtils";
-import { safeUpdateUserProfile } from "@/integrations/supabase/client";
 
 // Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
-      
-      if (event === 'SIGNED_IN' && session) {
-        // Handle synchronous state updates first
-        setLoading(true);
-        
-        // Use setTimeout to avoid Supabase deadlocks
-        setTimeout(async () => {
-          try {
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .maybeSingle();
-          
-            if (profileError) {
-              console.error("Error fetching profile:", profileError);
-              setUser(null);
-              setError(profileError.message);
-            } else if (profile) {
-              console.log("Setting user from auth state change:", profile);
-              const mappedProfile = mapDatabaseToUserProfile(profile);
-              setUser(mappedProfile);
-
-              // Ensure new users get their welcome gift of 500 Holos tokens
-              await ensureWelcomeGift(session.user.id, mappedProfile, setUser);
-            } else {
-              console.log("User exists in auth but not in profiles");
-              setUser(null);
-            }
-          } catch (err) {
-            console.error("Error handling sign-in:", err);
-          } finally {
-            setLoading(false);
-          }
-        }, 0);
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setLoading(false);
-      }
-    });
-    
-    // THEN check for existing session
     const checkUser = async () => {
+      setLoading(true);
+      
       try {
+        // Use getSession instead of subscription
         const { data } = await supabase.auth.getSession();
         
         if (data.session?.user) {
@@ -74,39 +31,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', data.session.user.id)
+            .eq('id', data.session.user.id as any)
             .maybeSingle();
           
           if (profileError) {
             console.error("Error fetching profile:", profileError);
-            setUser(null);
+            setCurrentUser(null);
             setError(profileError.message);
           } else if (profile) {
             // Successfully found profile
             console.log("Found user profile:", profile);
             const mappedProfile = mapDatabaseToUserProfile(profile);
-            setUser(mappedProfile);
+            setCurrentUser(mappedProfile);
             
             // Ensure new users get their welcome gift of 500 Holos tokens
-            await ensureWelcomeGift(data.session.user.id, mappedProfile, setUser);
+            await ensureWelcomeGift(data.session.user.id, currentUser, setCurrentUser);
           } else {
             console.log("User exists in auth but not in profiles");
-            setUser(null);
+            setCurrentUser(null);
           }
         } else {
           console.log("No session found, user is not logged in");
-          setUser(null);
+          setCurrentUser(null);
         }
       } catch (err) {
         console.error("Auth error:", err);
         setError(err instanceof Error ? err.message : "Authentication error");
-        setUser(null);
+        setCurrentUser(null);
       } finally {
         setLoading(false);
       }
     };
     
     checkUser();
+    
+    // Set up an event listener for sign in/out
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
+      
+      if (event === 'SIGNED_IN' && session) {
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id as any)
+            .maybeSingle();
+        
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            setCurrentUser(null);
+            setError(profileError.message);
+          } else if (profile) {
+            console.log("Setting user from auth state change:", profile);
+            const mappedProfile = mapDatabaseToUserProfile(profile);
+            setCurrentUser(mappedProfile);
+          
+            // Ensure new users get their welcome gift of 500 Holos tokens
+            await ensureWelcomeGift(session.user.id, currentUser, setCurrentUser);
+          }
+        } catch (err) {
+          console.error("Error handling sign-in:", err);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+      }
+    });
     
     return () => {
       authListener.subscription.unsubscribe();
@@ -119,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
       });
@@ -128,16 +117,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw signInError;
       }
       
-      if (!data.session) {
-        throw new Error("No session returned from login");
-      }
-      
       toast({
         title: "Login Successful",
         description: "You have been logged in",
       });
       
-      return data;
+      return;
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Login failed");
@@ -164,8 +149,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw signOutError;
       }
       
-      setUser(null);
-      navigate('/auth');
+      setCurrentUser(null);
+      navigate('/');
       
       toast({
         title: "Logged Out",
@@ -223,52 +208,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Update user function
-  const updateUser = async (userData: Partial<UserProfile>) => {
-    if (!user) {
+  const updateUser = async (updates: Partial<UserProfile>): Promise<void> => {
+    if (!currentUser) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to update your profile",
+        variant: "destructive",
+      });
       return;
     }
-
+    
     try {
-      // Convert UserProfile structure to database format
-      const dbUserData: any = {};
+      const dbUpdates: any = {};
       
-      // Map UserProfile fields to database column names
-      if ('holobots' in userData) dbUserData.holobots = userData.holobots;
-      if ('dailyEnergy' in userData) dbUserData.daily_energy = userData.dailyEnergy;
-      if ('maxDailyEnergy' in userData) dbUserData.max_daily_energy = userData.maxDailyEnergy;
-      if ('holosTokens' in userData) dbUserData.holos_tokens = userData.holosTokens;
-      if ('gachaTickets' in userData) dbUserData.gacha_tickets = userData.gachaTickets;
-      if ('stats' in userData) {
-        if (userData.stats?.wins !== undefined) dbUserData.wins = userData.stats.wins;
-        if (userData.stats?.losses !== undefined) dbUserData.losses = userData.stats.losses;
+      if (updates.username) dbUpdates.username = updates.username;
+      if (updates.holosTokens !== undefined) dbUpdates.holos_tokens = updates.holosTokens;
+      if (updates.gachaTickets !== undefined) dbUpdates.gacha_tickets = updates.gachaTickets;
+      if (updates.dailyEnergy !== undefined) dbUpdates.daily_energy = updates.dailyEnergy;
+      if (updates.maxDailyEnergy !== undefined) dbUpdates.max_daily_energy = updates.maxDailyEnergy;
+      if (updates.lastEnergyRefresh) dbUpdates.last_energy_refresh = updates.lastEnergyRefresh;
+      if (updates.stats?.wins !== undefined) dbUpdates.wins = updates.stats.wins;
+      if (updates.stats?.losses !== undefined) dbUpdates.losses = updates.stats.losses;
+      
+      if (updates.arena_passes !== undefined) dbUpdates.arena_passes = updates.arena_passes;
+      if (updates.exp_boosters !== undefined) dbUpdates.exp_boosters = updates.exp_boosters;
+      if (updates.energy_refills !== undefined) dbUpdates.energy_refills = updates.energy_refills;
+      if (updates.rank_skips !== undefined) dbUpdates.rank_skips = updates.rank_skips;
+      
+      if (updates.holobots) {
+        dbUpdates.holobots = updates.holobots;
       }
-      if ('lastEnergyRefresh' in userData) dbUserData.last_energy_refresh = userData.lastEnergyRefresh;
-      if ('level' in userData) dbUserData.level = userData.level;
-      if ('arena_passes' in userData) dbUserData.arena_passes = userData.arena_passes;
-      if ('exp_boosters' in userData) dbUserData.exp_boosters = userData.exp_boosters;
-      if ('energy_refills' in userData) dbUserData.energy_refills = userData.energy_refills;
-      if ('rank_skips' in userData) dbUserData.rank_skips = userData.rank_skips;
-      if ('blueprints' in userData) dbUserData.blueprints = userData.blueprints;
-
-      // Use our safe update function instead of direct supabase call
-      const { error } = await safeUpdateUserProfile(user.id, dbUserData);
-
-      if (error) {
-        console.error("Error updating user profile:", error);
-        return;
+      
+      console.log("Updating user profile with:", dbUpdates);
+      
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(dbUpdates)
+        .eq('id', currentUser.id as any);
+      
+      if (updateError) {
+        throw updateError;
       }
-
-      // Update local state with the new data
-      setUser(prevUser => {
-        if (!prevUser) return null;
-        
-        return {
-          ...prevUser,
-          ...userData
-        };
+      
+      // Update the local user state with the new values
+      const updatedUser = { ...currentUser, ...updates };
+      setCurrentUser(updatedUser);
+      
+      // Log the updated state
+      console.log("User profile updated successfully:", updatedUser);
+      
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated",
       });
     } catch (error) {
-      console.error("Error updating user profile:", error);
+      console.error("Error updating user:", error);
+      toast({
+        title: "Update Failed",
+        description: error instanceof Error ? error.message : "Failed to update profile",
+        variant: "destructive",
+      });
     }
   };
 
@@ -303,7 +302,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', userId as any)
         .maybeSingle();
       
       if (error) {
@@ -319,7 +318,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Create the context value
   const contextValue: AuthContextType = {
-    user,
+    user: currentUser,
     loading,
     error,
     login,
