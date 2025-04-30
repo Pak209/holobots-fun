@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -7,7 +8,7 @@ import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star } from "lucide-react";
 import { Progress } from "./ui/progress";
-import { supabase, safeUpdateUserProfile } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { QuestBattleBanner } from "@/components/quests/QuestBattleBanner";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 
@@ -225,15 +226,7 @@ export const QuestGrid = () => {
             [randomHolobotKey]: (currentBlueprints[randomHolobotKey] || 0) + tier.rewards.blueprintPieces
           };
           
-          // Use the safe update function instead
-          await safeUpdateUserProfile(user.id, {
-            daily_energy: user.dailyEnergy - tier.energyCost,
-            holos_tokens: user.holosTokens + tier.rewards.holosTokens,
-            blueprints: updatedBlueprints
-          });
-          
-          // Update local state to reflect changes
-          updateUser({
+          await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
             holosTokens: user.holosTokens + tier.rewards.holosTokens,
             blueprints: updatedBlueprints
@@ -260,13 +253,7 @@ export const QuestGrid = () => {
         
         // Update user's energy
         if (user) {
-          // Use the safe update function instead
-          await safeUpdateUserProfile(user.id, {
-            daily_energy: user.dailyEnergy - tier.energyCost
-          });
-          
-          // Update local state to reflect changes
-          updateUser({
+          await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost
           });
         }
@@ -385,21 +372,11 @@ export const QuestGrid = () => {
         
         // Update user's tokens, tickets, and energy
         if (user) {
-          // Use the safe update function instead
-          await safeUpdateUserProfile(user.id, {
-            daily_energy: user.dailyEnergy - tier.energyCost,
-            holos_tokens: user.holosTokens + tier.rewards.holosTokens,
-            gacha_tickets: user.gachaTickets + tier.rewards.gachaTickets,
-            holobots: updatedHolobots, // Update with new XP values
-            blueprints: updatedBlueprints
-          });
-          
-          // Update local state to reflect changes
-          updateUser({
+          await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
             holosTokens: user.holosTokens + tier.rewards.holosTokens,
             gachaTickets: user.gachaTickets + tier.rewards.gachaTickets,
-            holobots: updatedHolobots,
+            holobots: updatedHolobots, // Update with new XP values
             blueprints: updatedBlueprints
           });
         }
@@ -436,17 +413,9 @@ export const QuestGrid = () => {
         
         // Update user's energy and holobots
         if (user) {
-          // Use the safe update function instead
-          await safeUpdateUserProfile(user.id, {
-            daily_energy: user.dailyEnergy - tier.energyCost,
-            holobots: updatedHolobots,
-            blueprints: updatedBlueprints
-          });
-          
-          // Update local state to reflect changes
-          updateUser({
+          await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
-            holobots: updatedHolobots,
+            holobots: updatedHolobots, // Update with new XP values
             blueprints: updatedBlueprints
           });
         }
