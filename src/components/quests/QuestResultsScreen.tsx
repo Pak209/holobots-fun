@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
@@ -14,6 +15,9 @@ interface QuestResultsScreenProps {
   };
   holosRewards: number;
   onClose: () => void;
+  gachaTickets?: number;
+  arenaPass?: number;
+  squadHolobotKeys?: string[];
 }
 
 export const QuestResultsScreen = ({
@@ -22,7 +26,10 @@ export const QuestResultsScreen = ({
   squadHolobotExp,
   blueprintRewards,
   holosRewards,
-  onClose
+  onClose,
+  gachaTickets,
+  arenaPass,
+  squadHolobotKeys
 }: QuestResultsScreenProps) => {
   const [animation, setAnimation] = useState<"entering" | "active" | "exiting" | "hidden">("hidden");
   
@@ -90,6 +97,30 @@ export const QuestResultsScreen = ({
                     <p className="text-md font-bold text-purple-400">
                       {blueprintRewards.amount} {HOLOBOT_STATS[blueprintRewards.holobotKey]?.name || ""}
                     </p>
+                  </div>
+                </div>
+              )}
+              
+              {gachaTickets && gachaTickets > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <span className="text-green-400 text-sm font-bold">G</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Gacha Tickets</p>
+                    <p className="text-md font-bold text-green-400">{gachaTickets}</p>
+                  </div>
+                </div>
+              )}
+              
+              {arenaPass && arenaPass > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                    <span className="text-blue-400 text-sm font-bold">A</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Arena Passes</p>
+                    <p className="text-md font-bold text-blue-400">{arenaPass}</p>
                   </div>
                 </div>
               )}

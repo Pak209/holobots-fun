@@ -9,7 +9,6 @@ import { SignInForm, SignUpForm } from "@/components/auth/AuthForms";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   // Check if user is already logged in
@@ -43,12 +42,10 @@ export default function Auth() {
 
         {isSignUp ? (
           <SignUpForm 
-            loading={loading} 
             onToggleMode={toggleAuthMode} 
           />
         ) : (
           <SignInForm 
-            loading={loading} 
             onToggleMode={toggleAuthMode} 
           />
         )}

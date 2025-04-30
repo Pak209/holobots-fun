@@ -1,3 +1,4 @@
+
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -61,9 +62,9 @@ const Index = () => {
 
   const useArenaPass = async () => {
     try {
-      if (user && user.arena_passes > 0) {
+      if (user && (user.arena_passes ?? 0) > 0) {
         await updateUser({
-          arena_passes: user.arena_passes - 1
+          arena_passes: (user.arena_passes ?? 0) - 1
         });
         setHasEntryFee(true);
         
@@ -174,7 +175,7 @@ const Index = () => {
         isSuccess: victories > 0,
         squadHolobotKeys: [selectedHolobot],
         squadHolobotExp: experienceRewards,
-        blueprintRewards: rewards.blueprintReward,
+        blueprintReward: rewards.blueprintReward,
         holosRewards: rewards.holosTokens,
         gachaTickets: rewards.gachaTickets,
         arenaPass: rewards.arenaPass
@@ -269,7 +270,7 @@ const Index = () => {
           isVisible={showResults}
           isSuccess={arenaResults.isSuccess}
           squadHolobotExp={arenaResults.squadHolobotExp}
-          blueprintRewards={arenaResults.blueprintRewards}
+          blueprintRewards={arenaResults.blueprintReward}
           holosRewards={arenaResults.holosRewards}
           onClose={handleResultsClose}
           gachaTickets={arenaResults.gachaTickets}

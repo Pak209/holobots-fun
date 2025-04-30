@@ -41,7 +41,7 @@ export const QuestBattleBanner = ({
   const actualPlayerHolobots = playerHolobots || 
     (user?.holobots?.filter(holobot => 
       squadHolobotKeys.some(key => 
-        HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
+        HOLOBOT_STATS[key]?.name?.toLowerCase() === holobot.name.toLowerCase()
       )
     ) || []);
   
@@ -57,7 +57,7 @@ export const QuestBattleBanner = ({
   
   const teamStats = actualPlayerHolobots.reduce((stats, holobot) => {
     const baseStatsKey = Object.keys(HOLOBOT_STATS).find(
-      key => HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
+      key => HOLOBOT_STATS[key]?.name?.toLowerCase() === holobot.name.toLowerCase()
     );
     
     if (baseStatsKey) {
@@ -67,7 +67,7 @@ export const QuestBattleBanner = ({
       
       stats.attack += baseStats.attack + (holobot.boostedAttributes?.attack || 0);
       stats.defense += baseStats.defense + (holobot.boostedAttributes?.defense || 0);
-      stats.health += baseStats.maxHealth + (holobot.boostedAttributes?.health || 0);
+      stats.health += (baseStats.maxHealth || 100) + (holobot.boostedAttributes?.health || 0);
       stats.speed += baseStats.speed + (holobot.boostedAttributes?.speed || 0);
     }
     return stats;
@@ -90,7 +90,7 @@ export const QuestBattleBanner = ({
   const adjustedBossStats = {
     attack: boss.attack * bossMultiplier,
     defense: boss.defense * bossMultiplier,
-    health: boss.maxHealth * bossMultiplier,
+    health: (boss.maxHealth || 100) * bossMultiplier,
     speed: boss.speed * bossMultiplier,
   };
   

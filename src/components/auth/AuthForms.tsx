@@ -3,238 +3,232 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AuthFormProps {
-  isSignUp: boolean;
-  loading: boolean;
+  loading?: boolean;
   onToggleMode: () => void;
 }
 
-export const SignUpForm = ({ loading, onToggleMode }: Omit<AuthFormProps, "isSignUp">) => {
+export const SignInForm = ({ loading, onToggleMode }: AuthFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-          }
-        }
-      });
-
-      if (signUpError) throw signUpError;
-
-      toast({
-        title: "Account created!",
-        description: "Please check your email to verify your account, then sign in.",
-      });
-      
-      // Switch to sign in view after successful signup
-      onToggleMode();
-    } catch (error) {
-      console.error('Auth error:', error);
-      toast({
-        title: "Authentication Error",
-        description: error instanceof Error ? error.message : "An error occurred during authentication",
-        variant: "destructive",
-      });
-    }
-  };
-
-  return (
-    <form onSubmit={handleSignUp} className="space-y-4">
-      <div>
-        <Label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</Label>
-        <Input
-          id="username"
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-          className="w-full"
-          placeholder="Choose a username"
-          disabled={loading}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full"
-          placeholder="Enter your email"
-          disabled={loading}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full"
-          placeholder="Enter your password"
-          minLength={6}
-          disabled={loading}
-        />
-      </div>
-
-      <Button
-        type="submit"
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md"
-        disabled={loading}
-      >
-        {loading ? (
-          <div className="flex items-center justify-center">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            <span>Processing...</span>
-          </div>
-        ) : "Create Account"}
-      </Button>
-
-      <div className="mt-4 text-center">
-        <Button
-          variant="link"
-          onClick={onToggleMode}
-          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-          disabled={loading}
-        >
-          Already have an account? Sign In
-        </Button>
-      </div>
-    </form>
-  );
-};
-
-export const SignInForm = ({ loading, onToggleMode }: Omit<AuthFormProps, "isSignUp">) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!email || !password) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
-      const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
+      setIsSubmitting(true);
+      
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
-      if (signInError) throw signInError;
-
-      if (session) {
-        toast({
-          title: "Login successful",
-          description: "Redirecting you to the dashboard",
-        });
-
-        // Redirect to dashboard after login
-        navigate('/dashboard');
-      }
-    } catch (error) {
-      console.error('Auth error:', error);
+      
+      if (error) throw error;
+      
       toast({
-        title: "Authentication Error",
-        description: error instanceof Error ? error.message : "An error occurred during authentication",
+        title: "Welcome back!",
+        description: "You've been successfully logged in.",
+      });
+      
+      // Auth redirect handled by Auth.tsx useEffect
+    } catch (error: any) {
+      toast({
+        title: "Login Error",
+        description: error.message || "Failed to sign in. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <form onSubmit={handleSignIn} className="space-y-4">
-      <div>
-        <Label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</Label>
-        <Input
-          id="email"
-          type="email"
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input 
+          id="email" 
+          type="email" 
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full"
-          placeholder="Enter your email"
-          disabled={loading}
+          placeholder="you@example.com" 
+          required 
         />
       </div>
-
-      <div>
-        <Label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</Label>
-        <Input
-          id="password"
+      
+      <div className="space-y-2">
+        <div className="flex justify-between">
+          <Label htmlFor="password">Password</Label>
+          <a href="#" className="text-xs text-blue-500 hover:underline">
+            Forgot password?
+          </a>
+        </div>
+        <Input 
+          id="password" 
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full"
-          placeholder="Enter your password"
-          minLength={6}
-          disabled={loading}
+          placeholder="••••••••" 
+          required 
         />
       </div>
-
-      <div className="flex items-center space-x-2">
-        <Checkbox 
-          id="rememberMe" 
-          checked={rememberMe} 
-          onCheckedChange={(checked) => {
-            if (typeof checked === 'boolean') {
-              setRememberMe(checked);
-            }
-          }}
-        />
-        <Label 
-          htmlFor="rememberMe" 
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-        >
-          Remember me
-        </Label>
-      </div>
-
-      <Button
-        type="submit"
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md"
-        disabled={loading}
+      
+      <Button 
+        type="submit" 
+        className="w-full bg-holobots-accent hover:bg-holobots-hover"
+        disabled={isSubmitting || loading}
       >
-        {loading ? (
-          <div className="flex items-center justify-center">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            <span>Processing...</span>
-          </div>
-        ) : "Sign In"}
+        {isSubmitting ? "Signing in..." : "Sign In"}
       </Button>
-
-      <div className="mt-4 text-center">
-        <Button
-          variant="link"
+      
+      <div className="text-center text-sm">
+        Don't have an account?{" "}
+        <button 
+          type="button"
           onClick={onToggleMode}
-          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-          disabled={loading}
+          className="text-blue-500 hover:underline"
         >
-          Need an account? Sign Up
-        </Button>
+          Sign Up
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export const SignUpForm = ({ loading, onToggleMode }: AuthFormProps) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password || !username) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            full_name: username,
+          },
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Registration Successful",
+        description: "Please check your email to verify your account.",
+      });
+      
+      // Switch to sign in mode
+      onToggleMode();
+    } catch (error: any) {
+      toast({
+        title: "Registration Error",
+        description: error.message || "Failed to create account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSignUp} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="username">Username</Label>
+        <Input 
+          id="username" 
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Your username" 
+          required 
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="signup-email">Email</Label>
+        <Input 
+          id="signup-email" 
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com" 
+          required 
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="signup-password">Password</Label>
+        <Input 
+          id="signup-password" 
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••" 
+          required 
+        />
+        <p className="text-xs text-gray-500">
+          Must be at least 6 characters.
+        </p>
+      </div>
+      
+      <Button 
+        type="submit" 
+        className="w-full bg-holobots-accent hover:bg-holobots-hover"
+        disabled={isSubmitting || loading}
+      >
+        {isSubmitting ? "Creating Account..." : "Create Account"}
+      </Button>
+      
+      <div className="text-center text-sm">
+        Already have an account?{" "}
+        <button 
+          type="button"
+          onClick={onToggleMode}
+          className="text-blue-500 hover:underline"
+        >
+          Sign In
+        </button>
       </div>
     </form>
   );
