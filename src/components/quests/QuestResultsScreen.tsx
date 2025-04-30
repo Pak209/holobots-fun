@@ -22,7 +22,6 @@ interface QuestResultsScreenProps {
 export const QuestResultsScreen = ({
   isVisible,
   isSuccess,
-  squadHolobotKeys,
   squadHolobotExp,
   blueprintRewards,
   holosRewards,
@@ -74,15 +73,17 @@ export const QuestResultsScreen = ({
           <div className="mb-6 p-3 bg-black/40 rounded-lg border border-holobots-accent/30">
             <h3 className="text-md font-semibold mb-2">Rewards Earned</h3>
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                  <span className="text-yellow-400 text-sm font-bold">H</span>
+              {holosRewards > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                    <span className="text-yellow-400 text-sm font-bold">H</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Holos Tokens</p>
+                    <p className="text-md font-bold text-yellow-400">{holosRewards}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-400">Holos Tokens</p>
-                  <p className="text-md font-bold text-yellow-400">{holosRewards}</p>
-                </div>
-              </div>
+              )}
               
               {blueprintRewards && (
                 <div className="flex items-center gap-2">

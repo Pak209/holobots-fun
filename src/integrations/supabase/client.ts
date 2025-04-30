@@ -78,3 +78,45 @@ export const safeUpdateUserProfile = async (userId: string, updateData: Partial<
     return { data: null, error: err };
   }
 };
+
+// New function to get the daily boss rotation based on day of week
+export const getDailyBossRotation = () => {
+  const day = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
+  
+  // Define different boss rotations for each day
+  const rotations = {
+    tier1: [
+      ['aurora', 'hare', 'shiori'], // Sunday
+      ['baxter', 'hare', 'pyro'],   // Monday
+      ['nexus', 'aurora', 'hare'],  // Tuesday
+      ['hare', 'shiori', 'nexus'],  // Wednesday
+      ['pyro', 'hare', 'baxter'],   // Thursday
+      ['hare', 'aurora', 'pyro'],   // Friday
+      ['hare', 'tsuin', 'aurora']   // Saturday
+    ],
+    tier2: [
+      ['synth', 'tsuin', 'cypher'], // Sunday
+      ['void', 'tsuin', 'synth'],   // Monday
+      ['cypher', 'tsuin', 'void'],  // Tuesday
+      ['tsuin', 'synth', 'archon'], // Wednesday
+      ['archon', 'tsuin', 'void'],  // Thursday
+      ['void', 'tsuin', 'synth'],   // Friday
+      ['tsuin', 'cypher', 'archon'] // Saturday
+    ],
+    tier3: [
+      ['kurai', 'echo', 'lumina'],  // Sunday
+      ['echo', 'kurai', 'rai'],     // Monday
+      ['rai', 'kurai', 'flare'],    // Tuesday
+      ['lumina', 'kurai', 'echo'],  // Wednesday
+      ['flare', 'kurai', 'rai'],    // Thursday
+      ['rai', 'kurai', 'lumina'],   // Friday
+      ['kurai', 'flare', 'echo']    // Saturday
+    ]
+  };
+  
+  return {
+    tier1: rotations.tier1[day],
+    tier2: rotations.tier2[day],
+    tier3: rotations.tier3[day]
+  };
+};
