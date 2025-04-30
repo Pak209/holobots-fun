@@ -1,9 +1,6 @@
 
-import { useState } from 'react';
 import { HolobotCard } from "@/components/HolobotCard";
-import { HOLOBOT_STATS, getRank, HolobotStats } from "@/types/holobot";
-import { Button } from "@/components/ui/button";
-import { Coins, ShoppingCart } from "lucide-react";
+import { getRank, HolobotStats } from "@/types/holobot";
 import { Badge } from "@/components/ui/badge";
 import { MarketplaceSellerInfo } from "@/components/marketplace/MarketplaceSellerInfo";
 
@@ -17,7 +14,6 @@ interface MarketplaceHolobotCardProps {
 }
 
 export const MarketplaceHolobotCard = ({
-  holobotKey,
   holobotStats,
   price,
   seller,
@@ -36,19 +32,19 @@ export const MarketplaceHolobotCard = ({
                 {holobotStats.name}
               </h2>
               <Badge className="text-xs py-0 h-5 bg-holobots-accent text-black">
-                LV{holobotStats.level}
+                LV{holobotStats.level || 1}
               </Badge>
             </div>
             
             <div className="text-xs font-semibold text-right mb-2">
-              {getRank(holobotStats.level)}
+              {getRank(holobotStats.level || 1)}
             </div>
             
             <div className="space-y-1 font-mono text-sm">
-              <p>HP: {holobotStats.maxHealth}</p>
-              <p>Attack: {holobotStats.attack}</p>
-              <p>Defense: {holobotStats.defense}</p>
-              <p>Speed: {holobotStats.speed}</p>
+              <p>HP: {holobotStats.maxHealth || 0}</p>
+              <p>Attack: {holobotStats.attack || 0}</p>
+              <p>Defense: {holobotStats.defense || 0}</p>
+              <p>Speed: {holobotStats.speed || 0}</p>
               <p className="text-holobots-accent text-xs drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] text-shadow">Special: {holobotStats.specialMove}</p>
             </div>
           </div>

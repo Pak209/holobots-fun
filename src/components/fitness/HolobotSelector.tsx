@@ -4,7 +4,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserHolobot } from "@/types/user";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
-import { cn } from "@/lib/utils";
 
 interface HolobotSelectorProps {
   holobots: UserHolobot[];
@@ -13,7 +12,14 @@ interface HolobotSelectorProps {
 }
 
 export function HolobotSelector({ holobots, selectedHolobot, onSelect }: HolobotSelectorProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    // Initialize currentIndex based on selectedHolobot if provided
+    if (selectedHolobot) {
+      const index = holobots.findIndex(h => h.name === selectedHolobot);
+      return index >= 0 ? index : 0;
+    }
+    return 0;
+  });
   
   if (!holobots.length) {
     return (

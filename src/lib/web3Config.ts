@@ -2,7 +2,7 @@
 import { configureChains, createConfig } from 'wagmi';
 import { mainnet, polygon } from 'wagmi/chains';
 import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum';
-import { Web3ReactHooks, initializeConnector } from '@web3-react/core';
+import { initializeConnector } from '@web3-react/core';
 import { MetaMask } from '@web3-react/metamask';
 
 // Use empty string for project ID to avoid any connections

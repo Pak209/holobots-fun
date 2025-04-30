@@ -1,15 +1,12 @@
-
 import { useState, useEffect } from "react";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 
 interface QuestResultsScreenProps {
   isVisible: boolean;
   isSuccess: boolean;
-  squadHolobotKeys: string[];
   squadHolobotExp: Array<{name: string, xp: number, levelUp: boolean, newLevel: number}>;
   blueprintRewards?: {
     holobotKey: string;
@@ -22,7 +19,6 @@ interface QuestResultsScreenProps {
 export const QuestResultsScreen = ({
   isVisible,
   isSuccess,
-  squadHolobotKeys,
   squadHolobotExp,
   blueprintRewards,
   holosRewards,

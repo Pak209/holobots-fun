@@ -19,7 +19,7 @@ export const Web3Login = () => {
       const guestPassword = Math.random().toString(36) + Math.random().toString(36);
       
       // Sign up the guest
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: guestEmail,
         password: guestPassword,
         options: {
