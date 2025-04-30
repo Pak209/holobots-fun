@@ -56,3 +56,25 @@ export const HOLOBOT_STATS = {
   BASE_DEFENSE: 5,
   BASE_SPEED: 8
 };
+
+// Add a safe update function to prevent ambiguous column references
+export const safeUpdateUserProfile = async (userId: string, updateData: Partial<any>) => {
+  try {
+    // Make sure we're explicitly referencing the profiles table when updating
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('id', userId)
+      .select();
+    
+    if (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
+    }
+    
+    return { data, error: null };
+  } catch (err) {
+    console.error('Failed to update profile:', err);
+    return { data: null, error: err };
+  }
+};
