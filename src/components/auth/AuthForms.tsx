@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,15 +8,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 interface AuthFormProps {
-  loading?: boolean;
   onToggleMode: () => void;
 }
 
-export const SignInForm = ({ loading, onToggleMode }: AuthFormProps) => {
+export const SignInForm = ({ onToggleMode }: AuthFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +45,8 @@ export const SignInForm = ({ loading, onToggleMode }: AuthFormProps) => {
         description: "You've been successfully logged in.",
       });
       
-      // Auth redirect handled by Auth.tsx useEffect
+      // Navigate to dashboard after successful login
+      navigate('/dashboard');
     } catch (error: any) {
       toast({
         title: "Login Error",
@@ -57,7 +59,7 @@ export const SignInForm = ({ loading, onToggleMode }: AuthFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSignIn} className="space-y-4">
+    <form onSubmit={handleSignIn} className="space-y-4 mt-6">
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input 
@@ -67,6 +69,7 @@ export const SignInForm = ({ loading, onToggleMode }: AuthFormProps) => {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com" 
           required 
+          autoComplete="email"
         />
       </div>
       
@@ -84,13 +87,14 @@ export const SignInForm = ({ loading, onToggleMode }: AuthFormProps) => {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••" 
           required 
+          autoComplete="current-password"
         />
       </div>
       
       <Button 
         type="submit" 
         className="w-full bg-holobots-accent hover:bg-holobots-hover"
-        disabled={isSubmitting || loading}
+        disabled={isSubmitting}
       >
         {isSubmitting ? "Signing in..." : "Sign In"}
       </Button>
@@ -109,12 +113,13 @@ export const SignInForm = ({ loading, onToggleMode }: AuthFormProps) => {
   );
 };
 
-export const SignUpForm = ({ loading, onToggleMode }: AuthFormProps) => {
+export const SignUpForm = ({ onToggleMode }: AuthFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,7 +145,7 @@ export const SignUpForm = ({ loading, onToggleMode }: AuthFormProps) => {
     try {
       setIsSubmitting(true);
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -148,18 +153,29 @@ export const SignUpForm = ({ loading, onToggleMode }: AuthFormProps) => {
             username,
             full_name: username,
           },
+          emailRedirectTo: window.location.origin + '/dashboard',
         },
       });
       
       if (error) throw error;
       
-      toast({
-        title: "Registration Successful",
-        description: "Please check your email to verify your account.",
-      });
-      
-      // Switch to sign in mode
-      onToggleMode();
+      if (data.session) {
+        // If immediate login is successful
+        toast({
+          title: "Welcome!",
+          description: "Your account has been created. You're now logged in!",
+        });
+        navigate('/dashboard');
+      } else {
+        // Email verification required
+        toast({
+          title: "Registration Successful",
+          description: "Please check your email to verify your account.",
+        });
+        
+        // Switch to sign in mode
+        onToggleMode();
+      }
     } catch (error: any) {
       toast({
         title: "Registration Error",
@@ -172,7 +188,7 @@ export const SignUpForm = ({ loading, onToggleMode }: AuthFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSignUp} className="space-y-4">
+    <form onSubmit={handleSignUp} className="space-y-4 mt-6">
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
         <Input 
@@ -182,6 +198,7 @@ export const SignUpForm = ({ loading, onToggleMode }: AuthFormProps) => {
           onChange={(e) => setUsername(e.target.value)}
           placeholder="Your username" 
           required 
+          autoComplete="username"
         />
       </div>
       
@@ -194,6 +211,7 @@ export const SignUpForm = ({ loading, onToggleMode }: AuthFormProps) => {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com" 
           required 
+          autoComplete="email"
         />
       </div>
       
@@ -206,6 +224,7 @@ export const SignUpForm = ({ loading, onToggleMode }: AuthFormProps) => {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••" 
           required 
+          autoComplete="new-password"
         />
         <p className="text-xs text-gray-500">
           Must be at least 6 characters.
@@ -215,7 +234,7 @@ export const SignUpForm = ({ loading, onToggleMode }: AuthFormProps) => {
       <Button 
         type="submit" 
         className="w-full bg-holobots-accent hover:bg-holobots-hover"
-        disabled={isSubmitting || loading}
+        disabled={isSubmitting}
       >
         {isSubmitting ? "Creating Account..." : "Create Account"}
       </Button>

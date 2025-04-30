@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BackgroundEffect } from "@/components/BackgroundEffect";
-import { WordCycler } from "@/components/WordCycler";
+import WordCycler from "@/components/WordCycler";
 
 export default function Landing() {
   const [showDemo, setShowDemo] = useState(false);
