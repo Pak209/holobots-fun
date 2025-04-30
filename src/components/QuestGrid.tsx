@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -8,7 +7,7 @@ import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star } from "lucide-react";
 import { Progress } from "./ui/progress";
-import { supabase, getDailyBossRotation } from "@/integrations/supabase/client";
+import { supabase, getDailyBossRotation, playerRankColors } from "@/integrations/supabase/client";
 import { QuestBattleBanner } from "@/components/quests/QuestBattleBanner";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 
@@ -324,7 +323,7 @@ export const QuestGrid = () => {
     const tier = BOSS_TIERS[selectedBossTier];
     const currentBossKey = dailyBosses[selectedBossTier];
     
-    if (!currentBossKey) {
+    if (!currentBossKey || !HOLOBOT_STATS[currentBossKey]) {
       toast({
         title: "Error",
         description: "Failed to get daily boss. Please refresh the page.",
@@ -383,25 +382,32 @@ export const QuestGrid = () => {
           [currentBossKey]: (currentBlueprints[currentBossKey] || 0) + tier.rewards.blueprintPieces
         };
         
-        // Update user's gachaTickets and energy
-        if (user) {
+        // Update user's gachaTickets, energy, and blueprints
+        try {
           await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
             gachaTickets: user.gachaTickets + tier.rewards.gachaTickets,
             holobots: updatedHolobots, // Update with new XP values
             blueprints: updatedBlueprints
           });
+          
+          // Set up results screen data
+          setBattleSuccess(true);
+          setBlueprintReward({
+            holobotKey: currentBossKey,
+            amount: tier.rewards.blueprintPieces
+          });
+          setHolosReward(0); // No Holos rewards for boss quests
+          setGachaReward(tier.rewards.gachaTickets);
+          setShowResultsScreen(true);
+        } catch (error) {
+          console.error("Profile update error:", error);
+          toast({
+            title: "Update Error",
+            description: "Failed to update profile with rewards. Please try again.",
+            variant: "destructive"
+          });
         }
-        
-        // Set up results screen data
-        setBattleSuccess(true);
-        setBlueprintReward({
-          holobotKey: currentBossKey,
-          amount: tier.rewards.blueprintPieces
-        });
-        setHolosReward(0); // No Holos rewards for boss quests
-        setGachaReward(tier.rewards.gachaTickets);
-        setShowResultsScreen(true);
       } else {
         // Even on failure, Holobots gain some experience (half of success amount)
         const failureXp = Math.floor(tier.rewards.squadXp * 0.5);
@@ -424,24 +430,31 @@ export const QuestGrid = () => {
           setHolobotOnCooldown(holobotKey);
         });
         
-        // Update user's energy and holobots
-        if (user) {
+        // Update user's energy, holobots, and blueprints
+        try {
           await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
             holobots: updatedHolobots, // Update with new XP values
             blueprints: updatedBlueprints
           });
+          
+          // Set up results screen for failure
+          setBattleSuccess(false);
+          setBlueprintReward({
+            holobotKey: currentBossKey,
+            amount: failureBlueprintPieces
+          });
+          setHolosReward(0);
+          setGachaReward(0);
+          setShowResultsScreen(true);
+        } catch (error) {
+          console.error("Profile update error:", error);
+          toast({
+            title: "Update Error",
+            description: "Failed to update profile. Please try again.",
+            variant: "destructive"
+          });
         }
-        
-        // Set up results screen for failure
-        setBattleSuccess(false);
-        setBlueprintReward({
-          holobotKey: currentBossKey,
-          amount: failureBlueprintPieces
-        });
-        setHolosReward(0);
-        setGachaReward(0);
-        setShowResultsScreen(true);
       }
     } catch (error) {
       console.error("Error during boss quest:", error);
@@ -555,7 +568,7 @@ export const QuestGrid = () => {
   // Get daily boss display name
   const getDailyBossName = (tier: keyof typeof BOSS_TIERS) => {
     const bossKey = dailyBosses[tier];
-    return bossKey ? HOLOBOT_STATS[bossKey]?.name || "Unknown Boss" : "Loading...";
+    return bossKey && HOLOBOT_STATS[bossKey] ? HOLOBOT_STATS[bossKey].name || "Unknown Boss" : "Loading...";
   };
 
   const availableHolobots = getAvailableHolobots();

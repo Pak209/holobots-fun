@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { PlayerRankCard } from "@/components/PlayerRankCard";
+import { playerRankColors } from "@/integrations/supabase/client";
 
 const Quests = () => {
   const { user, updateUser } = useAuth();

@@ -57,7 +57,7 @@ export const HOLOBOT_STATS = {
   BASE_SPEED: 8
 };
 
-// Daily boss rotation function
+// Daily boss rotation function - UPDATED to use actual holobots
 export const getDailyBossRotation = () => {
   // Create deterministic boss rotations based on the day of the year
   const now = new Date();
@@ -66,16 +66,16 @@ export const getDailyBossRotation = () => {
   const oneDay = 1000 * 60 * 60 * 24;
   const dayOfYear = Math.floor(diff / oneDay);
   
-  // Use modulo to rotate through bosses
+  // Use modulo to rotate through bosses - Use actual holobots from HOLOBOT_STATS
   const bossRotations = {
     tier1: [
-      'ace', 'hare', 'byte', 'nova', 'zed'
+      'ace', 'hare', 'kuma', 'shadow', 'tora'
     ],
     tier2: [
-      'luna', 'rex', 'tsuin', 'pulse', 'grit'
+      'wake', 'era', 'gama', 'ken', 'kurai'
     ],
     tier3: [
-      'void', 'kurai', 'flux', 'neo', 'titan'
+      'tsuin', 'wolf', 'ace', 'hare', 'kuma'
     ]
   };
   
