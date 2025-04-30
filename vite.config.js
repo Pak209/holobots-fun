@@ -17,10 +17,14 @@ export default defineConfig({
   },
   optimizeDeps: {
     esbuildOptions: {
-      // Fix for any Node.js compatibility issues
       define: {
         global: 'globalThis',
       },
     },
+  },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    }
   }
 });

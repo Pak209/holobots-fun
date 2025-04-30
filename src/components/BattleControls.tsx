@@ -1,8 +1,7 @@
 
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { useTooltip } from '@/hooks/use-tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface BattleControlsProps {
   onStartBattle: () => void;
@@ -19,8 +18,6 @@ export const BattleControls = ({
   isBattleStarted,
   hackGauge
 }: BattleControlsProps) => {
-  const { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } = useTooltip();
-
   return (
     <div className="flex flex-wrap gap-2 md:flex-row">
       <Button
