@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star } from "lucide-react";
 import { Progress } from "./ui/progress";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getDailyBossRotation } from "@/integrations/supabase/client";
 import { QuestBattleBanner } from "@/components/quests/QuestBattleBanner";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 
@@ -46,7 +46,6 @@ const BOSS_TIERS = {
     energyCost: 40, 
     rewards: { 
       blueprintPieces: 5,
-      holosTokens: 1000,
       gachaTickets: 5,
       xpMultiplier: 1,
       squadXp: 50 // Base XP for each squad member
@@ -57,7 +56,6 @@ const BOSS_TIERS = {
     energyCost: 60, 
     rewards: { 
       blueprintPieces: 10,
-      holosTokens: 2500,
       gachaTickets: 10,
       xpMultiplier: 2,
       squadXp: 100 // Base XP for each squad member
@@ -68,7 +66,6 @@ const BOSS_TIERS = {
     energyCost: 80, 
     rewards: { 
       blueprintPieces: 15,
-      holosTokens: 5000,
       gachaTickets: 15,
       xpMultiplier: 3,
       squadXp: 200 // Base XP for each squad member
@@ -88,9 +85,15 @@ export const QuestGrid = () => {
   const [isExplorationQuesting, setIsExplorationQuesting] = useState(false);
   
   const [bossHolobots, setBossHolobots] = useState<string[]>([]);
-  const [selectedBoss, setSelectedBoss] = useState<string>("");
   const [selectedBossTier, setSelectedBossTier] = useState<keyof typeof BOSS_TIERS>("tier1");
   const [isBossQuesting, setIsBossQuesting] = useState(false);
+  
+  // Daily boss rotation
+  const [dailyBosses, setDailyBosses] = useState<Record<string, string>>({
+    tier1: "",
+    tier2: "",
+    tier3: ""
+  });
   
   // Cooldown state for holobots
   const [holobotCooldowns, setHolobotCooldowns] = useState<Record<string, Date>>({});
@@ -107,6 +110,13 @@ export const QuestGrid = () => {
   const [squadExpResults, setSquadExpResults] = useState<Array<{name: string, xp: number, levelUp: boolean, newLevel: number}>>([]);
   const [blueprintReward, setBlueprintReward] = useState<{holobotKey: string, amount: number} | undefined>();
   const [holosReward, setHolosReward] = useState(0);
+  const [gachaReward, setGachaReward] = useState(0);
+
+  // Load daily boss rotation on component mount
+  useEffect(() => {
+    const rotation = getDailyBossRotation();
+    setDailyBosses(rotation);
+  }, []);
 
   // Get the user's holobots that are not on cooldown
   const getAvailableHolobots = () => {
@@ -245,6 +255,7 @@ export const QuestGrid = () => {
             amount: tier.rewards.blueprintPieces
           });
           setHolosReward(tier.rewards.holosTokens);
+          setGachaReward(0);
           setShowResultsScreen(true);
         }
       } else {
@@ -268,6 +279,7 @@ export const QuestGrid = () => {
         }]);
         setBlueprintReward(undefined);
         setHolosReward(0);
+        setGachaReward(0);
         setShowResultsScreen(true);
       }
     } catch (error) {
@@ -309,16 +321,17 @@ export const QuestGrid = () => {
       return;
     }
 
-    if (!selectedBoss) {
+    const tier = BOSS_TIERS[selectedBossTier];
+    const currentBossKey = dailyBosses[selectedBossTier];
+    
+    if (!currentBossKey) {
       toast({
-        title: "Select a Boss",
-        description: "Please select a Boss to challenge",
+        title: "Error",
+        description: "Failed to get daily boss. Please refresh the page.",
         variant: "destructive"
       });
       return;
     }
-
-    const tier = BOSS_TIERS[selectedBossTier];
     
     if (!user || user.dailyEnergy < tier.energyCost) {
       toast({
@@ -334,7 +347,7 @@ export const QuestGrid = () => {
     // Set up battle banner
     setIsBossBattle(true);
     setCurrentBattleHolobots([...bossHolobots]);
-    setCurrentBossHolobot(selectedBoss);
+    setCurrentBossHolobot(currentBossKey);
     setShowBattleBanner(true);
     
     try {
@@ -367,14 +380,13 @@ export const QuestGrid = () => {
         // Update the blueprint count for the boss holobot
         const updatedBlueprints = {
           ...currentBlueprints,
-          [selectedBoss]: (currentBlueprints[selectedBoss] || 0) + tier.rewards.blueprintPieces
+          [currentBossKey]: (currentBlueprints[currentBossKey] || 0) + tier.rewards.blueprintPieces
         };
         
-        // Update user's tokens, tickets, and energy
+        // Update user's gachaTickets and energy
         if (user) {
           await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
-            holosTokens: user.holosTokens + tier.rewards.holosTokens,
             gachaTickets: user.gachaTickets + tier.rewards.gachaTickets,
             holobots: updatedHolobots, // Update with new XP values
             blueprints: updatedBlueprints
@@ -384,10 +396,11 @@ export const QuestGrid = () => {
         // Set up results screen data
         setBattleSuccess(true);
         setBlueprintReward({
-          holobotKey: selectedBoss,
+          holobotKey: currentBossKey,
           amount: tier.rewards.blueprintPieces
         });
-        setHolosReward(tier.rewards.holosTokens);
+        setHolosReward(0); // No Holos rewards for boss quests
+        setGachaReward(tier.rewards.gachaTickets);
         setShowResultsScreen(true);
       } else {
         // Even on failure, Holobots gain some experience (half of success amount)
@@ -403,7 +416,7 @@ export const QuestGrid = () => {
         // Update the blueprint count for the boss holobot
         const updatedBlueprints = {
           ...currentBlueprints,
-          [selectedBoss]: (currentBlueprints[selectedBoss] || 0) + failureBlueprintPieces
+          [currentBossKey]: (currentBlueprints[currentBossKey] || 0) + failureBlueprintPieces
         };
         
         // Set all squad holobots on cooldown
@@ -423,10 +436,11 @@ export const QuestGrid = () => {
         // Set up results screen for failure
         setBattleSuccess(false);
         setBlueprintReward({
-          holobotKey: selectedBoss,
+          holobotKey: currentBossKey,
           amount: failureBlueprintPieces
         });
         setHolosReward(0);
+        setGachaReward(0);
         setShowResultsScreen(true);
       }
     } catch (error) {
@@ -442,7 +456,7 @@ export const QuestGrid = () => {
     }
   };
 
-  // New function to update experience for all Holobots in the squad - update to track XP messages
+  // Update experience for all Holobots in the squad - update to track XP messages
   const updateSquadExperience = async (squadHolobotKeys, baseXp, multiplier = 1) => {
     if (!user?.holobots || !Array.isArray(user.holobots)) {
       return [];
@@ -538,13 +552,19 @@ export const QuestGrid = () => {
     return currentLevel;
   };
 
+  // Get daily boss display name
+  const getDailyBossName = (tier: keyof typeof BOSS_TIERS) => {
+    const bossKey = dailyBosses[tier];
+    return bossKey ? HOLOBOT_STATS[bossKey]?.name || "Unknown Boss" : "Loading...";
+  };
+
   const availableHolobots = getAvailableHolobots();
 
   return (
     <div className="space-y-8">
-      <Card className="glass-morphism border-holobots-accent">
+      <Card className="glass-morphism border-app-primary/30">
         <CardHeader>
-          <CardTitle className="text-2xl text-holobots-accent">Quests Info</CardTitle>
+          <CardTitle className="text-2xl text-app-primary">Quests Info</CardTitle>
           <CardDescription className="text-lg text-foreground/90">
             Send your Holobots on quests to earn rewards
           </CardDescription>
@@ -552,31 +572,20 @@ export const QuestGrid = () => {
         <CardContent>
           <ul className="list-disc list-inside space-y-2 text-foreground/80">
             <li>Exploration Quests: Earn Holos tokens and Blueprint Pieces</li>
-            <li>Boss Quests: Team up 3 Holobots to earn big rewards</li>
+            <li>Boss Quests: Team up 3 Holobots to earn Blueprint Pieces and Gacha Tickets</li>
             <li>Defeated Holobots need {COOLDOWN_MINUTES} minutes to recharge</li>
+            <li>Today's Boss Rotation: <span className="text-app-primary">{getDailyBossName('tier1')}, {getDailyBossName('tier2')}, {getDailyBossName('tier3')}</span></li>
           </ul>
-          
-          {/* Energy Display */}
-          <div className="mt-4 p-3 bg-black/30 rounded-lg border border-holobots-accent/30">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-holobots-accent font-medium">Daily Energy</span>
-              <span className="text-white">{user?.dailyEnergy || 0}/{user?.maxDailyEnergy || 100}</span>
-            </div>
-            <Progress 
-              value={(user?.dailyEnergy || 0) / (user?.maxDailyEnergy || 100) * 100} 
-              className="h-2 bg-gray-700"
-            />
-          </div>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Exploration Quest */}
-        <Card className="glass-morphism border-holobots-accent">
+        <Card className="glass-morphism border-app-primary/30">
           <CardHeader>
             <div className="flex items-center space-x-2">
-              <MapPin className="h-5 w-5 text-holobots-accent" />
-              <CardTitle className="text-xl text-holobots-accent">Exploration Quest</CardTitle>
+              <MapPin className="h-5 w-5 text-app-primary" />
+              <CardTitle className="text-xl text-app-primary">Exploration Quest</CardTitle>
             </div>
             <CardDescription>
               Send a Holobot to explore and collect resources
@@ -584,7 +593,7 @@ export const QuestGrid = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <Select value={explorationHolobot} onValueChange={setExplorationHolobot}>
-              <SelectTrigger className="border-holobots-accent/50 text-foreground">
+              <SelectTrigger className="border-app-primary/50 text-foreground">
                 <SelectValue placeholder="Choose your Holobot" />
               </SelectTrigger>
               <SelectContent>
@@ -607,8 +616,8 @@ export const QuestGrid = () => {
                   variant={selectedExplorationTier === key ? "default" : "outline"}
                   className={`
                     h-auto py-2 px-3
-                    ${selectedExplorationTier === key ? 'bg-holobots-accent text-white' : 'bg-black/40 text-holobots-accent'}
-                    border-holobots-accent/20 hover:border-holobots-accent
+                    ${selectedExplorationTier === key ? 'bg-app-primary text-black' : 'bg-black/40 text-app-primary'}
+                    border-app-primary/20 hover:border-app-primary
                   `}
                   onClick={() => setSelectedExplorationTier(key)}
                 >
@@ -625,8 +634,8 @@ export const QuestGrid = () => {
             </div>
 
             {/* Rewards Display */}
-            <div className="bg-black/30 p-2 rounded-md border border-holobots-accent/30">
-              <h4 className="text-sm font-medium text-holobots-accent mb-2">Rewards:</h4>
+            <div className="bg-app-backgroundLight p-2 rounded-md border border-app-primary/30">
+              <h4 className="text-sm font-medium text-app-primary mb-2">Rewards:</h4>
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex items-center gap-1 text-xs">
                   <Gem className="h-3 w-3 text-purple-400" />
@@ -640,7 +649,7 @@ export const QuestGrid = () => {
             </div>
             
             <Button 
-              className="w-full bg-holobots-accent hover:bg-holobots-hover text-white"
+              className="w-full bg-app-primary hover:bg-app-primary/80 text-black"
               disabled={isExplorationQuesting || !explorationHolobot || (user?.dailyEnergy || 0) < EXPLORATION_TIERS[selectedExplorationTier].energyCost}
               onClick={handleStartExploration}
             >
@@ -660,11 +669,11 @@ export const QuestGrid = () => {
         </Card>
 
         {/* Boss Quest */}
-        <Card className="glass-morphism border-holobots-accent">
+        <Card className="glass-morphism border-app-primary/30">
           <CardHeader>
             <div className="flex items-center space-x-2">
               <Target className="h-5 w-5 text-red-500" />
-              <CardTitle className="text-xl text-holobots-accent">Boss Quest</CardTitle>
+              <CardTitle className="text-xl text-app-primary">Boss Quest</CardTitle>
             </div>
             <CardDescription>
               Challenge powerful bosses with a team of 3 Holobots
@@ -673,7 +682,7 @@ export const QuestGrid = () => {
           <CardContent className="space-y-4">
             {/* Squad Selection */}
             <div>
-              <div className="text-sm text-holobots-accent mb-2">Select 3 Holobots for your squad:</div>
+              <div className="text-sm text-app-primary mb-2">Select 3 Holobots for your squad:</div>
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {Array(3).fill(0).map((_, index) => {
                   const selectedKey = bossHolobots[index];
@@ -684,7 +693,7 @@ export const QuestGrid = () => {
                       key={index}
                       className={`
                         h-16 border rounded-md flex items-center justify-center
-                        ${isSelected ? 'border-holobots-accent bg-holobots-accent/10' : 'border-dashed border-gray-600 bg-black/20'}
+                        ${isSelected ? 'border-app-primary bg-app-primary/10' : 'border-dashed border-gray-600 bg-black/20'}
                       `}
                     >
                       {isSelected ? (
@@ -715,7 +724,7 @@ export const QuestGrid = () => {
                         size="sm"
                         className={`
                           h-auto py-1 justify-start text-left
-                          ${isSelected ? 'bg-holobots-accent/30 border-holobots-accent' : 'bg-black/30 border-gray-700'}
+                          ${isSelected ? 'bg-app-primary/30 border-app-primary' : 'bg-black/30 border-gray-700'}
                         `}
                         onClick={() => handleSelectBossHolobot(holobotKey)}
                       >
@@ -730,21 +739,26 @@ export const QuestGrid = () => {
               </div>
             </div>
             
-            {/* Boss Selection */}
-            <div>
-              <div className="text-sm text-holobots-accent mb-2">Select Boss:</div>
-              <Select value={selectedBoss} onValueChange={setSelectedBoss}>
-                <SelectTrigger className="border-holobots-accent/50 text-foreground">
-                  <SelectValue placeholder="Choose boss" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                    <SelectItem key={key} value={key}>
-                      {stats.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Daily Boss Info */}
+            <div className="bg-app-backgroundLight p-2 rounded-md border border-app-primary/30">
+              <h4 className="text-sm font-medium text-app-primary mb-2">Today's Boss Rotation:</h4>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="p-1 border border-app-primary/20 rounded">
+                  <div>Tier 1</div>
+                  <div className="font-medium">{getDailyBossName('tier1')}</div>
+                </div>
+                <div className="p-1 border border-app-primary/20 rounded">
+                  <div>Tier 2</div>
+                  <div className="font-medium">{getDailyBossName('tier2')}</div>
+                </div>
+                <div className="p-1 border border-app-primary/20 rounded">
+                  <div>Tier 3</div>
+                  <div className="font-medium">{getDailyBossName('tier3')}</div>
+                </div>
+              </div>
+              <div className="text-xs text-app-textSecondary mt-2 text-center">
+                Boss rotation changes daily
+              </div>
             </div>
             
             {/* Tier Selection */}
@@ -774,15 +788,11 @@ export const QuestGrid = () => {
 
             {/* Rewards Display */}
             <div className="bg-black/30 p-2 rounded-md border border-red-500/30">
-              <h4 className="text-sm font-medium text-holobots-accent mb-2">Rewards:</h4>
+              <h4 className="text-sm font-medium text-app-primary mb-2">Rewards:</h4>
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex items-center gap-1 text-xs">
                   <Gem className="h-3 w-3 text-purple-400" />
                   <span>{BOSS_TIERS[selectedBossTier].rewards.blueprintPieces} Blueprint Pieces</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span className="text-yellow-400">+</span>
-                  <span>{BOSS_TIERS[selectedBossTier].rewards.holosTokens} Holos</span>
                 </div>
                 <div className="flex items-center gap-1 text-xs">
                   <Ticket className="h-3 w-3 text-green-400" />
@@ -792,6 +802,10 @@ export const QuestGrid = () => {
                   <Swords className="h-3 w-3 text-blue-400" />
                   <span>x{BOSS_TIERS[selectedBossTier].rewards.xpMultiplier} XP Boost</span>
                 </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <Star className="h-3 w-3 text-yellow-400" />
+                  <span>{BOSS_TIERS[selectedBossTier].rewards.squadXp} Base XP</span>
+                </div>
               </div>
             </div>
             
@@ -800,7 +814,7 @@ export const QuestGrid = () => {
               disabled={
                 isBossQuesting || 
                 bossHolobots.length < 3 || 
-                !selectedBoss || 
+                !dailyBosses[selectedBossTier] || 
                 (user?.dailyEnergy || 0) < BOSS_TIERS[selectedBossTier].energyCost
               }
               onClick={handleStartBossQuest}
@@ -823,11 +837,11 @@ export const QuestGrid = () => {
 
       {/* Holobot Cooldowns Display */}
       {Object.keys(holobotCooldowns).length > 0 && (
-        <Card className="glass-morphism border-holobots-accent/50">
+        <Card className="glass-morphism border-app-primary/50">
           <CardHeader className="pb-2">
             <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-holobots-accent" />
-              <CardTitle className="text-lg text-holobots-accent">Holobot Cooldowns</CardTitle>
+              <Clock className="h-5 w-5 text-app-primary" />
+              <CardTitle className="text-lg text-app-primary">Holobot Cooldowns</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
@@ -877,6 +891,7 @@ export const QuestGrid = () => {
         squadHolobotExp={squadExpResults}
         blueprintRewards={blueprintReward}
         holosRewards={holosReward}
+        gachaTickets={gachaReward}
         onClose={() => setShowResultsScreen(false)}
       />
     </div>

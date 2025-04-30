@@ -11,7 +11,6 @@ import { ArenaPrebattleMenu } from "@/components/arena/ArenaPrebattleMenu";
 import { generateArenaOpponent, calculateArenaRewards } from "@/utils/battleUtils";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 import { HOLOBOT_STATS } from "@/types/holobot";
-import { updateHolobotExperience, calculateExperience } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);
@@ -30,6 +29,31 @@ const Index = () => {
   useEffect(() => {
     setCurrentOpponent(generateArenaOpponent(currentRound));
   }, [currentRound]);
+
+  // Helper function to calculate required XP for level
+  const calculateExperience = (level: number) => {
+    const BASE_XP = 100;
+    return Math.floor(BASE_XP * Math.pow(level, 2));
+  };
+  
+  // Helper function to update holobot experience
+  const updateHolobotExperience = (holobots: any[], holobotName: string, newExperience: number, newLevel: number) => {
+    if (!holobots || !Array.isArray(holobots)) {
+      return [];
+    }
+    
+    return holobots.map(holobot => {
+      if (holobot.name.toLowerCase() === holobotName.toLowerCase()) {
+        return {
+          ...holobot,
+          level: newLevel,
+          experience: newExperience,
+          nextLevelExp: calculateExperience(newLevel)
+        };
+      }
+      return holobot;
+    });
+  };
 
   const payEntryFee = async () => {
     try {
@@ -122,7 +146,7 @@ const Index = () => {
     const totalXp = currentXp + xpGained;
     
     // Check if level up occurred
-    const requiredXpForNextLevel = Math.floor(100 * Math.pow(currentLevel, 2));
+    const requiredXpForNextLevel = calculateExperience(currentLevel);
     const leveledUp = totalXp >= requiredXpForNextLevel;
     const newLevel = leveledUp ? currentLevel + 1 : currentLevel;
     
@@ -234,21 +258,21 @@ const Index = () => {
 
   return (
     <div className="px-2 py-3">
-      <div className="mb-4 bg-[#1A1F2C] rounded-lg p-3">
-        <div className="text-center mb-2 text-lg font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">
+      <div className="mb-4 bg-app-backgroundLight rounded-lg p-3">
+        <div className="text-center mb-2 text-lg font-bold neon-text-cyan">
           ARENA MODE
         </div>
         <div className="flex justify-between items-center mb-2">
           <div className="bg-black/30 px-3 py-1 rounded-lg">
-            <span className="text-xs text-[#8E9196]">Round</span>
-            <div className="text-md font-bold text-holobots-accent">{currentRound}/{maxRounds}</div>
+            <span className="text-xs text-app-textSecondary">Round</span>
+            <div className="text-md font-bold text-app-primary">{currentRound}/{maxRounds}</div>
           </div>
           <div className="bg-black/30 px-3 py-1 rounded-lg">
-            <span className="text-xs text-[#8E9196]">Victories</span>
+            <span className="text-xs text-app-textSecondary">Victories</span>
             <div className="text-md font-bold text-green-500">{victories}</div>
           </div>
           <div className="bg-black/30 px-3 py-1 rounded-lg">
-            <span className="text-xs text-[#8E9196]">Opponent Level</span>
+            <span className="text-xs text-app-textSecondary">Opponent Level</span>
             <div className="text-md font-bold text-yellow-500">
               {currentOpponent.level}
             </div>
@@ -273,6 +297,7 @@ const Index = () => {
           squadHolobotExp={arenaResults.squadHolobotExp}
           blueprintRewards={arenaResults.blueprintRewards}
           holosRewards={arenaResults.holosRewards}
+          gachaTickets={arenaResults.gachaTickets}
           onClose={handleResultsClose}
         />
       )}

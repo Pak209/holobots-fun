@@ -56,3 +56,56 @@ export const HOLOBOT_STATS = {
   BASE_DEFENSE: 5,
   BASE_SPEED: 8
 };
+
+// Daily boss rotation function
+export const getDailyBossRotation = () => {
+  // Create deterministic boss rotations based on the day of the year
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now.getTime() - start.getTime();
+  const oneDay = 1000 * 60 * 60 * 24;
+  const dayOfYear = Math.floor(diff / oneDay);
+  
+  // Use modulo to rotate through bosses
+  const bossRotations = {
+    tier1: [
+      'ace', 'hare', 'byte', 'nova', 'zed'
+    ],
+    tier2: [
+      'luna', 'rex', 'tsuin', 'pulse', 'grit'
+    ],
+    tier3: [
+      'void', 'kurai', 'flux', 'neo', 'titan'
+    ]
+  };
+  
+  return {
+    tier1: bossRotations.tier1[dayOfYear % bossRotations.tier1.length],
+    tier2: bossRotations.tier2[dayOfYear % bossRotations.tier2.length],
+    tier3: bossRotations.tier3[dayOfYear % bossRotations.tier3.length]
+  };
+};
+
+// Player rank colors
+export const playerRankColors = {
+  Rookie: '#cccccc',
+  Scout: '#4caf50',
+  Champion: '#2196f3',
+  Elite: '#9c27b0',
+  Legend: '#ff9800',
+  Mythic: '#f44336'
+};
+
+// Theme colors
+export const themeColors = {
+  primary: '#00E5FF',
+  secondary: '#9C27B0',
+  background: '#0C1218',
+  backgroundLight: '#1A2836',
+  text: '#FFFFFF',
+  textSecondary: '#AAAAAA',
+  error: '#FF3B30',
+  success: '#34C759',
+  warning: '#FFCC00',
+  muted: '#888888'
+};

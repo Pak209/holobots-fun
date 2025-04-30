@@ -22,7 +22,7 @@ import Fitness from "@/pages/Fitness";
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark" enableSystem>
+    <ThemeProvider forcedTheme="dark" enableSystem={false}>
       <Router>
         <AuthProvider>
           <Routes>
