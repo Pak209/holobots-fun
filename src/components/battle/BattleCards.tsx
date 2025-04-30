@@ -1,5 +1,9 @@
-import { HOLOBOT_STATS, HolobotStats } from "@/types/holobot";
+
+import { HolobotCard } from "../HolobotCard";
+import { ExperienceBar } from "../ExperienceBar";
 import { getExperienceProgress } from "@/utils/battleUtils";
+import { HOLOBOT_STATS } from "@/types/holobot";
+import { useAuth } from "@/contexts/auth";
 
 interface BattleCardsProps {
   selectedLeftHolobot: string;
@@ -7,7 +11,7 @@ interface BattleCardsProps {
   leftLevel: number;
   rightLevel: number;
   leftXp: number;
-  rightXp: number; // This prop exists but isn't used in the component
+  rightXp: number;
 }
 
 export const BattleCards = ({
@@ -15,93 +19,120 @@ export const BattleCards = ({
   selectedRightHolobot,
   leftLevel,
   rightLevel,
-  leftXp
+  leftXp,
+  rightXp
 }: BattleCardsProps) => {
-  const leftHolobotBaseStats = HOLOBOT_STATS[selectedLeftHolobot];
-  const rightHolobotBaseStats = HOLOBOT_STATS[selectedRightHolobot];
-
-  // Retrieve user's holobots from local storage or default to an empty array
-  const storedHolobots = localStorage.getItem('holobots');
-  const userHolobots = storedHolobots ? JSON.parse(storedHolobots) : [];
-
-  // Find the selected holobots in the user's collection
-  const leftUserHolobot = userHolobots.find((h: any) =>
-    h.name.toLowerCase() === leftHolobotBaseStats?.name?.toLowerCase()
+  console.log("BattleCards rendering with:", {
+    left: selectedLeftHolobot,
+    right: selectedRightHolobot,
+    leftLevel,
+    rightLevel
+  });
+  
+  const { user } = useAuth();
+  
+  // Look up the correct stats objects from HOLOBOT_STATS using normalized keys
+  const normalizedLeftKey = selectedLeftHolobot.toUpperCase();
+  const normalizedRightKey = selectedRightHolobot.toUpperCase();
+  
+  // Find the correct stats by normalized key or name property
+  const leftHolobotStats = Object.values(HOLOBOT_STATS).find(
+    h => h.name.toUpperCase() === normalizedLeftKey
   );
-  const rightUserHolobot = userHolobots.find((h: any) =>
-    h.name.toLowerCase() === rightHolobotBaseStats?.name?.toLowerCase()
+  
+  const rightHolobotStats = Object.values(HOLOBOT_STATS).find(
+    h => h.name.toUpperCase() === normalizedRightKey
   );
-
-  const leftHolobotStats = leftHolobotBaseStats ? applyUserHolobotBoosts(leftHolobotBaseStats, leftUserHolobot) : leftHolobotBaseStats;
-  const rightHolobotStats = rightHolobotBaseStats ? applyUserHolobotBoosts(rightHolobotBaseStats, rightUserHolobot) : rightHolobotBaseStats;
-
-  const leftXpDetails = getExperienceProgress(leftXp, leftLevel);
-
+  
+  // Find user's holobot to apply attribute boosts - use exact name match
+  const userLeftHolobot = user?.holobots?.find(h => 
+    h.name.toLowerCase() === (leftHolobotStats?.name || '').toLowerCase()
+  );
+  
+  // Log to check if we found the user's holobot
+  console.log("Found user's holobot?", {
+    leftHolobotStats: leftHolobotStats?.name,
+    userLeftHolobot: userLeftHolobot?.name,
+    userLeftLevel: userLeftHolobot?.level,
+    propLevel: leftLevel,
+    boostedAttributes: userLeftHolobot?.boostedAttributes
+  });
+  
+  if (!leftHolobotStats || !rightHolobotStats) {
+    console.error("Missing holobot stats", { 
+      leftKey: selectedLeftHolobot, 
+      rightKey: selectedRightHolobot,
+      normalizedLeftKey,
+      normalizedRightKey,
+      leftFound: !!leftHolobotStats,
+      rightFound: !!rightHolobotStats,
+      availableNames: Object.values(HOLOBOT_STATS).map(h => h.name).join(", ")
+    });
+  }
+  
+  // Apply attribute boosts from user's holobot
+  const applyAttributeBoosts = (baseStats, userHolobot) => {
+    if (!userHolobot || !userHolobot.boostedAttributes) return baseStats;
+    
+    // Log the attribute boost application
+    console.log("Applying boosts:", {
+      baseStats,
+      boosts: userHolobot.boostedAttributes,
+      holobotName: userHolobot.name,
+      holobotLevel: userHolobot.level
+    });
+    
+    return {
+      ...baseStats,
+      attack: baseStats.attack + (userHolobot.boostedAttributes.attack || 0),
+      defense: baseStats.defense + (userHolobot.boostedAttributes.defense || 0),
+      speed: baseStats.speed + (userHolobot.boostedAttributes.speed || 0),
+      maxHealth: baseStats.maxHealth + (userHolobot.boostedAttributes.health || 0)
+    };
+  };
+  
+  // Apply boosts to the left (player's) holobot
+  const boostedLeftStats = applyAttributeBoosts(
+    leftHolobotStats || HOLOBOT_STATS.ace, 
+    userLeftHolobot
+  );
+  
+  // Always prioritize the user's holobot level if available
+  const effectiveLeftLevel = userLeftHolobot?.level || leftLevel;
+  
   return (
-    <div className="flex justify-between items-center gap-2">
-      {/* Left Holobot Card */}
-      <div className="w-1/2 bg-holobots-card p-3 rounded-lg border border-holobots-border shadow-neon">
-        <h3 className="text-lg font-bold text-holobots-text">{leftHolobotStats?.name}</h3>
-        <p className="text-sm text-gray-400">Level: {leftLevel}</p>
-        <div className="relative pt-1">
-          <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-800">
-            <div
-              style={{ width: `${leftXpDetails.progress}%` }}
-              className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-holobots-accent transition-all duration-500"
-            ></div>
-          </div>
-          <p className="text-[0.6rem] text-gray-500 absolute -top-4">{leftXpDetails.currentXp} / {leftXpDetails.requiredXp} XP</p>
+    <div className="flex justify-center gap-2 mb-2">
+      <div className="flex flex-col items-center">
+        <div className="w-[150px] sm:w-auto">
+          <HolobotCard 
+            stats={{
+              ...boostedLeftStats, 
+              level: effectiveLeftLevel,
+              name: normalizedLeftKey
+            }} 
+            variant="blue" 
+          />
         </div>
-        <div className="flex justify-between text-sm text-gray-300">
-          <span>Attack: {leftHolobotStats?.attack}</span>
-          <span>Defense: {leftHolobotStats?.defense}</span>
-          <span>Speed: {leftHolobotStats?.speed}</span>
-        </div>
+        <ExperienceBar 
+          {...getExperienceProgress(leftXp, effectiveLeftLevel)}
+          level={effectiveLeftLevel}
+        />
       </div>
-
-      {/* Right Holobot Card */}
-      <div className="w-1/2 bg-holobots-card p-3 rounded-lg border border-holobots-border shadow-neon">
-        <h3 className="text-lg font-bold text-holobots-text">{rightHolobotStats?.name}</h3>
-        <p className="text-sm text-gray-400">Level: {rightLevel}</p>
-        <div className="relative pt-1">
-          <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-800">
-            <div
-              style={{ width: `0%` }}
-              className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-purple-500 transition-all duration-500"
-            ></div>
-          </div>
-          <p className="text-[0.6rem] text-gray-500 absolute -top-4">0 / 0 XP</p>
-        </div>
-        <div className="flex justify-between text-sm text-gray-300">
-          <span>Attack: {rightHolobotStats?.attack}</span>
-          <span>Defense: {rightHolobotStats?.defense}</span>
-          <span>Speed: {rightHolobotStats?.speed}</span>
+      <div className="flex items-center">
+        <span className="text-holobots-accent font-bold text-xl animate-neon-pulse">VS</span>
+      </div>
+      <div className="flex flex-col items-center">
+        <div className="w-[150px] sm:w-auto">
+          <HolobotCard 
+            stats={{
+              ...(rightHolobotStats || HOLOBOT_STATS.ace), 
+              level: rightLevel,
+              name: normalizedRightKey
+            }} 
+            variant="red" 
+          />
         </div>
       </div>
     </div>
   );
-};
-
-// Helper functions with proper types
-const applyUserHolobotBoosts = (baseStats: HolobotStats, userHolobot: any): HolobotStats => {
-  if (!userHolobot || !userHolobot.boostedAttributes) {
-    return baseStats;
-  }
-
-  const boostedStats: HolobotStats = { ...baseStats };
-
-  if (userHolobot.boostedAttributes.attack) {
-    boostedStats.attack += userHolobot.boostedAttributes.attack;
-  }
-  if (userHolobot.boostedAttributes.defense) {
-    boostedStats.defense += userHolobot.boostedAttributes.defense;
-  }
-  if (userHolobot.boostedAttributes.speed) {
-    boostedStats.speed += userHolobot.boostedAttributes.speed;
-  }
-    if (userHolobot.boostedAttributes.health && boostedStats.maxHealth) {
-        boostedStats.maxHealth += userHolobot.boostedAttributes.health;
-    }
-
-  return boostedStats;
 };

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import { FitnessStat } from "@/components/fitness/FitnessStat";
 import { WorkoutRewards } from "@/components/fitness/WorkoutRewards";
 import { HolobotSelector } from "@/components/fitness/HolobotSelector";
 import { cn } from "@/lib/utils";
-import { Progress } from "@/components/ui/progress";
 
 interface HolobotRank {
   name: string;

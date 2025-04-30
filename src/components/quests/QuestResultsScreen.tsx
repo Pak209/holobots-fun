@@ -1,41 +1,33 @@
+
 import { useState, useEffect } from "react";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface QuestResultsScreenProps {
   isVisible: boolean;
   isSuccess: boolean;
-  squadHolobotExp: Array<{
-    name: string;
-    xp: number;
-    levelUp: boolean;
-    newLevel: number;
-  }>;
+  squadHolobotKeys: string[];
+  squadHolobotExp: Array<{name: string, xp: number, levelUp: boolean, newLevel: number}>;
   blueprintRewards?: {
     holobotKey: string;
     amount: number;
   };
   holosRewards: number;
   onClose: () => void;
-  gachaTickets?: number;
-  arenaPass?: number;
-  squadHolobotKeys?: string[]; // Added but not used internally
 }
 
 export const QuestResultsScreen = ({
   isVisible,
   isSuccess,
+  squadHolobotKeys,
   squadHolobotExp,
   blueprintRewards,
   holosRewards,
-  onClose,
-  gachaTickets,
-  arenaPass,
+  onClose
 }: QuestResultsScreenProps) => {
-  if (!isVisible) return null;
-
   const [animation, setAnimation] = useState<"entering" | "active" | "exiting" | "hidden">("hidden");
   
   useEffect(() => {
@@ -102,30 +94,6 @@ export const QuestResultsScreen = ({
                     <p className="text-md font-bold text-purple-400">
                       {blueprintRewards.amount} {HOLOBOT_STATS[blueprintRewards.holobotKey]?.name || ""}
                     </p>
-                  </div>
-                </div>
-              )}
-              
-              {gachaTickets && gachaTickets > 0 && (
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                    <span className="text-green-400 text-sm font-bold">G</span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Gacha Tickets</p>
-                    <p className="text-md font-bold text-green-400">{gachaTickets}</p>
-                  </div>
-                </div>
-              )}
-              
-              {arenaPass && arenaPass > 0 && (
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                    <span className="text-blue-400 text-sm font-bold">A</span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Arena Passes</p>
-                    <p className="text-md font-bold text-blue-400">{arenaPass}</p>
                   </div>
                 </div>
               )}

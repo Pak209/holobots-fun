@@ -1,151 +1,265 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { HOLOBOT_STATS, HolobotStats, getRank } from "@/types/holobot";
-import { Badge } from "@/components/ui/badge";
+
+import { useState } from "react";
+import { HolobotCard } from "@/components/HolobotCard";
+import { HOLOBOT_STATS, getRank } from "@/types/holobot";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Coins, Plus, Crown, Zap } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { calculateExperience, getExperienceProgress } from "@/utils/battleUtils";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
+import { UserHolobot } from "@/types/user";
+import { useAuth } from "@/contexts/auth";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface HolobotInfoCardProps {
-  holobot: any;
+  holobotKey: string;
+  holobot: typeof HOLOBOT_STATS[keyof typeof HOLOBOT_STATS];
+  userHolobot: UserHolobot | undefined;
+  userTokens: number;
+  isMinting: boolean;
+  justMinted: boolean;
+  onMint: (holobotName: string) => void;
 }
 
-export const HolobotInfoCard = ({ holobot }: HolobotInfoCardProps) => {
-  const holobotKey = holobot.name.toLowerCase();
-  const baseStats = HOLOBOT_STATS[holobotKey];
+export const HolobotInfoCard = ({
+  holobotKey,
+  holobot,
+  userHolobot,
+  userTokens,
+  isMinting,
+  justMinted,
+  onMint
+}: HolobotInfoCardProps) => {
+  const isOwned = !!userHolobot;
+  const level = userHolobot?.level || holobot.level;
+  const currentXp = userHolobot?.experience || 0;
+  const nextLevelXp = userHolobot?.nextLevelExp || 100;
+  const holobotRank = userHolobot?.rank || "Common";
+  const attributePoints = userHolobot?.attributePoints || 0;
   
-  if (!baseStats) {
-    return (
-      <Card className="w-full glass-morphism border-none">
-        <CardHeader>
-          <CardTitle>Holobot Not Found</CardTitle>
-          <CardDescription>
-            The requested Holobot could not be found.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Please check the Holobot name and try again.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const { user, updateUser } = useAuth();
+  const { toast } = useToast();
+  
+  const calculateProgress = (current: number, total: number) => {
+    return Math.min(100, Math.floor((current / total) * 100));
+  };
+  
+  const xpProgress = calculateProgress(currentXp, nextLevelXp);
 
-  const level = holobot.level || 1;
-  const rank = getRank(level);
-  const nextLevelExp = calculateExperience(level);
-  
-  const maxHealthChecked = holobot.maxHealth || 100;
-  const progress = getExperienceProgress(holobot.experience || 0, level);
+  // Get background color based on rank
+  const getRankColor = (rank: string) => {
+    switch(rank) {
+      case "Legendary": return "bg-orange-600/20 border-orange-500 text-orange-400";
+      case "Elite": return "bg-yellow-600/20 border-yellow-500 text-yellow-400";
+      case "Rare": return "bg-purple-600/20 border-purple-500 text-purple-400";
+      case "Champion": return "bg-green-600/20 border-green-500 text-green-400";
+      case "Common":
+      default: return "bg-blue-600/20 border-blue-500 text-blue-400";
+    }
+  };
+
+  const handleBoostAttribute = async (attribute: 'attack' | 'defense' | 'speed' | 'health') => {
+    if (!isOwned || !user) return;
+    
+    try {
+      // Check if user has holobots array
+      if (!user.holobots || !Array.isArray(user.holobots)) {
+        throw new Error("User holobots data is not available");
+      }
+      
+      // Check if user has attribute points to spend
+      const targetHolobot = user.holobots.find(h => h.name.toLowerCase() === holobot.name.toLowerCase());
+      if (!targetHolobot || !(targetHolobot.attributePoints && targetHolobot.attributePoints > 0)) {
+        toast({
+          title: "No Attribute Points",
+          description: "You don't have any attribute points to spend.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Find the holobot to update
+      const updatedHolobots = user.holobots.map(h => {
+        if (h.name.toLowerCase() === holobot.name.toLowerCase()) {
+          // Initialize boostedAttributes if it doesn't exist
+          const boostedAttributes = h.boostedAttributes || {};
+          
+          // Update the specific attribute
+          if (attribute === 'health') {
+            boostedAttributes.health = (boostedAttributes.health || 0) + 10;
+          } else {
+            boostedAttributes[attribute] = (boostedAttributes[attribute] || 0) + 1;
+          }
+          
+          return {
+            ...h,
+            boostedAttributes,
+            attributePoints: (h.attributePoints || 0) - 1
+          };
+        }
+        return h;
+      });
+      
+      // Update the user profile
+      await updateUser({ holobots: updatedHolobots });
+      
+      toast({
+        title: "Attribute Boosted",
+        description: `Increased ${attribute} for ${holobot.name}`,
+      });
+    } catch (error) {
+      console.error("Error boosting attribute:", error);
+      toast({
+        title: "Error",
+        description: "Failed to boost attribute",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
-    <Card className="w-full glass-morphism border-none">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          {baseStats.name}
-          <Badge variant="secondary">{rank}</Badge>
-        </CardTitle>
-        <CardDescription>
-          {baseStats.abilityDescription}
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="grid gap-4">
-        <div className="flex items-center space-x-4">
-          <Avatar>
-            <AvatarImage src={`/images/holobots/${holobotKey}.png`} />
-            <AvatarFallback>{baseStats.name.substring(0, 2)}</AvatarFallback>
-          </Avatar>
-          <div className="space-y-1">
-            <p className="text-sm font-medium leading-none">Level {level}</p>
-            <Progress value={progress.progress} />
-            <p className="text-xs text-muted-foreground">
-              {holobot.experience || 0}/{nextLevelExp} XP
-            </p>
+    <div className={`flex flex-col sm:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-3 sm:p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300`}>
+      <div className="flex sm:flex-row gap-3 sm:gap-4 w-full items-stretch">
+        {/* Stats Panel - With reduced width on mobile */}
+        <div className="flex-none flex flex-col justify-between w-[120px] sm:w-[180px] bg-black/30 p-2 rounded-lg border border-holobots-accent self-start min-h-[320px]">
+          <div>
+            <div className="flex justify-between items-start mb-1.5">
+              <h2 className="text-lg font-bold text-holobots-accent drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] border border-transparent">
+                {holobot.name}
+              </h2>
+              {isOwned && !justMinted && (
+                <div className="px-1 py-0.5 bg-green-500/20 border border-green-500 rounded text-[9px]">
+                  OWNED
+                </div>
+              )}
+              {justMinted && (
+                <div className="px-1 py-0.5 bg-blue-500/20 border border-blue-500 rounded text-[9px] animate-pulse">
+                  NEW
+                </div>
+              )}
+            </div>
+            
+            {isOwned && (
+              <div className="mb-1.5 space-y-0.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span>LV {level}</span>
+                  <span>{currentXp}/{nextLevelXp}</span>
+                </div>
+                <Progress value={xpProgress} className="h-1" />
+                <div className="flex justify-between text-[9px]">
+                  <span className="text-right text-holobots-accent">
+                    Rank: {getRank(level)}
+                  </span>
+                  {userHolobot?.rank && (
+                    <Badge className={`text-[8px] py-0 px-1 h-4 ${getRankColor(holobotRank)}`}>
+                      <Crown className="h-2 w-2 mr-0.5" /> {holobotRank}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-0.5 font-mono text-xs">
+              <p>HP: {holobot.maxHealth} {userHolobot?.boostedAttributes?.health ? `+${userHolobot.boostedAttributes.health}` : ''}</p>
+              <p>Attack: {holobot.attack} {userHolobot?.boostedAttributes?.attack ? `+${userHolobot.boostedAttributes.attack}` : ''}</p>
+              <p>Defense: {holobot.defense} {userHolobot?.boostedAttributes?.defense ? `+${userHolobot.boostedAttributes.defense}` : ''}</p>
+              <p>Speed: {holobot.speed} {userHolobot?.boostedAttributes?.speed ? `+${userHolobot.boostedAttributes.speed}` : ''}</p>
+              <p className="text-sky-400 text-[10px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                Special: {holobot.specialMove}
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-1.5 pt-1 border-t border-holobots-border dark:border-holobots-dark-border">
+            {!isOwned && !justMinted && (
+              <Button 
+                onClick={() => onMint(holobot.name)}
+                disabled={isMinting || userTokens < 100}
+                className="w-full py-0 h-6 text-xs bg-holobots-accent hover:bg-holobots-accent/80 text-black font-semibold"
+              >
+                {isMinting ? (
+                  "Minting..."
+                ) : (
+                  <>
+                    <Plus size={10} className="mr-0.5" />
+                    Mint
+                    <Coins size={10} className="ml-0.5 mr-0.5" />
+                    <span>100</span>
+                  </>
+                )}
+              </Button>
+            )}
+            
+            {justMinted && (
+              <div className="w-full p-1 bg-green-500/20 border border-green-500 rounded text-center">
+                <span className="text-green-400 text-[9px] font-semibold">Minting Successful!</span>
+              </div>
+            )}
+            
+            {/* Attribute Boost Section - Only show for owned holobots with compact layout */}
+            {isOwned && (
+              <div>
+                <h3 className="text-[9px] font-bold mb-0.5 text-holobots-accent flex items-center justify-between">
+                  <span>Available Boosts</span>
+                  <Badge variant="outline" className="bg-blue-500/20 border-blue-500 text-blue-400 text-[8px] py-0 px-1 h-4 flex items-center">
+                    <Zap className="h-2 w-2 mr-0.5" /> {attributePoints}
+                  </Badge>
+                </h3>
+                <div className="grid grid-cols-2 gap-1">
+                  <button 
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
+                    onClick={() => handleBoostAttribute('attack')}
+                    disabled={attributePoints === 0}
+                  >
+                    +1 ATK
+                  </button>
+                  <button 
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
+                    onClick={() => handleBoostAttribute('defense')}
+                    disabled={attributePoints === 0}
+                  >
+                    +1 DEF
+                  </button>
+                  <button 
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
+                    onClick={() => handleBoostAttribute('speed')}
+                    disabled={attributePoints === 0}
+                  >
+                    +1 SPD
+                  </button>
+                  <button 
+                    className={`px-1 py-0.5 text-[8px] ${attributePoints > 0 ? 'bg-holobots-background dark:bg-holobots-dark-background border border-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover' : 'bg-gray-800/50 border border-gray-700 text-gray-500 cursor-not-allowed'} rounded transition-colors`}
+                    onClick={() => handleBoostAttribute('health')}
+                    disabled={attributePoints === 0}
+                  >
+                    +10 HP
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <span className="text-sm font-medium">Attack</span>
-            <span className="text-sm text-muted-foreground">{baseStats.attack}</span>
-          </div>
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <span className="text-sm font-medium">Defense</span>
-            <span className="text-sm text-muted-foreground">{baseStats.defense}</span>
-          </div>
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <span className="text-sm font-medium">Speed</span>
-            <span className="text-sm text-muted-foreground">{baseStats.speed}</span>
-          </div>
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <span className="text-sm font-medium">Health</span>
-            <span className="text-sm text-muted-foreground">{maxHealthChecked}</span>
+        {/* TCG Card - With preserved width on mobile */}
+        <div className="flex-1 flex justify-center items-center">
+          <div className="transform scale-100 origin-center w-[150px] sm:w-auto">
+            <HolobotCard 
+              stats={{
+                ...holobot,
+                level: isOwned ? level : holobot.level,
+                experience: isOwned ? currentXp : undefined,
+                nextLevelExp: isOwned ? nextLevelXp : undefined,
+                name: holobot.name.toUpperCase(),
+                // Apply boosted attributes if owned
+                attack: holobot.attack + (userHolobot?.boostedAttributes?.attack || 0),
+                defense: holobot.defense + (userHolobot?.boostedAttributes?.defense || 0),
+                speed: holobot.speed + (userHolobot?.boostedAttributes?.speed || 0),
+                maxHealth: holobot.maxHealth + (userHolobot?.boostedAttributes?.health || 0),
+              }} 
+              variant={isOwned ? "blue" : "red"} 
+            />
           </div>
         </div>
-        
-        <div>
-          <h3 className="text-sm font-medium">Special Move</h3>
-          <p className="text-sm text-muted-foreground">{baseStats.specialMove}</p>
-          <p className="text-xs text-gray-500">{baseStats.abilityStats}</p>
-        </div>
-      </CardContent>
-      
-      <CardFooter className="flex justify-between items-center">
-        <Button>Sync</Button>
-        <Button variant="secondary">View Details</Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
-};
-
-interface HolobotCardProps {
-    holobots: any[];
-    isLoading: boolean;
-}
-
-export function HolobotsCard({ holobots, isLoading }: HolobotCardProps) {
-    return (
-        <Card className="col-span-2 md:col-span-1 lg:col-span-2">
-            <CardHeader>
-                <CardTitle>Holobots</CardTitle>
-                <CardDescription>
-                    Here you can see your Holobots
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="pl-4 pb-4">
-                <ScrollArea className="h-[300px] w-full pr-4">
-                    <div className="grid gap-4">
-                        {isLoading ? (
-                            <>
-                                <Skeleton className="h-16 w-full" />
-                                <Skeleton className="h-16 w-full" />
-                                <Skeleton className="h-16 w-full" />
-                            </>
-                        ) : (
-                            holobots.map((holobot: any) => (
-                                <div key={holobot.id} className="flex items-center justify-between space-x-4 rounded-md border p-4">
-                                    <div className="flex items-center space-x-4">
-                                        <Avatar>
-                                            <AvatarImage src={`/images/holobots/${holobot.name.toLowerCase()}.png`} alt={holobot.name} />
-                                            <AvatarFallback>{holobot.name.substring(0, 2)}</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <p className="text-sm font-medium leading-none">{holobot.name}</p>
-                                            <p className="text-sm text-muted-foreground">
-                                                Level {holobot.level}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <Button size="sm">View</Button>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </ScrollArea>
-            </CardContent>
-        </Card>
-    )
 }

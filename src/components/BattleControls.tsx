@@ -1,7 +1,6 @@
-
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from "./ui/button";
+import { Rocket, Zap } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface BattleControlsProps {
   onStartBattle: () => void;
@@ -11,58 +10,42 @@ interface BattleControlsProps {
   hackGauge: number;
 }
 
-export const BattleControls = ({ 
-  onStartBattle, 
+export const BattleControls = ({
+  onStartBattle,
   onHypeUp,
   onHack,
   isBattleStarted,
   hackGauge
 }: BattleControlsProps) => {
   return (
-    <div className="flex flex-wrap gap-2 md:flex-row">
-      <Button
+    <div className="flex gap-1.5">
+      <Button 
+        variant="outline"
+        className="bg-holobots-accent hover:bg-holobots-hover text-white border-none text-xs shadow-neon-blue animate-pulse"
+        size="sm"
         onClick={onStartBattle}
-        className={`${
-          isBattleStarted ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
-        } text-white`}
       >
-        {isBattleStarted ? 'Reset Battle' : 'Start Battle'}
+        {isBattleStarted ? 'End Battle' : 'Start Battle'}
       </Button>
-
-      <Button
+      <Button 
+        variant="outline"
+        className="bg-yellow-400 hover:bg-yellow-500 text-white border-none text-xs shadow-neon"
+        size="sm"
         onClick={onHypeUp}
         disabled={!isBattleStarted}
-        className="bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-600"
       >
-        Hype Up!
+        <Rocket className="w-3 h-3 md:w-4 md:h-4" /> Hype
       </Button>
-
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Select
-              disabled={!isBattleStarted || hackGauge < 100}
-              onValueChange={(value) => onHack(value as 'attack' | 'speed' | 'heal')}
-            >
-              <SelectTrigger className={`w-24 ${
-                hackGauge >= 100 
-                  ? 'bg-purple-600 text-white border-purple-400' 
-                  : 'bg-gray-700 text-gray-400 border-gray-600'
-              }`}>
-                Hack {hackGauge >= 100 ? '✓' : `${Math.floor(hackGauge)}%`}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="attack">Attack +</SelectItem>
-                <SelectItem value="speed">Speed +</SelectItem>
-                <SelectItem value="heal">Heal</SelectItem>
-              </SelectContent>
-            </Select>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>Hack abilities unlock at 100%</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Select onValueChange={(value) => onHack(value as 'attack' | 'speed' | 'heal')} disabled={hackGauge < 100 || !isBattleStarted}>
+        <SelectTrigger className="h-9 bg-red-500 hover:bg-red-600 text-white border-none text-xs shadow-neon">
+          <Zap className="w-3 h-3 md:w-4 md:h-4" /> Hack ({Math.floor(hackGauge)}%)
+        </SelectTrigger>
+        <SelectContent className="bg-holobots-card border-holobots-border">
+          <SelectItem value="attack" className="text-holobots-text hover:bg-holobots-accent hover:text-white">Boost Attack</SelectItem>
+          <SelectItem value="speed" className="text-holobots-text hover:bg-holobots-accent hover:text-white">Boost Speed</SelectItem>
+          <SelectItem value="heal" className="text-holobots-text hover:bg-holobots-accent hover:text-white">Heal</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 };

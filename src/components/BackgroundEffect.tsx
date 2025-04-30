@@ -2,98 +2,99 @@
 import { useEffect, useRef } from 'react';
 import p5 from 'p5';
 
-interface BackgroundEffectProps {
-  width?: number;
-  height?: number;
-  particleCount?: number;
-  particleSize?: number;
-  particleColor?: string;
-  backgroundColor?: string;
-  particleSpeedMultiplier?: number;
-}
+const BackgroundEffect = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
 
-export const BackgroundEffect = ({
-  width = window.innerWidth,
-  height = window.innerHeight,
-  particleCount = 100,
-  particleSize = 2,
-  particleColor = '#ffffff',
-  backgroundColor = '#000000',
-  particleSpeedMultiplier = 1
-}: BackgroundEffectProps) => {
-  const sketchRef = useRef<HTMLDivElement>(null);
-  
   useEffect(() => {
-    // Only create the sketch when the container is available
-    if (!sketchRef.current) return;
-    
-    // Create a new p5 instance
-    const sketch = new p5((p) => {
-      // Array to hold particles
-      let particles: { x: number; y: number; vx: number; vy: number }[] = [];
-      
-      // Setup function runs once when the sketch starts
+    if (!containerRef.current) return;
+
+    const sketch = (p: p5) => {
+      const particles: { x: number; y: number; speed: number }[] = [];
+      const particleCount = 50;
+      const mouseInfluenceRadius = 200; // Radius of mouse influence
+      const maxSpeed = 2;
+      let mouseX = p.windowWidth / 2;
+      let mouseY = p.windowHeight / 2;
+
       p.setup = () => {
-        p.createCanvas(width, height);
-        p.frameRate(30);
-        
-        // Create initial particles
+        const canvas = p.createCanvas(window.innerWidth, window.innerHeight);
+        canvas.position(0, 0);
+        canvas.style('z-index', '-1');
+
+        // Initialize particles
         for (let i = 0; i < particleCount; i++) {
           particles.push({
-            x: p.random(width),
-            y: p.random(height),
-            vx: p.random(-1, 1) * particleSpeedMultiplier,
-            vy: p.random(-1, 1) * particleSpeedMultiplier
+            x: p.random(p.width),
+            y: p.random(p.height),
+            speed: p.random(0.5, 2)
           });
         }
       };
-      
-      // Draw function runs continuously
+
       p.draw = () => {
-        p.background(backgroundColor);
+        p.clear();
         
-        // Update and draw particles
-        for (let i = 0; i < particles.length; i++) {
-          let particle = particles[i];
+        // Update mouse position
+        mouseX = p.mouseX;
+        mouseY = p.mouseY;
+        
+        // Draw and update particles
+        particles.forEach((particle, i) => {
+          // Calculate distance to mouse
+          const dx = mouseX - particle.x;
+          const dy = mouseY - particle.y;
+          const distance = p.sqrt(dx * dx + dy * dy);
           
-          // Move particle
-          particle.x += particle.vx;
-          particle.y += particle.vy;
-          
-          // Bounce off edges
-          if (particle.x < 0 || particle.x > width) particle.vx *= -1;
-          if (particle.y < 0 || particle.y > height) particle.vy *= -1;
+          // Particle color based on distance to mouse
+          const alpha = p.map(distance, 0, mouseInfluenceRadius, 150, 50);
+          p.stroke(155, 92, 246, alpha);
+          p.strokeWeight(2);
           
           // Draw particle
-          p.fill(particleColor);
-          p.noStroke();
-          p.ellipse(particle.x, particle.y, particleSize);
+          p.point(particle.x, particle.y);
           
-          // Draw connections between close particles
-          for (let j = i + 1; j < particles.length; j++) {
-            let other = particles[j];
-            let d = p.dist(particle.x, particle.y, other.x, other.y);
-            
+          // Connect nearby particles
+          particles.slice(i + 1).forEach(other => {
+            const d = p.dist(particle.x, particle.y, other.x, other.y);
             if (d < 100) {
-              p.stroke(particleColor);
-              p.strokeWeight(0.5);
+              const alpha = p.map(d, 0, 100, 50, 0);
+              p.stroke(155, 92, 246, alpha);
               p.line(particle.x, particle.y, other.x, other.y);
             }
+          });
+          
+          // Move particle towards mouse if within influence radius
+          if (distance < mouseInfluenceRadius) {
+            const angle = p.atan2(dy, dx);
+            const influenceFactor = p.map(distance, 0, mouseInfluenceRadius, 1, 0);
+            particle.x += p.cos(angle) * particle.speed * influenceFactor;
+            particle.y += p.sin(angle) * particle.speed * influenceFactor;
+          } else {
+            // Default upward movement when not influenced by mouse
+            particle.y -= particle.speed * 0.5;
           }
-        }
+          
+          // Wrap particles around screen
+          if (particle.y < 0) particle.y = p.height;
+          if (particle.y > p.height) particle.y = 0;
+          if (particle.x < 0) particle.x = p.width;
+          if (particle.x > p.width) particle.x = 0;
+        });
       };
-      
-      // Window resize handler
+
       p.windowResized = () => {
-        p.resizeCanvas(width, height);
+        p.resizeCanvas(window.innerWidth, window.innerHeight);
       };
-    }, sketchRef.current);
-    
-    // Clean up function
-    return () => {
-      sketch.remove();
     };
-  }, [width, height, particleCount, particleSize, particleColor, backgroundColor, particleSpeedMultiplier]);
-  
-  return <div ref={sketchRef} className="absolute inset-0 -z-10" />;
+
+    const p5Instance = new p5(sketch, containerRef.current);
+
+    return () => {
+      p5Instance.remove();
+    };
+  }, []);
+
+  return <div ref={containerRef} className="fixed top-0 left-0 w-full h-full pointer-events-none" />;
 };
+
+export default BackgroundEffect;

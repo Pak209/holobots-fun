@@ -1,6 +1,7 @@
 
 import { useLocation, Link } from "react-router-dom";
-import { Home, Dumbbell, Trophy, ShoppingBag, Activity } from "lucide-react";
+import { Home, Dumbbell, Trophy, Bot, Gem, Gamepad2, ShoppingBag, Activity } from "lucide-react";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NavigationMenu } from "@/components/NavigationMenu";
@@ -11,6 +12,7 @@ interface MobileLayoutProps {
 
 export const MobileLayout = ({ children }: MobileLayoutProps) => {
   const location = useLocation();
+  const { theme } = useTheme();
   
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -82,6 +84,20 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
             className={cn(
               "h-10 w-10 rounded-full", 
               isActive("/gacha") && "bg-holobots-accent text-white"
+            )}
+          >
+            <Gamepad2 className="h-5 w-5" />
+          </Button>
+          <span className="text-[10px] mt-0.5">Gacha</span>
+        </Link>
+        
+        <Link to="/fitness" className="flex flex-col items-center justify-center w-1/7">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={cn(
+              "h-10 w-10 rounded-full", 
+              isActive("/fitness") && "bg-holobots-accent text-white"
             )}
           >
             <Activity className="h-5 w-5" />

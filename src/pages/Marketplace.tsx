@@ -370,24 +370,19 @@ const Marketplace = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {filteredItems
                         .filter(item => item.type === 'item')
-                        .map(item => {
-                          const safeItemName = item.name || "Unknown Item";
-                          const safeName = item.name || "";
-                          
-                          return (
-                            <MarketplaceItemCard 
-                              key={item.id}
-                              name={safeItemName}
-                              description={item.description || ""}
-                              rarity={item.rarity || "common"}
-                              price={item.price}
-                              seller={item.seller}
-                              quantity={item.quantity}
-                              type={item.itemType}
-                              onBuy={() => handleBuy(item.id, item.name, item.price)}
-                            />
-                          );
-                        })}
+                        .map(item => (
+                          <MarketplaceItemCard 
+                            key={item.id}
+                            name={item.name || ""}
+                            description={item.description || ""}
+                            rarity={item.rarity || "common"}
+                            price={item.price}
+                            seller={item.seller}
+                            quantity={item.quantity}
+                            type={item.itemType}
+                            onBuy={() => handleBuy(item.id, item.name, item.price)}
+                          />
+                        ))}
                     </div>
                   </div>
                 )}

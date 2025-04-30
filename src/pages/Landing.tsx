@@ -1,83 +1,148 @@
-
-import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { BackgroundEffect } from "@/components/BackgroundEffect";
+import { ArrowRight, ChevronRight, FileText } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import WordCycler from "@/components/WordCycler";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { useEffect, useState } from "react";
+import Autoplay from "embla-carousel-autoplay";
+import { HolobotCard } from "@/components/HolobotCard";
+import { HOLOBOT_STATS } from "@/types/holobot";
+import BackgroundEffect from "@/components/BackgroundEffect";
 
-export default function Landing() {
-  const [showDemo, setShowDemo] = useState(false);
-  
+const Landing = () => {
+  const [api, setApi] = useState<any>();
+  const navigate = useNavigate();
+
+  const autoplayOptions = {
+    delay: 3000,
+    rootNode: (emblaRoot: any) => emblaRoot.parentElement,
+  };
+
+  const handleLaunchApp = () => {
+    navigate('/auth');
+  };
+
+  const featuredHolobots = ["ace", "kuma", "shadow", "era"];
+
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex flex-col">
-      <BackgroundEffect 
-        particleCount={80}
-        backgroundColor="transparent"
-        particleColor="rgba(255,255,255,0.5)"
-      />
+    <div className="min-h-screen bg-gradient-to-br from-background to-accent/5 relative overflow-hidden">
+      <BackgroundEffect />
       
-      <header className="w-full p-4 flex justify-between items-center z-10">
-        <div className="text-2xl font-bold text-white">
-          Holobots
+      {/* Mobile header */}
+      <header className="fixed top-0 w-full p-4 flex justify-between items-center z-50 bg-background/80 backdrop-blur-sm">
+        <div className="text-xl font-bold italic tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover">
+          HOLOBOTS
         </div>
         <div className="flex gap-2">
-          <ThemeToggle />
+          <Link to="/bytepaper">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="border border-primary/30 text-primary"
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              Bytepaper
+            </Button>
+          </Link>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="bg-primary/20 border-primary/50 text-primary"
+            onClick={handleLaunchApp}
+          >
+            Launch App
+          </Button>
         </div>
       </header>
-      
-      <main className="flex-1 flex flex-col items-center justify-center p-4 z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-            The Future of Digital <WordCycler 
-              words={['Combat', 'Collection', 'Training', 'Gaming']} 
-              interval={2000}
-            />
+
+      <main className="pt-20 pb-10 px-4">
+        {/* Hero Section */}
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold mb-4">
+            Welcome to Holobots Battle Arena
           </h1>
-          
-          <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
-            Train, battle and collect unique digital fighters powered by blockchain technology.
+          <p className="text-muted-foreground mb-6">
+            Train, battle and collect unique digital fighters
           </p>
-          
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/auth">
-              <Button size="lg" className="bg-holobots-accent hover:bg-holobots-hover">
-                Get Started
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Button 
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90 py-6 text-lg"
+              onClick={handleLaunchApp}
+            >
+              Start Your Journey
+              <ArrowRight className="ml-2" />
+            </Button>
+            <Link to="/bytepaper" className="w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                className="w-full py-6 text-lg border-primary/50 text-primary"
+              >
+                Read Bytepaper
+                <FileText className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="border-white text-white hover:bg-white/10"
-              onClick={() => setShowDemo(!showDemo)}
-            >
-              {showDemo ? "Hide Demo" : "View Demo"}
-            </Button>
           </div>
         </div>
-        
-        {showDemo && (
-          <div className="w-full max-w-4xl mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="bg-black/40 border border-white/20">
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    Feature {i}
-                  </h3>
-                  <p className="text-gray-300">
-                    Description of amazing feature that makes Holobots unique and exciting.
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+
+        {/* Discover Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold leading-tight mb-3">
+            Discover, Collect &{" "}
+            <span className="text-holobots-accent">
+              <WordCycler 
+                words={["Train", "Battle", "Quest", "Win!"]} 
+                interval={2000}
+              />
+            </span>
+          </h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            Join the next generation of digital asset staking. Earn rewards while holding unique NFTs in the Holobots ecosystem.
+          </p>
+        </div>
+
+        {/* Featured Holobots */}
+        <div className="mb-10">
+          <h2 className="text-xl font-bold mb-4">Featured Holobots</h2>
+          <Carousel 
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            plugins={[
+              Autoplay(autoplayOptions)
+            ]}
+            setApi={setApi}
+            className="w-full"
+          >
+            <CarouselContent>
+              {featuredHolobots.map((holobot) => (
+                <CarouselItem key={holobot} className="basis-1/2 md:basis-1/3">
+                  <div className="p-1">
+                    <HolobotCard stats={HOLOBOT_STATS[holobot as keyof typeof HOLOBOT_STATS]} />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+
+        {/* CTA */}
+        <div className="bg-holobots-card rounded-lg p-4 flex flex-col items-center text-center">
+          <h3 className="text-lg font-bold mb-2">Ready to join the battle?</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Create your account now and start collecting Holobots
+          </p>
+          <Button 
+            className="w-full"
+            onClick={handleLaunchApp}
+          >
+            Get Started
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
       </main>
-      
-      <footer className="w-full py-4 px-6 text-center text-gray-400 z-10">
-        <p>© {new Date().getFullYear()} Holobots. All rights reserved.</p>
-      </footer>
     </div>
   );
-}
+};
+
+export default Landing;

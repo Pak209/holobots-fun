@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { BattleControls } from "./BattleControls";
 import { BattleLog } from "./BattleLog";
@@ -10,10 +9,13 @@ import { ModeSlider } from "./battle/ModeSlider";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { 
   calculateDamage, 
+  calculateExperience, 
+  getNewLevel, 
   applyHackBoost, 
   applySpecialAttack, 
   updateHolobotExperience,
-  getNewLevel,
+  resetComboChain,
+  incrementComboChain
 } from "@/utils/battleUtils";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -30,7 +32,7 @@ export const BattleScene = ({
   leftHolobot: initialLeftHolobot,
   rightHolobot: initialRightHolobot,
   isCpuBattle = false,
-  // Use cpuLevel if needed, or remove if not needed
+  cpuLevel = 1,
   onBattleEnd 
 }: BattleSceneProps) => {
   const { user, updateUser } = useAuth();
@@ -53,6 +55,7 @@ export const BattleScene = ({
   const [rightComboChain, setRightComboChain] = useState(0);
   
   const [displayLeftXp, setDisplayLeftXp] = useState(0);
+  const [displayRightXp, setRightXp] = useState(0);
   
   const [pendingXpGained, setPendingXpGained] = useState(0);
   
@@ -62,12 +65,12 @@ export const BattleScene = ({
   const [leftFatigue, setLeftFatigue] = useState(0);
   const [rightFatigue, setRightFatigue] = useState(0);
   const [isDefenseMode, setIsDefenseMode] = useState(false);
-  const [rightXp, setRightXp] = useState(0);
+  const [defenseModeRounds, setDefenseModeRounds] = useState(0);
 
   useEffect(() => {
     if (user && user.holobots && Array.isArray(user.holobots)) {
       const leftUserHolobot = user.holobots.find(h => 
-        h.name.toLowerCase() === HOLOBOT_STATS[selectedLeftHolobot]?.name?.toLowerCase());
+        h.name.toLowerCase() === HOLOBOT_STATS[selectedLeftHolobot]?.name.toLowerCase());
       
       if (leftUserHolobot && leftUserHolobot.boostedAttributes) {
         console.log("Applying attribute boosts for battle:", leftUserHolobot.boostedAttributes);
@@ -83,7 +86,7 @@ export const BattleScene = ({
         if (leftUserHolobot.boostedAttributes.speed) {
           tempLeftStats.speed += leftUserHolobot.boostedAttributes.speed;
         }
-        if (leftUserHolobot.boostedAttributes.health && tempLeftStats.maxHealth) {
+        if (leftUserHolobot.boostedAttributes.health) {
           tempLeftStats.maxHealth += leftUserHolobot.boostedAttributes.health;
         }
         
@@ -99,7 +102,7 @@ export const BattleScene = ({
   const handleHypeUp = () => {
     if (isBattleStarted) {
       setLeftSpecial(prev => Math.min(100, prev + 20));
-      addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Player"} is getting hyped up!`);
+      addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} is getting hyped up!`);
     }
   };
 
@@ -108,7 +111,7 @@ export const BattleScene = ({
       const updatedStats = applyHackBoost(HOLOBOT_STATS[selectedLeftHolobot], type);
       HOLOBOT_STATS[selectedLeftHolobot] = updatedStats;
       setLeftHack(0);
-      addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Player"} used hack: ${type}!`);
+      addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} used hack: ${type}!`);
     }
   };
 
@@ -149,9 +152,10 @@ export const BattleScene = ({
     if (isBattleStarted) {
       setIsDefenseMode(isDefense);
       if (isDefense) {
-        addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Player"} switched to Defense Mode!`);
+        setDefenseModeRounds(0);
+        addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} switched to Defense Mode!`);
       } else {
-        addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Player"} switched to Attack Mode!`);
+        addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} switched to Attack Mode!`);
       }
     }
   };
@@ -166,7 +170,7 @@ export const BattleScene = ({
         
         const updatedHolobots = updateHolobotExperience(
           user.holobots,
-          HOLOBOT_STATS[selectedLeftHolobot]?.name || "",
+          HOLOBOT_STATS[selectedLeftHolobot].name,
           newTotalXp,
           newLevel
         );
@@ -184,12 +188,12 @@ export const BattleScene = ({
         if (newLevel > leftLevel) {
           toast({
             title: "Level Up!",
-            description: `${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Your Holobot"} is now level ${newLevel}!`,
+            description: `${HOLOBOT_STATS[selectedLeftHolobot].name} is now level ${newLevel}!`,
           });
         } else {
           toast({
             title: "Battle Progress Saved",
-            description: `${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Your Holobot"} gained ${pendingXpGained} XP!`,
+            description: `${HOLOBOT_STATS[selectedLeftHolobot].name} gained ${pendingXpGained} XP!`,
           });
         }
       } else {
@@ -217,26 +221,18 @@ export const BattleScene = ({
       if (leftHealth <= 0 || rightHealth <= 0) {
         setIsBattleStarted(false);
         const winner = leftHealth > 0 ? selectedLeftHolobot : selectedRightHolobot;
-        const winnerName = HOLOBOT_STATS[winner]?.name || "Unknown";
+        const winnerName = HOLOBOT_STATS[winner].name;
         const loser = leftHealth > 0 ? selectedRightHolobot : selectedLeftHolobot;
-        const loserName = HOLOBOT_STATS[loser]?.name || "Unknown";
+        const loserName = HOLOBOT_STATS[loser].name;
         
         if (leftHealth > 0) {
-          if (HOLOBOT_STATS[selectedLeftHolobot]) {
-            HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedLeftHolobot].intelligence || 0 + 1);
-          }
-          if (HOLOBOT_STATS[selectedRightHolobot]) {
-            HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedRightHolobot].intelligence || 0 - 1);
-          }
+          HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedLeftHolobot].intelligence + 1);
+          HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedRightHolobot].intelligence - 1);
           onBattleEnd?.('victory');
           saveBattleResults(selectedLeftHolobot);
         } else {
-          if (HOLOBOT_STATS[selectedLeftHolobot]) {
-            HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedLeftHolobot].intelligence || 0 - 1);
-          }
-          if (HOLOBOT_STATS[selectedRightHolobot]) {
-            HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedRightHolobot].intelligence || 0 + 1);
-          }
+          HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedLeftHolobot].intelligence - 1);
+          HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedRightHolobot].intelligence + 1);
           onBattleEnd?.('defeat');
           saveBattleResults(selectedRightHolobot);
         }
@@ -251,23 +247,15 @@ export const BattleScene = ({
       }
 
       if (isDefenseMode) {
-        // We can use this but since we're not using defenseModeRounds directly, let's handle it differently
-        // setDefenseModeRounds(prev => {
-        //   const maxDefenseRounds = HOLOBOT_STATS[selectedLeftHolobot].intelligence >= 7 ? 3 : 2;
-        //   if (prev >= maxDefenseRounds) {
-        //     setIsDefenseMode(false);
-        //     addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} automatically switched to Attack Mode!`);
-        //     return 0;
-        //   }
-        //   return prev + 1;
-        // });
-        
-        // Alternative approach without using defenseModeRounds
-        const randomChance = Math.random();
-        if (randomChance > 0.7) {
-          setIsDefenseMode(false);
-          addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Player"} automatically switched to Attack Mode!`);
-        }
+        const maxDefenseRounds = HOLOBOT_STATS[selectedLeftHolobot].intelligence >= 7 ? 3 : 2;
+        setDefenseModeRounds(prev => {
+          if (prev >= maxDefenseRounds) {
+            setIsDefenseMode(false);
+            addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} automatically switched to Attack Mode!`);
+            return 0;
+          }
+          return prev + 1;
+        });
       }
 
       const attacker = Math.random() > 0.5;
@@ -276,89 +264,86 @@ export const BattleScene = ({
         setLeftIsAttacking(true);
         
         const leftHolobotStats = {...HOLOBOT_STATS[selectedLeftHolobot]};
-        if (leftHolobotStats) {
-          leftHolobotStats.fatigue = leftFatigue;
-          
-          let damage = calculateDamage(
-            leftHolobotStats,
-            HOLOBOT_STATS[selectedRightHolobot] || { attack: 0, defense: 0, speed: 0, name: "Unknown" }
-          );
+        leftHolobotStats.fatigue = leftFatigue;
+        
+        let damage = calculateDamage(
+          leftHolobotStats,
+          HOLOBOT_STATS[selectedRightHolobot]
+        );
 
-          if (isDefenseMode) {
-            damage *= 0.5;
-            setLeftSpecial(prev => Math.min(100, prev + 15));
-            setLeftHack(prev => Math.min(100, prev + 10));
-          } else {
-            const intelligenceValue = HOLOBOT_STATS[selectedLeftHolobot]?.intelligence || 0;
-            const intMultiplier = 1 + (intelligenceValue * 0.1);
-            damage *= intMultiplier;
-          }
-          
-          const maxCombo = (HOLOBOT_STATS[selectedLeftHolobot]?.intelligence || 0) > 5 ? 8 : 5;
-          if (leftComboChain > 0) {
-            const comboMultiplier = 1 + (leftComboChain * 0.15);
-            damage = Math.floor(damage * comboMultiplier);
-            addToBattleLog(`Combo x${leftComboChain}! Damage boosted to ${damage}!`);
-          }
-          
-          setTimeout(() => {
-            if (damage > 0) {
-              setRightIsDamaged(true);
-              setRightHealth(prev => Math.max(0, prev - damage));
-              setLeftSpecial(prev => Math.min(100, prev + 10));
-              setLeftHack(prev => Math.min(100, prev + 5));
-              
-              setLeftComboChain(prev => {
-                if (prev > maxCombo) {
-                  addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Player"}'s combo chain reset!`);
-                  return 0;
-                }
-                return prev + 1;
-              });
-              
-              if (leftSpecial >= 100) {
-                const boostedStats = applySpecialAttack(HOLOBOT_STATS[selectedLeftHolobot] || { attack: 0, defense: 0, speed: 0, name: "Unknown" });
-                HOLOBOT_STATS[selectedLeftHolobot] = boostedStats;
-                setLeftSpecial(0);
-                addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Player"} used their special move!`);
+        if (isDefenseMode) {
+          damage *= 0.5;
+          setLeftSpecial(prev => Math.min(100, prev + 15));
+          setLeftHack(prev => Math.min(100, prev + 10));
+        } else {
+          const intMultiplier = 1 + (HOLOBOT_STATS[selectedLeftHolobot].intelligence * 0.1);
+          damage *= intMultiplier;
+        }
+        
+        const maxCombo = HOLOBOT_STATS[selectedLeftHolobot].intelligence > 5 ? 8 : 5;
+        if (leftComboChain > 0) {
+          const comboMultiplier = 1 + (leftComboChain * 0.15);
+          damage = Math.floor(damage * comboMultiplier);
+          addToBattleLog(`Combo x${leftComboChain}! Damage boosted to ${damage}!`);
+        }
+        
+        setTimeout(() => {
+          if (damage > 0) {
+            setRightIsDamaged(true);
+            setRightHealth(prev => Math.max(0, prev - damage));
+            setLeftSpecial(prev => Math.min(100, prev + 10));
+            setLeftHack(prev => Math.min(100, prev + 5));
+            
+            setLeftComboChain(prev => {
+              if (prev > maxCombo) {
+                addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name}'s combo chain reset!`);
+                return 0;
               }
-              
-              const damageXp = Math.floor(damage * 2);
-              setPendingXpGained(prev => prev + damageXp);
-              
-              setDisplayLeftXp(leftXp + pendingXpGained + damageXp);
-              
-              const newDisplayLevel = getNewLevel(displayLeftXp + damageXp, leftLevel);
-              if (newDisplayLevel > leftLevel) {
-                addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Player"} is close to level ${newDisplayLevel}!`);
-              }
-              
-              addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Player"} attacks for ${damage} damage!`);
-            } else {
-              if (leftComboChain > 0) {
-                addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Player"}'s combo chain broken!`);
-                setLeftComboChain(0);
-              }
-              addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot]?.name || "Opponent"} evaded the attack!`);
+              return prev + 1;
+            });
+            
+            if (leftSpecial >= 100) {
+              const boostedStats = applySpecialAttack(HOLOBOT_STATS[selectedLeftHolobot]);
+              HOLOBOT_STATS[selectedLeftHolobot] = boostedStats;
+              setLeftSpecial(0);
+              addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} used their special move!`);
             }
             
-            setLeftFatigue(prev => prev + (prev > 2 ? 1 : 0));
+            const damageXp = Math.floor(damage * 2);
+            setPendingXpGained(prev => prev + damageXp);
             
-            setTimeout(() => {
-              setRightIsDamaged(false);
-              setLeftIsAttacking(false);
-            }, 100);
-          }, 250);
-        }
+            setDisplayLeftXp(leftXp + pendingXpGained + damageXp);
+            
+            const newDisplayLevel = getNewLevel(displayLeftXp + damageXp, leftLevel);
+            if (newDisplayLevel > leftLevel) {
+              addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} is close to level ${newDisplayLevel}!`);
+            }
+            
+            addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} attacks for ${damage} damage!`);
+          } else {
+            if (leftComboChain > 0) {
+              addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name}'s combo chain broken!`);
+              setLeftComboChain(0);
+            }
+            addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} evaded the attack!`);
+          }
+          
+          setLeftFatigue(prev => prev + (prev > 2 ? 1 : 0));
+          
+          setTimeout(() => {
+            setRightIsDamaged(false);
+            setLeftIsAttacking(false);
+          }, 100);
+        }, 250);
       } else {
         setRightIsAttacking(true);
         
         let damage = calculateDamage(
-          { ...HOLOBOT_STATS[selectedRightHolobot], fatigue: rightFatigue } || { attack: 0, defense: 0, speed: 0, name: "Unknown", fatigue: 0 },
-          HOLOBOT_STATS[selectedLeftHolobot] || { attack: 0, defense: 0, speed: 0, name: "Unknown" }
+          { ...HOLOBOT_STATS[selectedRightHolobot], fatigue: rightFatigue },
+          HOLOBOT_STATS[selectedLeftHolobot]
         );
         
-        const maxRightCombo = (HOLOBOT_STATS[selectedRightHolobot]?.intelligence || 0) > 5 ? 8 : 5;
+        const maxRightCombo = HOLOBOT_STATS[selectedRightHolobot].intelligence > 5 ? 8 : 5;
         if (rightComboChain > 0) {
           const comboMultiplier = 1 + (rightComboChain * 0.15);
           damage = Math.floor(damage * comboMultiplier);
@@ -375,36 +360,36 @@ export const BattleScene = ({
             setRightComboChain(prev => {
               const newCombo = prev + 1;
               if (newCombo > maxRightCombo) {
-                addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot]?.name || "Opponent"}'s combo chain reset!`);
+                addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name}'s combo chain reset!`);
                 return 0;
               }
               return newCombo;
             });
             
             if (rightSpecial >= 100) {
-              const boostedStats = applySpecialAttack(HOLOBOT_STATS[selectedRightHolobot] || { attack: 0, defense: 0, speed: 0, name: "Unknown" });
+              const boostedStats = applySpecialAttack(HOLOBOT_STATS[selectedRightHolobot]);
               HOLOBOT_STATS[selectedRightHolobot] = boostedStats;
               setRightSpecial(0);
-              addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot]?.name || "Opponent"} used their special move!`);
+              addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} used their special move!`);
             }
             
-            setRightXp((prev: number) => {
+            setRightXp(prev => {
               const newXp = prev + Math.floor(damage * 2);
               const newLevel = getNewLevel(newXp, rightLevel);
               if (newLevel > rightLevel) {
                 setRightLevel(newLevel);
-                addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot]?.name || "Opponent"} reached level ${newLevel}!`);
+                addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} reached level ${newLevel}!`);
               }
               return newXp;
             });
             
-            addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot]?.name || "Opponent"} attacks for ${damage} damage!`);
+            addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name} attacks for ${damage} damage!`);
           } else {
             if (rightComboChain > 0) {
-              addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot]?.name || "Opponent"}'s combo chain broken!`);
+              addToBattleLog(`${HOLOBOT_STATS[selectedRightHolobot].name}'s combo chain broken!`);
               setRightComboChain(0);
             }
-            addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot]?.name || "Player"} evaded the attack!`);
+            addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} evaded the attack!`);
           }
           
           setRightFatigue(prev => prev + (prev > 2 ? 1 : 0));
@@ -455,7 +440,7 @@ export const BattleScene = ({
           leftLevel={leftLevel}
           rightLevel={rightLevel}
           leftXp={displayLeftXp}
-          rightXp={rightXp}
+          rightXp={displayRightXp}
         />
         
         <div className="relative w-full max-w-3xl mx-auto h-20 md:h-32 bg-cyberpunk-background rounded-lg overflow-hidden border-2 border-cyberpunk-border shadow-neon">

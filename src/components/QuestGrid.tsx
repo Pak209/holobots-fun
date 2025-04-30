@@ -1,12 +1,14 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame } from "lucide-react";
+import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star } from "lucide-react";
 import { Progress } from "./ui/progress";
+import { supabase } from "@/integrations/supabase/client";
 import { QuestBattleBanner } from "@/components/quests/QuestBattleBanner";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 
@@ -182,7 +184,7 @@ export const QuestGrid = () => {
 
     const tier = EXPLORATION_TIERS[selectedExplorationTier];
     
-    if (!user || (user.dailyEnergy ?? 0) < tier.energyCost) {
+    if (user?.dailyEnergy < tier.energyCost) {
       toast({
         title: "Not Enough Energy",
         description: `You need ${tier.energyCost} energy for this quest`,
@@ -225,7 +227,7 @@ export const QuestGrid = () => {
           };
           
           await updateUser({
-            dailyEnergy: (user.dailyEnergy ?? 0) - tier.energyCost,
+            dailyEnergy: user.dailyEnergy - tier.energyCost,
             holosTokens: user.holosTokens + tier.rewards.holosTokens,
             blueprints: updatedBlueprints
           });
@@ -252,7 +254,7 @@ export const QuestGrid = () => {
         // Update user's energy
         if (user) {
           await updateUser({
-            dailyEnergy: (user.dailyEnergy ?? 0) - tier.energyCost
+            dailyEnergy: user.dailyEnergy - tier.energyCost
           });
         }
         
@@ -262,7 +264,7 @@ export const QuestGrid = () => {
           name: HOLOBOT_STATS[explorationHolobot].name,
           xp: 0,
           levelUp: false,
-          newLevel: user?.holobots.find(h => h.name === HOLOBOT_STATS[explorationHolobot].name)?.level || 1
+          newLevel: user.holobots.find(h => h.name === HOLOBOT_STATS[explorationHolobot].name)?.level || 1
         }]);
         setBlueprintReward(undefined);
         setHolosReward(0);
@@ -318,7 +320,7 @@ export const QuestGrid = () => {
 
     const tier = BOSS_TIERS[selectedBossTier];
     
-    if (!user || (user.dailyEnergy ?? 0) < tier.energyCost) {
+    if (!user || user.dailyEnergy < tier.energyCost) {
       toast({
         title: "Not Enough Energy",
         description: `You need ${tier.energyCost} energy for this quest`,
@@ -371,7 +373,7 @@ export const QuestGrid = () => {
         // Update user's tokens, tickets, and energy
         if (user) {
           await updateUser({
-            dailyEnergy: (user.dailyEnergy ?? 0) - tier.energyCost,
+            dailyEnergy: user.dailyEnergy - tier.energyCost,
             holosTokens: user.holosTokens + tier.rewards.holosTokens,
             gachaTickets: user.gachaTickets + tier.rewards.gachaTickets,
             holobots: updatedHolobots, // Update with new XP values
@@ -412,7 +414,7 @@ export const QuestGrid = () => {
         // Update user's energy and holobots
         if (user) {
           await updateUser({
-            dailyEnergy: (user.dailyEnergy ?? 0) - tier.energyCost,
+            dailyEnergy: user.dailyEnergy - tier.energyCost,
             holobots: updatedHolobots, // Update with new XP values
             blueprints: updatedBlueprints
           });
@@ -441,7 +443,7 @@ export const QuestGrid = () => {
   };
 
   // New function to update experience for all Holobots in the squad - update to track XP messages
-  const updateSquadExperience = async (squadHolobotKeys: string[], baseXp: number, multiplier = 1) => {
+  const updateSquadExperience = async (squadHolobotKeys, baseXp, multiplier = 1) => {
     if (!user?.holobots || !Array.isArray(user.holobots)) {
       return [];
     }
@@ -523,12 +525,12 @@ export const QuestGrid = () => {
   };
 
   // Helper function to calculate required XP for level
-  const calculateExperience = (level: number): number => {
+  const calculateExperience = (level) => {
     return Math.floor(100 * Math.pow(level, 2));
   };
   
   // Helper function to determine if level up occurs
-  const getNewLevel = (currentXp: number, currentLevel: number): number => {
+  const getNewLevel = (currentXp, currentLevel) => {
     const requiredXp = calculateExperience(currentLevel);
     if (currentXp >= requiredXp && currentLevel < 50) {
       return currentLevel + 1;
@@ -830,7 +832,7 @@ export const QuestGrid = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Object.entries(holobotCooldowns).map(([holobotKey]) => {
+              {Object.entries(holobotCooldowns).map(([holobotKey, cooldownTime]) => {
                 const progress = getCooldownProgress(holobotKey);
                 const timeRemaining = getCooldownTimeRemaining(holobotKey);
                 const isReady = timeRemaining === "Ready";
@@ -871,11 +873,11 @@ export const QuestGrid = () => {
       <QuestResultsScreen 
         isVisible={showResultsScreen}
         isSuccess={battleSuccess}
+        squadHolobotKeys={currentBattleHolobots}
         squadHolobotExp={squadExpResults}
         blueprintRewards={blueprintReward}
         holosRewards={holosReward}
         onClose={() => setShowResultsScreen(false)}
-        squadHolobotKeys={currentBattleHolobots}
       />
     </div>
   );
