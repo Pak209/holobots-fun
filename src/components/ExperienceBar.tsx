@@ -15,10 +15,11 @@ export const ExperienceBar = ({ progress }: ExperienceBarProps) => {
         <div className="flex items-center justify-center bg-black rounded w-6 h-6">
           <span className="text-[10px] font-bold text-yellow-400">XP</span>
         </div>
-        <Progress 
-          value={progress} 
-          className="h-2 flex-1"
-        />
+        <div className="flex-1">
+          <Progress 
+            value={progress} 
+          />
+        </div>
       </div>
     </div>
   );
