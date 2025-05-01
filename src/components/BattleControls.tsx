@@ -2,11 +2,12 @@
 import { Button } from "./ui/button";
 import { Rocket, Zap } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { HackType } from "@/types/holobot";
 
 interface BattleControlsProps {
   onStartBattle: () => void;
   onHypeUp: () => void;
-  onHack: (type: 'attack' | 'speed' | 'heal' | 'special_attack') => void;
+  onHack: (type: HackType) => void;
   isBattleStarted: boolean;
   hackGauge: number;
 }
@@ -83,7 +84,7 @@ export const BattleControls = ({
       value === 'heal' && hackGauge >= 75 ||
       value === 'special_attack' && hackGauge >= 100
     ) {
-      onHack(value as 'attack' | 'speed' | 'heal' | 'special_attack');
+      onHack(value as HackType);
     }
   };
 
