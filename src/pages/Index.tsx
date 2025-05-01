@@ -1,4 +1,3 @@
-
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -45,7 +44,6 @@ const Index = () => {
     
     return holobots.map(holobot => {
       if (holobot.name.toLowerCase() === holobotName.toLowerCase()) {
-        // Only update level and experience, but preserve all other attributes
         return {
           ...holobot,
           level: newLevel,
@@ -181,7 +179,7 @@ const Index = () => {
         updates.arena_passes = (user.arena_passes || 0) + rewards.arenaPass;
       }
       
-      // Update holobot experience - but preserve all other attributes
+      // Update holobot experience
       if (experienceRewards.length > 0) {
         const updatedHolobots = updateHolobotExperience(
           user.holobots,
@@ -297,9 +295,8 @@ const Index = () => {
           isCpuBattle={true}
           cpuLevel={currentOpponent.level}
           onBattleEnd={handleBattleEnd}
-          applyXpAfterBattle={true} // Process XP only after battle
+          applyXpAfterBattle={true} // New prop to control when XP is applied
           pendingXp={pendingXpGained} // Pass accumulated XP to battle scene
-          preserveHolobotStats={true} // NEW: Ensure holobot stats are preserved (not permanently modified)
         />
       )}
 

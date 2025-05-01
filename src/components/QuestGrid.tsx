@@ -235,36 +235,27 @@ export const QuestGrid = () => {
             [randomHolobotKey]: (currentBlueprints[randomHolobotKey] || 0) + tier.rewards.blueprintPieces
           };
           
-          try {
-            await updateUser({
-              dailyEnergy: user.dailyEnergy - tier.energyCost,
-              holosTokens: user.holosTokens + tier.rewards.holosTokens,
-              blueprints: updatedBlueprints
-            });
-            
-            // Set up results screen data
-            setBattleSuccess(true);
-            setSquadExpResults([{
-              name: HOLOBOT_STATS[explorationHolobot].name,
-              xp: 0, // No XP for exploration currently
-              levelUp: false,
-              newLevel: user.holobots.find(h => h.name === HOLOBOT_STATS[explorationHolobot].name)?.level || 1
-            }]);
-            setBlueprintReward({
-              holobotKey: randomHolobotKey,
-              amount: tier.rewards.blueprintPieces
-            });
-            setHolosReward(tier.rewards.holosTokens);
-            setGachaReward(0);
-            setShowResultsScreen(true);
-          } catch (error) {
-            console.error("Profile update error:", error);
-            toast({
-              title: "Update Error",
-              description: "Failed to update profile with rewards. Please try again.",
-              variant: "destructive"
-            });
-          }
+          await updateUser({
+            dailyEnergy: user.dailyEnergy - tier.energyCost,
+            holosTokens: user.holosTokens + tier.rewards.holosTokens,
+            blueprints: updatedBlueprints
+          });
+          
+          // Set up results screen data
+          setBattleSuccess(true);
+          setSquadExpResults([{
+            name: HOLOBOT_STATS[explorationHolobot].name,
+            xp: 0, // No XP for exploration currently
+            levelUp: false,
+            newLevel: user.holobots.find(h => h.name === HOLOBOT_STATS[explorationHolobot].name)?.level || 1
+          }]);
+          setBlueprintReward({
+            holobotKey: randomHolobotKey,
+            amount: tier.rewards.blueprintPieces
+          });
+          setHolosReward(tier.rewards.holosTokens);
+          setGachaReward(0);
+          setShowResultsScreen(true);
         }
       } else {
         // Set holobot on cooldown
@@ -383,29 +374,29 @@ export const QuestGrid = () => {
         const updatedHolobots = await updateSquadExperience(bossHolobots, tier.rewards.squadXp, tier.rewards.xpMultiplier);
         
         // Get current blueprints or initialize empty object
-        const currentBlueprints = { ...(user?.blueprints || {}) };
+        const currentBlueprints = user.blueprints || {};
         
         // Update the blueprint count for the boss holobot
-        currentBlueprints[currentBossKey] = (currentBlueprints[currentBossKey] || 0) + tier.rewards.blueprintPieces;
+        const updatedBlueprints = {
+          ...currentBlueprints,
+          [currentBossKey]: (currentBlueprints[currentBossKey] || 0) + tier.rewards.blueprintPieces
+        };
         
         console.log("Success! Updating rewards:", {
-          updatedBlueprints: currentBlueprints,
-          gachaTickets: (user?.gachaTickets || 0) + tier.rewards.gachaTickets,
+          updatedBlueprints,
+          gachaTickets: user.gachaTickets + tier.rewards.gachaTickets,
           boss: currentBossKey,
           blueprintPieces: tier.rewards.blueprintPieces
         });
         
-        // Prepare the update object
-        const updateObject = {
-          dailyEnergy: (user?.dailyEnergy || 100) - tier.energyCost,
-          gachaTickets: (user?.gachaTickets || 0) + tier.rewards.gachaTickets,
-          holobots: updatedHolobots,
-          blueprints: currentBlueprints
-        };
-        
         // Update user's gachaTickets, energy, and blueprints
         try {
-          await updateUser(updateObject);
+          await updateUser({
+            dailyEnergy: user.dailyEnergy - tier.energyCost,
+            gachaTickets: (user.gachaTickets || 0) + tier.rewards.gachaTickets,
+            holobots: updatedHolobots, // Update with new XP values
+            blueprints: updatedBlueprints
+          });
           
           // Set up results screen data
           setBattleSuccess(true);
@@ -433,26 +424,26 @@ export const QuestGrid = () => {
         const failureBlueprintPieces = Math.max(1, Math.floor(tier.rewards.blueprintPieces * 0.25));
         
         // Get current blueprints or initialize empty object
-        const currentBlueprints = { ...(user?.blueprints || {}) };
+        const currentBlueprints = user.blueprints || {};
         
         // Update the blueprint count for the boss holobot
-        currentBlueprints[currentBossKey] = (currentBlueprints[currentBossKey] || 0) + failureBlueprintPieces;
+        const updatedBlueprints = {
+          ...currentBlueprints,
+          [currentBossKey]: (currentBlueprints[currentBossKey] || 0) + failureBlueprintPieces
+        };
         
         // Set all squad holobots on cooldown
         bossHolobots.forEach(holobotKey => {
           setHolobotOnCooldown(holobotKey);
         });
         
-        // Prepare update object
-        const updateObject = {
-          dailyEnergy: (user?.dailyEnergy || 100) - tier.energyCost,
-          holobots: updatedHolobots,
-          blueprints: currentBlueprints
-        };
-        
         // Update user's energy, holobots, and blueprints
         try {
-          await updateUser(updateObject);
+          await updateUser({
+            dailyEnergy: user.dailyEnergy - tier.energyCost,
+            holobots: updatedHolobots, // Update with new XP values
+            blueprints: updatedBlueprints
+          });
           
           // Set up results screen for failure
           setBattleSuccess(false);
