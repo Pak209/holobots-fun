@@ -1,4 +1,3 @@
-
 export interface HolobotStats {
     name: string;
     attack: number;
@@ -162,3 +161,6 @@ export function getRank(level: number): string {
     if (level >= 2) return "Starter";
     return "Rookie";
 }
+
+// Add special_attack to the allowed hack types
+export type HackType = 'attack' | 'speed' | 'heal' | 'special_attack';

@@ -1,4 +1,3 @@
-
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -22,6 +21,7 @@ const Index = () => {
   const [arenaResults, setArenaResults] = useState<any>(null);
   const maxRounds = 3;
   const entryFee = 50;
+  const [pendingXpGained, setPendingXpGained] = useState(0); // New state to accumulate XP
   const { toast } = useToast();
   const { user, updateUser } = useAuth();
 
@@ -57,9 +57,9 @@ const Index = () => {
 
   const payEntryFee = async () => {
     try {
-      if (user && user.holosTokens >= entryFee) {
+      if (user && (user.holosTokens || 0) >= entryFee) {
         await updateUser({
-          holosTokens: user.holosTokens - entryFee
+          holosTokens: (user.holosTokens || 0) - entryFee
         });
         setHasEntryFee(true);
         
@@ -86,9 +86,9 @@ const Index = () => {
 
   const useArenaPass = async () => {
     try {
-      if (user && user.arena_passes > 0) {
+      if (user && (user.arena_passes || 0) > 0) {
         await updateUser({
-          arena_passes: user.arena_passes - 1
+          arena_passes: (user.arena_passes || 0) - 1
         });
         setHasEntryFee(true);
         
@@ -220,6 +220,8 @@ const Index = () => {
   const handleBattleEnd = (result: 'victory' | 'defeat') => {
     if (result === 'victory') {
       setVictories(prev => prev + 1);
+      setPendingXpGained(prev => prev + 100); // Add XP for the victory
+      
       if (currentRound < maxRounds) {
         setCurrentRound(prev => prev + 1);
         setCurrentOpponent(generateArenaOpponent(currentRound + 1));
@@ -280,13 +282,23 @@ const Index = () => {
         </div>
       </div>
       
-      <BattleScene 
-        leftHolobot={selectedHolobot}
-        rightHolobot={currentOpponent.name}
-        isCpuBattle={true}
-        cpuLevel={currentOpponent.level}
-        onBattleEnd={handleBattleEnd}
-      />
+      {!hasEntryFee ? (
+        <ArenaPrebattleMenu 
+          onHolobotSelect={handleHolobotSelect}
+          onEntryFeeMethod={handleEntryFeeMethod}
+          entryFee={entryFee}
+        />
+      ) : (
+        <BattleScene 
+          leftHolobot={selectedHolobot}
+          rightHolobot={currentOpponent.name}
+          isCpuBattle={true}
+          cpuLevel={currentOpponent.level}
+          onBattleEnd={handleBattleEnd}
+          applyXpAfterBattle={true} // New prop to control when XP is applied
+          pendingXp={pendingXpGained} // Pass accumulated XP to battle scene
+        />
+      )}
 
       {/* Results screen */}
       {showResults && arenaResults && (

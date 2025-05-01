@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 interface BattleControlsProps {
   onStartBattle: () => void;
   onHypeUp: () => void;
-  onHack: (type: 'attack' | 'speed' | 'heal') => void;
+  onHack: (type: 'attack' | 'speed' | 'heal' | 'special_attack') => void;
   isBattleStarted: boolean;
   hackGauge: number;
 }
@@ -18,6 +18,75 @@ export const BattleControls = ({
   isBattleStarted,
   hackGauge
 }: BattleControlsProps) => {
+  // Determine which hack options are available based on the gauge level
+  const getHackButtonProps = () => {
+    if (hackGauge >= 100) {
+      return {
+        disabled: !isBattleStarted,
+        className: "h-9 bg-red-500 hover:bg-red-600 text-white border-none text-xs shadow-neon"
+      };
+    } else if (hackGauge >= 75) {
+      return {
+        disabled: !isBattleStarted,
+        className: "h-9 bg-orange-500 hover:bg-orange-600 text-white border-none text-xs shadow-neon"
+      };
+    } else if (hackGauge >= 50) {
+      return {
+        disabled: !isBattleStarted, 
+        className: "h-9 bg-yellow-500 hover:bg-yellow-600 text-white border-none text-xs shadow-neon"
+      };
+    } else {
+      return {
+        disabled: true,
+        className: "h-9 bg-gray-500 text-gray-300 border-none text-xs"
+      };
+    }
+  };
+
+  // Get available hack options based on gauge level
+  const getAvailableHackOptions = () => {
+    const options = [];
+    
+    if (hackGauge >= 50) {
+      options.push(
+        <SelectItem key="attack" value="attack" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
+          Boost Attack (50%)
+        </SelectItem>,
+        <SelectItem key="speed" value="speed" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
+          Boost Speed (50%)
+        </SelectItem>
+      );
+    }
+    
+    if (hackGauge >= 75) {
+      options.push(
+        <SelectItem key="heal" value="heal" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
+          Heal (75%)
+        </SelectItem>
+      );
+    }
+    
+    if (hackGauge >= 100) {
+      options.push(
+        <SelectItem key="special_attack" value="special_attack" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
+          Special Attack (100%)
+        </SelectItem>
+      );
+    }
+    
+    return options;
+  };
+
+  const handleHackSelect = (value: string) => {
+    if (
+      (value === 'attack' || value === 'speed') && hackGauge >= 50 ||
+      value === 'heal' && hackGauge >= 75 ||
+      value === 'special_attack' && hackGauge >= 100
+    ) {
+      onHack(value as 'attack' | 'speed' | 'heal' | 'special_attack');
+    }
+  };
+
   return (
     <div className="flex gap-1.5">
       <Button 
@@ -35,8 +104,8 @@ export const BattleControls = ({
       >
         <Rocket className="w-3 h-3 md:w-4 md:h-4" /> Hype
       </Button>
-      <Select onValueChange={(value) => onHack(value as 'attack' | 'speed' | 'heal')} disabled={hackGauge < 100 || !isBattleStarted}>
-        <SelectTrigger className="h-9 bg-red-500 hover:bg-red-600 text-white border-none text-xs shadow-neon">
+      <Select onValueChange={handleHackSelect} disabled={hackGauge < 50 || !isBattleStarted}>
+        <SelectTrigger {...getHackButtonProps()}>
           <SelectValue>
             <div className="flex items-center">
               <Zap className="w-3 h-3 md:w-4 md:h-4 mr-1" /> 
@@ -45,15 +114,7 @@ export const BattleControls = ({
           </SelectValue>
         </SelectTrigger>
         <SelectContent className="bg-holobots-card border-holobots-border">
-          <SelectItem value="attack" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
-            Boost Attack
-          </SelectItem>
-          <SelectItem value="speed" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
-            Boost Speed
-          </SelectItem>
-          <SelectItem value="heal" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
-            Heal
-          </SelectItem>
+          {getAvailableHackOptions()}
         </SelectContent>
       </Select>
     </div>

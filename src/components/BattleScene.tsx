@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { BattleControls } from "./BattleControls";
 import { BattleLog } from "./BattleLog";
@@ -12,7 +13,7 @@ import {
   calculateExperience, 
   getNewLevel, 
   applyHackBoost, 
-  applySpecialAttack, 
+  applySpecialAttack,
   updateHolobotExperience,
   resetComboChain,
   incrementComboChain
@@ -26,6 +27,8 @@ interface BattleSceneProps {
   isCpuBattle?: boolean;
   cpuLevel?: number;
   onBattleEnd?: (result: 'victory' | 'defeat') => void;
+  applyXpAfterBattle?: boolean;
+  pendingXp?: number;
 }
 
 export const BattleScene = ({ 
@@ -33,7 +36,9 @@ export const BattleScene = ({
   rightHolobot: initialRightHolobot,
   isCpuBattle = false,
   cpuLevel = 1,
-  onBattleEnd 
+  onBattleEnd,
+  applyXpAfterBattle = false,
+  pendingXp = 0
 }: BattleSceneProps) => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
@@ -57,7 +62,7 @@ export const BattleScene = ({
   const [displayLeftXp, setDisplayLeftXp] = useState(0);
   const [displayRightXp, setRightXp] = useState(0);
   
-  const [pendingXpGained, setPendingXpGained] = useState(0);
+  const [accumulatedXp, setAccumulatedXp] = useState(0);
   
   const [leftXp, setLeftXp] = useState(0);
   const [leftLevel, setLeftLevel] = useState(1);
@@ -66,34 +71,48 @@ export const BattleScene = ({
   const [rightFatigue, setRightFatigue] = useState(0);
   const [isDefenseMode, setIsDefenseMode] = useState(false);
   const [defenseModeRounds, setDefenseModeRounds] = useState(0);
+  const [userHolobot, setUserHolobot] = useState<any>(null);
 
   useEffect(() => {
     if (user && user.holobots && Array.isArray(user.holobots)) {
-      const leftUserHolobot = user.holobots.find(h => 
+      const holobotData = user.holobots.find(h => 
         h.name.toLowerCase() === HOLOBOT_STATS[selectedLeftHolobot]?.name.toLowerCase());
       
-      if (leftUserHolobot && leftUserHolobot.boostedAttributes) {
-        console.log("Applying attribute boosts for battle:", leftUserHolobot.boostedAttributes);
+      if (holobotData) {
+        setUserHolobot(holobotData);
+        setLeftLevel(holobotData.level || 1);
+        setLeftXp(holobotData.experience || 0);
+        setDisplayLeftXp(holobotData.experience || 0);
         
-        const tempLeftStats = {...HOLOBOT_STATS[selectedLeftHolobot]};
-        
-        if (leftUserHolobot.boostedAttributes.attack) {
-          tempLeftStats.attack += leftUserHolobot.boostedAttributes.attack;
+        // Apply attribute boosts if they exist
+        if (holobotData.boostedAttributes) {
+          console.log("Applying attribute boosts for battle:", holobotData.boostedAttributes);
+          
+          const tempLeftStats = {...HOLOBOT_STATS[selectedLeftHolobot]};
+          
+          if (holobotData.boostedAttributes.attack) {
+            tempLeftStats.attack += holobotData.boostedAttributes.attack;
+          }
+          if (holobotData.boostedAttributes.defense) {
+            tempLeftStats.defense += holobotData.boostedAttributes.defense;
+          }
+          if (holobotData.boostedAttributes.speed) {
+            tempLeftStats.speed += holobotData.boostedAttributes.speed;
+          }
+          if (holobotData.boostedAttributes.health) {
+            tempLeftStats.maxHealth += holobotData.boostedAttributes.health;
+          }
+          
+          // Apply the boosted stats temporarily for this battle only
+          HOLOBOT_STATS[selectedLeftHolobot] = tempLeftStats;
         }
-        if (leftUserHolobot.boostedAttributes.defense) {
-          tempLeftStats.defense += leftUserHolobot.boostedAttributes.defense;
-        }
-        if (leftUserHolobot.boostedAttributes.speed) {
-          tempLeftStats.speed += leftUserHolobot.boostedAttributes.speed;
-        }
-        if (leftUserHolobot.boostedAttributes.health) {
-          tempLeftStats.maxHealth += leftUserHolobot.boostedAttributes.health;
-        }
-        
-        HOLOBOT_STATS[selectedLeftHolobot] = tempLeftStats;
       }
     }
-  }, [user, selectedLeftHolobot]);
+    
+    if (pendingXp > 0) {
+      setAccumulatedXp(pendingXp);
+    }
+  }, [user, selectedLeftHolobot, pendingXp]);
 
   const addToBattleLog = (message: string) => {
     setBattleLog(prev => [...prev, message]);
@@ -106,11 +125,26 @@ export const BattleScene = ({
     }
   };
 
-  const handleHack = (type: 'attack' | 'speed' | 'heal') => {
-    if (leftHack >= 100) {
+  const handleHack = (type: 'attack' | 'speed' | 'heal' | 'special_attack') => {
+    // Check if hack gauge is sufficient based on the action type
+    const sufficientGauge = 
+      (type === 'attack' || type === 'speed') ? leftHack >= 50 :
+      type === 'heal' ? leftHack >= 75 :
+      type === 'special_attack' ? leftHack >= 100 : false;
+    
+    if (sufficientGauge) {
       const updatedStats = applyHackBoost(HOLOBOT_STATS[selectedLeftHolobot], type);
       HOLOBOT_STATS[selectedLeftHolobot] = updatedStats;
-      setLeftHack(0);
+      
+      // Reduce gauge based on the action
+      if (type === 'special_attack') {
+        setLeftHack(0);
+      } else if (type === 'heal') {
+        setLeftHack(prev => Math.max(0, prev - 75));
+      } else {
+        setLeftHack(prev => Math.max(0, prev - 50));
+      }
+      
       addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} used hack: ${type}!`);
     }
   };
@@ -141,7 +175,9 @@ export const BattleScene = ({
     setLeftComboChain(0);
     setRightComboChain(0);
     
-    setPendingXpGained(0);
+    if (!applyXpAfterBattle) {
+      setAccumulatedXp(0);
+    }
     
     setDisplayLeftXp(leftXp);
     
@@ -163,11 +199,15 @@ export const BattleScene = ({
   const saveBattleResults = async (winner: string) => {
     try {
       if (!user) return;
+      
+      // Apply accumulated XP at end of battle if that feature is enabled
+      const totalPendingXp = applyXpAfterBattle ? (accumulatedXp + pendingXp) : accumulatedXp;
 
       if (winner === selectedLeftHolobot) {
-        const newTotalXp = leftXp + pendingXpGained;
+        const newTotalXp = leftXp + totalPendingXp;
         const newLevel = getNewLevel(newTotalXp, leftLevel);
         
+        // Ensure we're not overwriting any existing holobot data
         const updatedHolobots = updateHolobotExperience(
           user.holobots,
           HOLOBOT_STATS[selectedLeftHolobot].name,
@@ -175,7 +215,14 @@ export const BattleScene = ({
           newLevel
         );
         
-        console.log("Updating user holobots with:", updatedHolobots);
+        console.log("Updating user holobots with:", {
+          oldXp: leftXp,
+          newXp: newTotalXp,
+          xpGained: totalPendingXp,
+          oldLevel: leftLevel,
+          newLevel: newLevel,
+          updatedHolobots
+        });
         
         await updateUser({ 
           holobots: updatedHolobots,
@@ -190,10 +237,10 @@ export const BattleScene = ({
             title: "Level Up!",
             description: `${HOLOBOT_STATS[selectedLeftHolobot].name} is now level ${newLevel}!`,
           });
-        } else {
+        } else if (totalPendingXp > 0) {
           toast({
             title: "Battle Progress Saved",
-            description: `${HOLOBOT_STATS[selectedLeftHolobot].name} gained ${pendingXpGained} XP!`,
+            description: `${HOLOBOT_STATS[selectedLeftHolobot].name} gained ${totalPendingXp} XP!`,
           });
         }
       } else {
@@ -204,6 +251,9 @@ export const BattleScene = ({
           }
         });
       }
+      
+      // Reset accumulated XP
+      setAccumulatedXp(0);
     } catch (error) {
       console.error("Error saving battle results:", error);
       toast({
@@ -226,13 +276,11 @@ export const BattleScene = ({
         const loserName = HOLOBOT_STATS[loser].name;
         
         if (leftHealth > 0) {
-          HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedLeftHolobot].intelligence + 1);
-          HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedRightHolobot].intelligence - 1);
+          // Don't modify the intelligence (we're preserving stats)
           onBattleEnd?.('victory');
           saveBattleResults(selectedLeftHolobot);
         } else {
-          HOLOBOT_STATS[selectedLeftHolobot].intelligence = Math.max(1, HOLOBOT_STATS[selectedLeftHolobot].intelligence - 1);
-          HOLOBOT_STATS[selectedRightHolobot].intelligence = Math.min(10, HOLOBOT_STATS[selectedRightHolobot].intelligence + 1);
+          // Don't modify the intelligence (we're preserving stats)
           onBattleEnd?.('defeat');
           saveBattleResults(selectedRightHolobot);
         }
@@ -241,7 +289,6 @@ export const BattleScene = ({
         setRightComboChain(0);
         
         addToBattleLog(`Battle ended! ${winnerName} is victorious!`);
-        addToBattleLog(`${winnerName}'s intelligence increased! ${loserName}'s intelligence decreased!`);
         clearInterval(interval);
         return;
       }
@@ -309,14 +356,21 @@ export const BattleScene = ({
               addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} used their special move!`);
             }
             
+            // Calculate XP gain from damage, but don't update display if applyXpAfterBattle is true
             const damageXp = Math.floor(damage * 2);
-            setPendingXpGained(prev => prev + damageXp);
             
-            setDisplayLeftXp(leftXp + pendingXpGained + damageXp);
-            
-            const newDisplayLevel = getNewLevel(displayLeftXp + damageXp, leftLevel);
-            if (newDisplayLevel > leftLevel) {
-              addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} is close to level ${newDisplayLevel}!`);
+            if (applyXpAfterBattle) {
+              // Just accumulate XP for end of battle
+              setAccumulatedXp(prev => prev + damageXp);
+            } else {
+              // Apply XP during battle
+              setAccumulatedXp(prev => prev + damageXp);
+              setDisplayLeftXp(leftXp + accumulatedXp + damageXp);
+              
+              const newDisplayLevel = getNewLevel(leftXp + accumulatedXp + damageXp, leftLevel);
+              if (newDisplayLevel > leftLevel) {
+                addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} is close to level ${newDisplayLevel}!`);
+              }
             }
             
             addToBattleLog(`${HOLOBOT_STATS[selectedLeftHolobot].name} attacks for ${damage} damage!`);
@@ -403,7 +457,7 @@ export const BattleScene = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth, isDefenseMode, leftXp, pendingXpGained, displayLeftXp, leftComboChain, rightComboChain]);
+  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth, isDefenseMode, leftXp, accumulatedXp, displayLeftXp, leftComboChain, rightComboChain, applyXpAfterBattle]);
 
   return (
     <div className="flex flex-col gap-1">
@@ -439,7 +493,7 @@ export const BattleScene = ({
           selectedRightHolobot={selectedRightHolobot}
           leftLevel={leftLevel}
           rightLevel={rightLevel}
-          leftXp={displayLeftXp}
+          leftXp={applyXpAfterBattle ? leftXp : displayLeftXp}
           rightXp={displayRightXp}
         />
         
