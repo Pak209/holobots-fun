@@ -382,11 +382,18 @@ export const QuestGrid = () => {
           [currentBossKey]: (currentBlueprints[currentBossKey] || 0) + tier.rewards.blueprintPieces
         };
         
+        console.log("Success! Updating rewards:", {
+          updatedBlueprints,
+          gachaTickets: user.gachaTickets + tier.rewards.gachaTickets,
+          boss: currentBossKey,
+          blueprintPieces: tier.rewards.blueprintPieces
+        });
+        
         // Update user's gachaTickets, energy, and blueprints
         try {
           await updateUser({
             dailyEnergy: user.dailyEnergy - tier.energyCost,
-            gachaTickets: user.gachaTickets + tier.rewards.gachaTickets,
+            gachaTickets: (user.gachaTickets || 0) + tier.rewards.gachaTickets,
             holobots: updatedHolobots, // Update with new XP values
             blueprints: updatedBlueprints
           });
