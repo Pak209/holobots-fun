@@ -107,7 +107,6 @@ const Quests = () => {
                     Available Refills: <span className="text-app-primary">{user?.energy_refills || 0}</span>
                   </div>
                   <Button 
-                    variant="default"
                     size="sm"
                     className="bg-app-primary hover:bg-app-primary/80 text-black"
                     disabled={!user?.energy_refills || user?.energy_refills <= 0 || user?.dailyEnergy >= user?.maxDailyEnergy}
