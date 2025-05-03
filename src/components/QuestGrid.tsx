@@ -227,13 +227,19 @@ export const QuestGrid = () => {
           const randomHolobotKey = randomOpponentKey;
           
           // Get current blueprints or initialize empty object
-          const currentBlueprints = user.blueprints || {};
+          let currentBlueprints = user.blueprints;
+          
+          // Ensure blueprints is an object, not an array or null
+          if (!currentBlueprints || Array.isArray(currentBlueprints) || typeof currentBlueprints !== 'object') {
+            console.log("Initializing blueprints as empty object (was:", currentBlueprints, ")");
+            currentBlueprints = {};
+          }
+          
+          // Create a clone to avoid mutation issues
+          const updatedBlueprints = { ...currentBlueprints };
           
           // Update the blueprint count for the random holobot
-          const updatedBlueprints = {
-            ...currentBlueprints,
-            [randomHolobotKey]: (currentBlueprints[randomHolobotKey] || 0) + tier.rewards.blueprintPieces
-          };
+          updatedBlueprints[randomHolobotKey] = (updatedBlueprints[randomHolobotKey] || 0) + tier.rewards.blueprintPieces;
           
           try {
             await updateUser({
@@ -259,6 +265,12 @@ export const QuestGrid = () => {
             setShowResultsScreen(true);
           } catch (error) {
             console.error("Profile update error:", error);
+            console.log("Failed update object:", {
+              dailyEnergy: user.dailyEnergy - tier.energyCost,
+              holosTokens: user.holosTokens + tier.rewards.holosTokens,
+              blueprints: updatedBlueprints
+            });
+            
             toast({
               title: "Update Error",
               description: "Failed to update profile with rewards. Please try again.",
@@ -383,13 +395,22 @@ export const QuestGrid = () => {
         const updatedHolobots = await updateSquadExperience(bossHolobots, tier.rewards.squadXp, tier.rewards.xpMultiplier);
         
         // Get current blueprints or initialize empty object
-        const currentBlueprints = { ...(user?.blueprints || {}) };
+        let currentBlueprints = user?.blueprints;
+        
+        // Ensure blueprints is an object, not an array or null
+        if (!currentBlueprints || Array.isArray(currentBlueprints) || typeof currentBlueprints !== 'object') {
+          console.log("Initializing blueprints as empty object (was:", currentBlueprints, ")");
+          currentBlueprints = {};
+        }
+        
+        // Create a clone to avoid mutation issues
+        const updatedBlueprints = { ...currentBlueprints };
         
         // Update the blueprint count for the boss holobot
-        currentBlueprints[currentBossKey] = (currentBlueprints[currentBossKey] || 0) + tier.rewards.blueprintPieces;
+        updatedBlueprints[currentBossKey] = (updatedBlueprints[currentBossKey] || 0) + tier.rewards.blueprintPieces;
         
         console.log("Success! Updating rewards:", {
-          updatedBlueprints: currentBlueprints,
+          updatedBlueprints: updatedBlueprints,
           gachaTickets: (user?.gachaTickets || 0) + tier.rewards.gachaTickets,
           boss: currentBossKey,
           blueprintPieces: tier.rewards.blueprintPieces
@@ -400,11 +421,11 @@ export const QuestGrid = () => {
           dailyEnergy: (user?.dailyEnergy || 100) - tier.energyCost,
           gachaTickets: (user?.gachaTickets || 0) + tier.rewards.gachaTickets,
           holobots: updatedHolobots,
-          blueprints: currentBlueprints
+          blueprints: updatedBlueprints
         };
         
-        // Update user's gachaTickets, energy, and blueprints
         try {
+          // Try to update the user profile
           await updateUser(updateObject);
           
           // Set up results screen data
@@ -418,6 +439,8 @@ export const QuestGrid = () => {
           setShowResultsScreen(true);
         } catch (error) {
           console.error("Profile update error:", error);
+          console.log("Failed update object:", JSON.stringify(updateObject));
+          
           toast({
             title: "Update Error",
             description: "Failed to update profile with rewards. Please try again.",
@@ -433,10 +456,19 @@ export const QuestGrid = () => {
         const failureBlueprintPieces = Math.max(1, Math.floor(tier.rewards.blueprintPieces * 0.25));
         
         // Get current blueprints or initialize empty object
-        const currentBlueprints = { ...(user?.blueprints || {}) };
+        let currentBlueprints = user?.blueprints;
+        
+        // Ensure blueprints is an object, not an array or null
+        if (!currentBlueprints || Array.isArray(currentBlueprints) || typeof currentBlueprints !== 'object') {
+          console.log("Initializing blueprints as empty object (was:", currentBlueprints, ")");
+          currentBlueprints = {};
+        }
+        
+        // Create a clone to avoid mutation issues
+        const updatedBlueprints = { ...currentBlueprints };
         
         // Update the blueprint count for the boss holobot
-        currentBlueprints[currentBossKey] = (currentBlueprints[currentBossKey] || 0) + failureBlueprintPieces;
+        updatedBlueprints[currentBossKey] = (updatedBlueprints[currentBossKey] || 0) + failureBlueprintPieces;
         
         // Set all squad holobots on cooldown
         bossHolobots.forEach(holobotKey => {
@@ -447,11 +479,11 @@ export const QuestGrid = () => {
         const updateObject = {
           dailyEnergy: (user?.dailyEnergy || 100) - tier.energyCost,
           holobots: updatedHolobots,
-          blueprints: currentBlueprints
+          blueprints: updatedBlueprints
         };
         
-        // Update user's energy, holobots, and blueprints
         try {
+          // Try to update the user profile
           await updateUser(updateObject);
           
           // Set up results screen for failure

@@ -1,10 +1,3 @@
-
-// Add the necessary imports and implement the updated BattleScene component
-// This should ensure that:
-// 1. Defense mode boosts hack gauge and special attack meters
-// 2. All boosts are temporary during battle only
-// 3. XP is applied only after battle completes
-
 // Add the necessary imports and update the component props interface to include preserveHolobotStats
 // Include the implementation of the defense mode boost
 

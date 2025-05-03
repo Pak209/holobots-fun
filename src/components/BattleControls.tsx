@@ -50,10 +50,10 @@ export const BattleControls = ({
     
     if (hackGauge >= 50) {
       options.push(
-        <SelectItem key="attack" value="attack" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
+        <SelectItem key="attack" value="attack">
           Boost Attack (50%)
         </SelectItem>,
-        <SelectItem key="speed" value="speed" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
+        <SelectItem key="speed" value="speed">
           Boost Speed (50%)
         </SelectItem>
       );
@@ -61,7 +61,7 @@ export const BattleControls = ({
     
     if (hackGauge >= 75) {
       options.push(
-        <SelectItem key="heal" value="heal" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
+        <SelectItem key="heal" value="heal">
           Heal (75%)
         </SelectItem>
       );
@@ -69,7 +69,7 @@ export const BattleControls = ({
     
     if (hackGauge >= 100) {
       options.push(
-        <SelectItem key="special_attack" value="special_attack" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
+        <SelectItem key="special_attack" value="special_attack">
           Special Attack (100%)
         </SelectItem>
       );
@@ -114,7 +114,7 @@ export const BattleControls = ({
             </div>
           </SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-holobots-card border-holobots-border">
+        <SelectContent>
           {getAvailableHackOptions()}
         </SelectContent>
       </Select>

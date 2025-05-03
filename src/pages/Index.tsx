@@ -1,4 +1,3 @@
-
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
