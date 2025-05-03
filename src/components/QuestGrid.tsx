@@ -831,4 +831,126 @@ export const QuestGrid = () => {
                     const isSelected = bossHolobots.includes(holobotKey);
                     
                     return (
-                      <
+                      <div 
+                        key={index} 
+                        className={`
+                          p-2 rounded-md cursor-pointer text-xs flex items-center gap-2
+                          ${isSelected ? 'bg-app-primary/40 border border-app-primary/80' : 'bg-black/30 border border-gray-700'}
+                        `}
+                        onClick={() => handleSelectBossHolobot(holobotKey)}
+                      >
+                        <div className="w-6 h-6 rounded-full bg-app-primary/20 flex items-center justify-center">
+                          {isSelected ? (
+                            <div className="w-3 h-3 rounded-full bg-app-primary"></div>
+                          ) : null}
+                        </div>
+                        <div>
+                          <div>{holobot.name}</div>
+                          <div className="text-[10px] opacity-70">Lv.{holobot.level}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Tier Selection */}
+            <div>
+              <div className="text-sm text-app-primary mb-2">Select Boss Tier:</div>
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.entries(BOSS_TIERS) as [keyof typeof BOSS_TIERS, any][]).map(([key, tier]) => (
+                  <Button
+                    key={key}
+                    variant={selectedBossTier === key ? "default" : "outline"}
+                    className={`
+                      h-auto py-2 px-3
+                      ${selectedBossTier === key ? 'bg-red-600 text-white border-red-400' : 'bg-black/40 text-red-400 border-red-900/50'}
+                      hover:border-red-500
+                    `}
+                    onClick={() => setSelectedBossTier(key)}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="capitalize font-medium">Tier {key.replace('tier', '')}</span>
+                      <div className="flex items-center text-xs">
+                        <Target className="h-3 w-3 mr-1" />
+                        <span>Lv.{tier.level}</span>
+                      </div>
+                      <span className="text-xs text-red-300">{tier.energyCost} Energy</span>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Boss Info */}
+            <div className="bg-black/30 p-2 rounded-md border border-red-900/30">
+              <div className="text-sm font-medium text-red-400 mb-1">
+                Today's Boss: {getDailyBossName(selectedBossTier)}
+              </div>
+              <div className="grid grid-cols-2 gap-1 text-xs">
+                <div className="flex items-center gap-1">
+                  <Flame className="h-3 w-3 text-yellow-500" />
+                  <span>Level: {BOSS_TIERS[selectedBossTier].level}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Ticket className="h-3 w-3 text-purple-400" />
+                  <span>Rewards: {BOSS_TIERS[selectedBossTier].rewards.gachaTickets} Tickets</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Gem className="h-3 w-3 text-blue-400" />
+                  <span>{BOSS_TIERS[selectedBossTier].rewards.blueprintPieces} Blueprint {BOSS_TIERS[selectedBossTier].rewards.blueprintPieces > 1 ? 'Pieces' : 'Piece'}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Star className="h-3 w-3 text-yellow-400" />
+                  <span>{BOSS_TIERS[selectedBossTier].rewards.squadXp}×{BOSS_TIERS[selectedBossTier].rewards.xpMultiplier} XP</span>
+                </div>
+              </div>
+            </div>
+
+            <Button 
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
+              disabled={isBossQuesting || bossHolobots.length < 3 || (user?.dailyEnergy || 0) < BOSS_TIERS[selectedBossTier].energyCost}
+              onClick={handleStartBossQuest}
+            >
+              {isBossQuesting ? (
+                <>
+                  <Swords className="animate-pulse mr-2 h-4 w-4" />
+                  Fighting Boss...
+                </>
+              ) : (
+                <>
+                  <Swords className="mr-2 h-4 w-4" />
+                  Start Boss Quest
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Battle UI */}
+      {showBattleBanner && (
+        <QuestBattleBanner
+          isBossBattle={isBossBattle}
+          playerHolobots={currentBattleHolobots.map(key => HOLOBOT_STATS[key])}
+          bossHolobot={HOLOBOT_STATS[currentBossHolobot]}
+          onAnimationComplete={() => setShowBattleBanner(false)}
+          fallbackImage="/placeholder.svg"
+        />
+      )}
+      
+      {/* Results Screen */}
+      {showResultsScreen && (
+        <QuestResultsScreen 
+          isSuccess={battleSuccess}
+          squadExpResults={squadExpResults}
+          blueprintReward={blueprintReward}
+          holosReward={holosReward}
+          gachaReward={gachaReward}
+          onClose={() => setShowResultsScreen(false)}
+        />
+      )}
+    </div>
+  );
+};
