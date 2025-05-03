@@ -38,16 +38,38 @@ export const QuestBattleBanner = ({
   const [battleRound, setBattleRound] = useState(0);
   const [battleResult, setBattleResult] = useState<'win' | 'loss' | null>(null);
 
+  // Safely get holobots from user data to prevent issues with squadHolobotKeys
+  const getValidSquadHolobots = () => {
+    if (!squadHolobotKeys || !Array.isArray(squadHolobotKeys) || !squadHolobotKeys.length) {
+      return [];
+    }
+    
+    // Filter out any undefined holobot keys
+    return squadHolobotKeys.filter(key => !!key);
+  };
+  
+  const validSquadHolobotKeys = getValidSquadHolobots();
+
   const actualPlayerHolobots = playerHolobots || 
     (user?.holobots?.filter(holobot => 
-      squadHolobotKeys.some(key => 
-        HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
+      validSquadHolobotKeys.some(key => 
+        key && HOLOBOT_STATS[key]?.name?.toLowerCase() === holobot.name?.toLowerCase()
       )
     ) || []);
   
-  const actualBossHolobot = bossHolobotKey || bossHolobot || "";
+  // Safely get the boss holobot and provide fallback if key is invalid
+  const safeGetBossHolobot = () => {
+    if (!bossHolobotKey && !bossHolobot) {
+      return "ace"; // Default fallback
+    }
+    
+    const key = (bossHolobotKey || bossHolobot || "").toLowerCase();
+    return HOLOBOT_STATS[key] ? key : "ace";
+  };
   
-  const boss = HOLOBOT_STATS[actualBossHolobot.toLowerCase()] || { 
+  const actualBossHolobot = safeGetBossHolobot();
+  
+  const boss = HOLOBOT_STATS[actualBossHolobot] || { 
     name: "Unknown Boss", 
     attack: 50,
     defense: 50,
@@ -55,25 +77,38 @@ export const QuestBattleBanner = ({
     speed: 50
   };
   
-  const teamStats = actualPlayerHolobots.reduce((stats, holobot) => {
-    const baseStatsKey = Object.keys(HOLOBOT_STATS).find(
-      key => HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
-    );
-    
-    if (baseStatsKey) {
-      const baseStats = HOLOBOT_STATS[baseStatsKey];
-      
-      console.log(`Applying boosts for ${holobot.name}:`, holobot.boostedAttributes);
-      
-      stats.attack += baseStats.attack + (holobot.boostedAttributes?.attack || 0);
-      stats.defense += baseStats.defense + (holobot.boostedAttributes?.defense || 0);
-      stats.health += baseStats.maxHealth + (holobot.boostedAttributes?.health || 0);
-      stats.speed += baseStats.speed + (holobot.boostedAttributes?.speed || 0);
+  // Safety check for team stats to prevent undefined errors
+  const calculateTeamStats = () => {
+    try {
+      return actualPlayerHolobots.reduce((stats, holobot) => {
+        const baseStatsKey = Object.keys(HOLOBOT_STATS).find(
+          key => HOLOBOT_STATS[key].name.toLowerCase() === holobot.name?.toLowerCase()
+        );
+        
+        if (baseStatsKey) {
+          const baseStats = HOLOBOT_STATS[baseStatsKey];
+          
+          stats.attack += baseStats.attack + (holobot.boostedAttributes?.attack || 0);
+          stats.defense += baseStats.defense + (holobot.boostedAttributes?.defense || 0);
+          stats.health += baseStats.maxHealth + (holobot.boostedAttributes?.health || 0);
+          stats.speed += baseStats.speed + (holobot.boostedAttributes?.speed || 0);
+        } else {
+          // Use default stats if no base stats found
+          stats.attack += 50;
+          stats.defense += 50;
+          stats.health += 100;
+          stats.speed += 50;
+        }
+        return stats;
+      }, { attack: 0, defense: 0, health: 0, speed: 0 });
+    } catch (error) {
+      console.error("Error calculating team stats:", error);
+      // Return fallback stats
+      return { attack: 100, defense: 100, health: 200, speed: 100 };
     }
-    return stats;
-  }, { attack: 0, defense: 0, health: 0, speed: 0 });
+  };
   
-  console.log("Team stats with boosts:", teamStats);
+  const teamStats = calculateTeamStats();
   
   const getDifficultyMultiplier = () => {
     switch (difficulty) {
@@ -94,6 +129,7 @@ export const QuestBattleBanner = ({
     speed: boss.speed * bossMultiplier,
   };
   
+  // Set up battle visibility and auto-completion timeout
   useEffect(() => {
     setVisible(isVisible);
     if (isVisible) {
@@ -103,9 +139,21 @@ export const QuestBattleBanner = ({
       setBattleRound(0);
       setBattleResult(null);
       setBattleText(`Battle with ${boss.name} is starting!`);
+      
+      // Safety timeout to ensure battle completes even if there are issues
+      const completionTimeout = setTimeout(() => {
+        if (visible) {
+          console.log("Force completing battle due to timeout");
+          setVisible(false);
+          if (onComplete) onComplete();
+        }
+      }, 30000); // 30 seconds max for a battle to complete
+      
+      return () => clearTimeout(completionTimeout);
     }
   }, [isVisible, boss.name]);
   
+  // Handle battle phases
   useEffect(() => {
     if (!visible) return;
     
@@ -157,9 +205,9 @@ export const QuestBattleBanner = ({
           setBossHealth(newBossHealth);
           setPlayerHealth(newPlayerHealth);
           
-          if (newBossHealth <= 0 || newPlayerHealth <= 0) {
+          if (newBossHealth <= 0 || newPlayerHealth <= 0 || battleRound >= 5) {
             setTimeout(() => {
-              if (newBossHealth <= 0) {
+              if (newBossHealth <= 0 || battleRound >= 5) {
                 setBattleText(`Victory! You defeated ${boss.name}!`);
                 setBattleResult('win');
               } else {
@@ -187,7 +235,9 @@ export const QuestBattleBanner = ({
       }, 2000);
     }
     
-    return () => clearTimeout(battleTimer);
+    return () => {
+      if (battleTimer) clearTimeout(battleTimer);
+    };
   }, [battlePhase, battleRound, bossHealth, playerHealth, visible]);
   
   if (!visible) return null;
@@ -213,18 +263,11 @@ export const QuestBattleBanner = ({
             className="h-3 bg-gray-700"
           />
           <div className="grid grid-cols-3 gap-1 mt-1">
-            {actualPlayerHolobots.map((holobot, idx) => (
-              <div key={idx} className="text-[10px] text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
-                {holobot.name}
-              </div>
-            ))}
-            {squadHolobotKeys.map((key, idx) => {
-              const holobotName = HOLOBOT_STATS[key]?.name;
-              const alreadyDisplayed = actualPlayerHolobots.some(h => 
-                h.name.toLowerCase() === holobotName?.toLowerCase()
-              );
-              if (alreadyDisplayed || !holobotName) return null;
+            {/* Only show valid holobots to prevent 404 errors */}
+            {validSquadHolobotKeys.map((key, idx) => {
+              if (!key || !HOLOBOT_STATS[key]) return null;
               
+              const holobotName = HOLOBOT_STATS[key]?.name || "Unknown";
               return (
                 <div key={`key-${idx}`} className="text-[10px] text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
                   {holobotName}

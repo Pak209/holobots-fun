@@ -10,6 +10,7 @@ interface BattleControlsProps {
   onHack: (type: HackType) => void;
   isBattleStarted: boolean;
   hackGauge: number;
+  disabled?: boolean; // Add disabled prop to disable all controls if needed
 }
 
 export const BattleControls = ({
@@ -17,23 +18,24 @@ export const BattleControls = ({
   onHypeUp,
   onHack,
   isBattleStarted,
-  hackGauge
+  hackGauge,
+  disabled = false
 }: BattleControlsProps) => {
   // Determine which hack options are available based on the gauge level
   const getHackButtonProps = () => {
     if (hackGauge >= 100) {
       return {
-        disabled: !isBattleStarted,
+        disabled: !isBattleStarted || disabled,
         className: "h-9 bg-red-500 hover:bg-red-600 text-white border-none text-xs shadow-neon"
       };
     } else if (hackGauge >= 75) {
       return {
-        disabled: !isBattleStarted,
+        disabled: !isBattleStarted || disabled,
         className: "h-9 bg-orange-500 hover:bg-orange-600 text-white border-none text-xs shadow-neon"
       };
     } else if (hackGauge >= 50) {
       return {
-        disabled: !isBattleStarted, 
+        disabled: !isBattleStarted || disabled, 
         className: "h-9 bg-yellow-500 hover:bg-yellow-600 text-white border-none text-xs shadow-neon"
       };
     } else {
@@ -79,6 +81,8 @@ export const BattleControls = ({
   };
 
   const handleHackSelect = (value: string) => {
+    if (disabled) return;
+    
     if (
       (value === 'attack' || value === 'speed') && hackGauge >= 50 ||
       value === 'heal' && hackGauge >= 75 ||
@@ -94,6 +98,7 @@ export const BattleControls = ({
         className="bg-holobots-accent hover:bg-holobots-hover text-white border-none text-xs shadow-neon-blue animate-pulse"
         size="sm"
         onClick={onStartBattle}
+        disabled={disabled}
       >
         {isBattleStarted ? 'End Battle' : 'Start Battle'}
       </Button>
@@ -101,11 +106,14 @@ export const BattleControls = ({
         className="bg-yellow-400 hover:bg-yellow-500 text-white border-none text-xs shadow-neon"
         size="sm"
         onClick={onHypeUp}
-        disabled={!isBattleStarted}
+        disabled={!isBattleStarted || disabled}
       >
         <Rocket className="w-3 h-3 md:w-4 md:h-4" /> Hype
       </Button>
-      <Select onValueChange={handleHackSelect} disabled={hackGauge < 50 || !isBattleStarted}>
+      <Select 
+        onValueChange={handleHackSelect} 
+        disabled={hackGauge < 50 || !isBattleStarted || disabled}
+      >
         <SelectTrigger {...getHackButtonProps()}>
           <SelectValue>
             <div className="flex items-center">

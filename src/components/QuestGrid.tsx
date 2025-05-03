@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star } from "lucide-react";
 import { Progress } from "./ui/progress";
+import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star } from "lucide-react";
 import { supabase, getDailyBossRotation, playerRankColors } from "@/integrations/supabase/client";
 import { QuestBattleBanner } from "@/components/quests/QuestBattleBanner";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
@@ -110,6 +110,16 @@ export const QuestGrid = () => {
   const [blueprintReward, setBlueprintReward] = useState<{holobotKey: string, amount: number} | undefined>();
   const [holosReward, setHolosReward] = useState(0);
   const [gachaReward, setGachaReward] = useState(0);
+
+  // Ensure blueprint object is properly initialized
+  const ensureBlueprintsObject = (blueprints: any) => {
+    // If blueprints is undefined, null, or an array, convert to empty object
+    if (!blueprints || Array.isArray(blueprints) || typeof blueprints !== 'object') {
+      console.log("Converting invalid blueprints to empty object:", blueprints);
+      return {};
+    }
+    return blueprints;
+  };
 
   // Load daily boss rotation on component mount
   useEffect(() => {
@@ -226,22 +236,22 @@ export const QuestGrid = () => {
           // Add blueprints rewards - random selection of holobot for exploration
           const randomHolobotKey = randomOpponentKey;
           
-          // Get current blueprints or initialize empty object
-          let currentBlueprints = user.blueprints;
-          
-          // Ensure blueprints is an object, not an array or null
-          if (!currentBlueprints || Array.isArray(currentBlueprints) || typeof currentBlueprints !== 'object') {
-            console.log("Initializing blueprints as empty object (was:", currentBlueprints, ")");
-            currentBlueprints = {};
-          }
-          
-          // Create a clone to avoid mutation issues
-          const updatedBlueprints = { ...currentBlueprints };
-          
-          // Update the blueprint count for the random holobot
-          updatedBlueprints[randomHolobotKey] = (updatedBlueprints[randomHolobotKey] || 0) + tier.rewards.blueprintPieces;
-          
           try {
+            // FIXED: Ensure blueprints is an object, not an array
+            const currentBlueprints = ensureBlueprintsObject(user.blueprints);
+            
+            // Create a clone to avoid mutation issues
+            const updatedBlueprints = { ...currentBlueprints };
+            
+            // Update the blueprint count for the random holobot
+            updatedBlueprints[randomHolobotKey] = (updatedBlueprints[randomHolobotKey] || 0) + tier.rewards.blueprintPieces;
+            
+            console.log("Updating exploration rewards:", {
+              dailyEnergy: user.dailyEnergy - tier.energyCost,
+              holosTokens: user.holosTokens + tier.rewards.holosTokens,
+              blueprints: updatedBlueprints
+            });
+            
             await updateUser({
               dailyEnergy: user.dailyEnergy - tier.energyCost,
               holosTokens: user.holosTokens + tier.rewards.holosTokens,
@@ -268,7 +278,7 @@ export const QuestGrid = () => {
             console.log("Failed update object:", {
               dailyEnergy: user.dailyEnergy - tier.energyCost,
               holosTokens: user.holosTokens + tier.rewards.holosTokens,
-              blueprints: updatedBlueprints
+              blueprints: "See Error"
             });
             
             toast({
@@ -303,6 +313,7 @@ export const QuestGrid = () => {
         setShowResultsScreen(true);
       }
     } catch (error) {
+      console.error("Exploration error:", error);
       toast({
         title: "Error",
         description: "An error occurred during the quest",
@@ -370,9 +381,24 @@ export const QuestGrid = () => {
     setCurrentBossHolobot(currentBossKey);
     setShowBattleBanner(true);
     
+    // Add a safety timeout to prevent infinite spinner
+    const safetyTimeout = setTimeout(() => {
+      console.log("Safety timeout triggered - resetting boss quest state");
+      setIsBossQuesting(false);
+      setShowBattleBanner(false);
+      toast({
+        title: "Quest Error",
+        description: "The quest process took too long and was reset. Please try again.",
+        variant: "destructive"
+      });
+    }, 15000); // 15-second safety timeout
+    
     try {
       // Wait for battle banner to complete
       await new Promise(resolve => setTimeout(resolve, 4000));
+      
+      // Clear the safety timeout as we've reached this point
+      clearTimeout(safetyTimeout);
       
       // Calculate squad power (simplified)
       const squadPower = bossHolobots.reduce((power, holobotKey) => {
@@ -394,56 +420,77 @@ export const QuestGrid = () => {
         // Update XP for all Holobots in the squad
         const updatedHolobots = await updateSquadExperience(bossHolobots, tier.rewards.squadXp, tier.rewards.xpMultiplier);
         
-        // Get current blueprints or initialize empty object
-        let currentBlueprints = user?.blueprints;
-        
-        // Ensure blueprints is an object, not an array or null
-        if (!currentBlueprints || Array.isArray(currentBlueprints) || typeof currentBlueprints !== 'object') {
-          console.log("Initializing blueprints as empty object (was:", currentBlueprints, ")");
-          currentBlueprints = {};
-        }
-        
-        // Create a clone to avoid mutation issues
-        const updatedBlueprints = { ...currentBlueprints };
-        
-        // Update the blueprint count for the boss holobot
-        updatedBlueprints[currentBossKey] = (updatedBlueprints[currentBossKey] || 0) + tier.rewards.blueprintPieces;
-        
-        console.log("Success! Updating rewards:", {
-          updatedBlueprints: updatedBlueprints,
-          gachaTickets: (user?.gachaTickets || 0) + tier.rewards.gachaTickets,
-          boss: currentBossKey,
-          blueprintPieces: tier.rewards.blueprintPieces
-        });
-        
-        // Prepare the update object
-        const updateObject = {
-          dailyEnergy: (user?.dailyEnergy || 100) - tier.energyCost,
-          gachaTickets: (user?.gachaTickets || 0) + tier.rewards.gachaTickets,
-          holobots: updatedHolobots,
-          blueprints: updatedBlueprints
-        };
-        
         try {
-          // Try to update the user profile
-          await updateUser(updateObject);
+          // FIXED: Ensure blueprints is an object, not an array
+          const currentBlueprints = ensureBlueprintsObject(user?.blueprints);
           
-          // Set up results screen data
-          setBattleSuccess(true);
-          setBlueprintReward({
-            holobotKey: currentBossKey,
-            amount: tier.rewards.blueprintPieces
+          // Create a clone to avoid mutation issues
+          const updatedBlueprints = { ...currentBlueprints };
+          
+          // Update the blueprint count for the boss holobot
+          updatedBlueprints[currentBossKey] = (updatedBlueprints[currentBossKey] || 0) + tier.rewards.blueprintPieces;
+          
+          console.log("Success! Updating rewards:", {
+            updatedBlueprints: updatedBlueprints,
+            gachaTickets: (user?.gachaTickets || 0) + tier.rewards.gachaTickets,
+            boss: currentBossKey,
+            blueprintPieces: tier.rewards.blueprintPieces
           });
-          setHolosReward(0); // No Holos rewards for boss quests
-          setGachaReward(tier.rewards.gachaTickets);
-          setShowResultsScreen(true);
-        } catch (error) {
-          console.error("Profile update error:", error);
-          console.log("Failed update object:", JSON.stringify(updateObject));
           
+          // Prepare the update object
+          const updateObject = {
+            dailyEnergy: (user?.dailyEnergy || 100) - tier.energyCost,
+            gachaTickets: (user?.gachaTickets || 0) + tier.rewards.gachaTickets,
+            holobots: updatedHolobots,
+            blueprints: updatedBlueprints
+          };
+          
+          try {
+            // Try to update the user profile
+            await updateUser(updateObject);
+            
+            // Set up results screen data
+            setBattleSuccess(true);
+            setBlueprintReward({
+              holobotKey: currentBossKey,
+              amount: tier.rewards.blueprintPieces
+            });
+            setHolosReward(0); // No Holos rewards for boss quests
+            setGachaReward(tier.rewards.gachaTickets);
+            setShowResultsScreen(true);
+          } catch (error) {
+            console.error("Profile update error:", error);
+            console.log("Failed update object:", JSON.stringify(updateObject));
+            
+            // Update just the energy consumption separately to ensure the quest is marked as completed
+            try {
+              await updateUser({ dailyEnergy: (user?.dailyEnergy || 100) - tier.energyCost });
+            } catch (energyError) {
+              console.error("Even energy update failed:", energyError);
+            }
+            
+            toast({
+              title: "Update Error",
+              description: "Failed to update profile with rewards, but the quest was completed. Please check your inventory later.",
+              variant: "destructive"
+            });
+            
+            // Still show success results but with a warning
+            setBattleSuccess(true);
+            setBlueprintReward({
+              holobotKey: currentBossKey,
+              amount: tier.rewards.blueprintPieces
+            });
+            setHolosReward(0);
+            setGachaReward(tier.rewards.gachaTickets);
+            setShowResultsScreen(true);
+          }
+        } catch (error) {
+          console.error("Blueprint processing error:", error);
+          // Handle blueprint processing errors
           toast({
-            title: "Update Error",
-            description: "Failed to update profile with rewards. Please try again.",
+            title: "Reward Error",
+            description: "There was an error processing your blueprint rewards.",
             variant: "destructive"
           });
         }
@@ -455,51 +502,54 @@ export const QuestGrid = () => {
         // Grant a reduced amount of blueprint pieces even on failure (25% of normal)
         const failureBlueprintPieces = Math.max(1, Math.floor(tier.rewards.blueprintPieces * 0.25));
         
-        // Get current blueprints or initialize empty object
-        let currentBlueprints = user?.blueprints;
-        
-        // Ensure blueprints is an object, not an array or null
-        if (!currentBlueprints || Array.isArray(currentBlueprints) || typeof currentBlueprints !== 'object') {
-          console.log("Initializing blueprints as empty object (was:", currentBlueprints, ")");
-          currentBlueprints = {};
-        }
-        
-        // Create a clone to avoid mutation issues
-        const updatedBlueprints = { ...currentBlueprints };
-        
-        // Update the blueprint count for the boss holobot
-        updatedBlueprints[currentBossKey] = (updatedBlueprints[currentBossKey] || 0) + failureBlueprintPieces;
-        
-        // Set all squad holobots on cooldown
-        bossHolobots.forEach(holobotKey => {
-          setHolobotOnCooldown(holobotKey);
-        });
-        
-        // Prepare update object
-        const updateObject = {
-          dailyEnergy: (user?.dailyEnergy || 100) - tier.energyCost,
-          holobots: updatedHolobots,
-          blueprints: updatedBlueprints
-        };
-        
         try {
-          // Try to update the user profile
-          await updateUser(updateObject);
+          // FIXED: Ensure blueprints is an object, not an array
+          const currentBlueprints = ensureBlueprintsObject(user?.blueprints);
           
-          // Set up results screen for failure
-          setBattleSuccess(false);
-          setBlueprintReward({
-            holobotKey: currentBossKey,
-            amount: failureBlueprintPieces
+          // Create a clone to avoid mutation issues
+          const updatedBlueprints = { ...currentBlueprints };
+          
+          // Update the blueprint count for the boss holobot
+          updatedBlueprints[currentBossKey] = (updatedBlueprints[currentBossKey] || 0) + failureBlueprintPieces;
+          
+          // Set all squad holobots on cooldown
+          bossHolobots.forEach(holobotKey => {
+            setHolobotOnCooldown(holobotKey);
           });
-          setHolosReward(0);
-          setGachaReward(0);
-          setShowResultsScreen(true);
-        } catch (error) {
-          console.error("Profile update error:", error);
+          
+          // Prepare update object
+          const updateObject = {
+            dailyEnergy: (user?.dailyEnergy || 100) - tier.energyCost,
+            holobots: updatedHolobots,
+            blueprints: updatedBlueprints
+          };
+          
+          try {
+            // Try to update the user profile
+            await updateUser(updateObject);
+            
+            // Set up results screen for failure
+            setBattleSuccess(false);
+            setBlueprintReward({
+              holobotKey: currentBossKey,
+              amount: failureBlueprintPieces
+            });
+            setHolosReward(0);
+            setGachaReward(0);
+            setShowResultsScreen(true);
+          } catch (error) {
+            console.error("Profile update error:", error);
+            toast({
+              title: "Update Error",
+              description: "Failed to update profile. Please try again.",
+              variant: "destructive"
+            });
+          }
+        } catch (blueprintError) {
+          console.error("Blueprint processing error:", blueprintError);
           toast({
-            title: "Update Error",
-            description: "Failed to update profile. Please try again.",
+            title: "Blueprint Error",
+            description: "Failed to process blueprint rewards. Please try again.",
             variant: "destructive"
           });
         }
@@ -512,6 +562,8 @@ export const QuestGrid = () => {
         variant: "destructive"
       });
     } finally {
+      // Clear the safety timeout if it's still active
+      clearTimeout(safetyTimeout);
       setIsBossQuesting(false);
       setBossHolobots([]);
     }
@@ -671,7 +723,7 @@ export const QuestGrid = () => {
 
             {/* Tier Selection */}
             <div className="grid grid-cols-3 gap-2">
-              {(Object.entries(EXPLORATION_TIERS) as [keyof typeof EXPLORATION_TIERS, typeof EXPLORATION_TIERS[keyof typeof EXPLORATION_TIERS]][]).map(([key, tier]) => (
+              {(Object.entries(EXPLORATION_TIERS) as [keyof typeof EXPLORATION_TIERS, typeof EXPLORATION_TIERS[keyof typeof EXPLORATION_TIERS][keyof typeof EXPLORATION_TIERS]][]).map(([key, tier]) => (
                 <Button
                   key={key}
                   variant={selectedExplorationTier === key ? "default" : "outline"}
@@ -779,182 +831,4 @@ export const QuestGrid = () => {
                     const isSelected = bossHolobots.includes(holobotKey);
                     
                     return (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        className={`
-                          h-auto py-1 justify-start text-left
-                          ${isSelected ? 'bg-app-primary/30 border-app-primary' : 'bg-black/30 border-gray-700'}
-                        `}
-                        onClick={() => handleSelectBossHolobot(holobotKey)}
-                      >
-                        <div className="flex flex-col">
-                          <span className="text-xs font-medium">{holobot.name}</span>
-                          <span className="text-xs opacity-70">Lv.{holobot.level}</span>
-                        </div>
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
-            {/* Daily Boss Info */}
-            <div className="bg-app-backgroundLight p-2 rounded-md border border-app-primary/30">
-              <h4 className="text-sm font-medium text-app-primary mb-2">Today's Boss Rotation:</h4>
-              <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <div className="p-1 border border-app-primary/20 rounded">
-                  <div>Tier 1</div>
-                  <div className="font-medium">{getDailyBossName('tier1')}</div>
-                </div>
-                <div className="p-1 border border-app-primary/20 rounded">
-                  <div>Tier 2</div>
-                  <div className="font-medium">{getDailyBossName('tier2')}</div>
-                </div>
-                <div className="p-1 border border-app-primary/20 rounded">
-                  <div>Tier 3</div>
-                  <div className="font-medium">{getDailyBossName('tier3')}</div>
-                </div>
-              </div>
-              <div className="text-xs text-app-textSecondary mt-2 text-center">
-                Boss rotation changes daily
-              </div>
-            </div>
-            
-            {/* Tier Selection */}
-            <div className="grid grid-cols-3 gap-2">
-              {(Object.entries(BOSS_TIERS) as [keyof typeof BOSS_TIERS, typeof BOSS_TIERS[keyof typeof BOSS_TIERS]][]).map(([key, tier]) => (
-                <Button
-                  key={key}
-                  variant={selectedBossTier === key ? "default" : "outline"}
-                  className={`
-                    h-auto py-2 px-3
-                    ${selectedBossTier === key ? 'bg-red-600 text-white' : 'bg-black/40 text-red-400'}
-                    border-red-800/30 hover:border-red-500
-                  `}
-                  onClick={() => setSelectedBossTier(key)}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="capitalize font-medium">{key.replace('tier', 'T')}</span>
-                    <div className="flex items-center text-xs">
-                      <Target className="h-3 w-3 mr-1" />
-                      <span>Lv.{tier.level}</span>
-                    </div>
-                    <span className="text-xs text-green-400">{tier.energyCost} Energy</span>
-                  </div>
-                </Button>
-              ))}
-            </div>
-
-            {/* Rewards Display */}
-            <div className="bg-black/30 p-2 rounded-md border border-red-500/30">
-              <h4 className="text-sm font-medium text-app-primary mb-2">Rewards:</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center gap-1 text-xs">
-                  <Gem className="h-3 w-3 text-purple-400" />
-                  <span>{BOSS_TIERS[selectedBossTier].rewards.blueprintPieces} Blueprint Pieces</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <Ticket className="h-3 w-3 text-green-400" />
-                  <span>{BOSS_TIERS[selectedBossTier].rewards.gachaTickets} Gacha Tickets</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <Swords className="h-3 w-3 text-blue-400" />
-                  <span>x{BOSS_TIERS[selectedBossTier].rewards.xpMultiplier} XP Boost</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <Star className="h-3 w-3 text-yellow-400" />
-                  <span>{BOSS_TIERS[selectedBossTier].rewards.squadXp} Base XP</span>
-                </div>
-              </div>
-            </div>
-            
-            <Button 
-              className="w-full bg-red-600 hover:bg-red-700 text-white"
-              disabled={
-                isBossQuesting || 
-                bossHolobots.length < 3 || 
-                !dailyBosses[selectedBossTier] || 
-                (user?.dailyEnergy || 0) < BOSS_TIERS[selectedBossTier].energyCost
-              }
-              onClick={handleStartBossQuest}
-            >
-              {isBossQuesting ? (
-                <>
-                  <Swords className="animate-spin mr-2 h-4 w-4" />
-                  Fighting Boss...
-                </>
-              ) : (
-                <>
-                  <Swords className="mr-2 h-4 w-4" />
-                  Start Boss Quest
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Holobot Cooldowns Display */}
-      {Object.keys(holobotCooldowns).length > 0 && (
-        <Card className="glass-morphism border-app-primary/50">
-          <CardHeader className="pb-2">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-app-primary" />
-              <CardTitle className="text-lg text-app-primary">Holobot Cooldowns</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Object.entries(holobotCooldowns).map(([holobotKey, cooldownTime]) => {
-                const progress = getCooldownProgress(holobotKey);
-                const timeRemaining = getCooldownTimeRemaining(holobotKey);
-                const isReady = timeRemaining === "Ready";
-                
-                return (
-                  <div 
-                    key={holobotKey}
-                    className={`
-                      p-2 rounded-md border
-                      ${isReady ? 'border-green-500/30 bg-green-900/10' : 'border-orange-500/30 bg-orange-900/10'}
-                    `}
-                  >
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-medium">{HOLOBOT_STATS[holobotKey].name}</span>
-                      <span className={`text-xs ${isReady ? 'text-green-400' : 'text-orange-400'}`}>
-                        {timeRemaining}
-                      </span>
-                    </div>
-                    <Progress value={progress} className="h-1" />
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Battle Banner */}
-      <QuestBattleBanner 
-        isVisible={showBattleBanner}
-        isBossQuest={isBossBattle}
-        squadHolobotKeys={currentBattleHolobots}
-        bossHolobotKey={currentBossHolobot}
-        onComplete={() => setShowBattleBanner(false)}
-      />
-      
-      {/* Results Screen */}
-      <QuestResultsScreen 
-        isVisible={showResultsScreen}
-        isSuccess={battleSuccess}
-        squadHolobotKeys={currentBattleHolobots}
-        squadHolobotExp={squadExpResults}
-        blueprintRewards={blueprintReward}
-        holosRewards={holosReward}
-        gachaTickets={gachaReward}
-        onClose={() => setShowResultsScreen(false)}
-      />
-    </div>
-  );
-};
+                      <

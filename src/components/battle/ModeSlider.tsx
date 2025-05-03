@@ -5,7 +5,7 @@ interface ModeSliderProps {
   isDefense: boolean;
   onModeChange: (isDefense: boolean) => void;
   disabled?: boolean;
-  onDefenseModeBoost?: () => void; // New prop to trigger defense mode boost effects
+  onDefenseModeBoost?: () => void; // Prop to trigger defense mode boost effects
 }
 
 export const ModeSlider = ({ 
@@ -17,12 +17,17 @@ export const ModeSlider = ({
   const handleModeChange = () => {
     if (disabled) return;
     
-    // Call the onModeChange prop with the new mode value
-    onModeChange(!isDefense);
-    
-    // If switching to defense mode, trigger the defense boost effect
-    if (!isDefense && onDefenseModeBoost) {
-      onDefenseModeBoost();
+    try {
+      // Call the onModeChange prop with the new mode value
+      onModeChange(!isDefense);
+      
+      // If switching to defense mode, trigger the defense boost effect
+      if (!isDefense && onDefenseModeBoost) {
+        console.log("Triggering defense mode boost");
+        onDefenseModeBoost();
+      }
+    } catch (error) {
+      console.error("Error changing battle mode:", error);
     }
   };
   
