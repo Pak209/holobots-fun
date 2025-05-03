@@ -4,7 +4,7 @@ import { AuthContextType } from "./types";
 import { UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ensureWelcomeGift } from "./authUtils";
 
 // Create the auth context
@@ -16,17 +16,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const checkUser = async () => {
-      setLoading(true);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
       
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setLoading(true);
+        
+        if (session?.user) {
+          try {
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id as any)
+              .maybeSingle();
+            
+            if (profileError) {
+              console.error("Error fetching profile:", profileError);
+              setCurrentUser(null);
+              setError(profileError.message);
+            } else if (profile) {
+              console.log("Setting user from auth state change:", profile);
+              const mappedProfile = mapDatabaseToUserProfile(profile);
+              setCurrentUser(mappedProfile);
+              
+              // Check for welcome gift (only needs to run once after sign-in)
+              setTimeout(async () => {
+                await ensureWelcomeGift(session.user.id, currentUser, setCurrentUser);
+              }, 0);
+              
+              // Redirect to dashboard if on auth page
+              if (location.pathname === '/auth' || location.pathname === '/') {
+                navigate('/dashboard');
+              }
+            }
+          } catch (err) {
+            console.error("Error handling sign-in:", err);
+          } finally {
+            setLoading(false);
+          }
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+        setLoading(false);
+        
+        // Redirect to auth if trying to access protected routes
+        const protectedRoutes = ['/dashboard', '/app', '/quests', '/training', '/gacha', '/marketplace'];
+        if (protectedRoutes.includes(location.pathname)) {
+          navigate('/auth');
+        }
+      }
+    });
+    
+    // THEN check for existing session
+    const checkSession = async () => {
       try {
-        // Use getSession instead of subscription
         const { data } = await supabase.auth.getSession();
         
         if (data.session?.user) {
-          console.log("Found session with user:", data.session.user.id);
+          console.log("Found existing session with user:", data.session.user.id);
           
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -39,13 +90,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setCurrentUser(null);
             setError(profileError.message);
           } else if (profile) {
-            // Successfully found profile
             console.log("Found user profile:", profile);
             const mappedProfile = mapDatabaseToUserProfile(profile);
             setCurrentUser(mappedProfile);
             
-            // Ensure new users get their welcome gift of 500 Holos tokens
-            await ensureWelcomeGift(data.session.user.id, currentUser, setCurrentUser);
+            // Redirect to dashboard if on auth page
+            if (location.pathname === '/auth') {
+              navigate('/dashboard');
+            }
           } else {
             console.log("User exists in auth but not in profiles");
             setCurrentUser(null);
@@ -53,9 +105,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           console.log("No session found, user is not logged in");
           setCurrentUser(null);
+          
+          // Redirect to auth if trying to access protected routes
+          const protectedRoutes = ['/dashboard', '/app', '/quests', '/training', '/gacha', '/marketplace'];
+          if (protectedRoutes.includes(location.pathname)) {
+            navigate('/auth');
+          }
         }
       } catch (err) {
-        console.error("Auth error:", err);
+        console.error("Session check error:", err);
         setError(err instanceof Error ? err.message : "Authentication error");
         setCurrentUser(null);
       } finally {
@@ -63,44 +121,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
     
-    checkUser();
-    
-    // Set up an event listener for sign in/out
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
-      
-      if (event === 'SIGNED_IN' && session) {
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id as any)
-            .maybeSingle();
-        
-          if (profileError) {
-            console.error("Error fetching profile:", profileError);
-            setCurrentUser(null);
-            setError(profileError.message);
-          } else if (profile) {
-            console.log("Setting user from auth state change:", profile);
-            const mappedProfile = mapDatabaseToUserProfile(profile);
-            setCurrentUser(mappedProfile);
-          
-            // Ensure new users get their welcome gift of 500 Holos tokens
-            await ensureWelcomeGift(session.user.id, currentUser, setCurrentUser);
-          }
-        } catch (err) {
-          console.error("Error handling sign-in:", err);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setCurrentUser(null);
-      }
-    });
+    checkSession();
     
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate, location.pathname]);
 
   // Login function
   const login = async (email: string, password: string) => {
@@ -122,6 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "You have been logged in",
       });
       
+      // Navigation handled by onAuthStateChange
       return;
     } catch (err) {
       console.error("Login error:", err);
@@ -150,12 +177,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       setCurrentUser(null);
-      navigate('/');
       
       toast({
         title: "Logged Out",
         description: "You have been logged out",
       });
+      
+      // Navigation handled by onAuthStateChange
     } catch (err) {
       console.error("Logout error:", err);
       setError(err instanceof Error ? err.message : "Logout failed");
