@@ -150,7 +150,7 @@ export const ArenaPrebattleMenu = ({
             <p className="text-[#8E9196] mb-4 text-center">Your balance: {user?.holosTokens || 0} Holos</p>
             <Button 
               onClick={handlePayWithTokens}
-              disabled={!user || (user.holosTokens || 0) < entryFee || !selectedHolobot}
+              disabled={!user || user.holosTokens < entryFee || !selectedHolobot}
               className="w-full bg-holobots-accent hover:bg-holobots-hover text-white"
             >
               <Gem className="mr-2 h-4 w-4" />
@@ -162,7 +162,7 @@ export const ArenaPrebattleMenu = ({
             <p className="text-[#8E9196] mb-2 text-center">Your Arena Passes: {user?.arena_passes || 0}</p>
             <Button
               onClick={handleUseArenaPass}
-              disabled={!user || !(user.arena_passes || 0) || !selectedHolobot}
+              disabled={!user || !user.arena_passes || user.arena_passes <= 0 || !selectedHolobot}
               className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
             >
               <Award className="mr-2 h-4 w-4" />

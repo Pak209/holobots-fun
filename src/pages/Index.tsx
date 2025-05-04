@@ -1,3 +1,4 @@
+
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -10,6 +11,7 @@ import { ArenaPrebattleMenu } from "@/components/arena/ArenaPrebattleMenu";
 import { generateArenaOpponent, calculateArenaRewards } from "@/utils/battleUtils";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 import { HOLOBOT_STATS } from "@/types/holobot";
+import { updateHolobotExperience, calculateExperience } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [currentRound, setCurrentRound] = useState(1);
@@ -21,7 +23,6 @@ const Index = () => {
   const [arenaResults, setArenaResults] = useState<any>(null);
   const maxRounds = 3;
   const entryFee = 50;
-  const [pendingXpGained, setPendingXpGained] = useState(0); // New state to accumulate XP
   const { toast } = useToast();
   const { user, updateUser } = useAuth();
 
@@ -30,37 +31,11 @@ const Index = () => {
     setCurrentOpponent(generateArenaOpponent(currentRound));
   }, [currentRound]);
 
-  // Helper function to calculate required XP for level
-  const calculateExperience = (level: number) => {
-    const BASE_XP = 100;
-    return Math.floor(BASE_XP * Math.pow(level, 2));
-  };
-  
-  // Helper function to update holobot experience
-  const updateHolobotExperience = (holobots: any[], holobotName: string, newExperience: number, newLevel: number) => {
-    if (!holobots || !Array.isArray(holobots)) {
-      return [];
-    }
-    
-    return holobots.map(holobot => {
-      if (holobot.name.toLowerCase() === holobotName.toLowerCase()) {
-        // Only update level and experience, but preserve all other attributes
-        return {
-          ...holobot,
-          level: newLevel,
-          experience: newExperience,
-          nextLevelExp: calculateExperience(newLevel)
-        };
-      }
-      return holobot;
-    });
-  };
-
   const payEntryFee = async () => {
     try {
-      if (user && (user.holosTokens || 0) >= entryFee) {
+      if (user && user.holosTokens >= entryFee) {
         await updateUser({
-          holosTokens: (user.holosTokens || 0) - entryFee
+          holosTokens: user.holosTokens - entryFee
         });
         setHasEntryFee(true);
         
@@ -87,9 +62,9 @@ const Index = () => {
 
   const useArenaPass = async () => {
     try {
-      if (user && (user.arena_passes || 0) > 0) {
+      if (user && user.arena_passes > 0) {
         await updateUser({
-          arena_passes: (user.arena_passes || 0) - 1
+          arena_passes: user.arena_passes - 1
         });
         setHasEntryFee(true);
         
@@ -147,7 +122,7 @@ const Index = () => {
     const totalXp = currentXp + xpGained;
     
     // Check if level up occurred
-    const requiredXpForNextLevel = calculateExperience(currentLevel);
+    const requiredXpForNextLevel = Math.floor(100 * Math.pow(currentLevel, 2));
     const leveledUp = totalXp >= requiredXpForNextLevel;
     const newLevel = leveledUp ? currentLevel + 1 : currentLevel;
     
@@ -180,7 +155,7 @@ const Index = () => {
         updates.arena_passes = (user.arena_passes || 0) + rewards.arenaPass;
       }
       
-      // Update holobot experience - but preserve all other attributes
+      // Update holobot experience
       if (experienceRewards.length > 0) {
         const updatedHolobots = updateHolobotExperience(
           user.holobots,
@@ -221,8 +196,6 @@ const Index = () => {
   const handleBattleEnd = (result: 'victory' | 'defeat') => {
     if (result === 'victory') {
       setVictories(prev => prev + 1);
-      setPendingXpGained(prev => prev + 100); // Add XP for the victory
-      
       if (currentRound < maxRounds) {
         setCurrentRound(prev => prev + 1);
         setCurrentOpponent(generateArenaOpponent(currentRound + 1));
@@ -261,21 +234,21 @@ const Index = () => {
 
   return (
     <div className="px-2 py-3">
-      <div className="mb-4 bg-app-backgroundLight rounded-lg p-3">
-        <div className="text-center mb-2 text-lg font-bold neon-text-cyan">
+      <div className="mb-4 bg-[#1A1F2C] rounded-lg p-3">
+        <div className="text-center mb-2 text-lg font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">
           ARENA MODE
         </div>
         <div className="flex justify-between items-center mb-2">
           <div className="bg-black/30 px-3 py-1 rounded-lg">
-            <span className="text-xs text-app-textSecondary">Round</span>
-            <div className="text-md font-bold text-app-primary">{currentRound}/{maxRounds}</div>
+            <span className="text-xs text-[#8E9196]">Round</span>
+            <div className="text-md font-bold text-holobots-accent">{currentRound}/{maxRounds}</div>
           </div>
           <div className="bg-black/30 px-3 py-1 rounded-lg">
-            <span className="text-xs text-app-textSecondary">Victories</span>
+            <span className="text-xs text-[#8E9196]">Victories</span>
             <div className="text-md font-bold text-green-500">{victories}</div>
           </div>
           <div className="bg-black/30 px-3 py-1 rounded-lg">
-            <span className="text-xs text-app-textSecondary">Opponent Level</span>
+            <span className="text-xs text-[#8E9196]">Opponent Level</span>
             <div className="text-md font-bold text-yellow-500">
               {currentOpponent.level}
             </div>
@@ -283,24 +256,13 @@ const Index = () => {
         </div>
       </div>
       
-      {!hasEntryFee ? (
-        <ArenaPrebattleMenu 
-          onHolobotSelect={handleHolobotSelect}
-          onEntryFeeMethod={handleEntryFeeMethod}
-          entryFee={entryFee}
-        />
-      ) : (
-        <BattleScene 
-          leftHolobot={selectedHolobot}
-          rightHolobot={currentOpponent.name}
-          isCpuBattle={true}
-          cpuLevel={currentOpponent.level}
-          onBattleEnd={handleBattleEnd}
-          applyXpAfterBattle={true} // Process XP only after battle
-          pendingXp={pendingXpGained} // Pass accumulated XP to battle scene
-          preserveHolobotStats={true} // NEW: Ensure holobot stats are preserved (not permanently modified)
-        />
-      )}
+      <BattleScene 
+        leftHolobot={selectedHolobot}
+        rightHolobot={currentOpponent.name}
+        isCpuBattle={true}
+        cpuLevel={currentOpponent.level}
+        onBattleEnd={handleBattleEnd}
+      />
 
       {/* Results screen */}
       {showResults && arenaResults && (
@@ -311,7 +273,6 @@ const Index = () => {
           squadHolobotExp={arenaResults.squadHolobotExp}
           blueprintRewards={arenaResults.blueprintRewards}
           holosRewards={arenaResults.holosRewards}
-          gachaTickets={arenaResults.gachaTickets}
           onClose={handleResultsClose}
         />
       )}

@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -60,33 +59,10 @@ export default {
           card: "hsl(var(--card))",      
           border: "hsl(var(--border))",    
           hover: "#0FA0CE"      
-        },
-        // New colors from the requested scheme
-        app: {
-          primary: '#00E5FF',
-          secondary: '#9C27B0',
-          background: '#0C1218',
-          backgroundLight: '#1A2836',
-          text: '#FFFFFF',
-          textSecondary: '#AAAAAA',
-          error: '#FF3B30',
-          success: '#34C759',
-          warning: '#FFCC00',
-          muted: '#888888',
-        },
-        // Player rank colors
-        rank: {
-          rookie: '#cccccc',
-          scout: '#4caf50',
-          champion: '#2196f3',
-          elite: '#9c27b0',
-          legend: '#ff9800',
-          mythic: '#f44336',
         }
       },
       boxShadow: {
         'neon-blue': '0 0 5px theme(colors.holobots.accent), 0 0 20px theme(colors.holobots.accent)',
-        'neon-cyan': '0 0 5px theme(colors.app.primary), 0 0 20px theme(colors.app.primary)',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -106,16 +82,11 @@ export default {
           '0%, 100%': { opacity: '1', boxShadow: '0 0 5px theme(colors.holobots.accent), 0 0 20px theme(colors.holobots.accent)' },
           '50%': { opacity: '0.5', boxShadow: '0 0 2px theme(colors.holobots.accent), 0 0 10px theme(colors.holobots.accent)' },
         },
-        'neon-pulse-cyan': {
-          '0%, 100%': { opacity: '1', boxShadow: '0 0 5px theme(colors.app.primary), 0 0 20px theme(colors.app.primary)' },
-          '50%': { opacity: '0.5', boxShadow: '0 0 2px theme(colors.app.primary), 0 0 10px theme(colors.app.primary)' },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         'neon-pulse': 'neon-pulse 2s ease-in-out infinite',
-        'neon-pulse-cyan': 'neon-pulse-cyan 2s ease-in-out infinite',
       },
     },
   },

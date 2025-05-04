@@ -5,7 +5,6 @@
 
 @layer base {
   :root {
-    /* Original light theme variables */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -29,49 +28,25 @@
   }
 
   .dark {
-    /* Updated dark theme variables to match requested scheme */
-    --background: 213 33% 7%;
+    --background: 0 0% 10%;
     --foreground: 210 40% 98%;
-    --card: 213 33% 10%;
+    --card: 0 0% 15%;
     --card-foreground: 210 40% 98%;
-    --popover: 213 33% 7%;
+    --popover: 0 0% 15%;
     --popover-foreground: 210 40% 98%;
-    --primary: 187 100% 50%;
+    --primary: 196 84% 57%;
     --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 300 59% 42%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 187 100% 50%;
+    --accent: 196 84% 57%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 187 100% 50%;
-  }
-
-  /* Force dark mode */
-  :root {
-    --background: 213 33% 7%;
-    --foreground: 210 40% 98%;
-    --card: 213 33% 10%;
-    --card-foreground: 210 40% 98%;
-    --popover: 213 33% 7%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 187 100% 50%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 300 59% 42%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 187 100% 50%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 187 100% 50%;
+    --ring: 196 84% 57%;
   }
 }
 
@@ -135,37 +110,4 @@
   .text-shadow {
     text-shadow: -1px -1px 0 #221F26, 1px -1px 0 #221F26, -1px 1px 0 #221F26, 1px 1px 0 #221F26;
   }
-
-  /* Neon glow utilities */
-  .neon-text-cyan {
-    @apply text-app-primary;
-    text-shadow: 0 0 5px theme(colors.app.primary), 0 0 20px theme(colors.app.primary);
-  }
-
-  .neon-border-cyan {
-    @apply border border-app-primary;
-    box-shadow: 0 0 5px theme(colors.app.primary), 0 0 20px theme(colors.app.primary);
-  }
-
-  /* Rank color utilities */
-  .rank-rookie { @apply text-rank-rookie; }
-  .rank-scout { @apply text-rank-scout; }
-  .rank-champion { @apply text-rank-champion; }
-  .rank-elite { @apply text-rank-elite; }
-  .rank-legend { @apply text-rank-legend; }
-  .rank-mythic { @apply text-rank-mythic; }
-  
-  .rank-border-rookie { @apply border-rank-rookie; }
-  .rank-border-scout { @apply border-rank-scout; }
-  .rank-border-champion { @apply border-rank-champion; }
-  .rank-border-elite { @apply border-rank-elite; }
-  .rank-border-legend { @apply border-rank-legend; }
-  .rank-border-mythic { @apply border-rank-mythic; }
-  
-  .rank-bg-rookie { @apply bg-rank-rookie/10; }
-  .rank-bg-scout { @apply bg-rank-scout/10; }
-  .rank-bg-champion { @apply bg-rank-champion/10; }
-  .rank-bg-elite { @apply bg-rank-elite/10; }
-  .rank-bg-legend { @apply bg-rank-legend/10; }
-  .rank-bg-mythic { @apply bg-rank-mythic/10; }
 }

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { ShieldAlert, Swords } from "lucide-react";
@@ -7,36 +6,48 @@ import { UserHolobot } from "@/types/user";
 import { useAuth } from "@/contexts/auth";
 
 interface QuestBattleBannerProps {
-  isBossBattle?: boolean;
-  playerHolobots?: string[];
+  playerHolobots?: UserHolobot[];
   bossHolobot?: string;
-  onAnimationComplete?: () => void;
+  onBattleComplete?: () => void;
   difficulty?: string;
-  fallbackImage?: string;
+  isVisible?: boolean;
+  isBossQuest?: boolean;
+  squadHolobotKeys?: string[];
+  bossHolobotKey?: string;
+  onComplete?: () => void;
 }
 
-export const QuestBattleBanner: React.FC<QuestBattleBannerProps> = ({ 
-  isBossBattle = false,
-  playerHolobots = [],
-  bossHolobot = "",
-  onAnimationComplete,
+export const QuestBattleBanner = ({ 
+  playerHolobots,
+  bossHolobot,
+  onBattleComplete,
   difficulty = "normal",
-  fallbackImage = "/placeholder.svg"
-}) => {
+  isVisible = true,
+  isBossQuest = false,
+  squadHolobotKeys = [],
+  bossHolobotKey = "",
+  onComplete
+}: QuestBattleBannerProps) => {
   const { user } = useAuth();
   
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(isVisible);
   const [battlePhase, setBattlePhase] = useState<'intro' | 'battle' | 'result'>('intro');
   const [battleText, setBattleText] = useState<string>("");
   const [playerHealth, setPlayerHealth] = useState(100);
   const [bossHealth, setBossHealth] = useState(100);
   const [battleRound, setBattleRound] = useState(0);
   const [battleResult, setBattleResult] = useState<'win' | 'loss' | null>(null);
+
+  const actualPlayerHolobots = playerHolobots || 
+    (user?.holobots?.filter(holobot => 
+      squadHolobotKeys.some(key => 
+        HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
+      )
+    ) || []);
   
-  // Get valid boss holobot
-  const activeBossHolobot = bossHolobot && HOLOBOT_STATS[bossHolobot] ? bossHolobot : Object.keys(HOLOBOT_STATS)[0];
+  const actualBossHolobot = bossHolobotKey || bossHolobot || "";
   
-  const boss = HOLOBOT_STATS[activeBossHolobot] || { 
+  const boss = HOLOBOT_STATS[actualBossHolobot.toLowerCase()] || { 
     name: "Unknown Boss", 
     attack: 50,
     defense: 50,
@@ -44,21 +55,25 @@ export const QuestBattleBanner: React.FC<QuestBattleBannerProps> = ({
     speed: 50
   };
   
-  // Calculate team stats from holobot keys
-  const calculateTeamStats = () => {
-    return playerHolobots.reduce((stats, holobotKey) => {
-      if (HOLOBOT_STATS[holobotKey]) {
-        const baseStats = HOLOBOT_STATS[holobotKey];
-        stats.attack += baseStats.attack;
-        stats.defense += baseStats.defense;
-        stats.health += baseStats.maxHealth;
-        stats.speed += baseStats.speed;
-      }
-      return stats;
-    }, { attack: 0, defense: 0, health: 0, speed: 0 });
-  };
+  const teamStats = actualPlayerHolobots.reduce((stats, holobot) => {
+    const baseStatsKey = Object.keys(HOLOBOT_STATS).find(
+      key => HOLOBOT_STATS[key].name.toLowerCase() === holobot.name.toLowerCase()
+    );
+    
+    if (baseStatsKey) {
+      const baseStats = HOLOBOT_STATS[baseStatsKey];
+      
+      console.log(`Applying boosts for ${holobot.name}:`, holobot.boostedAttributes);
+      
+      stats.attack += baseStats.attack + (holobot.boostedAttributes?.attack || 0);
+      stats.defense += baseStats.defense + (holobot.boostedAttributes?.defense || 0);
+      stats.health += baseStats.maxHealth + (holobot.boostedAttributes?.health || 0);
+      stats.speed += baseStats.speed + (holobot.boostedAttributes?.speed || 0);
+    }
+    return stats;
+  }, { attack: 0, defense: 0, health: 0, speed: 0 });
   
-  const teamStats = calculateTeamStats();
+  console.log("Team stats with boosts:", teamStats);
   
   const getDifficultyMultiplier = () => {
     switch (difficulty) {
@@ -79,7 +94,18 @@ export const QuestBattleBanner: React.FC<QuestBattleBannerProps> = ({
     speed: boss.speed * bossMultiplier,
   };
   
-  // Battle animation effect
+  useEffect(() => {
+    setVisible(isVisible);
+    if (isVisible) {
+      setBattlePhase('intro');
+      setPlayerHealth(100);
+      setBossHealth(100);
+      setBattleRound(0);
+      setBattleResult(null);
+      setBattleText(`Battle with ${boss.name} is starting!`);
+    }
+  }, [isVisible, boss.name]);
+  
   useEffect(() => {
     if (!visible) return;
     
@@ -101,15 +127,12 @@ export const QuestBattleBanner: React.FC<QuestBattleBannerProps> = ({
           let newPlayerHealth = playerHealth;
           
           if (playerFastAttack) {
-            // Player attacks first
             const playerDamage = Math.max(5, teamStats.attack - (adjustedBossStats.defense * 0.5));
             newBossHealth = Math.max(0, bossHealth - (playerDamage / adjustedBossStats.health * 100));
             setBattleText(`Your team attacks for ${playerDamage.toFixed(0)} damage!`);
-            setBossHealth(newBossHealth);
             
             if (newBossHealth > 0) {
               setTimeout(() => {
-                // Boss counter-attacks
                 const bossDamage = Math.max(5, adjustedBossStats.attack - (teamStats.defense * 0.4));
                 newPlayerHealth = Math.max(0, playerHealth - (bossDamage / teamStats.health * 100));
                 setBattleText(`${boss.name} counters for ${bossDamage.toFixed(0)} damage!`);
@@ -117,15 +140,12 @@ export const QuestBattleBanner: React.FC<QuestBattleBannerProps> = ({
               }, 1000);
             }
           } else {
-            // Boss attacks first
             const bossDamage = Math.max(5, adjustedBossStats.attack - (teamStats.defense * 0.4));
             newPlayerHealth = Math.max(0, playerHealth - (bossDamage / teamStats.health * 100));
             setBattleText(`${boss.name} attacks for ${bossDamage.toFixed(0)} damage!`);
-            setPlayerHealth(newPlayerHealth);
             
             if (newPlayerHealth > 0) {
               setTimeout(() => {
-                // Player counter-attacks
                 const playerDamage = Math.max(5, teamStats.attack - (adjustedBossStats.defense * 0.5));
                 newBossHealth = Math.max(0, bossHealth - (playerDamage / adjustedBossStats.health * 100));
                 setBattleText(`Your team counters for ${playerDamage.toFixed(0)} damage!`);
@@ -134,10 +154,12 @@ export const QuestBattleBanner: React.FC<QuestBattleBannerProps> = ({
             }
           }
           
-          // Check battle conclusion
-          if (newBossHealth <= 0 || newPlayerHealth <= 0 || battleRound >= 5) {
+          setBossHealth(newBossHealth);
+          setPlayerHealth(newPlayerHealth);
+          
+          if (newBossHealth <= 0 || newPlayerHealth <= 0) {
             setTimeout(() => {
-              if (newBossHealth <= 0 || battleRound >= 5) {
+              if (newBossHealth <= 0) {
                 setBattleText(`Victory! You defeated ${boss.name}!`);
                 setBattleResult('win');
               } else {
@@ -147,7 +169,6 @@ export const QuestBattleBanner: React.FC<QuestBattleBannerProps> = ({
               setBattlePhase('result');
             }, 1500);
           } else {
-            // Continue to next round
             setTimeout(() => {
               setBattleRound(prevRound => prevRound + 1);
               setBattleText(`Round ${battleRound + 1} begins!`);
@@ -156,18 +177,17 @@ export const QuestBattleBanner: React.FC<QuestBattleBannerProps> = ({
         }, 1000);
       }
     } else if (battlePhase === 'result') {
-      // Animation complete
       battleTimer = setTimeout(() => {
         setVisible(false);
-        if (onAnimationComplete) {
-          onAnimationComplete();
+        if (onComplete) {
+          onComplete();
+        } else if (onBattleComplete) {
+          onBattleComplete();
         }
       }, 2000);
     }
     
-    return () => {
-      if (battleTimer) clearTimeout(battleTimer);
-    };
+    return () => clearTimeout(battleTimer);
   }, [battlePhase, battleRound, bossHealth, playerHealth, visible]);
   
   if (!visible) return null;
@@ -193,12 +213,20 @@ export const QuestBattleBanner: React.FC<QuestBattleBannerProps> = ({
             className="h-3 bg-gray-700"
           />
           <div className="grid grid-cols-3 gap-1 mt-1">
-            {playerHolobots.slice(0, 3).map((key, idx) => {
-              if (!key || !HOLOBOT_STATS[key]) return null;
+            {actualPlayerHolobots.map((holobot, idx) => (
+              <div key={idx} className="text-[10px] text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
+                {holobot.name}
+              </div>
+            ))}
+            {squadHolobotKeys.map((key, idx) => {
+              const holobotName = HOLOBOT_STATS[key]?.name;
+              const alreadyDisplayed = actualPlayerHolobots.some(h => 
+                h.name.toLowerCase() === holobotName?.toLowerCase()
+              );
+              if (alreadyDisplayed || !holobotName) return null;
               
-              const holobotName = HOLOBOT_STATS[key]?.name || "Unknown";
               return (
-                <div key={`player-${idx}`} className="text-[10px] text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
+                <div key={`key-${idx}`} className="text-[10px] text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
                   {holobotName}
                 </div>
               );
@@ -219,7 +247,7 @@ export const QuestBattleBanner: React.FC<QuestBattleBannerProps> = ({
             className="h-3 bg-gray-700"
           />
           <div className="text-[10px] text-center mt-1 bg-red-900/30 rounded px-1 py-0.5">
-            {isBossBattle ? "BOSS QUEST" : "EXPLORATION"} - {difficulty.toUpperCase()}
+            {isBossQuest ? "BOSS QUEST" : "EXPLORATION"} - {difficulty.toUpperCase()}
           </div>
         </div>
         

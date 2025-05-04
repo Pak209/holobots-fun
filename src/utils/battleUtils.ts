@@ -1,4 +1,5 @@
-import { HolobotStats, HackType } from "@/types/holobot";
+
+import { HolobotStats } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
 const LEVEL_SCALING_FACTOR = 10; // k factor for XP scaling
@@ -57,32 +58,20 @@ export const getNewLevel = (currentXp: number, currentLevel: number) => {
   return currentLevel;
 };
 
-export const applyHackBoost = (stats: HolobotStats, type: HackType): HolobotStats => {
+export const applyHackBoost = (stats: HolobotStats, type: 'attack' | 'speed' | 'heal'): HolobotStats => {
   const newStats = { ...stats };
   
   switch (type) {
     case 'attack':
-      // Requires only 50% hack gauge
-      newStats.attack += Math.floor(newStats.attack * 0.25);
+      newStats.attack += Math.floor(newStats.attack * 0.2);
       break;
     case 'speed':
-      // Requires only 50% hack gauge
-      newStats.speed += Math.floor(newStats.speed * 0.25);
-      break;
-    case 'heal':
-      // Requires 75% hack gauge
-      const healAmount = Math.floor((newStats.maxHealth || 100) * 0.4);
-      newStats.hp = Math.min((newStats.maxHealth || 100), (newStats.hp || 0) + healAmount);
-      break;
-    case 'special_attack':
-      // Requires 100% hack gauge
-      newStats.attack += Math.floor(newStats.attack * 0.4);
       newStats.speed += Math.floor(newStats.speed * 0.2);
       break;
+    case 'heal':
+      newStats.maxHealth = Math.min(100, newStats.maxHealth + 30);
+      break;
   }
-  
-  // Mark that hack has been used
-  newStats.hackUsed = true;
   
   return newStats;
 };

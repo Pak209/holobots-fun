@@ -5,35 +5,12 @@ interface ModeSliderProps {
   isDefense: boolean;
   onModeChange: (isDefense: boolean) => void;
   disabled?: boolean;
-  onDefenseModeBoost?: () => void; // Prop to trigger defense mode boost effects
 }
 
-export const ModeSlider = ({ 
-  isDefense, 
-  onModeChange, 
-  disabled = false,
-  onDefenseModeBoost
-}: ModeSliderProps) => {
-  const handleModeChange = () => {
-    if (disabled) return;
-    
-    try {
-      // Call the onModeChange prop with the new mode value
-      onModeChange(!isDefense);
-      
-      // If switching to defense mode, trigger the defense boost effect
-      if (!isDefense && onDefenseModeBoost) {
-        console.log("Triggering defense mode boost");
-        onDefenseModeBoost();
-      }
-    } catch (error) {
-      console.error("Error changing battle mode:", error);
-    }
-  };
-  
+export const ModeSlider = ({ isDefense, onModeChange, disabled = false }: ModeSliderProps) => {
   return (
     <div 
-      onClick={handleModeChange}
+      onClick={() => !disabled && onModeChange(!isDefense)}
       className={`relative w-24 md:w-32 h-10 md:h-12 cursor-pointer rounded-full bg-holobots-card border-2 border-holobots-border transition-all duration-300
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-neon-blue'}`}
     >
