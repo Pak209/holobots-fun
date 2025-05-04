@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useAuth } from "@/contexts/auth";
+import { useAuth, useAuthSession } from "@/contexts/auth";
 import { Web3Login } from "@/components/Web3Login";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -22,59 +21,35 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { session } = useAuthSession();
 
   // Check if user is already logged in
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
+    if (user || session) {
+      navigate('/dashboard', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, session, navigate]);
 
   // Handle auth (sign up or sign in)
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+    
     try {
       if (isSignUp) {
-        // Handle sign up
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username,
-            }
-          }
-        });
-
-        if (signUpError) throw signUpError;
-
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account, then sign in.",
-        });
+        // Basic validation
+        if (!username.trim()) {
+          throw new Error('Username is required');
+        }
         
-        // Switch to sign in view after successful signup
-        setIsSignUp(false);
-        setLoading(false);
-        return;
-      } 
-      
-      // Handle sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) throw signInError;
-
-      toast({
-        title: "Login successful",
-        description: "Redirecting you to the dashboard",
-      });
-      
-      // Redirect handled by AuthProvider's onAuthStateChange
+        if (password.length < 6) {
+          throw new Error('Password must be at least 6 characters');
+        }
+        
+        await signup();
+      } else {
+        await login();
+      }
     } catch (error) {
       console.error('Auth error:', error);
       toast({
@@ -85,6 +60,24 @@ export default function Auth() {
     } finally {
       setLoading(false);
     }
+  };
+  
+  const login = async () => {
+    const { login } = useAuth();
+    await login(email, password);
+    // No need to navigate - AuthProvider handles redirection
+  };
+  
+  const signup = async () => {
+    const { signup } = useAuth();
+    await signup(email, password, username);
+    
+    // Switch to sign in view after successful signup
+    setIsSignUp(false);
+    toast({
+      title: "Account created!",
+      description: "Please check your email to verify your account, then sign in.",
+    });
   };
 
   return (

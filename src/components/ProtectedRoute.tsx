@@ -15,6 +15,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   useEffect(() => {
     if (!loading && !user && !location.pathname.includes('auth')) {
+      console.log("No user detected, redirecting to auth page");
       navigate('/auth', { replace: true });
     }
   }, [user, loading, navigate, location]);

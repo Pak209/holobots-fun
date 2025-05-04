@@ -7,11 +7,11 @@ import { HOLOBOT_STATS } from "@/types/holobot";
 import { Check, X, Trophy, Star, FileText, Ticket } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface QuestResultsScreenProps {
+export interface QuestResultsScreenProps {
   isVisible: boolean;
   isSuccess: boolean;
   squadHolobotKeys: string[];
-  squadHolobotExp: Array<{name: string, xp: number, levelUp: boolean, newLevel: number}>;
+  squadExpResults?: Array<{name: string, xp: number, levelUp: boolean, newLevel: number}>;
   blueprintRewards?: {holobotKey: string, amount: number};
   holosRewards: number;
   gachaTickets?: number;
@@ -22,7 +22,7 @@ export const QuestResultsScreen: React.FC<QuestResultsScreenProps> = ({
   isVisible,
   isSuccess,
   squadHolobotKeys,
-  squadHolobotExp,
+  squadExpResults = [],
   blueprintRewards,
   holosRewards,
   gachaTickets = 0,
@@ -64,14 +64,14 @@ export const QuestResultsScreen: React.FC<QuestResultsScreenProps> = ({
         
         <div className="p-4 space-y-4">
           {/* Squad Results */}
-          {squadHolobotExp.length > 0 && (
+          {squadExpResults.length > 0 && (
             <div>
               <h3 className="text-sm font-medium flex items-center gap-2 mb-2">
                 <Trophy className="h-4 w-4 text-yellow-400" />
                 Squad Performance
               </h3>
               <div className="grid gap-2">
-                {squadHolobotExp.map((result, index) => (
+                {squadExpResults.map((result, index) => (
                   <div 
                     key={index} 
                     className="flex justify-between items-center p-2 rounded-md bg-black/30 border border-white/10"

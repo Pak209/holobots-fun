@@ -1,11 +1,13 @@
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { AuthContextType } from "./types";
+import { createContext, useContext } from "react";
 import { UserProfile, mapDatabaseToUserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ensureWelcomeGift } from "./authUtils";
+import { useAuthSession } from "@/components/auth/AuthSession";
 
 // Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -13,76 +15,22 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Use the session provider to get auth state
+  const { user: authUser, loading: authLoading } = useAuthSession();
 
+  // Load user profile when auth state changes
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
-      
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setLoading(true);
-        
-        if (session?.user) {
-          try {
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id as any)
-              .maybeSingle();
-            
-            if (profileError) {
-              console.error("Error fetching profile:", profileError);
-              setCurrentUser(null);
-              setError(profileError.message);
-            } else if (profile) {
-              console.log("Setting user from auth state change:", profile);
-              const mappedProfile = mapDatabaseToUserProfile(profile);
-              setCurrentUser(mappedProfile);
-              
-              // Check for welcome gift (only needs to run once after sign-in)
-              setTimeout(async () => {
-                await ensureWelcomeGift(session.user.id, currentUser, setCurrentUser);
-              }, 0);
-              
-              // Redirect to dashboard if on auth page
-              if (location.pathname === '/auth' || location.pathname === '/') {
-                navigate('/dashboard');
-              }
-            }
-          } catch (err) {
-            console.error("Error handling sign-in:", err);
-          } finally {
-            setLoading(false);
-          }
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setCurrentUser(null);
-        setLoading(false);
-        
-        // Redirect to auth if trying to access protected routes
-        const protectedRoutes = ['/dashboard', '/app', '/quests', '/training', '/gacha', '/marketplace'];
-        if (protectedRoutes.includes(location.pathname)) {
-          navigate('/auth');
-        }
-      }
-    });
-    
-    // THEN check for existing session
-    const checkSession = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        
-        if (data.session?.user) {
-          console.log("Found existing session with user:", data.session.user.id);
-          
+    const loadUserProfile = async () => {
+      if (authUser) {
+        try {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', data.session.user.id as any)
+            .eq('id', authUser.id)
             .maybeSingle();
           
           if (profileError) {
@@ -90,47 +38,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setCurrentUser(null);
             setError(profileError.message);
           } else if (profile) {
-            console.log("Found user profile:", profile);
+            console.log("Setting user from profile:", profile);
             const mappedProfile = mapDatabaseToUserProfile(profile);
             setCurrentUser(mappedProfile);
             
+            // Check for welcome gift (only needs to run once after sign-in)
+            setTimeout(async () => {
+              await ensureWelcomeGift(authUser.id, currentUser, setCurrentUser);
+            }, 0);
+            
             // Redirect to dashboard if on auth page
-            if (location.pathname === '/auth') {
+            if (location.pathname === '/auth' || location.pathname === '/') {
               navigate('/dashboard');
             }
-          } else {
-            console.log("User exists in auth but not in profiles");
-            setCurrentUser(null);
           }
-        } else {
-          console.log("No session found, user is not logged in");
-          setCurrentUser(null);
-          
-          // Redirect to auth if trying to access protected routes
-          const protectedRoutes = ['/dashboard', '/app', '/quests', '/training', '/gacha', '/marketplace'];
-          if (protectedRoutes.includes(location.pathname)) {
-            navigate('/auth');
-          }
+        } catch (err) {
+          console.error("Error handling profile load:", err);
         }
-      } catch (err) {
-        console.error("Session check error:", err);
-        setError(err instanceof Error ? err.message : "Authentication error");
+      } else if (!authLoading) {
+        // User is not authenticated and we've finished loading
         setCurrentUser(null);
-      } finally {
-        setLoading(false);
+        
+        // Redirect to auth if trying to access protected routes
+        const protectedRoutes = ['/dashboard', '/app', '/quests', '/training', '/gacha', '/marketplace'];
+        if (protectedRoutes.includes(location.pathname)) {
+          navigate('/auth');
+        }
       }
     };
-    
-    checkSession();
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate, location.pathname]);
+
+    loadUserProfile();
+  }, [authUser, authLoading, location.pathname]);
 
   // Login function
   const login = async (email: string, password: string) => {
-    setLoading(true);
     setError(null);
     
     try {
@@ -145,10 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       toast({
         title: "Login Successful",
-        description: "You have been logged in",
+        description: "Redirecting to dashboard...",
       });
       
-      // Navigation handled by onAuthStateChange
+      // Navigation handled by AuthSession
       return;
     } catch (err) {
       console.error("Login error:", err);
@@ -159,14 +100,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 
   // Logout function
   const logout = async () => {
-    setLoading(true);
     setError(null);
     
     try {
@@ -183,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "You have been logged out",
       });
       
-      // Navigation handled by onAuthStateChange
+      navigate('/auth');
     } catch (err) {
       console.error("Logout error:", err);
       setError(err instanceof Error ? err.message : "Logout failed");
@@ -192,14 +130,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: err instanceof Error ? err.message : "Failed to log out",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   // Signup function
   const signup = async (email: string, password: string, username: string) => {
-    setLoading(true);
     setError(null);
     
     try {
@@ -219,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       toast({
         title: "Signup Successful",
-        description: "Your account has been created",
+        description: "Your account has been created. Please check your email for verification.",
       });
     } catch (err) {
       console.error("Signup error:", err);
@@ -230,12 +165,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 
-  // Update user function
+  // Update user function - simplified for clarity
   const updateUser = async (updates: Partial<UserProfile>): Promise<void> => {
     if (!currentUser) {
       toast({
@@ -247,8 +180,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     try {
-      const dbUpdates: any = {};
+      const dbUpdates: Record<string, any> = {};
       
+      // Map properties to database column names
       if (updates.username) dbUpdates.username = updates.username;
       if (updates.holosTokens !== undefined) dbUpdates.holos_tokens = updates.holosTokens;
       if (updates.gachaTickets !== undefined) dbUpdates.gacha_tickets = updates.gachaTickets;
@@ -257,38 +191,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updates.lastEnergyRefresh) dbUpdates.last_energy_refresh = updates.lastEnergyRefresh;
       if (updates.stats?.wins !== undefined) dbUpdates.wins = updates.stats.wins;
       if (updates.stats?.losses !== undefined) dbUpdates.losses = updates.stats.losses;
-      
       if (updates.arena_passes !== undefined) dbUpdates.arena_passes = updates.arena_passes;
       if (updates.exp_boosters !== undefined) dbUpdates.exp_boosters = updates.exp_boosters;
       if (updates.energy_refills !== undefined) dbUpdates.energy_refills = updates.energy_refills;
       if (updates.rank_skips !== undefined) dbUpdates.rank_skips = updates.rank_skips;
-      
-      if (updates.holobots) {
-        dbUpdates.holobots = updates.holobots;
-      }
-      
-      console.log("Updating user profile with:", dbUpdates);
+      if (updates.holobots) dbUpdates.holobots = updates.holobots;
+      if (updates.blueprints) dbUpdates.blueprints = updates.blueprints;
       
       const { error: updateError } = await supabase
         .from('profiles')
         .update(dbUpdates)
-        .eq('id', currentUser.id as any);
+        .eq('id', currentUser.id);
       
       if (updateError) {
         throw updateError;
       }
       
       // Update the local user state with the new values
-      const updatedUser = { ...currentUser, ...updates };
-      setCurrentUser(updatedUser);
+      setCurrentUser({ ...currentUser, ...updates });
       
-      // Log the updated state
-      console.log("User profile updated successfully:", updatedUser);
-      
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been updated",
-      });
+      console.log("User profile updated successfully");
     } catch (error) {
       console.error("Error updating user:", error);
       toast({
@@ -296,6 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error instanceof Error ? error.message : "Failed to update profile",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -330,7 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId as any)
+        .eq('id', userId)
         .maybeSingle();
       
       if (error) {
@@ -347,7 +270,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Create the context value
   const contextValue: AuthContextType = {
     user: currentUser,
-    loading,
+    loading: authLoading,
     error,
     login,
     logout,
