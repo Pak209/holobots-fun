@@ -5,6 +5,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
+import { Alert } from "./ui/alert";
 
 export const Web3Login = () => {
   const [email, setEmail] = useState('');
@@ -35,11 +36,25 @@ export const Web3Login = () => {
         }
       }
     } catch (err: any) {
-      toast({
-        title: "Authentication error",
-        description: err.message || "Failed to authenticate",
-        variant: "destructive",
-      });
+      console.error("Authentication error:", err);
+      
+      // Specific error handling for common issues
+      const errorMessage = err.message || "Failed to authenticate";
+      
+      // Check for potential prestige_count ambiguous column error
+      if (errorMessage.includes('prestige_count') && errorMessage.includes('ambiguous')) {
+        toast({
+          title: "Database error",
+          description: "There's an issue with the database configuration. Please contact support.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Authentication error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -50,9 +65,14 @@ export const Web3Login = () => {
       </h2>
       
       {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-800 rounded">
-          {error}
-        </div>
+        <Alert variant="destructive" className="mb-4">
+          <p className="text-sm">{error}</p>
+          {error.includes('prestige_count') && (
+            <p className="text-xs mt-1">
+              Database configuration issue detected. Please try again later.
+            </p>
+          )}
+        </Alert>
       )}
       
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -100,3 +120,4 @@ export const Web3Login = () => {
     </div>
   );
 };
+
