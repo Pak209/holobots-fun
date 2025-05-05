@@ -120,4 +120,3 @@ export const Web3Login = () => {
     </div>
   );
 };
-
