@@ -11,4 +11,5 @@ export interface AuthContextType {
   updateUser: (updates: Partial<UserProfile>) => Promise<void>;
   searchPlayers: (query: string) => Promise<UserProfile[]>;
   getUserProfile: (userId: string) => Promise<UserProfile | null>;
+  debug?: any; // Only available in development mode
 }

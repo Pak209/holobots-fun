@@ -12,6 +12,7 @@ export interface UserHolobot {
   rank?: string; // Add rank property to track holobot tier
   attributePoints?: number; // Add attributePoints for tracking available boost points
   receivedLegendaryBonus?: boolean; // Track if the holobot has received the one-time legendary bonus
+  prestiged?: boolean; // Add prestiged property to track if holobot is prestiged
 }
 
 export interface UserProfile {

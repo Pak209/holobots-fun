@@ -10,96 +10,156 @@ import { ensureWelcomeGift } from "./authUtils";
 // Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Define a debug mode flag for development environments
+const AUTH_DEBUG = process.env.NODE_ENV === 'development';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkUser = async () => {
-      setLoading(true);
+  // Helper function to log debug information
+  const logDebug = (...args: any[]) => {
+    if (AUTH_DEBUG) {
+      console.log('[Auth Debug]', ...args);
+    }
+  };
+
+  // Function to fetch user profile
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      logDebug('Fetching profile for user:', userId);
       
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (profileError) {
+        logDebug('Error fetching profile:', profileError);
+        throw profileError;
+      }
+      
+      if (!profile) {
+        logDebug('No profile found for user:', userId);
+        return null;
+      }
+      
+      logDebug('Profile found:', profile);
+      return mapDatabaseToUserProfile(profile);
+    } catch (err) {
+      logDebug('Exception in fetchUserProfile:', err);
+      throw err;
+    }
+  };
+
+  // Function to handle user session
+  const handleSession = async (session: any) => {
+    logDebug('Handling session:', session?.user?.id || 'No session');
+    
+    if (!session?.user) {
+      setCurrentUser(null);
+      return;
+    }
+
+    try {
+      const userId = session.user.id;
+      const userProfile = await fetchUserProfile(userId);
+      
+      if (!userProfile) {
+        logDebug('No profile after handling session, user may be new');
+        setError("Profile not found. Please try logging out and in again.");
+        return;
+      }
+      
+      setCurrentUser(userProfile);
+      setError(null);
+      
+      // Process welcome gift outside of critical path
+      setTimeout(() => {
+        ensureWelcomeGift(userId, currentUser, setCurrentUser)
+          .catch(err => logDebug('Welcome gift error:', err));
+      }, 0);
+    } catch (err) {
+      logDebug('Error in handleSession:', err);
+      setError(err instanceof Error ? err.message : "Failed to load user profile");
+      setCurrentUser(null);
+    }
+  };
+
+  // Set up auth state management
+  useEffect(() => {
+    logDebug('Auth provider initialized');
+    setLoading(true);
+    
+    // Create a flag to prevent state updates after unmount
+    let isMounted = true;
+    
+    const initializeAuth = async () => {
       try {
-        // Use getSession instead of subscription
+        logDebug('Setting up auth state listener');
+        
+        // First set up the auth state change listener
+        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+          logDebug('Auth state changed:', event, session?.user?.id);
+          
+          if (!isMounted) return;
+          
+          if (event === 'SIGNED_OUT') {
+            setCurrentUser(null);
+            setError(null);
+          }
+          else if (session) {
+            // Defer profile fetching to avoid Supabase deadlocks
+            setTimeout(async () => {
+              if (!isMounted) return;
+              await handleSession(session);
+            }, 0);
+          }
+        });
+        
+        // Then check for existing session
+        logDebug('Checking for existing session');
         const { data } = await supabase.auth.getSession();
         
-        if (data.session?.user) {
-          console.log("Found session with user:", data.session.user.id);
-          
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.session.user.id as any)
-            .maybeSingle();
-          
-          if (profileError) {
-            console.error("Error fetching profile:", profileError);
-            setCurrentUser(null);
-            setError(profileError.message);
-          } else if (profile) {
-            // Successfully found profile
-            console.log("Found user profile:", profile);
-            const mappedProfile = mapDatabaseToUserProfile(profile);
-            setCurrentUser(mappedProfile);
-            
-            // Ensure new users get their welcome gift of 500 Holos tokens
-            await ensureWelcomeGift(data.session.user.id, currentUser, setCurrentUser);
-          } else {
-            console.log("User exists in auth but not in profiles");
-            setCurrentUser(null);
-          }
+        if (data.session) {
+          logDebug('Found existing session:', data.session.user.id);
+          await handleSession(data.session);
         } else {
-          console.log("No session found, user is not logged in");
+          logDebug('No existing session found');
           setCurrentUser(null);
         }
-      } catch (err) {
-        console.error("Auth error:", err);
-        setError(err instanceof Error ? err.message : "Authentication error");
-        setCurrentUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    checkUser();
-    
-    // Set up an event listener for sign in/out
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
-      
-      if (event === 'SIGNED_IN' && session) {
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id as any)
-            .maybeSingle();
         
-          if (profileError) {
-            console.error("Error fetching profile:", profileError);
-            setCurrentUser(null);
-            setError(profileError.message);
-          } else if (profile) {
-            console.log("Setting user from auth state change:", profile);
-            const mappedProfile = mapDatabaseToUserProfile(profile);
-            setCurrentUser(mappedProfile);
-          
-            // Ensure new users get their welcome gift of 500 Holos tokens
-            await ensureWelcomeGift(session.user.id, currentUser, setCurrentUser);
-          }
-        } catch (err) {
-          console.error("Error handling sign-in:", err);
+        if (isMounted) {
+          setLoading(false);
+          setAuthInitialized(true);
         }
-      } else if (event === 'SIGNED_OUT') {
-        setCurrentUser(null);
+        
+        return () => {
+          isMounted = false;
+          if (authListener?.subscription) {
+            logDebug('Cleaning up auth listener');
+            authListener.subscription.unsubscribe();
+          }
+        };
+      } catch (err) {
+        logDebug('Error initializing auth:', err);
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Authentication error");
+          setLoading(false);
+          setCurrentUser(null);
+        }
+        return () => { isMounted = false; };
       }
-    });
-    
-    return () => {
-      authListener.subscription.unsubscribe();
     };
+    
+    initializeAuth();
+    
+    return () => { isMounted = false; };
   }, []);
 
   // Login function
@@ -108,7 +168,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      logDebug('Attempting login for:', email);
+      
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
       });
@@ -117,6 +179,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw signInError;
       }
       
+      if (!data.session) {
+        throw new Error("Login successful but no session returned");
+      }
+      
+      logDebug('Login successful:', data.session.user.id);
+      
       toast({
         title: "Login Successful",
         description: "You have been logged in",
@@ -124,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return;
     } catch (err) {
-      console.error("Login error:", err);
+      logDebug('Login error:', err);
       setError(err instanceof Error ? err.message : "Login failed");
       toast({
         title: "Login Failed",
@@ -143,6 +211,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     
     try {
+      logDebug('Attempting logout');
+      
       const { error: signOutError } = await supabase.auth.signOut();
       
       if (signOutError) {
@@ -157,7 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "You have been logged out",
       });
     } catch (err) {
-      console.error("Logout error:", err);
+      logDebug('Logout error:', err);
       setError(err instanceof Error ? err.message : "Logout failed");
       toast({
         title: "Logout Failed",
@@ -175,7 +245,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      logDebug('Attempting signup for:', email);
+      
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -189,12 +261,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw signUpError;
       }
       
+      logDebug('Signup successful, session:', data.session?.user.id || 'No session');
+      
       toast({
         title: "Signup Successful",
         description: "Your account has been created",
       });
     } catch (err) {
-      console.error("Signup error:", err);
+      logDebug('Signup error:', err);
       setError(err instanceof Error ? err.message : "Signup failed");
       toast({
         title: "Signup Failed",
@@ -219,6 +293,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     try {
+      logDebug('Updating user profile:', updates);
+      
       const dbUpdates: any = {};
       
       if (updates.username) dbUpdates.username = updates.username;
@@ -239,12 +315,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dbUpdates.holobots = updates.holobots;
       }
       
-      console.log("Updating user profile with:", dbUpdates);
+      if (updates.blueprints) {
+        dbUpdates.blueprints = updates.blueprints;
+      }
+      
+      logDebug('Database updates:', dbUpdates);
       
       const { error: updateError } = await supabase
         .from('profiles')
         .update(dbUpdates)
-        .eq('id', currentUser.id as any);
+        .eq('id', currentUser.id);
       
       if (updateError) {
         throw updateError;
@@ -254,15 +334,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const updatedUser = { ...currentUser, ...updates };
       setCurrentUser(updatedUser);
       
-      // Log the updated state
-      console.log("User profile updated successfully:", updatedUser);
+      logDebug('User profile updated successfully:', updatedUser);
       
       toast({
         title: "Profile Updated",
         description: "Your profile has been updated",
       });
     } catch (error) {
-      console.error("Error updating user:", error);
+      logDebug('Error updating user:', error);
       toast({
         title: "Update Failed",
         description: error instanceof Error ? error.message : "Failed to update profile",
@@ -274,6 +353,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Search players function
   const searchPlayers = async (query: string): Promise<UserProfile[]> => {
     try {
+      logDebug('Searching players with query:', query);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -286,7 +367,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return data.map(profile => mapDatabaseToUserProfile(profile));
     } catch (error) {
-      console.error("Error searching players:", error);
+      logDebug('Error searching players:', error);
       toast({
         title: "Search Failed",
         description: error instanceof Error ? error.message : "Failed to search players",
@@ -299,21 +380,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Get user profile function
   const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId as any)
-        .maybeSingle();
-      
-      if (error) {
-        throw error;
-      }
-      
-      return data ? mapDatabaseToUserProfile(data) : null;
+      logDebug('Getting user profile for:', userId);
+      return await fetchUserProfile(userId);
     } catch (error) {
-      console.error("Error getting user profile:", error);
+      logDebug('Error getting user profile:', error);
       return null;
     }
+  };
+
+  // Debug function for development use
+  const debugAuth = () => {
+    if (process.env.NODE_ENV !== 'development') return null;
+    
+    return {
+      checkSession: async () => {
+        const { data } = await supabase.auth.getSession();
+        console.log('Current session:', data.session);
+        return data.session;
+      },
+      resetAuthState: () => {
+        setLoading(false);
+        setError(null);
+        console.log('Auth state reset');
+      },
+      status: {
+        initialized: authInitialized,
+        loading,
+        error,
+        user: currentUser,
+      }
+    };
   };
 
   // Create the context value
@@ -326,7 +422,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signup,
     updateUser,
     searchPlayers,
-    getUserProfile
+    getUserProfile,
+    ...(AUTH_DEBUG ? { debug: debugAuth() } : {})
   };
 
   return (

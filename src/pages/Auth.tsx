@@ -1,13 +1,14 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/auth";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -16,40 +17,59 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-
+  const { user, loading: authLoading } = useAuth();
+  
+  // Extract redirect path from location state
+  const from = location.state?.from?.pathname || "/dashboard";
+  
   // Check if user is already logged in
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/dashboard');
-      }
-    };
-    
-    checkSession();
-  }, [navigate]);
+    if (user) {
+      navigate(from);
+    }
+  }, [user, navigate, from]);
 
   // Handle auth (sign up or sign in)
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setAuthError(null);
 
     try {
       if (isSignUp) {
-        // Handle sign up
-        const { error: signUpError } = await supabase.auth.signUp({
+        // Email validation
+        if (!email.includes('@')) {
+          setAuthError("Please enter a valid email address");
+          setLoading(false);
+          return;
+        }
+        
+        // Password validation
+        if (password.length < 6) {
+          setAuthError("Password must be at least 6 characters long");
+          setLoading(false);
+          return;
+        }
+        
+        // Username validation
+        if (username.length < 3) {
+          setAuthError("Username must be at least 3 characters long");
+          setLoading(false);
+          return;
+        }
+        
+        // Handle sign up through AuthProvider
+        await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: {
-              username,
-            }
+            data: { username },
           }
         });
-
-        if (signUpError) throw signUpError;
 
         toast({
           title: "Account created!",
@@ -58,38 +78,53 @@ export default function Auth() {
         
         // Switch to sign in view after successful signup
         setIsSignUp(false);
-        setLoading(false);
         return;
       } 
       
-      // Handle sign in
-      const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
+      // Handle sign in through AuthProvider
+      const { data: { session }, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
-      if (signInError) throw signInError;
-
+      
+      if (error) throw error;
+      
       if (session) {
         toast({
           title: "Login successful",
           description: "Redirecting you to the dashboard",
         });
-
-        // Redirect to dashboard after login
-        navigate('/dashboard');
+        
+        // Navigating to dashboard will happen through the useEffect above
+        // when the AuthProvider updates the user state
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth error:', error);
-      toast({
-        title: "Authentication Error",
-        description: error instanceof Error ? error.message : "An error occurred during authentication",
-        variant: "destructive",
-      });
+      
+      // Handle specific error cases
+      if (error.message?.includes('Email not confirmed')) {
+        setAuthError("Please check your email and confirm your account before signing in.");
+      } else if (error.message?.includes('Invalid login credentials')) {
+        setAuthError("Invalid email or password. Please try again.");
+      } else {
+        setAuthError(error.message || "An error occurred during authentication");
+      }
     } finally {
       setLoading(false);
     }
   };
+  
+  // Show loading state if auth is still being initialized
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-holobots-accent mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Initializing...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
@@ -102,6 +137,13 @@ export default function Auth() {
             {isSignUp ? "Sign up to start your journey" : "Sign in to continue"}
           </p>
         </div>
+
+        {authError && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 mb-4 flex items-start">
+            <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-red-600 dark:text-red-300">{authError}</p>
+          </div>
+        )}
 
         <form onSubmit={handleAuth} className="space-y-4">
           {isSignUp && (
@@ -186,13 +228,31 @@ export default function Auth() {
         <div className="mt-4 text-center">
           <Button
             variant="link"
-            onClick={() => setIsSignUp(!isSignUp)}
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setAuthError(null);
+            }}
             className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
             disabled={loading}
           >
             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
           </Button>
         </div>
+        
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+            <details className="text-xs text-gray-500">
+              <summary className="cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">Debug Info</summary>
+              <div className="mt-2 bg-gray-50 dark:bg-gray-900 p-2 rounded overflow-auto">
+                <p>Current Path: {location.pathname}</p>
+                <p>Redirect After Login: {from}</p>
+                <p>Auth Loading: {authLoading ? 'true' : 'false'}</p>
+                <p>Form Loading: {loading ? 'true' : 'false'}</p>
+                <p>Auth Error: {authError || 'none'}</p>
+              </div>
+            </details>
+          </div>
+        )}
       </div>
     </div>
   );
