@@ -1,4 +1,3 @@
-
 import { 
   LogOut, 
   User, 
@@ -26,11 +25,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { PlayerRankCard } from './PlayerRankCard';
+import React from 'react';
 
 export const NavigationMenu = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [isRefilling, setIsRefilling] = React.useState(false);
 
   const handleLogout = async () => {
     try {
@@ -46,6 +48,36 @@ export const NavigationMenu = () => {
         description: "An error occurred while logging out.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleRefill = async () => {
+    if (!user || (user.energy_refills || 0) <= 0) {
+      toast({
+        title: 'No Energy Refills',
+        description: "You don't have any Energy Refills to use.",
+        variant: 'destructive',
+      });
+      return;
+    }
+    setIsRefilling(true);
+    try {
+      await updateUser({
+        energy_refills: (user.energy_refills || 0) - 1,
+        dailyEnergy: user.maxDailyEnergy,
+      });
+      toast({
+        title: 'Energy Refilled',
+        description: 'Your daily energy has been restored to full!',
+      });
+    } catch (error) {
+      toast({
+        title: 'Refill Failed',
+        description: 'Could not refill energy. Try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRefilling(false);
     }
   };
 
@@ -82,12 +114,27 @@ export const NavigationMenu = () => {
         <DropdownMenuSeparator />
         
         <div className="p-2 space-y-2">
+          <PlayerRankCard user={user} />
+          
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
               <Battery className="h-4 w-4 text-blue-400" />
               <span>Daily Energy:</span>
             </div>
             <span className="font-semibold">{user.dailyEnergy}/{user.maxDailyEnergy}</span>
+          </div>
+          
+          <div className="flex items-center justify-between px-2 py-1 pl-7">
+            <span className="text-xs text-gray-400">Available Refills: {user.energy_refills || 0}</span>
+            <Button
+              size="sm"
+              className="ml-2 bg-cyan-500 hover:bg-cyan-600 text-white px-2 py-0.5 rounded"
+              onClick={handleRefill}
+              disabled={isRefilling || (user.energy_refills || 0) <= 0 || user.dailyEnergy === user.maxDailyEnergy}
+              aria-label="Refill Daily Energy"
+            >
+              {isRefilling ? 'Refilling...' : 'Refill'}
+            </Button>
           </div>
           
           <div className="flex items-center justify-between px-2 py-1">
