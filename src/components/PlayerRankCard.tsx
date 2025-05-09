@@ -3,24 +3,14 @@ import { PlayerRankBadge } from './PlayerRankBadge';
 import { Progress } from './ui/progress';
 import { UserProfile } from '@/types/user';
 import React, { useMemo } from 'react';
-
 interface PlayerRankCardProps {
   user: UserProfile;
 }
-
 const getNextRank = (current: PlayerRank): PlayerRank | null => {
-  const order = [
-    PLAYER_RANKS.ROOKIE,
-    PLAYER_RANKS.CHAMPION,
-    PLAYER_RANKS.RARE,
-    PLAYER_RANKS.ELITE,
-    PLAYER_RANKS.LEGEND,
-    PLAYER_RANKS.MYTHIC,
-  ];
+  const order = [PLAYER_RANKS.ROOKIE, PLAYER_RANKS.CHAMPION, PLAYER_RANKS.RARE, PLAYER_RANKS.ELITE, PLAYER_RANKS.LEGEND, PLAYER_RANKS.MYTHIC];
   const idx = order.indexOf(current);
   return idx >= 0 && idx < order.length - 1 ? order[idx + 1] : null;
 };
-
 const getRequirementText = (next: PlayerRank | null): string => {
   switch (next) {
     case PLAYER_RANKS.CHAMPION:
@@ -37,7 +27,6 @@ const getRequirementText = (next: PlayerRank | null): string => {
       return '';
   }
 };
-
 const getProgress = (user: UserProfile, current: PlayerRank, next: PlayerRank | null): number => {
   if (!next) return 1;
   const holobots = user.holobots || [];
@@ -63,42 +52,35 @@ const getProgress = (user: UserProfile, current: PlayerRank, next: PlayerRank | 
       return 1;
   }
 };
-
-export const PlayerRankCard: React.FC<PlayerRankCardProps> = ({ user }) => {
+export const PlayerRankCard: React.FC<PlayerRankCardProps> = ({
+  user
+}) => {
   const holobots = user.holobots || [];
   const championCount = holobots.filter(h => h.rank === 'Champion').length;
   const rareCount = holobots.filter(h => h.rank === 'Rare').length;
   const eliteCount = holobots.filter(h => h.rank === 'Elite').length;
   const legendaryCount = holobots.filter(h => h.rank === 'Legendary').length;
   const prestigedCount = holobots.filter(h => h.prestiged).length;
-
   const currentRank = calculatePlayerRank({
     championCount,
     rareCount,
     eliteCount,
     legendaryCount,
-    prestigedCount,
+    prestigedCount
   });
   const nextRank = useMemo(() => getNextRank(currentRank), [currentRank]);
   const progress = useMemo(() => getProgress(user, currentRank, nextRank), [user, currentRank, nextRank]);
   const requirement = useMemo(() => getRequirementText(nextRank), [nextRank]);
-
-  return (
-    <div className="rounded-xl border border-gray-600 bg-black/40 p-4 mb-2">
+  return <div className="rounded-xl border border-gray-600 bg-black/40 p-4 mb-2">
       <div className="flex items-center justify-between mb-2">
         <span className="font-bold text-lg text-white">Player Rank</span>
         <PlayerRankBadge rank={currentRank} size="md" />
       </div>
-      {nextRank && (
-        <>
+      {nextRank && <>
           <div className="text-gray-200 text-sm mb-1">Progress to {nextRank}</div>
           <Progress value={progress * 100} className="h-2 bg-gray-700 mb-1" />
-          <div className="text-xs text-blue-400 font-medium mt-1">{requirement}</div>
-        </>
-      )}
-      {!nextRank && (
-        <div className="text-green-400 text-sm mt-2">Max Rank Achieved!</div>
-      )}
-    </div>
-  );
-}; 
+          <div className="text-xs text-white-400 font-medium mt-1">{requirement}</div>
+        </>}
+      {!nextRank && <div className="text-green-400 text-sm mt-2">Max Rank Achieved!</div>}
+    </div>;
+};
