@@ -1,4 +1,3 @@
-
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -18,7 +17,8 @@ const Index = () => {
   const [victories, setVictories] = useState(0);
   const [hasEntryFee, setHasEntryFee] = useState(false);
   const [selectedHolobot, setSelectedHolobot] = useState("ace"); // Default holobot
-  const [currentOpponent, setCurrentOpponent] = useState(generateArenaOpponent(1));
+  const [arenaLineup, setArenaLineup] = useState<string[]>([]);
+  const [arenaOpponentLevel, setArenaOpponentLevel] = useState(1);
   const [showResults, setShowResults] = useState(false);
   const [arenaResults, setArenaResults] = useState<any>(null);
   const maxRounds = 3;
@@ -26,17 +26,29 @@ const Index = () => {
   const { toast } = useToast();
   const { user, updateUser } = useAuth();
 
-  // Generate a new opponent when the round changes
-  useEffect(() => {
-    setCurrentOpponent(generateArenaOpponent(currentRound));
-  }, [currentRound]);
+  // Get the current opponent based on round
+  const getCurrentOpponent = () => {
+    if (arenaLineup.length === 0) return HOLOBOT_STATS.ace;
+    const opponentKey = arenaLineup[currentRound - 1];
+    return {
+      ...HOLOBOT_STATS[opponentKey],
+      name: opponentKey,
+      level: arenaOpponentLevel
+    };
+  };
+  
+  const currentOpponent = getCurrentOpponent();
 
-  const payEntryFee = async () => {
+  const payEntryFee = async (selectedBot: string, opponentLineup: string[], opponentLevel: number) => {
     try {
       if (user && user.holosTokens >= entryFee) {
         await updateUser({
           holosTokens: user.holosTokens - entryFee
         });
+        setSelectedHolobot(selectedBot);
+        setArenaLineup(opponentLineup);
+        setArenaOpponentLevel(opponentLevel);
+        setCurrentRound(1);
         setHasEntryFee(true);
         
         toast({
@@ -60,12 +72,16 @@ const Index = () => {
     }
   };
 
-  const useArenaPass = async () => {
+  const useArenaPass = async (selectedBot: string, opponentLineup: string[], opponentLevel: number) => {
     try {
       if (user && user.arena_passes > 0) {
         await updateUser({
           arena_passes: user.arena_passes - 1
         });
+        setSelectedHolobot(selectedBot);
+        setArenaLineup(opponentLineup);
+        setArenaOpponentLevel(opponentLevel);
+        setCurrentRound(1);
         setHasEntryFee(true);
         
         toast({
@@ -94,11 +110,16 @@ const Index = () => {
     setSelectedHolobot(holobotKey);
   };
 
-  const handleEntryFeeMethod = async (method: 'tokens' | 'pass') => {
+  const handleEntryFeeMethod = async (
+    method: 'tokens' | 'pass',
+    selectedBot: string,
+    opponentLineup: string[],
+    opponentLevel: number
+  ) => {
     if (method === 'tokens') {
-      await payEntryFee();
+      await payEntryFee(selectedBot, opponentLineup, opponentLevel);
     } else {
-      await useArenaPass();
+      await useArenaPass(selectedBot, opponentLineup, opponentLevel);
     }
   };
 
@@ -197,21 +218,25 @@ const Index = () => {
     if (result === 'victory') {
       setVictories(prev => prev + 1);
       if (currentRound < maxRounds) {
+        // Move to next round with next opponent in lineup
         setCurrentRound(prev => prev + 1);
-        setCurrentOpponent(generateArenaOpponent(currentRound + 1));
       } else {
+        // Final round completed
         distributeRewards();
         setCurrentRound(1);
         setVictories(0);
         setHasEntryFee(false);
-        setCurrentOpponent(generateArenaOpponent(1));
+        setArenaLineup([]);
+        setArenaOpponentLevel(1);
       }
     } else {
+      // Battle lost
       distributeRewards();
       setCurrentRound(1);
       setVictories(0);
       setHasEntryFee(false);
-      setCurrentOpponent(generateArenaOpponent(1));
+      setArenaLineup([]);
+      setArenaOpponentLevel(1);
     }
   };
 
@@ -232,6 +257,9 @@ const Index = () => {
     );
   }
 
+  // Get current opponent from lineup
+  const currentOpponentKey = arenaLineup[currentRound - 1];
+
   return (
     <div className="px-2 py-3">
       <div className="mb-4 bg-[#1A1F2C] rounded-lg p-3">
@@ -250,7 +278,7 @@ const Index = () => {
           <div className="bg-black/30 px-3 py-1 rounded-lg">
             <span className="text-xs text-[#8E9196]">Opponent Level</span>
             <div className="text-md font-bold text-yellow-500">
-              {currentOpponent.level}
+              {arenaOpponentLevel}
             </div>
           </div>
         </div>
@@ -258,9 +286,9 @@ const Index = () => {
       
       <BattleScene 
         leftHolobot={selectedHolobot}
-        rightHolobot={currentOpponent.name}
+        rightHolobot={currentOpponentKey}
         isCpuBattle={true}
-        cpuLevel={currentOpponent.level}
+        cpuLevel={arenaOpponentLevel}
         onBattleEnd={handleBattleEnd}
       />
 

@@ -20,6 +20,11 @@ export class Holobot {
   speedBoostTurns: number;
   specialAttackGauge: number;
   maxSpecialAttackGauge: number;
+  isDefenseMode: boolean;
+  defenseModeSpecialMultiplier: number;
+  defenseModeHackMultiplier: number;
+  holosHackCount: number;
+  maxHolosHackCount: number;
 
   constructor(stats: HolobotStats) {
     this.name = stats.name;
@@ -41,6 +46,11 @@ export class Holobot {
     this.speedBoostTurns = 0;
     this.specialAttackGauge = 0;
     this.maxSpecialAttackGauge = 100;
+    this.isDefenseMode = false;
+    this.defenseModeSpecialMultiplier = 1.5;
+    this.defenseModeHackMultiplier = 1.5;
+    this.holosHackCount = 0;
+    this.maxHolosHackCount = 3;
   }
 
   calculateEvasionChance(attacker: Holobot): number {
@@ -211,6 +221,71 @@ export class Holobot {
 
   isAlive(): boolean {
     return this.health > 0;
+  }
+
+  toggleDefenseMode(isDefense: boolean) {
+    this.isDefenseMode = isDefense;
+  }
+
+  gainSpecialAttackGauge(amount: number) {
+    const multiplier = this.isDefenseMode ? this.defenseModeSpecialMultiplier : 1;
+    this.specialAttackGauge = Math.min(this.maxSpecialAttackGauge, this.specialAttackGauge + (amount * multiplier));
+  }
+
+  gainHackGauge(amount: number) {
+    const multiplier = this.isDefenseMode ? this.defenseModeHackMultiplier : 1;
+    this.hackGauge = Math.min(this.maxHackGauge, this.hackGauge + (amount * multiplier));
+  }
+
+  useHolosHack(type: 'special' | 'hack' | 'boost'): BattleEffect {
+    if (this.holosHackCount >= this.maxHolosHackCount) {
+      return {
+        type: 'error',
+        value: 0,
+        message: 'Maximum Holos Hack uses reached!'
+      };
+    }
+
+    this.holosHackCount++;
+    let effect: BattleEffect = {
+      type: '',
+      value: 0,
+      message: ''
+    };
+
+    switch(type) {
+      case 'special':
+        this.specialAttackGauge = this.maxSpecialAttackGauge;
+        effect = {
+          type: 'special_boost',
+          value: this.maxSpecialAttackGauge,
+          message: `${this.name}'s special attack gauge is fully charged!`
+        };
+        break;
+      case 'hack':
+        this.hackGauge = this.maxHackGauge;
+        effect = {
+          type: 'hack_boost',
+          value: this.maxHackGauge,
+          message: `${this.name}'s hack gauge is fully charged!`
+        };
+        break;
+      case 'boost':
+        this.attackBoost += 20;
+        this.defense += Math.floor(this.baseDefense * 0.3);
+        this.speed += Math.floor(this.baseSpeed * 0.3);
+        this.attackBoostTurns = 3;
+        this.defenseBoostTurns = 3;
+        this.speedBoostTurns = 3;
+        effect = {
+          type: 'stat_boost',
+          value: 20,
+          message: `${this.name}'s stats are significantly boosted for 3 turns!`
+        };
+        break;
+    }
+
+    return effect;
   }
 }
 

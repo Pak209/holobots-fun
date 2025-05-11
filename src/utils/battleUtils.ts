@@ -1,5 +1,5 @@
-
 import { HolobotStats } from "@/types/holobot";
+import { HOLOBOT_STATS } from "@/types/holobot";
 
 const BASE_XP = 100; // Base experience points
 const LEVEL_SCALING_FACTOR = 10; // k factor for XP scaling
@@ -173,24 +173,30 @@ export const incrementComboChain = (stats: HolobotStats): HolobotStats => {
 export const generateArenaOpponent = (currentRound: number) => {
   const holobotKeys = ['ace', 'kuma', 'shadow', 'era', 'nova', 'wolf', 'tsuin', 'ken', 'gama', 'kurai', 'tora', 'wake', 'hare'];
   
-  // Ensure we get a different opponent by using round number as a seed
-  // Different round numbers will result in different opponents
-  const seed = currentRound + Date.now() % 1000;
-  const randomIndex = Math.floor((seed * 13) % holobotKeys.length);
+  // Use a more complex seeding mechanism to ensure variety
+  const seed = (currentRound * 13 + Date.now() % 1000) % holobotKeys.length;
+  const randomIndex = Math.floor(seed);
   const holobotKey = holobotKeys[randomIndex];
   
+  // Scale stats based on round number
   const baseLevel = Math.max(1, Math.min(50, Math.floor(currentRound * 1.5)));
   const attackMod = 1 + (currentRound * 0.1);
   const defenseMod = 1 + (currentRound * 0.05);
   const speedMod = 1 + (currentRound * 0.08);
   
+  // Add some randomness to stats
+  const randomFactor = 0.8 + (Math.random() * 0.4); // Random factor between 0.8 and 1.2
+  
   return {
     name: holobotKey,
     level: baseLevel,
     stats: {
-      attack: attackMod,
-      defense: defenseMod,
-      speed: speedMod
+      attack: attackMod * randomFactor,
+      defense: defenseMod * randomFactor,
+      speed: speedMod * randomFactor,
+      maxHealth: 100 + (baseLevel * 2),
+      specialMove: HOLOBOT_STATS[holobotKey].specialMove,
+      intelligence: Math.min(10, Math.max(1, Math.floor(baseLevel / 5)))
     }
   };
 };
