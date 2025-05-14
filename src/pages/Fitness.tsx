@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
@@ -200,9 +199,9 @@ export default function Fitness() {
   };
 
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background p-4">
+    <div className="min-h-screen bg-[#1A1F2C] text-white p-4">
       <div className="max-w-md mx-auto pt-16">
-        <h1 className="text-2xl font-bold text-center mb-6 text-holobots-accent">
+        <h1 className="text-3xl font-bold text-center mb-6 text-cyan-400 font-orbitron italic">
           FITNESS SYNC
         </h1>
         

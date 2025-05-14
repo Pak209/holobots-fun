@@ -21,6 +21,19 @@ import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "./ui/dialog";
 
+// Define a default structure for safety
+const defaultBattleStats = {
+  name: 'Unknown',
+  attack: 10,
+  defense: 10,
+  speed: 10,
+  maxHealth: 100,
+  level: 1,
+  specialMove: 'None',
+  intelligence: 5 // Added default intelligence
+  // Add other required fields from HolobotStats if necessary, with defaults
+};
+
 interface BattleSceneProps {
   leftHolobot: string;
   rightHolobot: string;
@@ -70,54 +83,153 @@ export const BattleScene = ({
     }
     return 1;
   });
-  const [rightLevel, setRightLevel] = useState(1);
+  const [rightLevel, setRightLevel] = useState(cpuLevel);
   const [leftFatigue, setLeftFatigue] = useState(0);
   const [rightFatigue, setRightFatigue] = useState(0);
   const [isDefenseMode, setIsDefenseMode] = useState(false);
   const [defenseModeRounds, setDefenseModeRounds] = useState(0);
 
-  const [leftStats, setLeftStats] = useState(() => ({...HOLOBOT_STATS[selectedLeftHolobot]}));
-  const [rightStats, setRightStats] = useState(() => ({...HOLOBOT_STATS[selectedRightHolobot]}));
+  const [leftStats, setLeftStats] = useState(() => {
+    const base = HOLOBOT_STATS[selectedLeftHolobot];
+    return { 
+      ...defaultBattleStats, // Start with defaults
+      ...(base || {}), // Spread actual stats if they exist
+      level: leftLevel, // Override level
+      maxHealth: base?.maxHealth || defaultBattleStats.maxHealth // Ensure maxHealth
+    };
+  });
+  const [rightStats, setRightStats] = useState(() => {
+    const base = HOLOBOT_STATS[selectedRightHolobot];
+    return { 
+      ...defaultBattleStats,
+      ...(base || {}),
+      level: cpuLevel,
+      maxHealth: base?.maxHealth || defaultBattleStats.maxHealth
+    };
+  });
 
   useEffect(() => {
+    setSelectedLeftHolobot(initialLeftHolobot);
+    if (user?.holobots) {
+      const userHolobot = user.holobots.find(h => 
+        h.name.toLowerCase() === HOLOBOT_STATS[initialLeftHolobot]?.name.toLowerCase()
+      );
+      setLeftLevel(userHolobot?.level || 1);
+    } else {
+      setLeftLevel(1);
+    }
+  }, [initialLeftHolobot, user]);
+
+  useEffect(() => {
+    setSelectedRightHolobot(initialRightHolobot);
+    setRightLevel(cpuLevel);
+  }, [initialRightHolobot, cpuLevel]);
+
+  useEffect(() => {
+    const baseStats = HOLOBOT_STATS[selectedLeftHolobot];
+    const initialStats = {
+        ...defaultBattleStats,
+        ...(baseStats || {}),
+        level: leftLevel,
+        maxHealth: baseStats?.maxHealth || defaultBattleStats.maxHealth
+    };
+
+    const mergedLeftStats = { ...initialStats }; // Create a mutable copy
+
     if (user && user.holobots && Array.isArray(user.holobots)) {
       const leftUserHolobot = user.holobots.find(h => 
-        h.name.toLowerCase() === HOLOBOT_STATS[selectedLeftHolobot]?.name.toLowerCase()
+        h.name.toLowerCase() === initialStats.name.toLowerCase() // Use name from initialStats
       );
       
       if (leftUserHolobot && leftUserHolobot.boostedAttributes) {
-        console.log("Applying attribute boosts for battle:", leftUserHolobot.boostedAttributes);
-        
-        const tempLeftStats = {...HOLOBOT_STATS[selectedLeftHolobot]};
-        
+        console.log("Applying attribute boosts for battle (left):", leftUserHolobot.boostedAttributes);
         if (leftUserHolobot.boostedAttributes.attack) {
-          tempLeftStats.attack += leftUserHolobot.boostedAttributes.attack;
+          mergedLeftStats.attack += leftUserHolobot.boostedAttributes.attack;
         }
         if (leftUserHolobot.boostedAttributes.defense) {
-          tempLeftStats.defense += leftUserHolobot.boostedAttributes.defense;
+          mergedLeftStats.defense += leftUserHolobot.boostedAttributes.defense;
         }
         if (leftUserHolobot.boostedAttributes.speed) {
-          tempLeftStats.speed += leftUserHolobot.boostedAttributes.speed;
+          mergedLeftStats.speed += leftUserHolobot.boostedAttributes.speed;
         }
         if (leftUserHolobot.boostedAttributes.health) {
-          tempLeftStats.maxHealth += leftUserHolobot.boostedAttributes.health;
+          mergedLeftStats.maxHealth += leftUserHolobot.boostedAttributes.health;
         }
-        
-        setLeftStats(tempLeftStats);
       }
     }
-  }, [user, selectedLeftHolobot]);
+    setLeftStats(mergedLeftStats);
+    setLeftHealth(mergedLeftStats.maxHealth);
+  }, [selectedLeftHolobot, leftLevel, user]);
+  
+  useEffect(() => {
+    const baseStats = HOLOBOT_STATS[selectedRightHolobot];
+    const initialRightStats = {
+        ...defaultBattleStats,
+        ...(baseStats || {}),
+        level: rightLevel, // This is the tier-based level from cpuLevel prop
+        maxHealth: baseStats?.maxHealth || defaultBattleStats.maxHealth
+    };
+
+    // Apply randomized attribute upgrades based on tier level
+    let upgradesToApply = 0;
+    if (initialRightStats.level === 5) { // Tier 1
+      upgradesToApply = 5;
+    } else if (initialRightStats.level === 20) { // Tier 2
+      upgradesToApply = 20;
+    } else if (initialRightStats.level === 40) { // Tier 3
+      upgradesToApply = 40;
+    }
+
+    const attributes: Array<keyof typeof initialRightStats> = ['attack', 'defense', 'speed'];
+    const boostedStats = { ...initialRightStats };
+
+    for (let i = 0; i < upgradesToApply; i++) {
+      const randomAttribute = attributes[Math.floor(Math.random() * attributes.length)];
+      if (typeof boostedStats[randomAttribute] === 'number') {
+        (boostedStats[randomAttribute] as number) += 1;
+      }
+    }
+    
+    // Log the boosted stats for verification
+    if (upgradesToApply > 0) {
+        console.log(`Applied ${upgradesToApply} upgrades to opponent ${selectedRightHolobot} (Lvl ${initialRightStats.level}). New Stats:`, boostedStats);
+    }
+
+    setRightStats(boostedStats);
+    setRightHealth(boostedStats.maxHealth); // Reset health based on maxHealth (which isn't changed by these upgrades)
+  }, [selectedRightHolobot, rightLevel]);
 
   useEffect(() => {
-    if (user?.holobots) {
-      const userHolobot = user.holobots.find(h => 
-        h.name.toLowerCase() === HOLOBOT_STATS[selectedLeftHolobot]?.name.toLowerCase()
-      );
-      if (userHolobot?.level) {
-        setLeftLevel(userHolobot.level);
-      }
+    const currentLeftMaxHealth = leftStats.maxHealth || 100;
+    const currentRightMaxHealth = rightStats.maxHealth || 100;
+
+    setLeftHealth(currentLeftMaxHealth);
+    setRightHealth(currentRightMaxHealth);
+    setLeftSpecial(0);
+    setRightSpecial(0);
+    setLeftHack(0);
+    setLeftFatigue(0);
+    setRightFatigue(0);
+    setLeftComboChain(0);
+    setRightComboChain(0);
+    
+    if (isBattleStarted && battleLog.length > 0 && battleLog[battleLog.length -1] !== `New Round! Facing ${rightStats.name || 'Unknown Opponent'}`) {
+        if (initialRightHolobot === selectedRightHolobot) {
+             addToBattleLog(`New Round! Facing ${rightStats.name || 'Unknown Opponent'}`);
+        }
+    } else if (!isBattleStarted && battleLog.length === 0) {
+        setBattleLog(["Battle ready!"]);
     }
-  }, [user, selectedLeftHolobot]);
+
+    setLeftIsAttacking(false);
+    setRightIsAttacking(false);
+    setLeftIsDamaged(false);
+    setRightIsDamaged(false);
+    setIsDefenseMode(false);
+    setDefenseModeRounds(0);
+    setHolosHackCount(0);
+
+  }, [selectedRightHolobot, isBattleStarted, initialRightHolobot]);
 
   const addToBattleLog = (message: string) => {
     setBattleLog(prev => [...prev, message]);
@@ -132,8 +244,15 @@ export const BattleScene = ({
 
   const handleHack = (type: 'attack' | 'speed' | 'heal') => {
     if (leftHack >= 100) {
-      const updatedStats = applyHackBoost(leftStats, type);
-      setLeftStats(updatedStats);
+      const currentStats = leftStats; // Has defined level and maxHealth
+      const updatedStatsFromUtil = applyHackBoost(currentStats, type);
+      setLeftStats({ 
+        ...defaultBattleStats, // Ensure all keys from default are present
+        ...updatedStatsFromUtil, // Spread the util result
+        level: currentStats.level, // Explicitly keep current level
+        maxHealth: currentStats.maxHealth // Explicitly keep current maxHealth (if not changed by util)
+                                  // or updatedStatsFromUtil.maxHealth if util can change it
+      });
       setLeftHack(0);
       addToBattleLog(`${leftStats.name} used hack: ${type}!`);
     }
@@ -160,15 +279,33 @@ export const BattleScene = ({
         addToBattleLog(`${leftStats.name} regains health!`);
         break;
       case 'attack':
-        setLeftStats(prev => ({ ...prev, attack: prev.attack + 20 }));
+        setLeftStats(prev => ({ 
+            ...defaultBattleStats,
+            ...prev, 
+            attack: (prev.attack || defaultBattleStats.attack) + 20, 
+            level: prev.level || defaultBattleStats.level, 
+            maxHealth: prev.maxHealth || defaultBattleStats.maxHealth
+        }));
         addToBattleLog(`${leftStats.name}'s attack is boosted!`);
         break;
       case 'defense':
-        setLeftStats(prev => ({ ...prev, defense: prev.defense + Math.floor(prev.defense * 0.3) }));
+        setLeftStats(prev => ({ 
+            ...defaultBattleStats,
+            ...prev, 
+            defense: (prev.defense || defaultBattleStats.defense) + Math.floor((prev.defense || defaultBattleStats.defense) * 0.3), 
+            level: prev.level || defaultBattleStats.level,
+            maxHealth: prev.maxHealth || defaultBattleStats.maxHealth
+        }));
         addToBattleLog(`${leftStats.name}'s defense is boosted!`);
         break;
       case 'speed':
-        setLeftStats(prev => ({ ...prev, speed: prev.speed + Math.floor(prev.speed * 0.3) }));
+        setLeftStats(prev => ({ 
+            ...defaultBattleStats,
+            ...prev, 
+            speed: (prev.speed || defaultBattleStats.speed) + Math.floor((prev.speed || defaultBattleStats.speed) * 0.3), 
+            level: prev.level || defaultBattleStats.level,
+            maxHealth: prev.maxHealth || defaultBattleStats.maxHealth
+        }));
         addToBattleLog(`${leftStats.name}'s speed is boosted!`);
         break;
     }
@@ -279,30 +416,30 @@ export const BattleScene = ({
     const interval = setInterval(() => {
       if (leftHealth <= 0 || rightHealth <= 0) {
         setIsBattleStarted(false);
-        const winner = leftHealth > 0 ? selectedLeftHolobot : selectedRightHolobot;
-        const winnerName = leftHealth > 0 ? leftStats.name : rightStats.name;
-        const loser = leftHealth > 0 ? selectedRightHolobot : selectedLeftHolobot;
-        const loserName = leftHealth > 0 ? rightStats.name : leftStats.name;
+        const winnerIsLeft = leftHealth > 0;
+        const winnerName = winnerIsLeft ? leftStats.name : rightStats.name;
+        const loserName = winnerIsLeft ? rightStats.name : leftStats.name;
         
-        if (leftHealth > 0) {
-          const updatedLeftStats = {...leftStats};
-          const updatedRightStats = {...rightStats};
-          updatedLeftStats.intelligence = Math.min(10, updatedLeftStats.intelligence + 1);
-          updatedRightStats.intelligence = Math.max(1, updatedRightStats.intelligence - 1);
-          setLeftStats(updatedLeftStats);
-          setRightStats(updatedRightStats);
-          onBattleEnd?.('victory');
-          saveBattleResults(selectedLeftHolobot);
-        } else {
-          const updatedLeftStats = {...leftStats};
-          const updatedRightStats = {...rightStats};
-          updatedLeftStats.intelligence = Math.max(1, updatedLeftStats.intelligence - 1);
-          updatedRightStats.intelligence = Math.min(10, updatedRightStats.intelligence + 1);
-          setLeftStats(updatedLeftStats);
-          setRightStats(updatedRightStats);
-          onBattleEnd?.('defeat');
-          saveBattleResults(selectedRightHolobot);
-        }
+        const finalLeftStats = {
+            ...defaultBattleStats,
+            ...leftStats,
+            level: leftStats.level || defaultBattleStats.level, // Ensure level is defined
+            maxHealth: leftStats.maxHealth || defaultBattleStats.maxHealth, // Ensure maxHealth is defined
+            intelligence: Math.min(10, (leftStats.intelligence || defaultBattleStats.intelligence) + (winnerIsLeft ? 1 : -1))
+        };
+        const finalRightStats = {
+            ...defaultBattleStats,
+            ...rightStats,
+            level: rightStats.level || defaultBattleStats.level, // Ensure level is defined
+            maxHealth: rightStats.maxHealth || defaultBattleStats.maxHealth, // Ensure maxHealth is defined
+            intelligence: Math.min(10, (rightStats.intelligence || defaultBattleStats.intelligence) + (winnerIsLeft ? -1 : 1))
+        };
+
+        setLeftStats(finalLeftStats);
+        setRightStats(finalRightStats);
+        
+        onBattleEnd?.(winnerIsLeft ? 'victory' : 'defeat');
+        saveBattleResults(winnerIsLeft ? selectedLeftHolobot : selectedRightHolobot);
         
         setLeftComboChain(0);
         setRightComboChain(0);
@@ -370,8 +507,14 @@ export const BattleScene = ({
             });
             
             if (leftSpecial >= 100) {
-              const boostedStats = applySpecialAttack(leftStats);
-              setLeftStats(boostedStats);
+              const currentLeftStats = leftStats;
+              const boostedStats = applySpecialAttack(currentLeftStats);
+              setLeftStats({
+                  ...defaultBattleStats,
+                  ...boostedStats, 
+                  level: currentLeftStats.level, 
+                  maxHealth: currentLeftStats.maxHealth // Or boostedStats.maxHealth if special can change it
+              });
               setLeftSpecial(0);
               addToBattleLog(`${leftStats.name} used their special move!`);
             }
@@ -424,8 +567,14 @@ export const BattleScene = ({
             });
             
             if (rightSpecial >= 100) {
-              const boostedStats = applySpecialAttack(rightStats);
-              setRightStats(boostedStats);
+              const currentRightStats = rightStats;
+              const boostedStats = applySpecialAttack(currentRightStats);
+              setRightStats({
+                  ...defaultBattleStats,
+                  ...boostedStats, 
+                  level: currentRightStats.level, 
+                  maxHealth: currentRightStats.maxHealth // Or boostedStats.maxHealth
+              });
               setRightSpecial(0);
               addToBattleLog(`${rightStats.name} used their special move!`);
             }

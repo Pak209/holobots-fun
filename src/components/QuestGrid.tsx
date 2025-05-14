@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -690,7 +689,7 @@ export const QuestGrid = () => {
                       {isSelected ? (
                         <div className="text-center">
                           <div className="text-xs font-medium">{HOLOBOT_STATS[selectedKey].name}</div>
-                          <div className="text-xs opacity-70">
+                          <div className="text-xs text-gray-200">
                             {user?.holobots.find(h => h.name.toLowerCase() === HOLOBOT_STATS[selectedKey].name.toLowerCase())?.level || 1}
                           </div>
                         </div>
@@ -721,7 +720,7 @@ export const QuestGrid = () => {
                       >
                         <div className="flex flex-col">
                           <span className="text-xs font-medium">{holobot.name}</span>
-                          <span className="text-xs opacity-70">Lv.{holobot.level}</span>
+                          <span className="text-xs text-gray-200">Lv.{holobot.level}</span>
                         </div>
                       </Button>
                     );

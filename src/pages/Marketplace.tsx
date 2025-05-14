@@ -1,22 +1,18 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import { MarketplaceFilters, FilterOptions } from "@/components/marketplace/MarketplaceFilters";
 import { MarketplaceHolobotCard } from "@/components/marketplace/MarketplaceHolobotCard";
 import { MarketplaceItemCard } from "@/components/marketplace/MarketplaceItemCard";
 import { BlueprintCard } from "@/components/marketplace/BlueprintCard";
 import { HOLOBOT_STATS } from "@/types/holobot";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { 
   ShoppingBag, 
-  Boxes, 
-  AlertCircle, 
-  Gem, 
-  PackagePlus, 
-  Info, 
-  Plus 
+  Plus,
+  Search,
+  SlidersHorizontal
 } from "lucide-react";
+import { HOLOBOT_IMAGE_MAPPING } from "@/utils/holobotImageUtils";
 
 const MARKETPLACE_ITEMS = [
   // Holobots
@@ -130,7 +126,7 @@ const MARKETPLACE_ITEMS = [
     name: "Arena Pass",
     description: "Grants entry to one arena battle without costing HOLOS tokens",
     rarity: "rare" as "common" | "rare" | "extremely-rare",
-    price: 50,  // Changed from 1000 to 50
+    price: 50,  
     seller: "BattleMaster",
     quantity: 2,
     createdAt: new Date('2023-07-12')
@@ -142,7 +138,7 @@ const MARKETPLACE_ITEMS = [
     name: "Gacha Ticket",
     description: "Can be used for one pull in the Gacha system",
     rarity: "rare" as "common" | "rare" | "extremely-rare",
-    price: 50,  // Changed from 850 to 50
+    price: 50,  
     seller: "GachaDealer",
     quantity: 3,
     createdAt: new Date('2023-07-16')
@@ -152,315 +148,319 @@ const MARKETPLACE_ITEMS = [
 const Marketplace = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<string>("browse");
-  const [filters, setFilters] = useState<FilterOptions>({
-    type: "all",
-    searchQuery: "",
-    sortBy: "newest"
-  });
+  const [activeNavItem, setActiveNavItem] = useState<string>("browse");
   const [filteredItems, setFilteredItems] = useState(MARKETPLACE_ITEMS);
+  const [searchQuery, setSearchQuery] = useState("");
   
-  useEffect(() => {
-    // Apply filters to the marketplace items
-    let results = [...MARKETPLACE_ITEMS];
-    
-    // Filter by type
-    if (filters.type !== 'all') {
-      results = results.filter(item => item.type === filters.type);
-    }
-    
-    // Filter by search query
-    if (filters.searchQuery) {
-      const query = filters.searchQuery.toLowerCase();
-      results = results.filter(item => 
-        item.name?.toLowerCase().includes(query) || 
-        item.holobotName?.toLowerCase().includes(query) ||
-        item.seller.toLowerCase().includes(query)
-      );
-    }
-    
-    // Filter by price range
-    if (filters.minPrice !== undefined) {
-      results = results.filter(item => item.price >= filters.minPrice!);
-    }
-    if (filters.maxPrice !== undefined) {
-      results = results.filter(item => item.price <= filters.maxPrice!);
-    }
-    
-    // Filter by level range (only for holobots)
-    if (filters.minLevel !== undefined) {
-      results = results.filter(item => 
-        item.type !== 'holobot' || (item.level && item.level >= filters.minLevel!)
-      );
-    }
-    if (filters.maxLevel !== undefined) {
-      results = results.filter(item => 
-        item.type !== 'holobot' || (item.level && item.level <= filters.maxLevel!)
-      );
-    }
-    
-    // Apply sorting
-    results.sort((a, b) => {
-      switch (filters.sortBy) {
-        case 'newest':
-          return b.createdAt.getTime() - a.createdAt.getTime();
-        case 'oldest':
-          return a.createdAt.getTime() - b.createdAt.getTime();
-        case 'price-asc':
-          return a.price - b.price;
-        case 'price-desc':
-          return b.price - a.price;
-        case 'level-asc':
-          if (a.type === 'holobot' && b.type === 'holobot') {
-            return (a.level || 0) - (b.level || 0);
-          }
-          return 0;
-        case 'level-desc':
-          if (a.type === 'holobot' && b.type === 'holobot') {
-            return (b.level || 0) - (a.level || 0);
-          }
-          return 0;
-        default:
-          return 0;
-      }
-    });
-    
-    setFilteredItems(results);
-  }, [filters]);
+  // Filter items by type
+  const holobotItems = MARKETPLACE_ITEMS.filter(item => item.type === "holobot");
+  const blueprintItems = MARKETPLACE_ITEMS.filter(item => item.type === "blueprint");
+  const itemItems = MARKETPLACE_ITEMS.filter(item => item.type === "item");
   
   const handleBuy = (itemId: string, itemName: string, price: number) => {
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "You need to be logged in to buy items.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if ((user.holosTokens || 0) < price) {
+    // Check if user has enough tokens
+    if (user.holosTokens < price) {
       toast({
         title: "Insufficient Funds",
-        description: `You need ${price} HOLOS to purchase this item.`,
-        variant: "destructive",
+        description: `You need ${price - user.holosTokens} more HOLOS tokens to purchase this item.`,
+        variant: "destructive"
       });
       return;
     }
     
-    // In a real app, we would call an API to process the purchase
+    // Process purchase
     toast({
-      title: "Purchase Successful!",
-      description: `You have purchased ${itemName} for ${price} HOLOS.`,
-    });
-  };
-  
-  const handleSell = () => {
-    toast({
-      title: "Coming Soon",
-      description: "The ability to sell items will be available soon!",
+      title: "Purchase Successful",
+      description: `You've purchased ${itemName} for ${price} HOLOS tokens.`
     });
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#111520] text-white">
       <div className="container mx-auto pt-16 px-4 pb-16">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-cyan-400 font-orbitron italic">
             HOLOBOT MARKETPLACE
           </h1>
-          <p className="text-gray-400 text-sm max-w-md mx-auto">
+          <p className="text-gray-200 text-sm max-w-md mx-auto">
             Buy and sell Holobots, Blueprints, and Items
           </p>
         </div>
-        
-        <Tabs defaultValue="browse" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="browse" className="flex items-center gap-1">
-              <ShoppingBag className="h-4 w-4" />
-              Browse Marketplace
-            </TabsTrigger>
-            <TabsTrigger value="inventory" className="flex items-center gap-1">
-              <Boxes className="h-4 w-4" />
-              My Inventory
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="browse" className="space-y-6">
-            <MarketplaceFilters 
-              filters={filters}
-              onFilterChange={setFilters}
-            />
+
+        {/* Tab Navigation */}
+        <div className="flex border border-cyan-900/30 rounded-md overflow-hidden mb-6">
+          <button 
+            className={`flex-1 py-3 px-4 flex items-center justify-center ${activeNavItem === 'browse' 
+              ? 'bg-cyan-500/20 text-white' 
+              : 'bg-[#0D111A] text-gray-400'}`}
+            onClick={() => setActiveNavItem('browse')}
+          >
+            <ShoppingBag className="w-5 h-5 mr-2" />
+            <span className="font-medium">Browse Marketplace</span>
+          </button>
+          <button 
+            className={`flex-1 py-3 px-4 flex items-center justify-center ${activeNavItem === 'inventory' 
+              ? 'bg-cyan-500/20 text-white' 
+              : 'bg-[#0D111A] text-gray-400'}`}
+            onClick={() => setActiveNavItem('inventory')}
+          >
+            <ShoppingBag className="w-5 h-5 mr-2" />
+            <span className="font-medium">My Inventory</span>
+          </button>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 gap-4">
+          {/* Top Row: Search and Balance */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* Search Bar */}
+            <div className="md:col-span-2 bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  placeholder="Search marketplace..."
+                  className="w-full py-2 pl-10 pr-4 rounded-md bg-black/40 border border-cyan-900/30 text-white"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <SlidersHorizontal className="h-5 w-5 text-gray-400" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <select className="bg-black/40 border border-cyan-900/30 rounded-md px-3 py-2 text-gray-200">
+                  <option>All Items</option>
+                  <option>Holobots</option>
+                  <option>Blueprints</option>
+                  <option>Items</option>
+                </select>
+                <select className="bg-black/40 border border-cyan-900/30 rounded-md px-3 py-2 text-gray-200">
+                  <option>Newest First</option>
+                  <option>Oldest First</option>
+                  <option>Price: Low to High</option>
+                  <option>Price: High to Low</option>
+                </select>
+              </div>
+            </div>
             
-            {filteredItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No items found</h3>
-                <p className="text-muted-foreground max-w-md">
-                  No marketplace listings match your current filters. Try adjusting your search criteria or check back later for new listings.
-                </p>
+            {/* Balance */}
+            <div className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
+              <h3 className="text-lg font-bold text-red-400 mb-2 font-orbitron">Balance</h3>
+              <div className="flex items-center text-cyan-400 text-xl font-bold mb-3">
+                <div className="w-3 h-3 mr-2 bg-yellow-400 rounded-full"></div>
+                {user.holosTokens} HOLOS
               </div>
-            ) : (
-              <div className="space-y-8">
-                {/* Holobots section */}
-                {filteredItems.some(item => item.type === 'holobot') && (
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4 flex items-center">
-                      <Gem className="mr-2 h-5 w-5 text-holobots-accent" />
-                      Holobots
-                    </h2>
-                    <div className="space-y-4">
-                      {filteredItems
-                        .filter(item => item.type === 'holobot')
-                        .map(item => {
-                          const holobotKey = item.name.toLowerCase();
-                          const holobotStats = HOLOBOT_STATS[holobotKey];
-                          
-                          if (!holobotStats) return null;
-                          
-                          return (
-                            <MarketplaceHolobotCard
-                              key={item.id}
-                              holobotKey={holobotKey}
-                              holobotStats={{
-                                ...holobotStats,
-                                level: item.level || 1
-                              }}
-                              price={item.price}
-                              seller={item.seller}
-                              forSale={true}
-                              onBuy={() => handleBuy(item.id, item.name, item.price)}
-                            />
-                          );
-                        })}
+              
+              <div className="mt-2">
+                <h4 className="text-sm font-bold mb-1 text-red-400">Need more HOLOS?</h4>
+                <Button 
+                  className="w-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Buy Tokens
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Holobots Section */}
+          <div>
+            <div className="flex items-center mb-3">
+              <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
+              <h2 className="text-xl font-bold text-white">Holobots</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {holobotItems.map(item => (
+                <div key={item.id} className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex justify-between mb-3">
+                      <div className="flex items-center">
+                        <span className="text-cyan-400 text-lg font-bold">{item.name}</span>
+                        <span className="ml-2 px-2 py-0.5 bg-cyan-500 rounded-full text-xs text-white">
+                          LV{item.level}
+                        </span>
+                      </div>
+                      <div className="px-2 py-0.5 rounded text-xs uppercase">
+                        {item.level > 10 ? "CHAMPION" : "STARTER"}
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-4">
+                      <div className="space-y-1">
+                        <div className="text-xs">HP: {HOLOBOT_STATS[item.name.toLowerCase()].maxHealth}</div>
+                        <div className="text-xs">Attack: {HOLOBOT_STATS[item.name.toLowerCase()].attack}</div>
+                        <div className="text-xs">Defense: {HOLOBOT_STATS[item.name.toLowerCase()].defense}</div>
+                        <div className="text-xs">Speed: {HOLOBOT_STATS[item.name.toLowerCase()].speed}</div>
+                        <div className="text-xs text-cyan-400">
+                          Special: {HOLOBOT_STATS[item.name.toLowerCase()].specialMove || "None"}
+                        </div>
+                      </div>
+                      
+                      <div className="bg-black/40 rounded overflow-hidden w-24 h-24 flex items-center justify-center">
+                        <img 
+                          src={HOLOBOT_IMAGE_MAPPING[item.name.toUpperCase()]} 
+                          alt={item.name}
+                          className="w-20 h-20 object-contain"
+                        />
+                      </div>
                     </div>
                   </div>
-                )}
-                
-                {/* Blueprints section */}
-                {filteredItems.some(item => item.type === 'blueprint') && (
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4 flex items-center">
-                      <PackagePlus className="mr-2 h-5 w-5 text-holobots-accent" />
-                      Blueprints
-                    </h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                      {filteredItems
-                        .filter(item => item.type === 'blueprint')
-                        .map(item => (
-                          <BlueprintCard 
-                            key={item.id}
-                            holobotName={item.holobotName || ""}
-                            tier={item.tier || 1}
-                            price={item.price}
-                            forSale={true}
-                            onClick={() => handleBuy(item.id, `${item.holobotName} Blueprint`, item.price)}
-                          />
-                        ))}
+                  
+                  <div className="bg-black/20 p-2 flex justify-between items-center">
+                    <div className="text-sm">
+                      Seller: {item.seller}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-400 font-bold">{item.price} HOLOS</span>
+                      <Button 
+                        className="bg-cyan-500 hover:bg-cyan-600 text-white flex items-center"
+                        onClick={() => handleBuy(item.id, `${item.name} (Lv.${item.level})`, item.price)}
+                      >
+                        <span className="mr-1">⭘</span> Buy
+                      </Button>
                     </div>
                   </div>
-                )}
-                
-                {/* Items section */}
-                {filteredItems.some(item => item.type === 'item') && (
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4 flex items-center">
-                      <Boxes className="mr-2 h-5 w-5 text-holobots-accent" />
-                      Items
-                    </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {filteredItems
-                        .filter(item => item.type === 'item')
-                        .map(item => (
-                          <MarketplaceItemCard 
-                            key={item.id}
-                            name={item.name || ""}
-                            description={item.description || ""}
-                            rarity={item.rarity || "common"}
-                            price={item.price}
-                            seller={item.seller}
-                            quantity={item.quantity}
-                            type={item.itemType}
-                            onBuy={() => handleBuy(item.id, item.name, item.price)}
-                          />
-                        ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Blueprints Section */}
+          <div>
+            <div className="flex items-center mb-3">
+              <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
+              <h2 className="text-xl font-bold text-white">Blueprints</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+              {blueprintItems.map(item => (
+                <div key={item.id}>
+                  <div className={`
+                    ${item.holobotName === 'KUMA' ? 'bg-green-800' : 
+                     item.holobotName === 'ACE' ? 'bg-blue-800' : 
+                     item.holobotName === 'WOLF' ? 'bg-purple-800' : 
+                     item.holobotName === 'TORA' ? 'bg-green-800' : 'bg-blue-800'}
+                    rounded-lg overflow-hidden h-48 border-2 border-cyan-500/30 relative
+                  `}>
+                    <div className="absolute top-2 right-2 z-10 bg-cyan-500 rounded px-2 py-0.5 text-xs text-white">
+                      FOR SALE
+                    </div>
+                    <div className="flex items-center justify-center h-full p-6">
+                      <img 
+                        src={HOLOBOT_IMAGE_MAPPING[item.holobotName]}
+                        alt={item.holobotName}
+                        className="w-32 h-32 object-contain opacity-50"
+                      />
+                    </div>
+                    <div className="absolute bottom-0 w-full bg-black/50 p-2">
+                      <div className="text-white font-bold text-lg">
+                        {item.holobotName} BLUEPRINT
+                      </div>
+                      <div className="bg-black/50 inline-block px-2 py-0.5 rounded text-xs text-white mt-1">
+                        Tier {item.tier}
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="inventory" className="space-y-6">
-            {!user ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Info className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Login Required</h3>
-                <p className="text-muted-foreground max-w-md">
-                  You need to be logged in to view your inventory and sell items.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                <div className="bg-card/90 backdrop-blur-sm p-4 rounded-lg border border-holobots-border">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">My Inventory</h2>
-                    <Button onClick={handleSell} className="bg-holobots-accent hover:bg-holobots-accent/80 text-black">
-                      <Plus className="mr-1 h-4 w-4" />
-                      Sell Item
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-yellow-400 font-bold">{item.price} HOLOS</span>
+                    <Button 
+                      className="bg-cyan-500 hover:bg-cyan-600 text-white flex items-center"
+                      onClick={() => handleBuy(item.id, `${item.holobotName} Blueprint (Tier ${item.tier})`, item.price)}
+                    >
+                      <span className="mr-1">⭘</span> Buy
                     </Button>
                   </div>
-                  
-                  <p className="text-muted-foreground">
-                    Select items from your inventory to list them on the marketplace.
-                  </p>
                 </div>
-                
-                {/* Mock inventory items - would be populated from user data in real app */}
-                <div className="space-y-8">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Your Holobots</h3>
-                    <p className="text-muted-foreground">No holobots available for sale</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Your Blueprints</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                      {/* Mock blueprint data - would be dynamically populated in real app */}
-                      <BlueprintCard 
-                        holobotName="ACE"
-                        tier={1}
-                        quantity={2}
-                        forSale={false}
-                      />
-                      <BlueprintCard 
-                        holobotName="KUMA"
-                        tier={2}
-                        quantity={1}
-                        forSale={false}
-                      />
+              ))}
+            </div>
+          </div>
+
+          {/* Items Section */}
+          <div>
+            <div className="flex items-center mb-3">
+              <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
+              <h2 className="text-xl font-bold text-white">Items</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {itemItems.map(item => (
+                <div key={item.id} className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
+                  <div className="flex gap-4 mb-4">
+                    <div className={`
+                      h-24 w-20 rounded-lg flex items-center justify-center
+                      ${item.itemType === 'energy-refill' ? 'bg-blue-900/30' : 
+                        item.itemType === 'gacha-ticket' ? 'bg-amber-900/30' : 
+                        item.itemType === 'exp-booster' ? 'bg-green-900/30' : 
+                        item.itemType === 'arena-pass' ? 'bg-purple-900/30' : 'bg-red-900/30'}
+                    `}>
+                      {item.itemType === 'energy-refill' && (
+                        <div className="text-blue-400 text-4xl">⚡</div>
+                      )}
+                      {item.itemType === 'gacha-ticket' && (
+                        <div className="text-amber-400 text-4xl">🎫</div>
+                      )}
+                      {item.itemType === 'exp-booster' && (
+                        <div className="text-green-400 text-4xl">▶▶</div>
+                      )}
+                      {item.itemType === 'arena-pass' && (
+                        <div className="text-purple-400 text-4xl">🏆</div>
+                      )}
+                      {item.itemType === 'rank-skip' && (
+                        <div className="text-red-400 text-4xl">⏫</div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <div>
+                          <h3 className={`
+                            font-bold text-lg
+                            ${item.itemType === 'energy-refill' ? 'text-blue-400' : 
+                              item.itemType === 'gacha-ticket' ? 'text-purple-400' : 
+                              item.itemType === 'exp-booster' ? 'text-green-400' : 
+                              item.itemType === 'arena-pass' ? 'text-purple-400' : 'text-yellow-400'}
+                          `}>
+                            {item.name.split(' ').slice(0,2).join(' ')}
+                          </h3>
+                          <h4 className="text-white">
+                            {item.name.split(' ').slice(2).join(' ')}
+                          </h4>
+                        </div>
+                        <span className={`
+                          text-xs px-2 py-0.5 h-fit rounded-full border
+                          ${item.rarity === 'common' ? 'border-gray-400 text-gray-400' : 
+                            item.rarity === 'rare' ? 'border-purple-400 text-purple-400' : 
+                            'border-yellow-400 text-yellow-400 bg-yellow-400/10'}
+                        `}>
+                          {item.rarity === 'common' ? 'Common' : 
+                           item.rarity === 'rare' ? 'Rare' : 
+                           'Extremely-Rare'}
+                        </span>
+                      </div>
+                      <p className="text-gray-200 text-sm mt-1">
+                        {item.description}
+                      </p>
                     </div>
                   </div>
                   
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Your Items</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {/* Mock item data - would be dynamically populated in real app */}
-                      <MarketplaceItemCard 
-                        name="Daily Energy Refill"
-                        description="Restores your daily energy to full"
-                        rarity="common"
-                        price={200}
-                        seller="You"
-                        quantity={5}
-                        onBuy={handleSell}
-                      />
+                  <div className="border-t border-cyan-900/30 pt-3 flex justify-between items-center">
+                    <div className="text-sm text-gray-400">
+                      Seller: {item.seller} 
+                      {item.quantity > 1 && <span className="text-cyan-400 ml-2">x{item.quantity}</span>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-400 font-bold">{item.price} HOLOS</span>
+                      <Button 
+                        className="bg-cyan-500 hover:bg-cyan-600 text-white"
+                        onClick={() => handleBuy(item.id, item.name, item.price)}
+                      >
+                        Buy
+                      </Button>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

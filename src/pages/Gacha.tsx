@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +9,9 @@ import { ItemCard } from "@/components/items/ItemCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useSearchParams } from "react-router-dom";
+import { BLUEPRINT_TIERS } from "@/components/holobots/BlueprintSection";
+import type { UserHolobot } from "@/types/user";
+import { HolobotSelectModal } from "@/components/items/HolobotSelectModal";
 
 interface GachaItem {
   name: string;
@@ -38,6 +40,10 @@ export default function Gacha() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "gacha");
+
+  // State for Holobot selection modal
+  const [isHolobotSelectModalOpen, setIsHolobotSelectModalOpen] = useState(false);
+  const [eligibleHolobotsForRankSkip, setEligibleHolobotsForRankSkip] = useState<UserHolobot[]>([]);
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
@@ -209,6 +215,109 @@ export default function Gacha() {
     });
   };
 
+  // Helper function to get attribute points for a tier (replicated from BlueprintSection.tsx or should be imported)
+  const getAttributePointsForTier = (tierName: string): number => {
+    switch(tierName) {
+      case "Legendary": return 40;
+      case "Elite": return 30;
+      case "Rare": return 20;
+      case "Champion": return 10;
+      case "Common":
+      default: return 10;
+    }
+  };
+
+  // Define the order of tiers for rank progression
+  const TIER_ORDER = ["Common", "Champion", "Rare", "Elite", "Legendary"];
+
+  const handleRankSkipConfirm = async (selectedHolobotName: string) => {
+    if (!user || (user.rank_skips || 0) <= 0) {
+      toast({
+        title: "Error",
+        description: "No Rank Skips available or user data missing.",
+        variant: "destructive"
+      });
+      setIsUsingItem(false);
+      return;
+    }
+
+    const targetHolobot = user.holobots?.find(h => h.name === selectedHolobotName);
+
+    if (!targetHolobot) {
+      toast({
+        title: "Error",
+        description: "Selected Holobot not found.",
+        variant: "destructive"
+      });
+      setIsUsingItem(false);
+      return;
+    }
+
+    const currentRank = targetHolobot.rank || "Common";
+    const currentRankIndex = TIER_ORDER.indexOf(currentRank);
+
+    if (currentRankIndex === -1 || currentRankIndex >= TIER_ORDER.length - 1) {
+      toast({
+        title: "Max Rank",
+        description: `${selectedHolobotName} is already at the highest rank or an unknown rank.`,
+        variant: "destructive"
+      });
+      setIsUsingItem(false);
+      return;
+    }
+
+    const nextRankName = TIER_ORDER[currentRankIndex + 1];
+    const nextTierInfo = Object.values(BLUEPRINT_TIERS).find(tier => tier.name === nextRankName);
+
+    if (!nextTierInfo) {
+      toast({
+        title: "Error",
+        description: "Could not determine next rank information.",
+        variant: "destructive"
+      });
+      setIsUsingItem(false);
+      return;
+    }
+
+    const attributePointsToAdd = getAttributePointsForTier(nextRankName);
+
+    const updatedHolobots = user.holobots.map((h: UserHolobot) => {
+      if (h.name === selectedHolobotName) {
+        return {
+          ...h,
+          rank: nextRankName,
+          level: nextTierInfo.startLevel,
+          experience: 0,
+          nextLevelExp: 100, 
+          attributePoints: (h.attributePoints || 0) + attributePointsToAdd,
+        };
+      }
+      return h;
+    });
+
+    try {
+      await updateUser({
+        rank_skips: (user.rank_skips || 0) - 1,
+        holobots: updatedHolobots,
+      });
+
+      toast({
+        title: "Rank Skipped!",
+        description: `${selectedHolobotName} has advanced to ${nextRankName} rank (Level ${nextTierInfo.startLevel})!`,
+      });
+    } catch (error) {
+      console.error("Error using rank skip:", error);
+      toast({
+        title: "Error",
+        description: "Failed to use the Rank Skip. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUsingItem(false);
+      setIsHolobotSelectModalOpen(false);
+    }
+  };
+
   const handleUseItem = async (type: string) => {
     setIsUsingItem(true);
     
@@ -320,14 +429,29 @@ export default function Gacha() {
             return;
           }
           
-          await updateUser({ 
-            rank_skips: (user.rank_skips || 0) - 1
-          });
+          // 1. Find eligible Holobots
+          const eligibleBots = user.holobots?.filter(
+            (h: UserHolobot) => (h.rank || "Common") !== "Legendary"
+          ) || [];
+
+          if (eligibleBots.length === 0) {
+            toast({
+              title: "No Eligible Holobot",
+              description: "All your Holobots are at max rank or you have no Holobots to upgrade.",
+              variant: "destructive"
+            });
+            setIsUsingItem(false);
+            return;
+          }
+
+          // If only one eligible bot, consider auto-selecting or still show modal for consistency
+          // For now, always show modal if eligible bots exist.
+          setEligibleHolobotsForRankSkip(eligibleBots);
+          setIsHolobotSelectModalOpen(true);
+          // Note: setIsUsingItem(false) will be handled by the modal's close or confirm action.
+          // We don't want to set it to false immediately here, as the operation is pending selection.
+          // The actual rank skip logic is moved to handleRankSkipConfirm
           
-          toast({
-            title: "Rank Skipped",
-            description: "You've advanced to the next rank!",
-          });
           break;
           
         default:
@@ -396,12 +520,38 @@ export default function Gacha() {
   ];
 
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background">
-      <div className="container mx-auto px-4 py-8 pt-16">
-        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="gacha">Gacha Machine</TabsTrigger>
-            <TabsTrigger value="items">Your Items</TabsTrigger>
+    <div className="min-h-screen bg-[#1A1F2C] text-white">
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-cyan-400 mb-2 font-orbitron italic animate-pulse">
+            GACHA SYSTEM
+          </h1>
+          <p className="text-gray-400 text-sm mx-auto max-w-md">
+            Spend HOLOS tokens for a chance to win powerful items and boosts
+          </p>
+        </div>
+
+        <Tabs 
+          defaultValue={activeTab}
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="mx-auto max-w-3xl"
+        >
+          <TabsList className="grid w-full grid-cols-2 bg-[#121620] border border-holobots-border">
+            <TabsTrigger 
+              value="gacha" 
+              className={`${activeTab === 'gacha' ? 'bg-cyan-400/20 text-white' : 'text-gray-400'} font-orbitron`}
+            >
+              <Package className="w-4 h-4 mr-2" />
+              Gacha Pull
+            </TabsTrigger>
+            <TabsTrigger 
+              value="items" 
+              className={`${activeTab === 'items' ? 'bg-cyan-400/20 text-white' : 'text-gray-400'} font-orbitron`}
+            >
+              <Ticket className="w-4 h-4 mr-2" />
+              My Items
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="gacha" className="space-y-4">
@@ -413,14 +563,14 @@ export default function Gacha() {
               />
               
               <div className="absolute top-4 right-4 flex flex-col gap-2">
-                <div className="bg-holobots-card dark:bg-holobots-dark-card p-2 rounded-lg shadow-neon-border">
+                <div className="bg-[#1A1F2C] border border-holobots-border p-2 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Ticket className="w-4 h-4 text-yellow-500" />
-                    <span className="text-holobots-accent">Tickets: {user.gachaTickets}</span>
+                    <span className="text-cyan-400">Tickets: {user.gachaTickets}</span>
                   </div>
                 </div>
-                <div className="bg-holobots-card dark:bg-holobots-dark-card p-2 rounded-lg shadow-neon-border">
-                  <span className="text-holobots-accent">Holos: {user.holosTokens}</span>
+                <div className="bg-[#1A1F2C] border border-holobots-border p-2 rounded-lg">
+                  <span className="text-cyan-400">Holos: {user.holosTokens}</span>
                 </div>
               </div>
             </div>
@@ -430,7 +580,7 @@ export default function Gacha() {
                 <Button
                   onClick={() => pullGacha(1, false)}
                   disabled={isAnimating || !isDailyPullAvailable}
-                  className="w-full sm:w-auto max-w-xs bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white"
+                  className="w-full sm:w-auto max-w-xs bg-[#1A1F2C] border border-cyan-500 hover:bg-cyan-900/20 text-white"
                   size="lg"
                 >
                   {isDailyPullAvailable ? (
@@ -449,7 +599,7 @@ export default function Gacha() {
                 <Button 
                   onClick={() => useGachaTicket(1)}
                   disabled={isAnimating || (user.gachaTickets || 0) <= 0}
-                  className="w-full sm:w-auto max-w-xs bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  className="w-full sm:w-auto max-w-xs bg-[#1A1F2C] border border-cyan-500 hover:bg-cyan-900/20 text-white"
                   size="lg"
                 >
                   <Ticket className="mr-2 h-5 w-5" />
@@ -459,7 +609,7 @@ export default function Gacha() {
                 <Button 
                   onClick={() => useGachaTicket(10)}
                   disabled={isAnimating || (user.gachaTickets || 0) < 10}
-                  className="w-full sm:w-auto max-w-xs bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
+                  className="w-full sm:w-auto max-w-xs bg-[#1A1F2C] border border-cyan-500 hover:bg-cyan-900/20 text-white"
                   size="lg"
                 >
                   <Plus className="mr-1 h-4 w-4" />
@@ -479,7 +629,7 @@ export default function Gacha() {
               <Button
                 onClick={() => pullGacha(1)}
                 disabled={isAnimating || user.holosTokens < SINGLE_PULL_COST}
-                className="w-5/12 bg-holobots-accent hover:bg-holobots-hover text-white"
+                className="w-5/12 bg-red-500 hover:bg-red-600 text-white"
               >
                 <Package className="mr-1 h-4 w-4" />
                 1x Pull (50)
@@ -488,7 +638,7 @@ export default function Gacha() {
               <Button
                 onClick={() => pullGacha(10)}
                 disabled={isAnimating || user.holosTokens < MULTI_PULL_COST}
-                className="w-5/12 bg-holobots-accent hover:bg-holobots-hover text-white"
+                className="w-5/12 bg-red-500 hover:bg-red-600 text-white"
               >
                 <Package className="mr-1 h-4 w-4" />
                 10x Pull (500)
@@ -500,16 +650,15 @@ export default function Gacha() {
                 <div
                   key={index}
                   className={`
-                    p-4 rounded-lg bg-holobots-card dark:bg-holobots-dark-card
-                    border border-holobots-border dark:border-holobots-dark-border
-                    shadow-neon-border transition-all duration-300
+                    p-4 rounded-lg bg-[#1A1F2C] border border-holobots-border
+                    shadow-lg transition-all duration-300
                     ${isAnimating ? 'animate-pulse' : ''}
                   `}
                 >
                   <h3 className={`text-lg font-bold ${getRarityColor(item.rarity)}`}>
                     {item.name}
                   </h3>
-                  <p className="text-sm text-holobots-text dark:text-holobots-dark-text capitalize">
+                  <p className="text-sm text-white capitalize">
                     {item.rarity}
                   </p>
                 </div>
@@ -519,7 +668,7 @@ export default function Gacha() {
           
           <TabsContent value="items">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-4 text-holobots-text dark:text-holobots-dark-text">
+              <h2 className="text-2xl font-bold mb-4 text-cyan-400 font-orbitron italic">
                 Your Items
               </h2>
               <p className="text-sm text-gray-500 mb-4">
@@ -546,6 +695,20 @@ export default function Gacha() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <HolobotSelectModal
+        isOpen={isHolobotSelectModalOpen}
+        holobots={eligibleHolobotsForRankSkip}
+        onConfirm={(selectedHolobotName) => {
+          setIsUsingItem(true); 
+          handleRankSkipConfirm(selectedHolobotName);
+        }}
+        onClose={() => {
+          setIsHolobotSelectModalOpen(false);
+          setIsUsingItem(false);
+        }}
+        isLoading={isUsingItem}
+      />
     </div>
   );
 }

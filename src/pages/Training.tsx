@@ -175,10 +175,10 @@ const Training = () => {
     : baseStats;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#1A1F2C] text-white">
       <div className="max-w-7xl mx-auto pt-16 px-4">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-cyan-400 mb-4 animate-pulse">
+          <h1 className="text-4xl font-bold text-cyan-400 mb-4 animate-pulse font-orbitron italic">
             TRAINING GROUNDS
           </h1>
           <p className="text-gray-400 text-sm mb-4">
@@ -197,144 +197,157 @@ const Training = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* Player Holobot Selection */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-cyan-400 mb-4">
+            <h2 className="text-xl font-bold text-red-400 mb-4 font-orbitron italic">
               Select Your Holobot
             </h2>
-            <Select value={selectedHolobot} onValueChange={setSelectedHolobot}>
-              <SelectTrigger className="w-full">
+            
+            <Select
+              value={selectedHolobot}
+              onValueChange={setSelectedHolobot}
+            >
+              <SelectTrigger className="w-full bg-[#1A1F2C] text-white border-holobots-border">
                 <SelectValue placeholder="Choose your holobot" />
               </SelectTrigger>
-              <SelectContent>
-                {user?.holobots.map((holobot, index) => {
-                  const holobotKey = getHolobotKeyByName(holobot.name);
+              <SelectContent className="bg-holobots-card border-holobots-border">
+                {Object.keys(HOLOBOT_STATS).map((key) => {
+                  const holobot = HOLOBOT_STATS[key];
+                  const userOwnsHolobot = user?.holobots?.some(
+                    h => h.name.toLowerCase() === holobot.name.toLowerCase()
+                  );
+                  
+                  // Only show holobots the user owns
+                  if (!userOwnsHolobot) return null;
+                  
                   return (
-                    <SelectItem key={index} value={holobotKey}>
-                      {holobot.name} (Lv.{holobot.level})
+                    <SelectItem key={key} value={key}>
+                      {holobot.name}
                     </SelectItem>
                   );
                 })}
               </SelectContent>
             </Select>
-
+            
             {selectedHolobot && (
-              <div className="mt-4 flex justify-center">
-                {userHolobot && boostedStats && (
-                  <HolobotCard 
-                    stats={{
-                      ...boostedStats,
-                      name: userHolobot.name || '',
-                      level: userHolobot.level || 1,
-                    }}
-                    variant="blue"
-                  />
-                )}
+              <div className="mt-4">
+                <HolobotCard
+                  stats={{
+                    ...boostedStats,
+                    name: userHolobot?.name || HOLOBOT_STATS[selectedHolobot].name
+                  }}
+                  variant="blue"
+                />
               </div>
             )}
           </div>
-
-          {/* Opponent Selection */}
+          
+          {/* Opponent Holobot Selection */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-red-400 mb-4">
-              Select Training Opponent
+            <h2 className="text-xl font-bold text-red-400 mb-4 font-orbitron italic">
+              Select Opponent
             </h2>
-            <Select value={selectedOpponent} onValueChange={setSelectedOpponent}>
-              <SelectTrigger className="w-full">
+            
+            <Select
+              value={selectedOpponent}
+              onValueChange={setSelectedOpponent}
+            >
+              <SelectTrigger className="w-full bg-[#1A1F2C] text-white border-holobots-border">
                 <SelectValue placeholder="Choose opponent" />
               </SelectTrigger>
-              <SelectContent>
-                {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
+              <SelectContent className="bg-holobots-card border-holobots-border">
+                {Object.keys(HOLOBOT_STATS).map((key) => (
                   <SelectItem key={key} value={key}>
-                    {stats.name}
+                    {HOLOBOT_STATS[key].name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-
+            
             {selectedOpponent && (
-              <div className="mt-4 flex justify-center">
-                <HolobotCard 
-                  stats={{
-                    ...HOLOBOT_STATS[selectedOpponent],
-                    level: DIFFICULTY_LEVELS[selectedDifficulty].level
-                  }}
+              <div className="mt-4">
+                <HolobotCard
+                  stats={HOLOBOT_STATS[selectedOpponent]}
                   variant="red"
                 />
               </div>
             )}
           </div>
         </div>
-
+        
         {/* Difficulty Selection */}
-        <Card className="mb-8 p-6 bg-black/40 border-cyan-500/20">
-          <h3 className="text-lg font-bold text-cyan-400 mb-4">
-            Select Difficulty
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {(Object.entries(DIFFICULTY_LEVELS) as [keyof typeof DIFFICULTY_LEVELS, typeof DIFFICULTY_LEVELS[keyof typeof DIFFICULTY_LEVELS]][]).map(([key, config]) => (
+        <Card className="p-6 mb-8 bg-[#1A1F2C] border border-holobots-border">
+          <h3 className="text-lg font-bold text-cyan-400 mb-4 font-orbitron italic">Select Difficulty</h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.entries(DIFFICULTY_LEVELS).map(([key, { level, xpMultiplier, energyCost }]) => (
               <Button
                 key={key}
                 variant={selectedDifficulty === key ? "default" : "outline"}
-                className={`
-                  h-auto py-4 px-6
-                  ${selectedDifficulty === key ? 'bg-cyan-500' : 'bg-black/40'}
-                  border-cyan-500/20 hover:border-cyan-400
-                `}
-                onClick={() => setSelectedDifficulty(key)}
+                className={`p-4 h-auto flex flex-col items-center gap-2 ${
+                  selectedDifficulty === key 
+                    ? 'bg-cyan-400/20 border-cyan-400 text-white' 
+                    : 'bg-black/20 border-holobots-border text-gray-300'
+                }`}
+                onClick={() => setSelectedDifficulty(key as keyof typeof DIFFICULTY_LEVELS)}
               >
-                <div className="text-center space-y-2">
-                  <div className="font-bold text-sm capitalize">
-                    {key}
-                  </div>
-                  <div className="text-xs space-y-1">
-                    <div>Level {config.level}</div>
-                    <div>x{config.xpMultiplier} XP</div>
-                    <div className="text-green-400">{config.energyCost} Energy</div>
-                  </div>
+                <span className="font-bold capitalize">{key}</span>
+                <div className="text-xs flex flex-col">
+                  <span>Level {level}</span>
+                  <span className="text-cyan-400">x{xpMultiplier} XP</span>
+                  <span className="text-green-400">{energyCost} Energy</span>
                 </div>
               </Button>
             ))}
           </div>
         </Card>
-
+        
         {/* Battle Controls */}
-        <div className="text-center space-y-4">
+        <div className="flex justify-center mb-8">
           <Button
             size="lg"
-            disabled={isBattling || !selectedHolobot || !selectedOpponent}
+            variant="default"
+            disabled={!selectedHolobot || !selectedOpponent || isBattling}
             onClick={handleStartTraining}
-            className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-sm px-8 py-6"
+            className="bg-red-500 hover:bg-red-600 text-white px-8 py-6 text-lg h-auto"
           >
             {isBattling ? (
-              <>
-                <Swords className="w-4 h-4 mr-2 animate-spin" />
-                Training...
-              </>
+              <>Processing...</>
             ) : (
               <>
-                <Swords className="w-4 h-4 mr-2" />
+                <Swords className="mr-2 h-6 w-6" /> 
                 Start Training
               </>
             )}
           </Button>
-
-          {battleResult && (
-            <Card className={`
-              p-4 animate-pulse
-              ${battleResult.won ? 'bg-green-500/20 border-green-500' : 'bg-red-500/20 border-red-500'}
-            `}>
-              <div className="flex items-center justify-center gap-2">
-                {battleResult.won ? (
-                  <Trophy className="w-5 h-5 text-yellow-500" />
-                ) : (
-                  <AlertCircle className="w-5 h-5 text-red-500" />
-                )}
-                <span className="font-bold text-sm">
-                  {battleResult.message}
-                </span>
-              </div>
-            </Card>
-          )}
         </div>
+        
+        {/* Battle Result */}
+        {battleResult && (
+          <Card className={`p-6 mb-8 text-center ${
+            battleResult.won 
+              ? 'bg-green-400/10 border-green-400' 
+              : 'bg-red-400/10 border-red-400'
+          }`}>
+            <h3 className={`text-2xl font-bold mb-2 ${
+              battleResult.won ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {battleResult.won ? (
+                <><Trophy className="inline-block mr-2 h-6 w-6" /> Victory!</>
+              ) : (
+                <><AlertCircle className="inline-block mr-2 h-6 w-6" /> Defeat</>
+              )}
+            </h3>
+            
+            <p className="text-lg mb-2">
+              {battleResult.message}
+            </p>
+            
+            {battleResult.won && (
+              <p className="text-cyan-400 text-sm">
+                Keep training to level up your Holobot!
+              </p>
+            )}
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -34,6 +34,12 @@ export interface UserProfile {
   energy_refills?: number;
   rank_skips?: number;
   blueprints?: Record<string, number>; // Add blueprints field to store blueprint pieces per holobot
+  inventory?: { // For storing items like common, rare, legendary from arena/quests
+    common?: number;
+    rare?: number;
+    legendary?: number;
+    // other specific item keys can be added here
+  };
 }
 
 export interface AuthState {
@@ -64,7 +70,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       exp_boosters: dbProfile.exp_boosters || 0,
       energy_refills: dbProfile.energy_refills || 0,
       rank_skips: dbProfile.rank_skips || 0,
-      blueprints: dbProfile.blueprints || {}
+      blueprints: dbProfile.blueprints || {},
+      inventory: dbProfile.inventory || { common: 0, rare: 0, legendary: 0 } // Initialize inventory
     };
   } else {
     // This is from the users table
@@ -86,7 +93,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       exp_boosters: 0,
       energy_refills: 0,
       rank_skips: 0,
-      blueprints: {}
+      blueprints: {},
+      inventory: { common: 0, rare: 0, legendary: 0 } // Initialize inventory
     };
   }
 }

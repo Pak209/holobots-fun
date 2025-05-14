@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -128,7 +127,7 @@ export default function Mint() {
           relative cursor-pointer transition-all duration-300 transform 
           hover:scale-105 ${isSelected ? 'scale-105' : ''}
           bg-holobots-card dark:bg-holobots-dark-card rounded-lg p-4 sm:p-6 border-2
-          ${isSelected ? 'border-holobots-accent' : 'border-holobots-accent/20'}
+          ${isSelected ? 'border-holobots-accent dark:border-holobots-dark-accent' : 'border-holobots-accent/20 dark:border-holobots-dark-border'}
           shadow-[0_0_10px_rgba(34,211,238,0.1)]
           hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]
           overflow-hidden
@@ -214,7 +213,7 @@ export default function Mint() {
             onClick={handleMintHolobot}
             disabled={!selectedHolobot || isMinting}
             className={`
-              bg-holobots-accent hover:bg-holobots-hover text-black font-bold py-1.5 sm:py-2 px-6 sm:px-8 text-base sm:text-lg
+              bg-holobots-accent hover:bg-holobots-hover dark:bg-holobots-dark-accent dark:hover:bg-holobots-dark-hover text-black dark:text-gray-900 font-bold py-1.5 sm:py-2 px-6 sm:px-8 text-base sm:text-lg
               w-[200px] max-w-full
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-300
@@ -223,7 +222,7 @@ export default function Mint() {
           >
             {isMinting ? (
               <div className="flex items-center gap-2">
-                <div className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-4 w-4 border-2 border-black dark:border-gray-900 border-t-transparent rounded-full"></div>
                 <span>Minting...</span>
               </div>
             ) : (

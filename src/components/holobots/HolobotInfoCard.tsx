@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS, getRank } from "@/types/holobot";
@@ -9,6 +8,7 @@ import { UserHolobot } from "@/types/user";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { BLUEPRINT_TIERS } from "@/components/holobots/BlueprintSection";
 
 interface HolobotInfoCardProps {
   holobotKey: string;
@@ -36,6 +36,8 @@ export const HolobotInfoCard = ({
   const holobotRank = userHolobot?.rank || "Common";
   const attributePoints = userHolobot?.attributePoints || 0;
   
+  const [isRankSkipping, setIsRankSkipping] = useState(false);
+
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   
@@ -116,6 +118,88 @@ export const HolobotInfoCard = ({
     }
   };
 
+  // Helper function to get attribute points for a tier (replicated or import if available elsewhere globally)
+  const getAttributePointsForTier = (tierName: string): number => {
+    switch(tierName) {
+      case "Legendary": return 40;
+      case "Elite": return 30;
+      case "Rare": return 20;
+      case "Champion": return 10;
+      case "Common":
+      default: return 10;
+    }
+  };
+
+  // Define the order of tiers for rank progression
+  const TIER_ORDER = ["Common", "Champion", "Rare", "Elite", "Legendary"];
+
+  const handleUseRankSkip = async () => {
+    if (!user || !userHolobot || (user.rank_skips || 0) <= 0 || holobotRank === "Legendary") {
+      toast({
+        title: "Cannot Use Rank Skip",
+        description: "Conditions not met (no skips, Holobot max rank, or not owned).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRankSkipping(true);
+
+    try {
+      const currentRankIndex = TIER_ORDER.indexOf(holobotRank);
+      if (currentRankIndex === -1 || currentRankIndex >= TIER_ORDER.length - 1) {
+        toast({ title: "Error", description: "Holobot is already at max rank or rank is invalid.", variant: "destructive" });
+        setIsRankSkipping(false);
+        return;
+      }
+
+      const nextRankName = TIER_ORDER[currentRankIndex + 1];
+      const nextTierInfo = Object.values(BLUEPRINT_TIERS).find(tier => tier.name === nextRankName);
+
+      if (!nextTierInfo) {
+        toast({ title: "Error", description: "Could not determine next rank information.", variant: "destructive" });
+        setIsRankSkipping(false);
+        return;
+      }
+
+      const attributePointsToAdd = getAttributePointsForTier(nextRankName);
+
+      const updatedHolobots = user.holobots.map(h => {
+        if (h.name.toLowerCase() === userHolobot.name.toLowerCase()) {
+          return {
+            ...h,
+            rank: nextRankName,
+            level: nextTierInfo.startLevel,
+            experience: 0,
+            nextLevelExp: 100, // Assuming 100 as per BlueprintSection, adjust if needed
+            attributePoints: (h.attributePoints || 0) + attributePointsToAdd,
+          };
+        }
+        return h;
+      });
+
+      await updateUser({
+        rank_skips: (user.rank_skips || 0) - 1,
+        holobots: updatedHolobots,
+      });
+
+      toast({
+        title: "Rank Skipped!",
+        description: `${userHolobot.name} has advanced to ${nextRankName} rank (Level ${nextTierInfo.startLevel})!`,
+      });
+
+    } catch (error) {
+      console.error("Error using Rank Skip:", error);
+      toast({
+        title: "Rank Skip Failed",
+        description: "An error occurred while using the Rank Skip.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRankSkipping(false);
+    }
+  };
+
   return (
     <div className={`flex flex-col sm:flex-row gap-4 ${isOwned ? 'bg-holobots-card/90' : 'bg-holobots-card/30'} dark:bg-holobots-dark-card p-3 sm:p-4 rounded-lg border border-holobots-border dark:border-holobots-dark-border shadow-neon transition-all duration-300`}>
       <div className="flex sm:flex-row gap-3 sm:gap-4 w-full items-stretch">
@@ -123,7 +207,7 @@ export const HolobotInfoCard = ({
         <div className="flex-none flex flex-col justify-between w-[120px] sm:w-[180px] bg-black/30 p-2 rounded-lg border border-holobots-accent self-start min-h-[320px]">
           <div>
             <div className="flex justify-between items-start mb-1.5">
-              <h2 className="text-lg font-bold text-holobots-accent drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] border border-transparent">
+              <h2 className="text-lg font-bold text-holobots-accent dark:text-holobots-dark-accent drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] border border-transparent">
                 {holobot.name}
               </h2>
               {isOwned && !justMinted && (
@@ -140,13 +224,13 @@ export const HolobotInfoCard = ({
             
             {isOwned && (
               <div className="mb-1.5 space-y-0.5">
-                <div className="flex justify-between items-center text-xs">
+                <div className="flex justify-between items-center text-xs text-gray-700 dark:text-gray-300">
                   <span>LV {level}</span>
                   <span>{currentXp}/{nextLevelXp}</span>
                 </div>
-                <Progress value={xpProgress} className="h-1" />
+                <Progress value={xpProgress} className="h-1 bg-gray-300 dark:bg-gray-700" />
                 <div className="flex justify-between text-[9px]">
-                  <span className="text-right text-holobots-accent">
+                  <span className="text-right text-holobots-accent dark:text-holobots-dark-accent">
                     Rank: {getRank(level)}
                   </span>
                   {userHolobot?.rank && (
@@ -158,7 +242,7 @@ export const HolobotInfoCard = ({
               </div>
             )}
             
-            <div className="space-y-0.5 font-mono text-xs">
+            <div className="space-y-0.5 font-mono text-xs text-gray-600 dark:text-gray-400">
               <p>HP: {holobot.maxHealth} {userHolobot?.boostedAttributes?.health ? `+${userHolobot.boostedAttributes.health}` : ''}</p>
               <p>Attack: {holobot.attack} {userHolobot?.boostedAttributes?.attack ? `+${userHolobot.boostedAttributes.attack}` : ''}</p>
               <p>Defense: {holobot.defense} {userHolobot?.boostedAttributes?.defense ? `+${userHolobot.boostedAttributes.defense}` : ''}</p>
@@ -167,6 +251,21 @@ export const HolobotInfoCard = ({
                 Special: {holobot.specialMove}
               </p>
             </div>
+            
+            {/* Rank Skip Button - Placed here below special move */}
+            {isOwned && holobotRank !== "Legendary" && (user?.rank_skips || 0) > 0 && (
+              <div className="mt-1.5">
+                <Button
+                  onClick={handleUseRankSkip}
+                  disabled={isRankSkipping || (user?.rank_skips || 0) === 0}
+                  size="sm"
+                  className="w-full py-0.5 h-auto text-xs bg-red-600/80 hover:bg-red-700/80 border border-red-500 text-white flex items-center justify-center"
+                >
+                  <Coins size={12} className="mr-1" />
+                  {isRankSkipping ? "Skipping..." : `Use Rank Skip (${user?.rank_skips || 0})`}
+                </Button>
+              </div>
+            )}
           </div>
           
           <div className="mt-1.5 pt-1 border-t border-holobots-border dark:border-holobots-dark-border">
@@ -174,7 +273,7 @@ export const HolobotInfoCard = ({
               <Button 
                 onClick={() => onMint(holobot.name)}
                 disabled={isMinting || userTokens < 100}
-                className="w-full py-0 h-6 text-xs bg-holobots-accent hover:bg-holobots-accent/80 text-black font-semibold"
+                className="w-full py-0 h-6 text-xs bg-holobots-accent hover:bg-holobots-hover dark:bg-holobots-dark-accent dark:hover:bg-holobots-dark-hover text-black dark:text-gray-900 font-semibold"
               >
                 {isMinting ? (
                   "Minting..."
@@ -198,9 +297,9 @@ export const HolobotInfoCard = ({
             {/* Attribute Boost Section - Only show for owned holobots with compact layout */}
             {isOwned && (
               <div>
-                <h3 className="text-[9px] font-bold mb-0.5 text-holobots-accent flex items-center justify-between">
+                <h3 className="text-[9px] font-bold mb-0.5 text-holobots-accent dark:text-holobots-dark-accent flex items-center justify-between">
                   <span>Available Boosts</span>
-                  <Badge variant="outline" className="bg-blue-500/20 border-blue-500 text-blue-400 text-[8px] py-0 px-1 h-4 flex items-center">
+                  <Badge variant="outline" className="bg-blue-500/20 border-blue-500 text-blue-400 dark:bg-blue-800/30 dark:border-blue-700 dark:text-blue-300 text-[8px] py-0 px-1 h-4 flex items-center">
                     <Zap className="h-2 w-2 mr-0.5" /> {attributePoints}
                   </Badge>
                 </h3>

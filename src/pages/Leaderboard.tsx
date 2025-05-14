@@ -62,7 +62,7 @@ const Leaderboard = () => {
       case 3:
         return <Medal className="h-5 w-5 text-amber-700" />;
       default:
-        return <span className="text-sm font-medium text-muted-foreground">#{rank}</span>;
+        return <span className="text-sm font-medium text-muted-foreground dark:text-gray-400">#{rank}</span>;
     }
   };
 
@@ -95,13 +95,13 @@ const Leaderboard = () => {
         >
           <div className="flex items-center gap-3">
             <div className="w-8 flex justify-center">{getRankIcon(leader.rank)}</div>
-            <Avatar className="h-8 w-8 border border-holobots-border">
+            <Avatar className="h-8 w-8 border border-holobots-border dark:border-holobots-dark-border">
               <AvatarImage src={leader.avatarUrl} />
-              <AvatarFallback>{leader.username.substring(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarFallback className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{leader.username.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <span className="font-medium">{leader.username}</span>
+            <span className="font-medium text-gray-800 dark:text-gray-200">{leader.username}</span>
           </div>
-          <div className="text-sm font-semibold text-holobots-accent">
+          <div className="text-sm font-semibold text-holobots-accent dark:text-holobots-dark-accent">
             {leader.value}
           </div>
         </div>
@@ -112,20 +112,20 @@ const Leaderboard = () => {
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background p-4">
       <div className="max-w-7xl mx-auto pt-16">
-        <h1 className="text-3xl font-bold text-center mb-6 text-holobots-accent">
+        <h1 className="text-3xl font-bold text-center mb-6 text-holobots-accent dark:text-holobots-dark-accent">
           LEADERBOARDS
         </h1>
         
         <Tabs defaultValue="battle" className="w-full" onValueChange={setCurrentTab}>
-          <TabsList className="grid grid-cols-3 mb-6">
-            <TabsTrigger value="battle">Battle</TabsTrigger>
-            <TabsTrigger value="tokens">Tokens</TabsTrigger>
-            <TabsTrigger value="level">Level</TabsTrigger>
+          <TabsList className="grid grid-cols-3 mb-6 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+            <TabsTrigger value="battle" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent dark:data-[state=active]:bg-holobots-dark-card dark:data-[state=active]:text-holobots-dark-accent">Battle</TabsTrigger>
+            <TabsTrigger value="tokens" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent dark:data-[state=active]:bg-holobots-dark-card dark:data-[state=active]:text-holobots-dark-accent">Tokens</TabsTrigger>
+            <TabsTrigger value="level" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent dark:data-[state=active]:bg-holobots-dark-card dark:data-[state=active]:text-holobots-dark-accent">Level</TabsTrigger>
           </TabsList>
           
           <Card className="bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border shadow-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center text-xl">
+              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-200">
                 {getLeaderboardIcon(currentTab)}
                 {currentTab === "battle" && "Battle Champions"}
                 {currentTab === "tokens" && "Token Masters"}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -155,7 +154,7 @@ export default function Auth() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required={isSignUp}
-                className="w-full"
+                className="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Choose a username"
                 disabled={loading}
               />
@@ -170,7 +169,7 @@ export default function Auth() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full"
+              className="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your email"
               disabled={loading}
             />
@@ -184,7 +183,7 @@ export default function Auth() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full"
+              className="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your password"
               minLength={6}
               disabled={loading}
@@ -204,7 +203,7 @@ export default function Auth() {
               />
               <Label 
                 htmlFor="rememberMe" 
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-gray-700 dark:text-gray-300"
               >
                 Remember me
               </Label>
@@ -213,7 +212,7 @@ export default function Auth() {
 
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md"
+            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-holobots-dark-accent dark:hover:bg-holobots-dark-accent/90 text-white dark:text-gray-900 py-2 rounded-md"
             disabled={loading}
           >
             {loading ? (

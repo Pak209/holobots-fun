@@ -1,5 +1,7 @@
 # Welcome to your Lovable project
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Pak209/holobots-fun)
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/58769da3-0d6d-467d-a2fd-abd0ced6793b

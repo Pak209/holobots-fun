@@ -217,13 +217,13 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
   };
   
   return (
-    <div className="mt-4 p-4 bg-holobots-card/50 rounded-lg border border-holobots-accent/30">
-      <h2 className="text-lg font-bold text-holobots-accent mb-2 flex items-center gap-2">
+    <div className="mt-4 p-4 bg-holobots-card/50 dark:bg-holobots-dark-card/50 rounded-lg border border-holobots-accent/30 dark:border-holobots-dark-accent/30">
+      <h2 className="text-lg font-bold text-holobots-accent dark:text-holobots-dark-accent mb-2 flex items-center gap-2">
         Blueprint Collection
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>
-              <Info className="h-4 w-4 text-holobots-accent/80" />
+              <Info className="h-4 w-4 text-holobots-accent/80 dark:text-holobots-dark-accent/80" />
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs max-w-xs">
@@ -247,16 +247,16 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
         <div className="flex-1 space-y-3">
           <div>
             <div className="flex justify-between items-center mb-1">
-              <span className="text-sm text-holobots-accent">Blueprint Pieces:</span>
-              <span className="text-sm font-bold">{blueprintCount}</span>
+              <span className="text-sm text-holobots-accent dark:text-holobots-dark-accent">Blueprint Pieces:</span>
+              <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{blueprintCount}</span>
             </div>
             
             <div className="space-y-1">
-              <div className="flex justify-between text-xs">
+              <div className="flex justify-between text-xs text-gray-700 dark:text-gray-300">
                 <span>Progress to {currentTier ? "Next Tier" : "Common Tier"}</span>
                 <span>{blueprintCount} / {nextTierRequired}</span>
               </div>
-              <Progress value={progress} className="h-2" />
+              <Progress value={progress} className="h-2 bg-gray-300 dark:bg-gray-700" />
             </div>
             
             <div className="mt-3 grid grid-cols-5 gap-1 text-center">
@@ -277,9 +277,9 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
           
           {currentTier && (
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="new">Mint New</TabsTrigger>
-                <TabsTrigger value="upgrade" disabled={!userOwnsHolobot}>Upgrade Existing</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                <TabsTrigger value="new" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent dark:data-[state=active]:bg-holobots-dark-card dark:data-[state=active]:text-holobots-dark-accent">Mint New</TabsTrigger>
+                <TabsTrigger value="upgrade" disabled={!userOwnsHolobot} className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent dark:data-[state=active]:bg-holobots-dark-card dark:data-[state=active]:text-holobots-dark-accent">Upgrade Existing</TabsTrigger>
               </TabsList>
               
               <TabsContent value="new">
@@ -299,7 +299,7 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
                     <Button 
                       onClick={handleRedeemBlueprints}
                       disabled={isRedeeming || !currentTier}
-                      className="w-full py-1 h-8 text-sm bg-holobots-accent hover:bg-holobots-hover text-white"
+                      className="w-full py-1 h-8 text-sm bg-holobots-accent hover:bg-holobots-hover dark:bg-holobots-dark-accent dark:hover:bg-holobots-dark-hover text-white dark:text-gray-900"
                     >
                       {isRedeeming ? "Redeeming..." : `Redeem for ${currentTier.required} Blueprints`}
                     </Button>
@@ -374,7 +374,7 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
                     <Button 
                       onClick={handleUpgradeHolobot}
                       disabled={isUpgrading || !selectedTier}
-                      className="w-full py-1 h-8 text-sm bg-holobots-accent hover:bg-holobots-hover text-white"
+                      className="w-full py-1 h-8 text-sm bg-holobots-accent hover:bg-holobots-hover dark:bg-holobots-dark-accent dark:hover:bg-holobots-dark-hover text-white dark:text-gray-900"
                     >
                       {isUpgrading ? (
                         "Upgrading..."

@@ -1,4 +1,3 @@
-
 import { useLocation, Link } from "react-router-dom";
 import { Home, Dumbbell, Trophy, Bot, Gem, Gamepad2, ShoppingBag, Activity } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -19,10 +18,10 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
   };
 
   return (
-    <div className="relative flex flex-col w-full min-h-screen bg-background">
+    <div className="relative flex flex-col w-full min-h-screen bg-[#1A1F2C]">
       {/* Header */}
-      <header className="fixed top-0 w-full z-50 px-4 py-3 flex items-center justify-between bg-card/80 backdrop-blur-md border-b border-border">
-        <div className="text-xl font-bold italic tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-holobots-accent to-holobots-hover">
+      <header className="fixed top-0 w-full z-50 px-4 py-3 flex items-center justify-between bg-[#1A1F2C]/95 backdrop-blur-md border-b border-cyan-900/30">
+        <div className="text-xl font-bold italic tracking-wider text-cyan-400 font-orbitron">
           HOLOBOTS
         </div>
         <NavigationMenu />
@@ -34,89 +33,83 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full h-16 flex justify-around items-center bg-card/80 backdrop-blur-md border-t border-border z-50">
-        <Link to="/app" className="flex flex-col items-center justify-center w-1/7">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn(
-              "h-10 w-10 rounded-full", 
-              isActive("/app") && "bg-holobots-accent text-white"
-            )}
-          >
+      <nav className="fixed bottom-0 w-full h-16 flex justify-around items-center bg-[#111520] border-t border-cyan-900/30 z-50">
+        <Link to="/app" className="flex flex-col items-center justify-center flex-1">
+          <div className={cn(
+            "h-10 w-10 rounded-full flex items-center justify-center", 
+            isActive("/app") ? "bg-cyan-500 text-white" : "text-gray-400"
+          )}>
             <Home className="h-5 w-5" />
-          </Button>
-          <span className="text-[10px] mt-0.5">Battle</span>
+          </div>
+          <span className={cn(
+            "text-[10px] mt-0.5",
+            isActive("/app") ? "text-white" : "text-gray-400"
+          )}>Battle</span>
         </Link>
         
-        <Link to="/training" className="flex flex-col items-center justify-center w-1/7">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn(
-              "h-10 w-10 rounded-full", 
-              isActive("/training") && "bg-holobots-accent text-white"
-            )}
-          >
+        <Link to="/training" className="flex flex-col items-center justify-center flex-1">
+          <div className={cn(
+            "h-10 w-10 rounded-full flex items-center justify-center", 
+            isActive("/training") ? "bg-cyan-500 text-white" : "text-gray-400"
+          )}>
             <Dumbbell className="h-5 w-5" />
-          </Button>
-          <span className="text-[10px] mt-0.5">Train</span>
+          </div>
+          <span className={cn(
+            "text-[10px] mt-0.5",
+            isActive("/training") ? "text-white" : "text-gray-400"
+          )}>Train</span>
         </Link>
         
-        <Link to="/quests" className="flex flex-col items-center justify-center w-1/7">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn(
-              "h-10 w-10 rounded-full", 
-              isActive("/quests") && "bg-holobots-accent text-white"
-            )}
-          >
+        <Link to="/quests" className="flex flex-col items-center justify-center flex-1">
+          <div className={cn(
+            "h-10 w-10 rounded-full flex items-center justify-center", 
+            isActive("/quests") ? "bg-cyan-500 text-white" : "text-gray-400"
+          )}>
             <Trophy className="h-5 w-5" />
-          </Button>
-          <span className="text-[10px] mt-0.5">Quests</span>
+          </div>
+          <span className={cn(
+            "text-[10px] mt-0.5",
+            isActive("/quests") ? "text-white" : "text-gray-400"
+          )}>Quests</span>
         </Link>
         
-        <Link to="/gacha" className="flex flex-col items-center justify-center w-1/7">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn(
-              "h-10 w-10 rounded-full", 
-              isActive("/gacha") && "bg-holobots-accent text-white"
-            )}
-          >
+        <Link to="/gacha" className="flex flex-col items-center justify-center flex-1">
+          <div className={cn(
+            "h-10 w-10 rounded-full flex items-center justify-center", 
+            isActive("/gacha") ? "bg-cyan-500 text-white" : "text-gray-400"
+          )}>
             <Gamepad2 className="h-5 w-5" />
-          </Button>
-          <span className="text-[10px] mt-0.5">Gacha</span>
+          </div>
+          <span className={cn(
+            "text-[10px] mt-0.5",
+            isActive("/gacha") ? "text-white" : "text-gray-400"
+          )}>Gacha</span>
         </Link>
         
-        <Link to="/fitness" className="flex flex-col items-center justify-center w-1/7">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn(
-              "h-10 w-10 rounded-full", 
-              isActive("/fitness") && "bg-holobots-accent text-white"
-            )}
-          >
+        <Link to="/fitness" className="flex flex-col items-center justify-center flex-1">
+          <div className={cn(
+            "h-10 w-10 rounded-full flex items-center justify-center", 
+            isActive("/fitness") ? "bg-cyan-500 text-white" : "text-gray-400"
+          )}>
             <Activity className="h-5 w-5" />
-          </Button>
-          <span className="text-[10px] mt-0.5">Fitness</span>
+          </div>
+          <span className={cn(
+            "text-[10px] mt-0.5",
+            isActive("/fitness") ? "text-white" : "text-gray-400"
+          )}>Fitness</span>
         </Link>
         
-        <Link to="/marketplace" className="flex flex-col items-center justify-center w-1/7">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn(
-              "h-10 w-10 rounded-full", 
-              isActive("/marketplace") && "bg-holobots-accent text-white"
-            )}
-          >
+        <Link to="/marketplace" className="flex flex-col items-center justify-center flex-1">
+          <div className={cn(
+            "h-10 w-10 rounded-full flex items-center justify-center", 
+            isActive("/marketplace") ? "bg-cyan-500 text-white" : "text-gray-400"
+          )}>
             <ShoppingBag className="h-5 w-5" />
-          </Button>
-          <span className="text-[10px] mt-0.5">Market</span>
+          </div>
+          <span className={cn(
+            "text-[10px] mt-0.5",
+            isActive("/marketplace") ? "text-white" : "text-gray-400"
+          )}>Market</span>
         </Link>
       </nav>
     </div>

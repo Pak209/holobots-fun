@@ -194,19 +194,19 @@ export const QuestBattleBanner = ({
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-md p-4 bg-holobots-card rounded-lg border border-holobots-accent shadow-neon-lg">
+      <div className="w-full max-w-md p-4 bg-[#1A1F2C] rounded-lg border border-holobots-accent shadow-neon-lg">
         <div className="mb-4 text-center">
-          <h2 className="text-xl font-bold text-holobots-accent">{battleText}</h2>
-          <div className="text-xs text-gray-400 mt-1">Round {battleRound}/5</div>
+          <h2 className="text-xl font-bold text-cyan-400 font-orbitron">{battleText}</h2>
+          <div className="text-xs text-gray-200 mt-1">Round {battleRound}/5</div>
         </div>
         
         <div className="mb-6 space-y-1">
           <div className="flex justify-between text-sm">
-            <div className="flex items-center">
+            <div className="flex items-center text-white">
               <ShieldAlert className="w-4 h-4 mr-1 text-blue-400" />
               <span>Your Team</span>
             </div>
-            <span>{Math.max(0, Math.round(playerHealth))}%</span>
+            <span className="text-white">{Math.max(0, Math.round(playerHealth))}%</span>
           </div>
           <Progress 
             value={playerHealth} 
@@ -214,7 +214,7 @@ export const QuestBattleBanner = ({
           />
           <div className="grid grid-cols-3 gap-1 mt-1">
             {actualPlayerHolobots.map((holobot, idx) => (
-              <div key={idx} className="text-[10px] text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
+              <div key={idx} className="text-[10px] text-white text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
                 {holobot.name}
               </div>
             ))}
@@ -226,7 +226,7 @@ export const QuestBattleBanner = ({
               if (alreadyDisplayed || !holobotName) return null;
               
               return (
-                <div key={`key-${idx}`} className="text-[10px] text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
+                <div key={`key-${idx}`} className="text-[10px] text-white text-center bg-blue-900/30 rounded px-1 py-0.5 truncate">
                   {holobotName}
                 </div>
               );
@@ -236,17 +236,17 @@ export const QuestBattleBanner = ({
         
         <div className="space-y-1">
           <div className="flex justify-between text-sm">
-            <div className="flex items-center">
+            <div className="flex items-center text-white">
               <Swords className="w-4 h-4 mr-1 text-red-400" />
               <span>{boss.name}</span>
             </div>
-            <span>{Math.max(0, Math.round(bossHealth))}%</span>
+            <span className="text-white">{Math.max(0, Math.round(bossHealth))}%</span>
           </div>
           <Progress 
             value={bossHealth} 
             className="h-3 bg-gray-700"
           />
-          <div className="text-[10px] text-center mt-1 bg-red-900/30 rounded px-1 py-0.5">
+          <div className="text-[10px] text-white text-center mt-1 bg-red-900/30 rounded px-1 py-0.5">
             {isBossQuest ? "BOSS QUEST" : "EXPLORATION"} - {difficulty.toUpperCase()}
           </div>
         </div>

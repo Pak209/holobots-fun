@@ -21,9 +21,9 @@ const ARENA_TIERS = {
     entryFee: 50,
     rewards: {
       items: {
-        common: 1,
-        rare: 0,
-        legendary: 0
+        energy_refills: 1,
+        exp_boosters: 0,
+        rank_skips: 0
       }
     }
   },
@@ -32,9 +32,9 @@ const ARENA_TIERS = {
     entryFee: 50,
     rewards: {
       items: {
-        common: 2,
-        rare: 1,
-        legendary: 0
+        energy_refills: 2,
+        exp_boosters: 1,
+        rank_skips: 0
       }
     }
   },
@@ -43,9 +43,9 @@ const ARENA_TIERS = {
     entryFee: 50,
     rewards: {
       items: {
-        common: 3,
-        rare: 2,
-        legendary: 0
+        energy_refills: 3,
+        exp_boosters: 2,
+        rank_skips: 0
       }
     }
   },
@@ -55,13 +55,21 @@ const ARENA_TIERS = {
     rewards: {
       holosTokens: 200,
       items: {
-        common: 4,
-        rare: 3,
-        legendary: 1
+        energy_refills: 4,
+        exp_boosters: 3,
+        rank_skips: 1
       }
     }
   }
 } as const;
+
+interface ArenaSpecificItemRewards {
+  energy_refills: number;
+  exp_boosters: number;
+  rank_skips: number;
+  // Add gacha_tickets and arena_passes if they can also come from here,
+  // though they are currently handled by calculateArenaRewards
+}
 
 interface ArenaPrebattleMenuProps {
   onHolobotSelect: (holobotKey: string) => void;
@@ -69,7 +77,8 @@ interface ArenaPrebattleMenuProps {
     method: 'tokens' | 'pass',
     selectedHolobot: string,
     opponentHolobots: string[],
-    opponentLevel: number
+    opponentLevel: number,
+    specificItemRewards: ArenaSpecificItemRewards
   ) => void;
   entryFee: number;
 }
@@ -152,7 +161,7 @@ export const ArenaPrebattleMenu = ({
       });
       return;
     }
-    onEntryFeeMethod('tokens', selectedHolobot, opponentHolobots, ARENA_TIERS[selectedTier].level);
+    onEntryFeeMethod('tokens', selectedHolobot, opponentHolobots, ARENA_TIERS[selectedTier].level, ARENA_TIERS[selectedTier].rewards.items);
   };
 
   const handleUseArenaPass = () => {
@@ -164,7 +173,7 @@ export const ArenaPrebattleMenu = ({
       });
       return;
     }
-    onEntryFeeMethod('pass', selectedHolobot, opponentHolobots, ARENA_TIERS[selectedTier].level);
+    onEntryFeeMethod('pass', selectedHolobot, opponentHolobots, ARENA_TIERS[selectedTier].level, ARENA_TIERS[selectedTier].rewards.items);
   };
 
   // Helper to get user holobot by key
@@ -347,24 +356,30 @@ export const ArenaPrebattleMenu = ({
 
                   {/* Tier Rewards - Compact */}
                   <div className="flex items-center gap-1 text-xs">
-                    {key === 'tier3' && (
+                    {'holosTokens' in tier.rewards && tier.rewards.holosTokens && tier.rewards.holosTokens > 0 && (
                       <div className="flex items-center mr-1">
                         <Gem className="h-3 w-3 text-yellow-400 mr-0.5" />
-                        <span className="text-yellow-400 font-medium">200</span>
+                        <span className="text-yellow-400 font-medium">{tier.rewards.holosTokens}</span>
                       </div>
                     )}
+                    {tier.rewards.items.energy_refills > 0 && (
                     <div className="flex items-center mr-1">
-                      <Star className="h-3 w-3 text-white mr-0.5" />
-                      <span className="text-white">{tier.rewards.items.common}</span>
+                      <Star className="h-3 w-3 text-white mr-0.5" /> {/* Assuming Energy Refill is common display */}
+                      <span className="text-white">ER x{tier.rewards.items.energy_refills}</span>
                     </div>
+                    )}
+                    {tier.rewards.items.exp_boosters > 0 && (
                     <div className="flex items-center mr-1">
-                      <Star className="h-3 w-3 text-blue-400 mr-0.5" />
-                      <span className="text-blue-400">{tier.rewards.items.rare}</span>
+                      <Star className="h-3 w-3 text-blue-400 mr-0.5" /> {/* Assuming EXP Booster is rare display */}
+                      <span className="text-blue-400">EB x{tier.rewards.items.exp_boosters}</span>
                     </div>
+                    )}
+                    {tier.rewards.items.rank_skips > 0 && (
                     <div className="flex items-center">
-                      <Star className="h-3 w-3 text-purple-400 mr-0.5" />
-                      <span className="text-purple-400">{tier.rewards.items.legendary}</span>
+                      <Star className="h-3 w-3 text-purple-400 mr-0.5" /> {/* Assuming Rank Skip is legendary display */}
+                      <span className="text-purple-400">RS x{tier.rewards.items.rank_skips}</span>
                     </div>
+                    )}
                   </div>
                 </div>
               ))}
