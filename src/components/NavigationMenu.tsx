@@ -87,7 +87,7 @@ export const NavigationMenu = () => {
       <Button 
         variant="outline" 
         size="sm" 
-        className="flex items-center gap-1 bg-background/90 border-holobots-accent px-2 py-1"
+        className="flex items-center gap-1 bg-background/90 border-holobots-accent px-2 py-1 text-gray-700"
         onClick={() => navigate('/auth')}
       >
         <User className="h-4 w-4 text-holobots-accent" />

@@ -299,7 +299,7 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
                     <Button 
                       onClick={handleRedeemBlueprints}
                       disabled={isRedeeming || !currentTier}
-                      className="w-full py-1 h-8 text-sm bg-holobots-accent hover:bg-holobots-hover dark:bg-holobots-dark-accent dark:hover:bg-holobots-dark-hover text-white dark:text-gray-900"
+                      className="w-full py-1 h-8 text-sm bg-holobots-accent hover:bg-holobots-hover text-white"
                     >
                       {isRedeeming ? "Redeeming..." : `Redeem for ${currentTier.required} Blueprints`}
                     </Button>
@@ -374,7 +374,7 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
                     <Button 
                       onClick={handleUpgradeHolobot}
                       disabled={isUpgrading || !selectedTier}
-                      className="w-full py-1 h-8 text-sm bg-holobots-accent hover:bg-holobots-hover dark:bg-holobots-dark-accent dark:hover:bg-holobots-dark-hover text-white dark:text-gray-900"
+                      className="w-full py-1 h-8 text-sm bg-holobots-accent hover:bg-holobots-hover text-white"
                     >
                       {isUpgrading ? (
                         "Upgrading..."

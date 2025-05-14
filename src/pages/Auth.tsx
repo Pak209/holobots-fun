@@ -212,7 +212,7 @@ export default function Auth() {
 
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-holobots-dark-accent dark:hover:bg-holobots-dark-accent/90 text-white dark:text-gray-900 py-2 rounded-md"
+            className="w-full bg-holobots-accent hover:bg-holobots-hover text-white py-2 rounded-md"
             disabled={loading}
           >
             {loading ? (
@@ -231,7 +231,7 @@ export default function Auth() {
               setIsSignUp(!isSignUp);
               setAuthError(null);
             }}
-            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            className="text-blue-600 dark:text-holobots-accent hover:underline"
             disabled={loading}
           >
             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}

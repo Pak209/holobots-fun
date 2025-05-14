@@ -117,10 +117,10 @@ const Leaderboard = () => {
         </h1>
         
         <Tabs defaultValue="battle" className="w-full" onValueChange={setCurrentTab}>
-          <TabsList className="grid grid-cols-3 mb-6 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-            <TabsTrigger value="battle" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent dark:data-[state=active]:bg-holobots-dark-card dark:data-[state=active]:text-holobots-dark-accent">Battle</TabsTrigger>
-            <TabsTrigger value="tokens" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent dark:data-[state=active]:bg-holobots-dark-card dark:data-[state=active]:text-holobots-dark-accent">Tokens</TabsTrigger>
-            <TabsTrigger value="level" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent dark:data-[state=active]:bg-holobots-dark-card dark:data-[state=active]:text-holobots-dark-accent">Level</TabsTrigger>
+          <TabsList className="bg-holobots-background/60 p-1 text-gray-700 mb-6">
+            <TabsTrigger value="battle" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent">Battle</TabsTrigger>
+            <TabsTrigger value="tokens" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent">Tokens</TabsTrigger>
+            <TabsTrigger value="level" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent">Level</TabsTrigger>
           </TabsList>
           
           <Card className="bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border shadow-lg">

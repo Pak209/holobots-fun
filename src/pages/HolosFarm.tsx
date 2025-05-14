@@ -35,10 +35,10 @@ const HolosFarm = () => {
                 <div className="text-sm">Total Staked: 1,234 SOL</div>
                 <div className="text-sm">Your Stake: 0 SOL</div>
                 <Button 
-                  onClick={handleStake}
-                  className="w-full bg-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover text-white transition-colors"
+                  onClick={() => {/* Farming Logic */}} 
+                  className="w-full bg-holobots-accent hover:bg-holobots-hover text-white transition-colors"
                 >
-                  Stake SOL
+                  Farm HOLOS
                 </Button>
               </div>
             </CardContent>
@@ -57,10 +57,10 @@ const HolosFarm = () => {
                 <div className="text-sm">Total Staked: 156 ETH</div>
                 <div className="text-sm">Your Stake: 0 ETH</div>
                 <Button 
-                  onClick={handleStake}
-                  className="w-full bg-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover text-white transition-colors"
+                  onClick={() => {/* Staking Logic */}} 
+                  className="w-full bg-holobots-accent hover:bg-holobots-hover text-white transition-colors"
                 >
-                  Stake ETH
+                  Stake Tokens
                 </Button>
               </div>
             </CardContent>
@@ -79,10 +79,10 @@ const HolosFarm = () => {
                 <div className="text-sm">Total Staked: 12 wBTC</div>
                 <div className="text-sm">Your Stake: 0 wBTC</div>
                 <Button 
-                  onClick={handleStake}
-                  className="w-full bg-holobots-accent hover:bg-holobots-hover dark:hover:bg-holobots-dark-hover text-white transition-colors"
+                  onClick={() => {/* Liquidity Logic */}} 
+                  className="w-full bg-holobots-accent hover:bg-holobots-hover text-white transition-colors"
                 >
-                  Stake wBTC
+                  Add Liquidity
                 </Button>
               </div>
             </CardContent>
@@ -104,10 +104,10 @@ const HolosFarm = () => {
                 <div className="text-sm text-gray-700 dark:text-gray-300">Current Minting Cost: 1000 HOLOS</div>
                 <div className="text-sm text-gray-700 dark:text-gray-300">Legendary Chance: 12%</div>
                 <Button 
-                  onClick={handleStake}
-                  className="w-full bg-holobots-accent hover:bg-holobots-hover dark:bg-holobots-dark-accent dark:hover:bg-holobots-dark-hover text-white dark:text-gray-900 transition-colors"
+                  onClick={() => {/* Collect Logic */}} 
+                  className="w-full bg-holobots-accent hover:bg-holobots-hover text-white transition-colors"
                 >
-                  Mint Holobot NFT
+                  Collect Rewards
                 </Button>
               </div>
               <div className="space-y-2">

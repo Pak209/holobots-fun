@@ -213,12 +213,11 @@ export default function Mint() {
             onClick={handleMintHolobot}
             disabled={!selectedHolobot || isMinting}
             className={`
-              bg-holobots-accent hover:bg-holobots-hover dark:bg-holobots-dark-accent dark:hover:bg-holobots-dark-hover text-black dark:text-gray-900 font-bold py-1.5 sm:py-2 px-6 sm:px-8 text-base sm:text-lg
-              w-[200px] max-w-full
-              disabled:opacity-50 disabled:cursor-not-allowed
-              transition-all duration-300
-              ${isMinting ? 'animate-pulse' : ''}
+              bg-holobots-accent hover:bg-holobots-hover text-black font-bold py-1.5 sm:py-2 px-6 sm:px-8 text-base sm:text-lg
+              ${isMinting ? 'cursor-not-allowed opacity-70' : ''}
+              w-[200px] sm:w-auto mx-auto
             `}
+            aria-label="Mint Holobot"
           >
             {isMinting ? (
               <div className="flex items-center gap-2">
