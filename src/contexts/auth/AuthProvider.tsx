@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType } from "./types";
 import { UserProfile, mapDatabaseToUserProfile } from "@/types/user";
@@ -311,6 +310,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updates.energy_refills !== undefined) dbUpdates.energy_refills = updates.energy_refills;
       if (updates.rank_skips !== undefined) dbUpdates.rank_skips = updates.rank_skips;
       
+      // Ensure all new item and state fields are mapped for Supabase (snake_case)
+      if (updates.attribute_boosts !== undefined) dbUpdates.attribute_boosts = updates.attribute_boosts;
+      if (updates.blueprint_fragments !== undefined) dbUpdates.blueprint_fragments = updates.blueprint_fragments;
+      if (updates.hack_gauge_boosters !== undefined) dbUpdates.hack_gauge_boosters = updates.hack_gauge_boosters;
+      if (updates.attribute_respec_tokens !== undefined) dbUpdates.attribute_respec_tokens = updates.attribute_respec_tokens;
+      if (updates.sync_point_multipliers !== undefined) dbUpdates.sync_point_multipliers = updates.sync_point_multipliers;
+      if (updates.sync_multiplier_active_until !== undefined) dbUpdates.sync_multiplier_active_until = updates.sync_multiplier_active_until;
+      if (updates.hack_gauge_boost_active !== undefined) dbUpdates.hack_gauge_boost_active = updates.hack_gauge_boost_active;
+
       if (updates.holobots) {
         dbUpdates.holobots = updates.holobots;
       }

@@ -22,7 +22,7 @@ export interface UserProfile {
   dailyEnergy: number;
   maxDailyEnergy: number;
   holosTokens: number;
-  gachaTickets: number;
+  gachaTickets?: number; // Keep as optional
   stats: {
     wins: number;
     losses: number;
@@ -33,6 +33,13 @@ export interface UserProfile {
   exp_boosters?: number;
   energy_refills?: number;
   rank_skips?: number;
+  attribute_boosts?: number; // Renamed from temp_attribute_boosts and made optional
+  blueprint_fragments?: number;
+  hack_gauge_boosters?: number;
+  attribute_respec_tokens?: number;
+  sync_point_multipliers?: number;
+  sync_multiplier_active_until?: string; // ISO date string, optional
+  hack_gauge_boost_active?: boolean; // Optional
   blueprints?: Record<string, number>; // Add blueprints field to store blueprint pieces per holobot
   inventory?: { // For storing items like common, rare, legendary from arena/quests
     common?: number;
@@ -70,6 +77,13 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       exp_boosters: dbProfile.exp_boosters || 0,
       energy_refills: dbProfile.energy_refills || 0,
       rank_skips: dbProfile.rank_skips || 0,
+      attribute_boosts: dbProfile.attribute_boosts || 0,
+      blueprint_fragments: dbProfile.blueprint_fragments || 0,
+      hack_gauge_boosters: dbProfile.hack_gauge_boosters || 0,
+      attribute_respec_tokens: dbProfile.attribute_respec_tokens || 0,
+      sync_point_multipliers: dbProfile.sync_point_multipliers || 0,
+      sync_multiplier_active_until: dbProfile.sync_multiplier_active_until || null,
+      hack_gauge_boost_active: dbProfile.hack_gauge_boost_active || false,
       blueprints: dbProfile.blueprints || {},
       inventory: dbProfile.inventory || { common: 0, rare: 0, legendary: 0 } // Initialize inventory
     };
@@ -93,6 +107,13 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       exp_boosters: 0,
       energy_refills: 0,
       rank_skips: 0,
+      attribute_boosts: 0,
+      blueprint_fragments: 0,
+      hack_gauge_boosters: 0,
+      attribute_respec_tokens: 0,
+      sync_point_multipliers: 0,
+      sync_multiplier_active_until: null,
+      hack_gauge_boost_active: false,
       blueprints: {},
       inventory: { common: 0, rare: 0, legendary: 0 } // Initialize inventory
     };

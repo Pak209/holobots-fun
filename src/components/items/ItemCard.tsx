@@ -1,4 +1,3 @@
-
 import { VariantProps, cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,10 @@ const itemCardVariants = cva(
         "exp-booster": "bg-gradient-to-br from-green-900/60 to-green-950/90 border-green-500 shadow-neon-green hover:shadow-neon-green/50",
         "rank-skip": "bg-gradient-to-br from-red-900/60 to-red-950/90 border-red-500 shadow-neon-red hover:shadow-neon-red/50",
         "attribute-boost": "bg-gradient-to-br from-cyan-900/60 to-cyan-950/90 border-cyan-500 shadow-neon-cyan hover:shadow-neon-cyan/50",
+        "blueprint-fragment": "bg-gradient-to-br from-gray-700/60 to-gray-800/90 border-gray-400 shadow-neon-gray hover:shadow-neon-gray/50",
+        "hack-gauge-booster": "bg-gradient-to-br from-teal-700/60 to-teal-800/90 border-teal-400 shadow-neon-teal hover:shadow-neon-teal/50",
+        "attribute-respec-token": "bg-gradient-to-br from-orange-700/60 to-orange-800/90 border-orange-400 shadow-neon-orange hover:shadow-neon-orange/50",
+        "sync-point-multiplier": "bg-gradient-to-br from-pink-700/60 to-pink-800/90 border-pink-400 shadow-neon-pink hover:shadow-neon-pink/50",
       },
     },
     defaultVariants: {
@@ -30,7 +33,7 @@ export interface ItemCardProps extends VariantProps<typeof itemCardVariants> {
   name: string;
   description: string;
   quantity: number;
-  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost";
+  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "blueprint-fragment" | "hack-gauge-booster" | "attribute-respec-token" | "sync-point-multiplier";
   onClick?: () => void;
   actionLabel?: string;
   disabled?: boolean;
