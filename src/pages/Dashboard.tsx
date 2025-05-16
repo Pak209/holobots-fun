@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/auth";
 import { ArrowRight, Bolt, Coins, Sword, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -10,8 +9,11 @@ const Dashboard = () => {
 
   console.log("Dashboard - Current user:", user);
 
-  // Get user's holobots from state
-  const userHolobots = user?.holobots || [];
+  // Get user's holobots from state and deduplicate
+  const allUserHolobots = user?.holobots || [];
+  const uniqueHolobots = Array.from(new Map(allUserHolobots.map(bot =>
+    [`${bot.name}-${bot.level}`, bot])).values()
+  );
 
   return (
     <div className="flex flex-col gap-5 px-4 py-2">
@@ -63,14 +65,14 @@ const Dashboard = () => {
         </div>
         
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {userHolobots.length > 0 ? (
-            userHolobots.map((bot, index) => (
-              <div key={index} className="min-w-[100px] flex-shrink-0">
-                <HolobotCard 
+          {uniqueHolobots.length > 0 ? (
+            uniqueHolobots.map((bot, index) => (
+              <div key={`${bot.name}-${bot.level}-${index}`} className="min-w-[100px] flex-shrink-0">
+                <HolobotCard
                   stats={{
                     ...HOLOBOT_STATS[bot.name.toLowerCase() as keyof typeof HOLOBOT_STATS],
                     level: bot.level || 1
-                  }} 
+                  }}
                 />
               </div>
             ))

@@ -12,26 +12,18 @@ import { useSearchParams } from "react-router-dom";
 import { BLUEPRINT_TIERS } from "@/components/holobots/BlueprintSection";
 import type { UserHolobot } from "@/types/user";
 import { HolobotSelectModal } from "@/components/items/HolobotSelectModal";
-import { BlueprintConversionModal, type HolobotBlueprintInfo } from "@/components/items/BlueprintConversionModal";
-import { HOLOBOT_STATS } from "@/types/holobot";
 
 interface GachaItem {
   name: string;
   rarity: "common" | "rare" | "extremely-rare";
   chance: number;
-  id: string;
 }
 
 const ITEMS: GachaItem[] = [
-  { name: "Daily Energy Refill", id: "energy-refill", rarity: "common", chance: 0.20 },
-  { name: "Exp Battle Booster", id: "exp-booster", rarity: "rare", chance: 0.07 },
-  { name: "Temporary Attribute Boost", id: "attribute-boost", rarity: "rare", chance: 0.07 },
-  { name: "Rank Skip", id: "rank-skip", rarity: "extremely-rare", chance: 0.002 },
-  { name: "Gacha Ticket", id: "gacha-ticket", rarity: "common", chance: 0.20 },
-  { name: "Blueprint Fragment", id: "blueprint-fragment", rarity: "common", chance: 0.30 },
-  { name: "Hack Gauge Booster", id: "hack-gauge-booster", rarity: "rare", chance: 0.08 },
-  { name: "Attribute Respec Token", id: "attribute-respec-token", rarity: "rare", chance: 0.05 },
-  { name: "Sync Point Multiplier", id: "sync-point-multiplier", rarity: "extremely-rare", chance: 0.028 }
+  { name: "Daily Energy Refill", rarity: "common", chance: 0.597 },
+  { name: "Exp Battle Booster", rarity: "rare", chance: 0.1015 },
+  { name: "Temporary Attribute Boost", rarity: "rare", chance: 0.1015 },
+  { name: "Rank Skip", rarity: "extremely-rare", chance: 0.002 }
 ];
 
 const SINGLE_PULL_COST = 50;
@@ -52,10 +44,6 @@ export default function Gacha() {
   // State for Holobot selection modal
   const [isHolobotSelectModalOpen, setIsHolobotSelectModalOpen] = useState(false);
   const [eligibleHolobotsForRankSkip, setEligibleHolobotsForRankSkip] = useState<UserHolobot[]>([]);
-
-  // State for Blueprint Conversion Modal
-  const [isBlueprintModalOpen, setIsBlueprintModalOpen] = useState(false);
-  const [holobotTypesForBlueprint, setHolobotTypesForBlueprint] = useState<HolobotBlueprintInfo[]>([]);
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
@@ -159,34 +147,16 @@ export default function Gacha() {
         "energy-refill": 0,
         "exp-booster": 0,
         "rank-skip": 0,
-        "attribute-boost": 0,
-        "gacha-ticket": 0,
-        "blueprint-fragment": 0,
-        "hack-gauge-booster": 0,
-        "attribute-respec-token": 0,
-        "sync-point-multiplier": 0,
       };
       newPulls.forEach(pull => {
-        if (pull.id === "energy-refill") itemCounts["energy-refill"]++;
-        if (pull.id === "exp-booster") itemCounts["exp-booster"]++;
-        if (pull.id === "rank-skip") itemCounts["rank-skip"]++;
-        if (pull.id === "attribute-boost") itemCounts["attribute-boost"]++;
-        if (pull.id === "gacha-ticket") itemCounts["gacha-ticket"]++;
-        if (pull.id === "blueprint-fragment") itemCounts["blueprint-fragment"]++;
-        if (pull.id === "hack-gauge-booster") itemCounts["hack-gauge-booster"]++;
-        if (pull.id === "attribute-respec-token") itemCounts["attribute-respec-token"]++;
-        if (pull.id === "sync-point-multiplier") itemCounts["sync-point-multiplier"]++;
+        if (pull.name === "Daily Energy Refill") itemCounts["energy-refill"]++;
+        if (pull.name === "Exp Battle Booster") itemCounts["exp-booster"]++;
+        if (pull.name === "Rank Skip") itemCounts["rank-skip"]++;
       });
 
       updatesForUser.energy_refills = (user.energy_refills || 0) + itemCounts["energy-refill"];
       updatesForUser.exp_boosters = (user.exp_boosters || 0) + itemCounts["exp-booster"];
       updatesForUser.rank_skips = (user.rank_skips || 0) + itemCounts["rank-skip"];
-      updatesForUser.attribute_boosts = (user.attribute_boosts || 0) + itemCounts["attribute-boost"];
-      updatesForUser.gachaTickets = (user.gachaTickets || 0) + itemCounts["gacha-ticket"];
-      updatesForUser.blueprint_fragments = (user.blueprint_fragments || 0) + itemCounts["blueprint-fragment"];
-      updatesForUser.hack_gauge_boosters = (user.hack_gauge_boosters || 0) + itemCounts["hack-gauge-booster"];
-      updatesForUser.attribute_respec_tokens = (user.attribute_respec_tokens || 0) + itemCounts["attribute-respec-token"];
-      updatesForUser.sync_point_multipliers = (user.sync_point_multipliers || 0) + itemCounts["sync-point-multiplier"];
       
       updateUser(updatesForUser);
 
@@ -227,34 +197,16 @@ export default function Gacha() {
         "energy-refill": 0,
         "exp-booster": 0,
         "rank-skip": 0,
-        "attribute-boost": 0,
-        "gacha-ticket": 0,
-        "blueprint-fragment": 0,
-        "hack-gauge-booster": 0,
-        "attribute-respec-token": 0,
-        "sync-point-multiplier": 0,
       };
       newPulls.forEach(pull => {
-        if (pull.id === "energy-refill") itemCounts["energy-refill"]++;
-        if (pull.id === "exp-booster") itemCounts["exp-booster"]++;
-        if (pull.id === "rank-skip") itemCounts["rank-skip"]++;
-        if (pull.id === "attribute-boost") itemCounts["attribute-boost"]++;
-        if (pull.id === "gacha-ticket") itemCounts["gacha-ticket"]++;
-        if (pull.id === "blueprint-fragment") itemCounts["blueprint-fragment"]++;
-        if (pull.id === "hack-gauge-booster") itemCounts["hack-gauge-booster"]++;
-        if (pull.id === "attribute-respec-token") itemCounts["attribute-respec-token"]++;
-        if (pull.id === "sync-point-multiplier") itemCounts["sync-point-multiplier"]++;
+        if (pull.name === "Daily Energy Refill") itemCounts["energy-refill"]++;
+        if (pull.name === "Exp Battle Booster") itemCounts["exp-booster"]++;
+        if (pull.name === "Rank Skip") itemCounts["rank-skip"]++;
       });
 
       updatesForUser.energy_refills = (user.energy_refills || 0) + itemCounts["energy-refill"];
       updatesForUser.exp_boosters = (user.exp_boosters || 0) + itemCounts["exp-booster"];
       updatesForUser.rank_skips = (user.rank_skips || 0) + itemCounts["rank-skip"];
-      updatesForUser.attribute_boosts = (user.attribute_boosts || 0) + itemCounts["attribute-boost"];
-      updatesForUser.gachaTickets = (user.gachaTickets || 0) - amount + itemCounts["gacha-ticket"];
-      updatesForUser.blueprint_fragments = (user.blueprint_fragments || 0) + itemCounts["blueprint-fragment"];
-      updatesForUser.hack_gauge_boosters = (user.hack_gauge_boosters || 0) + itemCounts["hack-gauge-booster"];
-      updatesForUser.attribute_respec_tokens = (user.attribute_respec_tokens || 0) + itemCounts["attribute-respec-token"];
-      updatesForUser.sync_point_multipliers = (user.sync_point_multipliers || 0) + itemCounts["sync-point-multiplier"];
       
       updateUser(updatesForUser);
 
@@ -427,34 +379,16 @@ export default function Gacha() {
             "energy-refill": 0,
             "exp-booster": 0,
             "rank-skip": 0,
-            "attribute-boost": 0,
-            "gacha-ticket": 0,
-            "blueprint-fragment": 0,
-            "hack-gauge-booster": 0,
-            "attribute-respec-token": 0,
-            "sync-point-multiplier": 0,
           };
           specialPull.forEach(pull => {
-            if (pull.id === "energy-refill") itemCounts["energy-refill"]++;
-            if (pull.id === "exp-booster") itemCounts["exp-booster"]++;
-            if (pull.id === "rank-skip") itemCounts["rank-skip"]++;
-            if (pull.id === "attribute-boost") itemCounts["attribute-boost"]++;
-            if (pull.id === "gacha-ticket") itemCounts["gacha-ticket"]++;
-            if (pull.id === "blueprint-fragment") itemCounts["blueprint-fragment"]++;
-            if (pull.id === "hack-gauge-booster") itemCounts["hack-gauge-booster"]++;
-            if (pull.id === "attribute-respec-token") itemCounts["attribute-respec-token"]++;
-            if (pull.id === "sync-point-multiplier") itemCounts["sync-point-multiplier"]++;
+            if (pull.name === "Daily Energy Refill") itemCounts["energy-refill"]++;
+            if (pull.name === "Exp Battle Booster") itemCounts["exp-booster"]++;
+            if (pull.name === "Rank Skip") itemCounts["rank-skip"]++;
           });
     
           updatesForUser.energy_refills = (user.energy_refills || 0) + itemCounts["energy-refill"];
           updatesForUser.exp_boosters = (user.exp_boosters || 0) + itemCounts["exp-booster"];
           updatesForUser.rank_skips = (user.rank_skips || 0) + itemCounts["rank-skip"];
-          updatesForUser.attribute_boosts = (user.attribute_boosts || 0) + itemCounts["attribute-boost"];
-          updatesForUser.gachaTickets = (user.gachaTickets || 0) - 1 + itemCounts["gacha-ticket"];
-          updatesForUser.blueprint_fragments = (user.blueprint_fragments || 0) + itemCounts["blueprint-fragment"];
-          updatesForUser.hack_gauge_boosters = (user.hack_gauge_boosters || 0) + itemCounts["hack-gauge-booster"];
-          updatesForUser.attribute_respec_tokens = (user.attribute_respec_tokens || 0) + itemCounts["attribute-respec-token"];
-          updatesForUser.sync_point_multipliers = (user.sync_point_multipliers || 0) + itemCounts["sync-point-multiplier"];
 
           await updateUser(updatesForUser);
           
@@ -542,75 +476,6 @@ export default function Gacha() {
           // setIsUsingItem(false) will be handled by the modal's close or confirm action for rank-skip.
           return; // Return here to prevent falling through to the finally block immediately
           
-        case "attribute-boost":
-          if ((user.attribute_boosts || 0) <= 0) {
-            toast({
-              title: "No Attribute Boosts",
-              description: "You don't have any Temporary Attribute Boosts to use.",
-              variant: "destructive"
-            });
-            // No setIsUsingItem(false) here as it's handled in finally if we return early
-            return;
-          }
-          
-          // TODO: Implement Holobot selection for attribute boost if it's targeted
-          // For now, assumes a general boost or is handled elsewhere.
-          await updateUser({ 
-            attribute_boosts: (user.attribute_boosts || 0) - 1 
-          });
-          
-          toast({
-            title: "Attribute Boost Active!",
-            description: "A temporary attribute boost has been activated.", // Further details might be needed
-          });
-          break;
-          
-        case "blueprint-fragment":
-          toast({
-            title: "Blueprint Fragment",
-            description: "Collect 10 fragments to create a full blueprint! Click to convert.",
-          });
-          openBlueprintModal(); // Use the new function to prepare data and open modal
-          return; 
-
-        case "hack-gauge-booster":
-          if ((user.hack_gauge_boosters || 0) <= 0) {
-            toast({ title: "No Hack Gauge Boosters", variant: "destructive" });
-            return;
-          }
-          await updateUser({ hack_gauge_boosters: (user.hack_gauge_boosters || 0) - 1 });
-          // TODO: Set a flag for the next battle to have an increased hack gauge.
-          // This might be stored in Zustand store or on the user object (e.g., user.hackGaugeBoostActive = true)
-          // and cleared after the next battle.
-          toast({ title: "Hack Gauge Booster Activated!", description: "Your next battle will start with an increased Hack Gauge." });
-          break;
-
-        case "attribute-respec-token":
-          if ((user.attribute_respec_tokens || 0) <= 0) {
-            toast({ title: "No Attribute Respec Tokens", variant: "destructive" });
-            return;
-          }
-          // TODO: Implement Holobot selection and attribute respec UI.
-          // This will likely open a new modal or navigate to a different screen.
-          // For now, we'll just show a toast and not decrement, as the actual use is more complex.
-          toast({ title: "Attribute Respec Token", description: "Select a Holobot to respec its attributes." });
-          // setIsUsingItem(false); // Should be handled by the respec UI flow
-          return; // Prevent falling to finally's setIsUsingItem(false)
-
-        case "sync-point-multiplier":
-          if ((user.sync_point_multipliers || 0) <= 0) {
-            toast({ title: "No Sync Point Multipliers", variant: "destructive" });
-            return;
-          }
-          // TODO: Check if a multiplier is already active.
-          await updateUser({ 
-            sync_point_multipliers: (user.sync_point_multipliers || 0) - 1,
-            // syncMultiplierActiveUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() 
-            // Add syncMultiplierActiveUntil to UserProfile type
-          });
-          toast({ title: "Sync Point Multiplier Activated!", description: "You'll earn double Sync Points for the next 24 hours." });
-          break;
-          
         default:
           toast({
             title: "Unknown Item",
@@ -677,117 +542,8 @@ export default function Gacha() {
       name: "Rank Skip",
       description: "Skip to the next rank instantly",
       quantity: user?.rank_skips || 0
-    },
-    {
-      type: "attribute-boost" as const,
-      name: "Temporary Attribute Boost",
-      description: "Temporarily boosts a Holobot's attributes for a limited time.",
-      quantity: user?.attribute_boosts || 0
-    },
-    {
-      type: "blueprint-fragment" as const,
-      name: "Blueprint Fragment",
-      description: "Collect 10 to form a full Holobot Blueprint.",
-      quantity: user?.blueprint_fragments || 0,
-    },
-    {
-      type: "hack-gauge-booster" as const,
-      name: "Hack Gauge Booster",
-      description: "Increases starting Hack Gauge in battles.",
-      quantity: user?.hack_gauge_boosters || 0,
-    },
-    {
-      type: "attribute-respec-token" as const,
-      name: "Attribute Respec Token",
-      description: "Allows redistribution of Holobot attribute points.",
-      quantity: user?.attribute_respec_tokens || 0,
-    },
-    {
-      type: "sync-point-multiplier" as const,
-      name: "Sync Point Multiplier",
-      description: "Doubles Sync Points earned for 24 hours.",
-      quantity: user?.sync_point_multipliers || 0,
     }
   ];
-
-  // Function to handle the blueprint conversion logic
-  const handleBlueprintConversion = async (selectedHolobotTypeKey: string) => {
-    const fragmentsNeeded = 10; // Generic fragments needed for 1 piece
-    if (!user || (user.blueprint_fragments || 0) < fragmentsNeeded) {
-      toast({
-        title: "Not Enough Fragments",
-        description: `You need ${fragmentsNeeded} generic blueprint fragments to convert. You have ${user.blueprint_fragments || 0}.`,
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!selectedHolobotTypeKey) {
-      toast({
-        title: "No Holobot Selected",
-        description: "Please select a Holobot type to add a blueprint piece to.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsUsingItem(true); 
-
-    // Get the holobot display name (what's used in BlueprintSection)
-    const holobotInfo = HOLOBOT_STATS[selectedHolobotTypeKey];
-    
-    if (!holobotInfo) {
-      toast({ title: "Error", description: "Selected Holobot type is invalid.", variant: "destructive" });
-      setIsUsingItem(false);
-      return;
-    }
-
-    // The BlueprintSection uses the holobot display name as the key
-    const currentBlueprintPieces = user.blueprints || {};
-    const updatedBlueprintPieces = {
-      ...currentBlueprintPieces,
-      [holobotInfo.name]: (currentBlueprintPieces[holobotInfo.name] || 0) + 1, // Add 1 piece
-    };
-
-    try {
-      await updateUser({
-        blueprint_fragments: (user.blueprint_fragments || 0) - fragmentsNeeded, // Deduct generic fragments
-        blueprints: updatedBlueprintPieces, // Update pieces for the specific Holobot blueprint
-      });
-
-      toast({
-        title: "Conversion Successful!",
-        description: `You converted ${fragmentsNeeded} generic fragments into 1 piece for the ${holobotInfo.name} Blueprint!`,
-      });
-      setIsBlueprintModalOpen(false);
-    } catch (error) {
-      console.error("Error converting blueprint fragments:", error);
-      toast({
-        title: "Conversion Failed",
-        description: "Could not convert fragments. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUsingItem(false);
-    }
-  };
-
-  const openBlueprintModal = () => {
-    if (!user) return;
-    
-    // Create the list of holobot types that match what's used in the Blueprint Section
-    const typesForModal: HolobotBlueprintInfo[] = Object.keys(HOLOBOT_STATS).map(key => {
-      const holobot = HOLOBOT_STATS[key];
-      // Use the exact same key that's used in BlueprintSection
-      return {
-        key: key, // The internal key (e.g. "ace")
-        name: holobot.name, // The display name (e.g. "ACE")
-        currentBlueprints: user.blueprints?.[holobot.name] || 0 // Use the display name as key
-      };
-    });
-    
-    setHolobotTypesForBlueprint(typesForModal);
-    setIsBlueprintModalOpen(true);
-  };
 
   return (
     <div className="min-h-screen bg-[#1A1F2C] text-white">
@@ -978,14 +734,6 @@ export default function Gacha() {
           setIsUsingItem(false);
         }}
         isLoading={isUsingItem}
-      />
-      <BlueprintConversionModal 
-        isOpen={isBlueprintModalOpen}
-        onClose={() => setIsBlueprintModalOpen(false)}
-        userBlueprintFragments={user?.blueprint_fragments || 0}
-        availableHolobotTypes={holobotTypesForBlueprint}
-        onConfirmConversion={handleBlueprintConversion} 
-        isLoading={isUsingItem} 
       />
     </div>
   );

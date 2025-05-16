@@ -213,6 +213,17 @@ const Marketplace = () => {
       return;
     }
 
+    // Prevent buying Holobots
+    if (itemToBuy.type === "holobot") {
+      toast({
+        title: "Buying Disabled",
+        description: "Holobot purchasing from the marketplace is temporarily disabled.",
+        variant: "destructive",
+      });
+      setIsBuying(false);
+      return;
+    }
+
     if (user.holosTokens < itemToBuy.price) {
       toast({
         title: "Insufficient Funds",
@@ -228,22 +239,7 @@ const Marketplace = () => {
       let profileUpdatesForSupabase: any = { holos_tokens: newHolosTokens };
       let updatedUserProfileFields: Partial<typeof user> = { holosTokens: newHolosTokens };
 
-      if (itemToBuy.type === "holobot") {
-        const newHolobot: UserHolobot = {
-          name: itemToBuy.name.toUpperCase(),
-          level: itemToBuy.level,
-          experience: 0,
-          nextLevelExp: 100,
-          boostedAttributes: {},
-          rank: "STARTER",
-          attributePoints: 0,
-          receivedLegendaryBonus: false,
-          prestiged: false,
-        };
-        const updatedHolobots = [...user.holobots, newHolobot];
-        profileUpdatesForSupabase.holobots = updatedHolobots;
-        updatedUserProfileFields.holobots = updatedHolobots;
-      } else if (itemToBuy.type === "blueprint") {
+      if (itemToBuy.type === "blueprint") {
         const currentBlueprints = user.blueprints || {};
         const updatedBlueprints = {
           ...currentBlueprints,
@@ -401,7 +397,7 @@ const Marketplace = () => {
                 </div>
               </div>
 
-              {/* Holobots Section */}
+              {/* Holobots Section - Removed as per user request
               <div>
                 <div className="flex items-center mb-3">
                   <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
@@ -462,8 +458,9 @@ const Marketplace = () => {
                   ))}
                 </div>
               </div>
+              */}
 
-              {/* Blueprints Section */}
+              {/* Blueprints Section - Removed as per user request
               <div>
                 <div className="flex items-center mb-3">
                   <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
@@ -511,6 +508,7 @@ const Marketplace = () => {
                   ))}
                 </div>
               </div>
+              */}
 
               {/* Items Section */}
               <div>
@@ -628,14 +626,42 @@ const Marketplace = () => {
               <h3 className="text-xl font-semibold text-white mb-3">My Blueprints</h3>
               {user.blueprints && Object.keys(user.blueprints).length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Object.entries(user.blueprints).map(([holobotName, count]) => (
-                    count > 0 && (
-                      <div key={holobotName} className="bg-[#0D111A] p-3 rounded-md border border-cyan-700/50">
-                        <p className="text-md font-semibold text-cyan-300">{holobotName} Blueprint</p>
-                        <p className="text-sm text-gray-300">Quantity: {count}</p>
+                  {Object.entries(user.blueprints).map(([holobotName, count]) => {
+                    // Skip entries with 0 count
+                    if (count <= 0) return null;
+                    
+                    // Convert common name variations to a standardized format
+                    // This helps avoid duplicate displays of the same blueprint with different casings
+                    const normalizedName = holobotName.toLowerCase();
+                    
+                    // Check if we've already processed this holobot type (case insensitive)
+                    const isDuplicate = Object.entries(user.blueprints || {})
+                      .some(([name, c]) => 
+                        name.toLowerCase() === normalizedName && 
+                        name !== holobotName && 
+                        c > 0
+                      );
+                      
+                    // Skip if this is a duplicate entry (different case but same holobot)
+                    if (isDuplicate) return null;
+                    
+                    // Combine counts for same blueprint with different casings
+                    const totalCount = Object.entries(user.blueprints || {})
+                      .reduce((sum, [name, c]) => 
+                        name.toLowerCase() === normalizedName ? sum + c : sum, 
+                        0
+                      );
+                      
+                    // Format the display name to be title case (first letter capitalized)
+                    const displayName = normalizedName.charAt(0).toUpperCase() + normalizedName.slice(1);
+                    
+                    return (
+                      <div key={normalizedName} className="bg-[#0D111A] p-3 rounded-md border border-cyan-700/50">
+                        <p className="text-md font-semibold text-cyan-300">{displayName} Blueprint</p>
+                        <p className="text-sm text-gray-300">Quantity: {totalCount}</p>
                       </div>
-                    )
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-gray-400">You don't have any blueprints.</p>

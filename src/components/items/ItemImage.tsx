@@ -1,5 +1,6 @@
+
 import { cva, type VariantProps } from "class-variance-authority";
-import { Zap, Trophy, Ticket, FastForward, Coins, Activity, Puzzle, BarChart2, RefreshCcw, TrendingUp } from "lucide-react";
+import { Zap, Trophy, Ticket, FastForward, Coins, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const itemImageVariants = cva(
@@ -13,10 +14,6 @@ const itemImageVariants = cva(
         "exp-booster": "bg-gradient-to-br from-green-900/60 via-green-700/40 to-green-950/90 border border-green-500",
         "rank-skip": "bg-gradient-to-br from-red-900/60 via-red-700/40 to-red-950/90 border border-red-500",
         "attribute-boost": "bg-gradient-to-br from-cyan-900/60 via-cyan-700/40 to-cyan-950/90 border border-cyan-500",
-        "blueprint-fragment": "bg-gradient-to-br from-gray-700/60 via-gray-500/40 to-gray-800/90 border border-gray-400",
-        "hack-gauge-booster": "bg-gradient-to-br from-teal-700/60 via-teal-500/40 to-teal-800/90 border border-teal-400",
-        "attribute-respec-token": "bg-gradient-to-br from-orange-700/60 via-orange-500/40 to-orange-800/90 border border-orange-400",
-        "sync-point-multiplier": "bg-gradient-to-br from-pink-700/60 via-pink-500/40 to-pink-800/90 border border-pink-400",
       },
       size: {
         sm: "w-12 h-12",
@@ -33,7 +30,7 @@ const itemImageVariants = cva(
 );
 
 export interface ItemImageProps extends VariantProps<typeof itemImageVariants> {
-  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost" | "blueprint-fragment" | "hack-gauge-booster" | "attribute-respec-token" | "sync-point-multiplier";
+  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost";
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
@@ -58,10 +55,6 @@ export const ItemImage = ({ type, size, className }: ItemImageProps) => {
     "exp-booster": <FastForward className={`${iconSize} text-green-700 font-bold`} strokeWidth={2.5} />,
     "rank-skip": <Coins className={`${iconSize} text-red-700 font-bold`} strokeWidth={2.5} />,
     "attribute-boost": <Activity className={`${iconSize} text-cyan-700 font-bold`} strokeWidth={2.5} />,
-    "blueprint-fragment": <Puzzle className={`${iconSize} text-gray-500 font-bold`} strokeWidth={2.5} />,
-    "hack-gauge-booster": <BarChart2 className={`${iconSize} text-teal-500 font-bold`} strokeWidth={2.5} />,
-    "attribute-respec-token": <RefreshCcw className={`${iconSize} text-orange-500 font-bold`} strokeWidth={2.5} />,
-    "sync-point-multiplier": <TrendingUp className={`${iconSize} text-pink-500 font-bold`} strokeWidth={2.5} />,
   };
 
   const shineEffect = "before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-tr before:from-transparent before:via-white/20 before:to-transparent before:opacity-70";

@@ -109,26 +109,26 @@ export const NavigationMenu = () => {
           <ChevronDown className="h-3 w-3 text-gray-700 dark:text-gray-200" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border">
+      <DropdownMenuContent align="end" className="w-64 bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border text-gray-700 dark:text-gray-300">
         <DropdownMenuLabel className="text-center font-bold">{user.username || 'User'}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="border-holobots-border dark:border-holobots-dark-border" />
         
         <div className="p-2 space-y-2">
           <PlayerRankCard user={user} />
           
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
-              <Battery className="h-4 w-4 text-blue-400" />
+              <Battery className="h-4 w-4 text-holobots-accent dark:text-holobots-dark-accent" />
               <span>Daily Energy:</span>
             </div>
             <span className="font-semibold">{user.dailyEnergy}/{user.maxDailyEnergy}</span>
           </div>
           
           <div className="flex items-center justify-between px-2 py-1 pl-7">
-            <span className="text-xs text-gray-400">Available Refills: {user.energy_refills || 0}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">Available Refills: {user.energy_refills || 0}</span>
             <Button
               size="sm"
-              className="ml-2 bg-cyan-500 hover:bg-cyan-600 text-white px-2 py-0.5 rounded"
+              className="ml-2 bg-holobots-primary hover:bg-holobots-primary-hover text-white dark:bg-holobots-dark-primary dark:hover:bg-holobots-dark-primary-hover dark:text-holobots-dark-text px-2 py-0.5 rounded"
               onClick={handleRefill}
               disabled={isRefilling || (user.energy_refills || 0) <= 0 || user.dailyEnergy === user.maxDailyEnergy}
               aria-label="Refill Daily Energy"
@@ -139,7 +139,7 @@ export const NavigationMenu = () => {
           
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
-              <Coins className="h-4 w-4 text-yellow-400" />
+              <Coins className="h-4 w-4 text-holobots-accent dark:text-holobots-dark-accent" />
               <span>Holos Tokens:</span>
             </div>
             <span className="font-semibold">{user.holosTokens}</span>
@@ -147,7 +147,7 @@ export const NavigationMenu = () => {
           
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
-              <Award className="h-4 w-4 text-purple-400" />
+              <Award className="h-4 w-4 text-holobots-accent dark:text-holobots-dark-accent" />
               <span>Arena Passes:</span>
             </div>
             <span className="font-semibold">{user.arena_passes || 0}</span>
@@ -155,52 +155,52 @@ export const NavigationMenu = () => {
           
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-green-400" />
+              <Trophy className="h-4 w-4 text-holobots-accent dark:text-holobots-dark-accent" />
               <span>Win/Loss:</span>
             </div>
             <span className="font-semibold">{user.stats.wins}/{user.stats.losses}</span>
           </div>
         </div>
         
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="border-holobots-border dark:border-holobots-dark-border" />
         
         <Link to="/holobots-info">
-          <DropdownMenuItem className="cursor-pointer">
+          <DropdownMenuItem className="cursor-pointer focus:bg-holobots-hover dark:focus:bg-holobots-dark-hover focus:text-holobots-accent dark:focus:text-holobots-dark-accent">
             <Database className="mr-2 h-4 w-4" />
             <span>Holobots Info</span>
           </DropdownMenuItem>
         </Link>
         
         <Link to="/gacha?tab=items">
-          <DropdownMenuItem className="cursor-pointer">
+          <DropdownMenuItem className="cursor-pointer focus:bg-holobots-hover dark:focus:bg-holobots-dark-hover focus:text-holobots-accent dark:focus:text-holobots-dark-accent">
             <Package className="mr-2 h-4 w-4" />
             <span>Your Items</span>
           </DropdownMenuItem>
         </Link>
         
         <Link to="/leaderboard">
-          <DropdownMenuItem className="cursor-pointer">
+          <DropdownMenuItem className="cursor-pointer focus:bg-holobots-hover dark:focus:bg-holobots-dark-hover focus:text-holobots-accent dark:focus:text-holobots-dark-accent">
             <BarChart4 className="mr-2 h-4 w-4" />
             <span>Leaderboard</span>
           </DropdownMenuItem>
         </Link>
         
         <Link to="/holos-farm">
-          <DropdownMenuItem className="cursor-pointer">
+          <DropdownMenuItem className="cursor-pointer focus:bg-holobots-hover dark:focus:bg-holobots-dark-hover focus:text-holobots-accent dark:focus:text-holobots-dark-accent">
             <Wheat className="mr-2 h-4 w-4" />
             <span>Holos Farm</span>
           </DropdownMenuItem>
         </Link>
         
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="border-holobots-border dark:border-holobots-dark-border" />
         
         <div className="p-2 flex justify-center">
           <ThemeToggle />
         </div>
         
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="border-holobots-border dark:border-holobots-dark-border" />
         
-        <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer">
+        <DropdownMenuItem onClick={handleLogout} className="text-red-500 dark:text-red-400 cursor-pointer focus:bg-red-100 dark:focus:bg-red-900/50 focus:text-red-600 dark:focus:text-red-300">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Logout</span>
         </DropdownMenuItem>

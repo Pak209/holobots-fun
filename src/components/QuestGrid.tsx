@@ -541,6 +541,7 @@ export const QuestGrid = () => {
 
   return (
     <div className="space-y-8">
+      {/* Quest Info Card Removed as per user request
       <Card className="glass-morphism border-holobots-accent">
         <CardHeader>
           <CardTitle className="text-2xl text-holobots-accent">Quests Info</CardTitle>
@@ -555,7 +556,6 @@ export const QuestGrid = () => {
             <li>Defeated Holobots need {COOLDOWN_MINUTES} minutes to recharge</li>
           </ul>
           
-          {/* Energy Display */}
           <div className="mt-4 p-3 bg-black/30 rounded-lg border border-holobots-accent/30">
             <div className="flex justify-between items-center mb-2">
               <span className="text-holobots-accent font-medium">Daily Energy</span>
@@ -568,6 +568,7 @@ export const QuestGrid = () => {
           </div>
         </CardContent>
       </Card>
+      */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Exploration Quest */}
@@ -583,14 +584,14 @@ export const QuestGrid = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <Select value={explorationHolobot} onValueChange={setExplorationHolobot}>
-              <SelectTrigger className="border-holobots-accent/50 text-foreground">
+              <SelectTrigger className="w-full bg-slate-900 border-white text-white hover:bg-slate-800 focus:ring-slate-500">
                 <SelectValue placeholder="Choose your Holobot" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-slate-900 border-slate-700 text-white">
                 {availableHolobots.map((holobot, index) => {
                   const holobotKey = getHolobotKeyByName(holobot.name);
                   return (
-                    <SelectItem key={index} value={holobotKey}>
+                    <SelectItem key={index} value={holobotKey} className="text-gray-200 hover:bg-slate-700 focus:bg-slate-700">
                       {holobot.name} (Lv.{holobot.level})
                     </SelectItem>
                   );
@@ -625,13 +626,13 @@ export const QuestGrid = () => {
 
             {/* Rewards Display */}
             <div className="bg-black/30 p-2 rounded-md border border-holobots-accent/30">
-              <h4 className="text-sm font-medium text-holobots-accent mb-2">Rewards:</h4>
+              <h4 className="text-sm font-medium text-gray-100 mb-2">Rewards:</h4>
               <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center gap-1 text-xs">
+                <div className="flex items-center gap-1 text-xs text-gray-300">
                   <Gem className="h-3 w-3 text-purple-400" />
                   <span>{EXPLORATION_TIERS[selectedExplorationTier].rewards.blueprintPieces} Blueprint {EXPLORATION_TIERS[selectedExplorationTier].rewards.blueprintPieces > 1 ? 'Pieces' : 'Piece'}</span>
                 </div>
-                <div className="flex items-center gap-1 text-xs">
+                <div className="flex items-center gap-1 text-xs text-gray-300">
                   <span className="text-yellow-400">+</span>
                   <span>{EXPLORATION_TIERS[selectedExplorationTier].rewards.holosTokens} Holos</span>
                 </div>
@@ -665,41 +666,30 @@ export const QuestGrid = () => {
               <Target className="h-5 w-5 text-red-500" />
               <CardTitle className="text-xl text-holobots-accent">Boss Quest</CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="text-gray-300">
               Challenge powerful bosses with a team of 3 Holobots
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Squad Selection */}
+            {/* Selected Squad Display */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              {Array.from({ length: 3 }).map((_, i) => {
+                const holobotKey = bossHolobots[i];
+                const holobot = holobotKey ? availableHolobots.find(h => getHolobotKeyByName(h.name) === holobotKey) : null;
+                return (
+                  <div 
+                    key={i} 
+                    className="h-10 bg-black/20 border border-dashed border-holobots-accent/30 rounded-md flex items-center justify-center text-xs text-gray-400"
+                  >
+                    {holobot ? `${holobot.name} (Lv.${holobot.level})` : "Empty Slot"}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Holobot Selection Grid */}
             <div>
-              <div className="text-sm text-holobots-accent mb-2">Select 3 Holobots for your squad:</div>
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {Array(3).fill(0).map((_, index) => {
-                  const selectedKey = bossHolobots[index];
-                  const isSelected = !!selectedKey;
-                  
-                  return (
-                    <div 
-                      key={index}
-                      className={`
-                        h-16 border rounded-md flex items-center justify-center
-                        ${isSelected ? 'border-holobots-accent bg-holobots-accent/10' : 'border-dashed border-gray-600 bg-black/20'}
-                      `}
-                    >
-                      {isSelected ? (
-                        <div className="text-center">
-                          <div className="text-xs font-medium">{HOLOBOT_STATS[selectedKey].name}</div>
-                          <div className="text-xs text-gray-200">
-                            {user?.holobots.find(h => h.name.toLowerCase() === HOLOBOT_STATS[selectedKey].name.toLowerCase())?.level || 1}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-gray-500">Empty Slot</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              <div className="text-sm text-gray-200 mb-2">Select 3 Holobots for your squad:</div>
               
               <div className="bg-black/20 rounded-md p-2 max-h-40 overflow-y-auto">
                 <div className="grid grid-cols-2 gap-2">
@@ -714,13 +704,13 @@ export const QuestGrid = () => {
                         size="sm"
                         className={`
                           h-auto py-1 justify-start text-left
-                          ${isSelected ? 'bg-holobots-accent/30 border-holobots-accent' : 'bg-black/30 border-gray-700'}
+                          ${isSelected ? 'bg-holobots-accent/30 border-holobots-accent text-white' : 'bg-black/30 border-gray-700 text-gray-300 hover:bg-gray-700/70 hover:text-white'}
                         `}
                         onClick={() => handleSelectBossHolobot(holobotKey)}
                       >
                         <div className="flex flex-col">
                           <span className="text-xs font-medium">{holobot.name}</span>
-                          <span className="text-xs text-gray-200">Lv.{holobot.level}</span>
+                          <span className="text-xs text-gray-400">Lv.{holobot.level}</span>
                         </div>
                       </Button>
                     );
@@ -731,14 +721,14 @@ export const QuestGrid = () => {
             
             {/* Boss Selection */}
             <div>
-              <div className="text-sm text-holobots-accent mb-2">Select Boss:</div>
+              <div className="text-sm text-gray-100 mb-2">Select Boss:</div>
               <Select value={selectedBoss} onValueChange={setSelectedBoss}>
-                <SelectTrigger className="border-holobots-accent/50 text-foreground">
+                <SelectTrigger className="w-full bg-slate-900 border-white text-white hover:bg-slate-800 focus:ring-slate-500">
                   <SelectValue placeholder="Choose boss" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-slate-900 border-slate-700 text-white">
                   {Object.entries(HOLOBOT_STATS).map(([key, stats]) => (
-                    <SelectItem key={key} value={key}>
+                    <SelectItem key={key} value={key} className="text-gray-200 hover:bg-slate-700 focus:bg-slate-700">
                       {stats.name}
                     </SelectItem>
                   ))}
@@ -773,21 +763,21 @@ export const QuestGrid = () => {
 
             {/* Rewards Display */}
             <div className="bg-black/30 p-2 rounded-md border border-red-500/30">
-              <h4 className="text-sm font-medium text-holobots-accent mb-2">Rewards:</h4>
+              <h4 className="text-sm font-medium text-gray-100 mb-2">Rewards:</h4>
               <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center gap-1 text-xs">
+                <div className="flex items-center gap-1 text-xs text-gray-300">
                   <Gem className="h-3 w-3 text-purple-400" />
                   <span>{BOSS_TIERS[selectedBossTier].rewards.blueprintPieces} Blueprint Pieces</span>
                 </div>
-                <div className="flex items-center gap-1 text-xs">
+                <div className="flex items-center gap-1 text-xs text-gray-300">
                   <span className="text-yellow-400">+</span>
                   <span>{BOSS_TIERS[selectedBossTier].rewards.holosTokens} Holos</span>
                 </div>
-                <div className="flex items-center gap-1 text-xs">
+                <div className="flex items-center gap-1 text-xs text-gray-300">
                   <Ticket className="h-3 w-3 text-green-400" />
                   <span>{BOSS_TIERS[selectedBossTier].rewards.gachaTickets} Gacha Tickets</span>
                 </div>
-                <div className="flex items-center gap-1 text-xs">
+                <div className="flex items-center gap-1 text-xs text-gray-300">
                   <Swords className="h-3 w-3 text-blue-400" />
                   <span>x{BOSS_TIERS[selectedBossTier].rewards.xpMultiplier} XP Boost</span>
                 </div>
