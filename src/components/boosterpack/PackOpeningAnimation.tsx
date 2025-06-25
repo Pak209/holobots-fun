@@ -53,6 +53,13 @@ const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
         // Add items to user inventory
         if (item.type === 'part' && item.part) {
           addPart(item.part);
+          // Also save to database
+          if (user) {
+            const updatedParts = [...(user.parts || []), item.part];
+            updateUser({ parts: updatedParts }).catch(err => 
+              console.warn("Failed to save part to database:", err)
+            );
+          }
         } else if (item.type === 'currency') {
           if (item.holosTokens && user) {
             updateUser({ holosTokens: (user.holosTokens || 0) + item.holosTokens });

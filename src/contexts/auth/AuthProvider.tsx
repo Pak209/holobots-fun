@@ -323,6 +323,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dbUpdates.parts = updates.parts;
       }
       
+      if (updates.equippedParts) {
+        dbUpdates.equipped_parts = updates.equippedParts;
+      }
+      
       logDebug('Database updates:', dbUpdates);
       
       const { error: updateError } = await supabase

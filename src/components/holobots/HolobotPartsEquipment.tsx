@@ -59,16 +59,21 @@ export function HolobotPartsEquipment({ holobotName }: HolobotPartsEquipmentProp
 
   const handleEquipPart = async (part: Part) => {
     try {
+      // First update the local store
       equipPart(holobotName, part);
       
       // Save equipped parts to database
       if (user) {
+        // Build the updated equipped parts state correctly
+        const currentEquipment = user.equippedParts?.[holobotName] || {};
+        const updatedEquipment = {
+          ...currentEquipment,
+          [part.slot]: part,
+        };
+        
         const updatedEquippedParts = {
           ...user.equippedParts,
-          [holobotName]: {
-            ...getEquippedParts(holobotName),
-            [part.slot]: part,
-          }
+          [holobotName]: updatedEquipment
         };
         
         await updateUser({
@@ -97,7 +102,7 @@ export function HolobotPartsEquipment({ holobotName }: HolobotPartsEquipmentProp
       
       // Save equipped parts to database
       if (user) {
-        const currentEquipment = getEquippedParts(holobotName);
+        const currentEquipment = user.equippedParts?.[holobotName] || {};
         const updatedEquipment = { ...currentEquipment };
         delete updatedEquipment[slot];
         

@@ -6,6 +6,8 @@ import { PartCard } from '../components/holobots/PartCard';
 import { Part, PartSlot, PART_SLOTS } from '../types/holobotParts';
 import { cn } from '../lib/utils';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/auth';
+import { useToast } from '@/hooks/use-toast';
 
 interface HolobotPartsScreenProps {
   holobotId: string;
@@ -16,6 +18,8 @@ export const HolobotPartsScreen: React.FC<HolobotPartsScreenProps> = ({
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const { user, updateUser } = useAuth();
+  const { toast } = useToast();
   
   const [selectedSlot, setSelectedSlot] = useState<PartSlot>('head');
   const [showInventory, setShowInventory] = useState(false);
@@ -30,13 +34,73 @@ export const HolobotPartsScreen: React.FC<HolobotPartsScreenProps> = ({
   const equippedParts = getEquippedParts(holobotId);
   const inventoryParts = getInventoryBySlot(selectedSlot);
   
-  const handleEquipPart = (part: Part) => {
-    equipPart(holobotId, part);
-    setShowInventory(false);
+  const handleEquipPart = async (part: Part) => {
+    try {
+      equipPart(holobotId, part);
+      
+      // Save equipped parts to database
+      if (user) {
+        const currentEquipment = user.equippedParts?.[holobotId] || {};
+        const updatedEquipment = {
+          ...currentEquipment,
+          [part.slot]: part,
+        };
+        
+        const updatedEquippedParts = {
+          ...user.equippedParts,
+          [holobotId]: updatedEquipment
+        };
+        
+        await updateUser({
+          equippedParts: updatedEquippedParts
+        });
+      }
+      
+      setShowInventory(false);
+      toast({
+        title: "Part Equipped!",
+        description: `${part.name} has been equipped.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Equipment Failed",
+        description: "Failed to equip the part. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
-  const handleUnequipPart = (slot: PartSlot) => {
-    unequipPart(holobotId, slot);
+  const handleUnequipPart = async (slot: PartSlot) => {
+    try {
+      unequipPart(holobotId, slot);
+      
+      // Save equipped parts to database
+      if (user) {
+        const currentEquipment = user.equippedParts?.[holobotId] || {};
+        const updatedEquipment = { ...currentEquipment };
+        delete updatedEquipment[slot];
+        
+        const updatedEquippedParts = {
+          ...user.equippedParts,
+          [holobotId]: updatedEquipment
+        };
+        
+        await updateUser({
+          equippedParts: updatedEquippedParts
+        });
+      }
+      
+      toast({
+        title: "Part Unequipped",
+        description: "Part has been removed.",
+      });
+    } catch (error) {
+      toast({
+        title: "Unequip Failed",
+        description: "Failed to unequip the part. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   const getSlotIcon = (slot: PartSlot) => {
