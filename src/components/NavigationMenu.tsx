@@ -147,6 +147,14 @@ export const NavigationMenu = () => {
           
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
+              <Package className="h-4 w-4 text-green-500" />
+              <span>Gacha Tickets:</span>
+            </div>
+            <span className="font-semibold">{user.gachaTickets || 0}</span>
+          </div>
+          
+          <div className="flex items-center justify-between px-2 py-1">
+            <div className="flex items-center gap-2">
               <Award className="h-4 w-4 text-holobots-accent dark:text-holobots-dark-accent" />
               <span>Arena Passes:</span>
             </div>
@@ -175,6 +183,13 @@ export const NavigationMenu = () => {
           <DropdownMenuItem className="cursor-pointer focus:bg-holobots-hover dark:focus:bg-holobots-dark-hover focus:text-holobots-accent dark:focus:text-holobots-dark-accent">
             <Package className="mr-2 h-4 w-4" />
             <span>Your Items</span>
+          </DropdownMenuItem>
+        </Link>
+        
+        <Link to="/booster-packs">
+          <DropdownMenuItem className="cursor-pointer focus:bg-holobots-hover dark:focus:bg-holobots-dark-hover focus:text-holobots-accent dark:focus:text-holobots-dark-accent">
+            <ShoppingBag className="mr-2 h-4 w-4" />
+            <span>Booster Packs</span>
           </DropdownMenuItem>
         </Link>
         

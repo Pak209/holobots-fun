@@ -1,6 +1,7 @@
 import { HolobotStats } from "@/types/holobot";
 import { HOLOBOT_STATS } from "@/types/holobot";
 
+
 const BASE_XP = 100; // Base experience points
 const LEVEL_SCALING_FACTOR = 10; // k factor for XP scaling
 
@@ -255,3 +256,5 @@ export const calculateArenaRewards = (round: number, victoriesCount: number) => 
     arenaPass
   };
 };
+
+

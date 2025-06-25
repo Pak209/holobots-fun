@@ -20,6 +20,7 @@ import { MobileLayout } from "@/components/MobileLayout";
 import Bytepaper from "./pages/Bytepaper";
 import Mint from "@/pages/Mint";
 import Fitness from "@/pages/Fitness";
+import BoosterPacks from "@/pages/BoosterPacks";
 
 function App() {
   return (
@@ -113,6 +114,13 @@ function App() {
               <ProtectedRoute>
                 <MobileLayout>
                   <Fitness />
+                </MobileLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/booster-packs" element={
+              <ProtectedRoute>
+                <MobileLayout>
+                  <BoosterPacks />
                 </MobileLayout>
               </ProtectedRoute>
             } />

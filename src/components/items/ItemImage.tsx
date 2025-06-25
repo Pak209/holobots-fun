@@ -1,6 +1,5 @@
-
 import { cva, type VariantProps } from "class-variance-authority";
-import { Zap, Trophy, Ticket, FastForward, Coins, Activity } from "lucide-react";
+import { Zap, Trophy, Ticket, FastForward, Coins, Activity, Cog } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const itemImageVariants = cva(
@@ -8,6 +7,7 @@ const itemImageVariants = cva(
   {
     variants: {
       type: {
+        "holobot-parts": "bg-gradient-to-br from-orange-900/60 via-orange-700/40 to-orange-950/90 border border-orange-500",
         "arena-pass": "bg-gradient-to-br from-purple-900/60 via-purple-700/40 to-purple-950/90 border border-purple-500",
         "gacha-ticket": "bg-gradient-to-br from-yellow-900/60 via-yellow-700/40 to-yellow-950/90 border border-yellow-500",
         "energy-refill": "bg-gradient-to-br from-blue-900/60 via-blue-700/40 to-blue-950/90 border border-blue-500",
@@ -30,7 +30,7 @@ const itemImageVariants = cva(
 );
 
 export interface ItemImageProps extends VariantProps<typeof itemImageVariants> {
-  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost";
+  type: "holobot-parts" | "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost";
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
@@ -49,6 +49,7 @@ export const ItemImage = ({ type, size, className }: ItemImageProps) => {
   
   // Icon mapping for each item type with darker colors
   const iconMap = {
+    "holobot-parts": <Cog className={`${iconSize} text-orange-700 font-bold`} strokeWidth={2.5} />,
     "arena-pass": <Trophy className={`${iconSize} text-purple-700 font-bold`} strokeWidth={2.5} />,
     "gacha-ticket": <Ticket className={`${iconSize} text-yellow-700 font-bold`} strokeWidth={2.5} />,
     "energy-refill": <Zap className={`${iconSize} text-blue-700 font-bold`} strokeWidth={2.5} />,

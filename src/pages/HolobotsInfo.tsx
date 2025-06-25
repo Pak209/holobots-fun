@@ -6,11 +6,23 @@ import { useMintHolobot } from "@/hooks/use-mint-holobot";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { calculateExperience } from "@/utils/battleUtils";
+import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
 
 const HolobotsInfo = () => {
   const { user, updateUser } = useAuth();
   const { isMinting, justMinted, handleMintHolobot } = useMintHolobot();
   const { toast } = useToast();
+  const { loadPartsFromUser, loadEquippedPartsFromUser } = useHolobotPartsStore();
+
+  // Load user parts when user data is available
+  useEffect(() => {
+    if (user?.parts) {
+      loadPartsFromUser(user.parts);
+    }
+    if (user?.equippedParts) {
+      loadEquippedPartsFromUser(user.equippedParts);
+    }
+  }, [user?.parts, user?.equippedParts, loadPartsFromUser, loadEquippedPartsFromUser]);
   
   // Helper function to find user's holobot by name
   const findUserHolobot = (name: string) => {

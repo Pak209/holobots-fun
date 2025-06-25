@@ -9,6 +9,8 @@ import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { BLUEPRINT_TIERS } from "@/components/holobots/BlueprintSection";
+import { HolobotPartsEquipment } from "@/components/holobots/HolobotPartsEquipment";
+import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
 
 interface HolobotInfoCardProps {
   holobotKey: string;
@@ -40,12 +42,34 @@ export const HolobotInfoCard = ({
 
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  const { getEquippedParts } = useHolobotPartsStore();
   
   const calculateProgress = (current: number, total: number) => {
     return Math.min(100, Math.floor((current / total) * 100));
   };
   
   const xpProgress = calculateProgress(currentXp, nextLevelXp);
+
+  // Calculate parts bonuses
+  const getPartsBonuses = () => {
+    if (!isOwned) return { attack: 0, defense: 0, speed: 0, intelligence: 0 };
+    
+    const equippedParts = getEquippedParts(holobot.name);
+    const bonuses = { attack: 0, defense: 0, speed: 0, intelligence: 0 };
+    
+    Object.values(equippedParts).forEach(part => {
+      if (part) {
+        bonuses.attack += part.baseStats.attack;
+        bonuses.defense += part.baseStats.defense;
+        bonuses.speed += part.baseStats.speed;
+        bonuses.intelligence += part.baseStats.intelligence;
+      }
+    });
+    
+    return bonuses;
+  };
+
+  const partsBonuses = getPartsBonuses();
 
   // Get background color based on rank
   const getRankColor = (rank: string) => {
@@ -230,11 +254,11 @@ export const HolobotInfoCard = ({
                 </div>
                 <Progress value={xpProgress} className="h-1 bg-gray-300 dark:bg-gray-700" />
                 <div className="flex justify-between text-[9px]">
-                  <span className="text-right text-holobots-accent dark:text-holobots-dark-accent">
+                  <span className="text-cyan-400 font-semibold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                     Rank: {getRank(level)}
                   </span>
                   {userHolobot?.rank && (
-                    <Badge className={`text-[8px] py-0 px-1 h-4 ${getRankColor(holobotRank)}`}>
+                    <Badge className={`text-[8px] py-0 px-1 h-4 ${getRankColor(holobotRank)} font-bold border-2 shadow-lg`}>
                       <Crown className="h-2 w-2 mr-0.5" /> {holobotRank}
                     </Badge>
                   )}
@@ -243,10 +267,21 @@ export const HolobotInfoCard = ({
             )}
             
             <div className="space-y-0.5 font-mono text-xs text-gray-600 dark:text-gray-400">
-              <p>HP: {holobot.maxHealth} {userHolobot?.boostedAttributes?.health ? `+${userHolobot.boostedAttributes.health}` : ''}</p>
-              <p>Attack: {holobot.attack} {userHolobot?.boostedAttributes?.attack ? `+${userHolobot.boostedAttributes.attack}` : ''}</p>
-              <p>Defense: {holobot.defense} {userHolobot?.boostedAttributes?.defense ? `+${userHolobot.boostedAttributes.defense}` : ''}</p>
-              <p>Speed: {holobot.speed} {userHolobot?.boostedAttributes?.speed ? `+${userHolobot.boostedAttributes.speed}` : ''}</p>
+              <p>HP: {holobot.maxHealth} 
+                {userHolobot?.boostedAttributes?.health ? <span className="text-blue-400">+{userHolobot.boostedAttributes.health}</span> : ''}
+              </p>
+              <p>Attack: {holobot.attack} 
+                {userHolobot?.boostedAttributes?.attack ? <span className="text-blue-400">+{userHolobot.boostedAttributes.attack}</span> : ''}
+                {partsBonuses.attack > 0 ? <span className="text-purple-400"> +{partsBonuses.attack}</span> : ''}
+              </p>
+              <p>Defense: {holobot.defense} 
+                {userHolobot?.boostedAttributes?.defense ? <span className="text-blue-400">+{userHolobot.boostedAttributes.defense}</span> : ''}
+                {partsBonuses.defense > 0 ? <span className="text-purple-400"> +{partsBonuses.defense}</span> : ''}
+              </p>
+              <p>Speed: {holobot.speed} 
+                {userHolobot?.boostedAttributes?.speed ? <span className="text-blue-400">+{userHolobot.boostedAttributes.speed}</span> : ''}
+                {partsBonuses.speed > 0 ? <span className="text-purple-400"> +{partsBonuses.speed}</span> : ''}
+              </p>
               <p className="text-sky-400 text-[10px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                 Special: {holobot.specialMove}
               </p>
@@ -335,6 +370,11 @@ export const HolobotInfoCard = ({
                 </div>
               </div>
             )}
+
+            {/* Parts Equipment Section - Only show for owned holobots */}
+            {isOwned && (
+              <HolobotPartsEquipment holobotName={holobot.name} />
+            )}
           </div>
         </div>
         
@@ -348,10 +388,10 @@ export const HolobotInfoCard = ({
                 experience: isOwned ? currentXp : undefined,
                 nextLevelExp: isOwned ? nextLevelXp : undefined,
                 name: holobot.name.toUpperCase(),
-                // Apply boosted attributes if owned
-                attack: holobot.attack + (userHolobot?.boostedAttributes?.attack || 0),
-                defense: holobot.defense + (userHolobot?.boostedAttributes?.defense || 0),
-                speed: holobot.speed + (userHolobot?.boostedAttributes?.speed || 0),
+                // Apply boosted attributes and parts bonuses if owned
+                attack: holobot.attack + (userHolobot?.boostedAttributes?.attack || 0) + partsBonuses.attack,
+                defense: holobot.defense + (userHolobot?.boostedAttributes?.defense || 0) + partsBonuses.defense,
+                speed: holobot.speed + (userHolobot?.boostedAttributes?.speed || 0) + partsBonuses.speed,
                 maxHealth: holobot.maxHealth + (userHolobot?.boostedAttributes?.health || 0),
               }} 
               variant={isOwned ? "blue" : "red"} 

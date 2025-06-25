@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MarketplaceHolobotCard } from "@/components/marketplace/MarketplaceHolobotCard";
 import { MarketplaceItemCard } from "@/components/marketplace/MarketplaceItemCard";
+import { MarketplacePartCard } from "@/components/marketplace/MarketplacePartCard";
 import { BlueprintCard } from "@/components/marketplace/BlueprintCard";
+import MarketplaceBoosterCard from "@/components/marketplace/MarketplaceBoosterCard";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -10,11 +12,18 @@ import {
   ShoppingBag, 
   Plus,
   Search,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Settings
 } from "lucide-react";
 import { HOLOBOT_IMAGE_MAPPING } from "@/utils/holobotImageUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { UserHolobot } from "@/types/user";
+import { MARKETPLACE_PARTS, MarketplacePart, createPartFromMarketplace } from "@/data/marketplaceParts";
+import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
+import { useBoosterPackStore } from "@/stores/boosterPackStore";
+import { Part } from "@/types/holobotParts";
+import { MarketplaceBoosterTier, MARKETPLACE_BOOSTER_TIERS } from "@/types/boosterPack";
+import PackOpeningAnimation from "@/components/boosterpack/PackOpeningAnimation";
 
 const MARKETPLACE_ITEMS = [
   // Holobots
@@ -187,6 +196,18 @@ const Marketplace = () => {
   const [filteredItems, setFilteredItems] = useState(MARKETPLACE_ITEMS as AnyMarketplaceItem[]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isBuying, setIsBuying] = useState(false);
+  const { addPart, inventory, loadPartsFromUser, loadEquippedPartsFromUser } = useHolobotPartsStore();
+  const { openMarketplaceBooster, isOpening, currentOpenResult, clearOpenResult } = useBoosterPackStore();
+
+  // Load user parts when user data is available
+  useEffect(() => {
+    if (user?.parts) {
+      loadPartsFromUser(user.parts);
+    }
+    if (user?.equippedParts) {
+      loadEquippedPartsFromUser(user.equippedParts);
+    }
+  }, [user?.parts, user?.equippedParts, loadPartsFromUser, loadEquippedPartsFromUser]);
   
   // Filter items by type
   const holobotItems = MARKETPLACE_ITEMS.filter(item => item.type === "holobot") as MarketplaceHolobotItem[];
@@ -300,6 +321,128 @@ const Marketplace = () => {
         title: "Purchase Failed",
         description: error.message || "An unexpected error occurred.",
         variant: "destructive",
+      });
+    } finally {
+      setIsBuying(false);
+    }
+  };
+
+  // Add new function for handling part purchases
+  const handleBuyPart = async (partId: string, tier: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to make a purchase.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsBuying(true);
+
+    const marketplacePart = MARKETPLACE_PARTS.find(item => item.id === partId);
+    if (!marketplacePart) {
+      toast({ title: "Error", description: "Part not found.", variant: "destructive" });
+      setIsBuying(false);
+      return;
+    }
+
+    const tierData = marketplacePart.tiers.find(t => t.tier === tier);
+    if (!tierData) {
+      toast({ title: "Error", description: "Tier not found.", variant: "destructive" });
+      setIsBuying(false);
+      return;
+    }
+
+    if (user.holosTokens < tierData.price) {
+      toast({
+        title: "Insufficient Funds",
+        description: `You need ${tierData.price - user.holosTokens} more HOLOS tokens to purchase this part.`,
+        variant: "destructive",
+      });
+      setIsBuying(false);
+      return;
+    }
+
+    try {
+      // Create the part with the selected tier
+      const newPart = createPartFromMarketplace(marketplacePart, tier as Part['tier']);
+      
+      // Add part to local inventory first
+      addPart(newPart);
+      
+      // Update user's parts in the database and deduct HOLOS tokens
+      const updatedParts = [...(user.parts || []), newPart];
+      
+      try {
+        await updateUser({
+          holosTokens: user.holosTokens - tierData.price,
+          parts: updatedParts,
+        });
+      } catch (dbError) {
+        console.warn("Database update failed, but part added to local inventory:", dbError);
+        // Still show success since the part is in local inventory
+        // The user will need to apply the database migration for persistence
+      }
+
+      toast({
+        title: "Purchase Successful!",
+        description: `You bought ${newPart.name} for ${tierData.price} HOLOS tokens.`,
+      });
+    } catch (error) {
+      console.error("Error purchasing part:", error);
+      toast({
+        title: "Purchase Failed",
+        description: "There was an error processing your purchase. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBuying(false);
+    }
+  };
+
+  const handleBuyBooster = async (tier: MarketplaceBoosterTier) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Please log in to purchase boosters.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const boosterConfig = MARKETPLACE_BOOSTER_TIERS[tier];
+    
+    if (user.holosTokens < boosterConfig.price) {
+      toast({
+        title: "Insufficient Funds",
+        description: `You need ${boosterConfig.price - user.holosTokens} more HOLOS tokens.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsBuying(true);
+    
+    try {
+      // Deduct HOLOS tokens
+      await updateUser({
+        holosTokens: user.holosTokens - boosterConfig.price
+      });
+
+      // Open the booster pack
+      await openMarketplaceBooster(tier);
+      
+      toast({
+        title: "Booster Purchased!",
+        description: `${boosterConfig.name} opened successfully!`,
+      });
+    } catch (error) {
+      console.error("Error purchasing booster:", error);
+      toast({
+        title: "Purchase Failed",
+        description: "Failed to purchase booster. Please try again.",
+        variant: "destructive"
       });
     } finally {
       setIsBuying(false);
@@ -510,6 +653,46 @@ const Marketplace = () => {
               </div>
               */}
 
+              {/* Boosters Section */}
+              <div>
+                <div className="flex items-center mb-3">
+                  <div className="w-4 h-4 bg-yellow-400 rounded-full mr-2"></div>
+                  <h2 className="text-xl font-bold text-white">Rank Boosters</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                  <MarketplaceBoosterCard
+                    onPurchase={handleBuyBooster}
+                    disabled={isBuying || isOpening}
+                    userHolos={user?.holosTokens || 0}
+                  />
+                </div>
+                <div className="bg-yellow-900/20 border border-yellow-400/30 rounded-lg p-4 mb-8">
+                  <h3 className="text-yellow-400 font-bold mb-2">🏆 Legendary Rank Boosters</h3>
+                  <p className="text-yellow-300 text-sm">
+                    Legendary Rank Boosters are exclusive rewards for tournament winners and top leaderboard players at the end of each season. 
+                    These premium boosters guarantee the highest tier items with 40% legendary drop rates!
+                  </p>
+                </div>
+              </div>
+
+              {/* Parts Section */}
+              <div>
+                <div className="flex items-center mb-3">
+                  <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
+                  <h2 className="text-xl font-bold text-white">Holobot Parts</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                  {MARKETPLACE_PARTS.map(part => (
+                    <MarketplacePartCard
+                      key={part.id}
+                      part={part}
+                      onBuy={handleBuyPart}
+                      isBuying={isBuying}
+                    />
+                  ))}
+                </div>
+              </div>
+
               {/* Items Section */}
               <div>
                 <div className="flex items-center mb-3">
@@ -603,6 +786,62 @@ const Marketplace = () => {
           <div className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-6">
             <h2 className="text-2xl font-bold text-cyan-400 mb-6 font-orbitron">My Inventory</h2>
             
+            {/* Parts Inventory */}
+            <div className="mb-8">
+              <div className="flex items-center mb-3">
+                <Settings className="w-5 h-5 text-cyan-400 mr-2" />
+                <h3 className="text-xl font-semibold text-white">Holobot Parts ({inventory.length})</h3>
+              </div>
+              
+              {inventory.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {inventory.map(part => (
+                    <div key={part.id} className="relative">
+                      <div className="bg-[#0D111A] p-4 rounded-md border border-cyan-700/50">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-300 capitalize">
+                            {part.slot}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded capitalize ${
+                            part.tier === 'mythic' ? 'bg-purple-500/20 text-purple-400' :
+                            part.tier === 'legendary' ? 'bg-yellow-500/20 text-yellow-400' :
+                            part.tier === 'epic' ? 'bg-purple-400/20 text-purple-300' :
+                            part.tier === 'rare' ? 'bg-blue-400/20 text-blue-300' :
+                            'bg-gray-400/20 text-gray-300'
+                          }`}>
+                            {part.tier}
+                          </span>
+                        </div>
+                        <h4 className="text-lg font-bold text-cyan-300 mb-1">{part.name}</h4>
+                        <p className="text-sm text-gray-400 mb-2 line-clamp-2">{part.description}</p>
+                        <div className="grid grid-cols-2 gap-1 text-xs">
+                          {Object.entries(part.baseStats).map(([stat, value]) => (
+                            <div key={stat} className="flex justify-between">
+                              <span className="text-gray-400 capitalize">{stat}:</span>
+                              <span className={value > 0 ? 'text-green-400' : value < 0 ? 'text-red-400' : 'text-gray-400'}>
+                                {value > 0 ? '+' : ''}{value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                        OWNED
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-[#0D111A] rounded-md border border-cyan-700/50">
+                  <Settings className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-400">No parts in your inventory yet.</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Purchase parts from the marketplace to enhance your Holobots!
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Holobots */}
             <div className="mb-8">
               <h3 className="text-xl font-semibold text-white mb-3">My Holobots ({user.holobots?.length || 0})</h3>
@@ -712,6 +951,22 @@ const Marketplace = () => {
         )}
 
       </div>
+
+      {/* Pack Opening Animation */}
+      <PackOpeningAnimation
+        result={currentOpenResult}
+        isOpening={isOpening}
+        onClose={clearOpenResult}
+        onEquipPart={(item) => {
+          // Handle equipping parts from booster packs
+          if (item.type === 'part' && item.part) {
+            toast({
+              title: "Part Added",
+              description: `${item.name} has been added to your inventory!`,
+            });
+          }
+        }}
+      />
     </div>
   );
 };

@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Battery, Swords, Trophy, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { calculateBattleExperience, updateHolobotExperience } from "@/utils/battleUtils";
+import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
 
 // CPU difficulty levels
 const DIFFICULTY_LEVELS = {
@@ -30,6 +31,7 @@ const Training = () => {
 
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  const { getEquippedParts } = useHolobotPartsStore();
 
   // Reset battle result when selections change
   useEffect(() => {
@@ -51,17 +53,34 @@ const Training = () => {
     return key || Object.keys(HOLOBOT_STATS)[0]; // fallback to first holobot if not found
   };
 
-  // Apply attribute boosts from user's holobot
-  const applyAttributeBoosts = (baseStats, userHolobot) => {
-    if (!userHolobot || !userHolobot.boostedAttributes) return baseStats;
+  // Apply attribute boosts and parts bonuses from user's holobot
+  const applyAllBoosts = (baseStats, userHolobot) => {
+    if (!baseStats) return baseStats;
     
-    return {
-      ...baseStats,
-      attack: baseStats.attack + (userHolobot.boostedAttributes.attack || 0),
-      defense: baseStats.defense + (userHolobot.boostedAttributes.defense || 0),
-      speed: baseStats.speed + (userHolobot.boostedAttributes.speed || 0),
-      maxHealth: baseStats.maxHealth + (userHolobot.boostedAttributes.health || 0)
-    };
+    let boostedStats = { ...baseStats };
+    
+    // Apply attribute boosts from leveling up
+    if (userHolobot?.boostedAttributes) {
+      boostedStats.attack += userHolobot.boostedAttributes.attack || 0;
+      boostedStats.defense += userHolobot.boostedAttributes.defense || 0;
+      boostedStats.speed += userHolobot.boostedAttributes.speed || 0;
+      boostedStats.maxHealth += userHolobot.boostedAttributes.health || 0;
+    }
+    
+    // Apply parts bonuses
+    const equippedParts = getEquippedParts(baseStats.name);
+    if (equippedParts) {
+      Object.values(equippedParts).forEach((part: any) => {
+        if (part?.baseStats) {
+          boostedStats.attack += part.baseStats.attack || 0;
+          boostedStats.defense += part.baseStats.defense || 0;
+          boostedStats.speed += part.baseStats.speed || 0;
+          boostedStats.intelligence = (boostedStats.intelligence || 0) + (part.baseStats.intelligence || 0);
+        }
+      });
+    }
+    
+    return boostedStats;
   };
 
   const handleStartTraining = async () => {
@@ -169,9 +188,9 @@ const Training = () => {
   // Get base stats for the selected holobot
   const baseStats = selectedHolobot ? HOLOBOT_STATS[selectedHolobot] : null;
   
-  // Apply attribute boosts if available
+  // Apply all boosts (attributes + parts) if available
   const boostedStats = baseStats && userHolobot 
-    ? applyAttributeBoosts(baseStats, userHolobot)
+    ? applyAllBoosts(baseStats, userHolobot)
     : baseStats;
 
   return (

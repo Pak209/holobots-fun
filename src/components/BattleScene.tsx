@@ -17,6 +17,7 @@ import {
   resetComboChain,
   incrementComboChain
 } from "@/utils/battleUtils";
+import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "./ui/dialog";
@@ -51,6 +52,7 @@ export const BattleScene = ({
 }: BattleSceneProps) => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  const { getEquippedParts } = useHolobotPartsStore();
   const [leftHealth, setLeftHealth] = useState(100);
   const [rightHealth, setRightHealth] = useState(100);
   const [leftSpecial, setLeftSpecial] = useState(0);
@@ -127,39 +129,48 @@ export const BattleScene = ({
 
   useEffect(() => {
     const baseStats = HOLOBOT_STATS[selectedLeftHolobot];
-    const initialStats = {
-        ...defaultBattleStats,
-        ...(baseStats || {}),
-        level: leftLevel,
-        maxHealth: baseStats?.maxHealth || defaultBattleStats.maxHealth
+    if (!baseStats) return;
+
+    const leftUserHolobot = user?.holobots?.find(h => 
+      h.name.toLowerCase() === baseStats.name.toLowerCase()
+    );
+
+    // Get equipped parts for this holobot
+    const equippedParts = getEquippedParts(baseStats.name);
+
+    // Start with base stats and apply boosts manually
+    let completeStats = { 
+      ...defaultBattleStats,
+      ...baseStats,
+      level: leftUserHolobot?.level || baseStats.level || 1,
+      maxHealth: baseStats.maxHealth || defaultBattleStats.maxHealth
     };
 
-    const mergedLeftStats = { ...initialStats }; // Create a mutable copy
-
-    if (user && user.holobots && Array.isArray(user.holobots)) {
-      const leftUserHolobot = user.holobots.find(h => 
-        h.name.toLowerCase() === initialStats.name.toLowerCase() // Use name from initialStats
-      );
-      
-      if (leftUserHolobot && leftUserHolobot.boostedAttributes) {
-        console.log("Applying attribute boosts for battle (left):", leftUserHolobot.boostedAttributes);
-        if (leftUserHolobot.boostedAttributes.attack) {
-          mergedLeftStats.attack += leftUserHolobot.boostedAttributes.attack;
-        }
-        if (leftUserHolobot.boostedAttributes.defense) {
-          mergedLeftStats.defense += leftUserHolobot.boostedAttributes.defense;
-        }
-        if (leftUserHolobot.boostedAttributes.speed) {
-          mergedLeftStats.speed += leftUserHolobot.boostedAttributes.speed;
-        }
-        if (leftUserHolobot.boostedAttributes.health) {
-          mergedLeftStats.maxHealth += leftUserHolobot.boostedAttributes.health;
-        }
-      }
+    // Apply attribute boosts from leveling up
+    if (leftUserHolobot?.boostedAttributes) {
+      completeStats.attack += leftUserHolobot.boostedAttributes.attack || 0;
+      completeStats.defense += leftUserHolobot.boostedAttributes.defense || 0;
+      completeStats.speed += leftUserHolobot.boostedAttributes.speed || 0;
+      completeStats.maxHealth += leftUserHolobot.boostedAttributes.health || 0;
     }
-    setLeftStats(mergedLeftStats);
-    setLeftHealth(mergedLeftStats.maxHealth);
-  }, [selectedLeftHolobot, leftLevel, user]);
+
+    // Apply parts bonuses
+    if (equippedParts) {
+      Object.values(equippedParts).forEach((part: any) => {
+        if (part?.baseStats) {
+          completeStats.attack += part.baseStats.attack || 0;
+          completeStats.defense += part.baseStats.defense || 0;
+          completeStats.speed += part.baseStats.speed || 0;
+          completeStats.intelligence = (completeStats.intelligence || 0) + (part.baseStats.intelligence || 0);
+        }
+      });
+    }
+
+    console.log("Battle stats for", baseStats.name, "including parts:", completeStats);
+
+    setLeftStats(completeStats);
+    setLeftHealth(completeStats.maxHealth);
+  }, [selectedLeftHolobot, leftLevel, user, getEquippedParts]);
   
   useEffect(() => {
     const baseStats = HOLOBOT_STATS[selectedRightHolobot];

@@ -110,4 +110,97 @@
   .text-shadow {
     text-shadow: -1px -1px 0 #221F26, 1px -1px 0 #221F26, -1px 1px 0 #221F26, 1px 1px 0 #221F26;
   }
+
+  /* Tier-specific glows for parts */
+  .tier-glow-common {
+    box-shadow: 0 0 10px rgba(156, 163, 175, 0.5);
+  }
+
+  .tier-glow-rare {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+  }
+
+  .tier-glow-epic {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.7);
+  }
+
+  .tier-glow-legendary {
+    box-shadow: 0 0 25px rgba(251, 191, 36, 0.8);
+  }
+
+  .tier-glow-mythic {
+    box-shadow: 0 0 30px rgba(236, 72, 153, 0.9);
+  }
+
+  /* Booster Pack Animations */
+  @keyframes fade-in-scale {
+    0% {
+      opacity: 0;
+      transform: scale(0.8) translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes pack-tear {
+    0% {
+      transform: scale(1) rotate(0deg);
+    }
+    25% {
+      transform: scale(1.1) rotate(-2deg);
+    }
+    50% {
+      transform: scale(1.2) rotate(2deg);
+    }
+    75% {
+      transform: scale(1.1) rotate(-1deg);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  @keyframes sparkle {
+    0%, 100% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes rainbow-glow {
+    0% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); }
+    16% { box-shadow: 0 0 20px rgba(255, 165, 0, 0.5); }
+    33% { box-shadow: 0 0 20px rgba(255, 255, 0, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.5); }
+    66% { box-shadow: 0 0 20px rgba(0, 0, 255, 0.5); }
+    83% { box-shadow: 0 0 20px rgba(75, 0, 130, 0.5); }
+    100% { box-shadow: 0 0 20px rgba(238, 130, 238, 0.5); }
+  }
+
+  .animate-fade-in-scale {
+    animation: fade-in-scale 0.6s ease-out forwards;
+  }
+
+  .animate-pack-tear {
+    animation: pack-tear 1s ease-in-out;
+  }
+
+  .animate-sparkle {
+    animation: sparkle 1.5s ease-in-out infinite;
+  }
+
+  .animate-rainbow-glow {
+    animation: rainbow-glow 2s linear infinite;
+  }
+
+  /* Text shadow utilities */
+  .text-shadow-lg {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  }
 }

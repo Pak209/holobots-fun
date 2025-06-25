@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Package, Ticket, Clock, Plus } from "lucide-react";
+import { Package, Ticket, Clock, Plus, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { formatDistanceToNow } from "date-fns";
 import { Progress } from "@/components/ui/progress";
@@ -12,6 +12,7 @@ import { useSearchParams } from "react-router-dom";
 import { BLUEPRINT_TIERS } from "@/components/holobots/BlueprintSection";
 import type { UserHolobot } from "@/types/user";
 import { HolobotSelectModal } from "@/components/items/HolobotSelectModal";
+import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
 
 interface GachaItem {
   name: string;
@@ -40,6 +41,17 @@ export default function Gacha() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "gacha");
+  const { inventory, loadPartsFromUser, loadEquippedPartsFromUser } = useHolobotPartsStore();
+
+  // Load user parts when user data is available
+  useEffect(() => {
+    if (user?.parts) {
+      loadPartsFromUser(user.parts);
+    }
+    if (user?.equippedParts) {
+      loadEquippedPartsFromUser(user.equippedParts);
+    }
+  }, [user?.parts, user?.equippedParts, loadPartsFromUser, loadEquippedPartsFromUser]);
 
   // State for Holobot selection modal
   const [isHolobotSelectModalOpen, setIsHolobotSelectModalOpen] = useState(false);
@@ -702,20 +714,86 @@ export default function Gacha() {
               </p>
               <Separator className="mb-6" />
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {userItems.map((item, index) => (
-                  <ItemCard
-                    key={index}
-                    name={item.name}
-                    description={item.description}
-                    quantity={item.quantity}
-                    type={item.type}
-                    onClick={() => handleUseItem(item.type)}
-                    actionLabel="Use Item"
-                    disabled={item.quantity <= 0}
-                    isLoading={isUsingItem}
-                  />
-                ))}
+              {/* Parts Section */}
+              <div className="mb-8">
+                <div className="flex items-center mb-4">
+                  <Settings className="w-5 h-5 text-cyan-400 mr-2" />
+                  <h3 className="text-xl font-bold text-white">Holobot Parts</h3>
+                  <span className="ml-2 px-2 py-1 bg-cyan-500/20 text-cyan-400 text-sm rounded">
+                    {inventory.length} parts
+                  </span>
+                </div>
+                
+                {inventory.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    {inventory.slice(0, 6).map(part => (
+                      <div key={part.id} className="bg-[#1A1F2C] border border-holobots-border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-300 capitalize">
+                            {part.slot}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded capitalize ${
+                            part.tier === 'mythic' ? 'bg-purple-500/20 text-purple-400' :
+                            part.tier === 'legendary' ? 'bg-yellow-500/20 text-yellow-400' :
+                            part.tier === 'epic' ? 'bg-purple-400/20 text-purple-300' :
+                            part.tier === 'rare' ? 'bg-blue-400/20 text-blue-300' :
+                            'bg-gray-400/20 text-gray-300'
+                          }`}>
+                            {part.tier}
+                          </span>
+                        </div>
+                        <h4 className="text-lg font-bold text-cyan-300 mb-1">{part.name}</h4>
+                        <p className="text-sm text-gray-400 mb-2 line-clamp-2">{part.description}</p>
+                        <div className="grid grid-cols-2 gap-1 text-xs">
+                          {Object.entries(part.baseStats).map(([stat, value]) => (
+                            <div key={stat} className="flex justify-between">
+                              <span className="text-gray-400 capitalize">{stat}:</span>
+                              <span className={value > 0 ? 'text-green-400' : value < 0 ? 'text-red-400' : 'text-gray-400'}>
+                                {value > 0 ? '+' : ''}{value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    {inventory.length > 6 && (
+                      <div className="bg-[#1A1F2C] border border-holobots-border rounded-lg p-4 flex items-center justify-center">
+                        <div className="text-center">
+                          <p className="text-gray-400 mb-2">+{inventory.length - 6} more parts</p>
+                          <p className="text-sm text-cyan-400">Visit Marketplace → My Inventory to see all</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 bg-[#1A1F2C] border border-holobots-border rounded-lg mb-6">
+                    <Settings className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-400">No parts in your inventory yet.</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Purchase parts from the marketplace to enhance your Holobots!
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Consumable Items */}
+              <div>
+                <h3 className="text-xl font-bold text-white mb-4">Consumable Items</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userItems.map((item, index) => (
+                    <ItemCard
+                      key={index}
+                      name={item.name}
+                      description={item.description}
+                      quantity={item.quantity}
+                      type={item.type}
+                      onClick={() => handleUseItem(item.type)}
+                      actionLabel="Use Item"
+                      disabled={item.quantity <= 0}
+                      isLoading={isUsingItem}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </TabsContent>

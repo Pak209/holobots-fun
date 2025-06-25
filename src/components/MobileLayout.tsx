@@ -1,5 +1,5 @@
 import { useLocation, Link } from "react-router-dom";
-import { Home, Dumbbell, Trophy, Bot, Gem, Gamepad2, ShoppingBag, Activity } from "lucide-react";
+import { Home, Dumbbell, Trophy, Bot, Gem, Package, ShoppingBag, Activity } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -73,17 +73,17 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
           )}>Quests</span>
         </Link>
         
-        <Link to="/gacha" className="flex flex-col items-center justify-center flex-1">
+        <Link to="/booster-packs" className="flex flex-col items-center justify-center flex-1">
           <div className={cn(
             "h-10 w-10 rounded-full flex items-center justify-center", 
-            isActive("/gacha") ? "bg-cyan-500 text-white" : "text-gray-400"
+            isActive("/booster-packs") ? "bg-cyan-500 text-white" : "text-gray-400"
           )}>
-            <Gamepad2 className="h-5 w-5" />
+            <Package className="h-5 w-5" />
           </div>
           <span className={cn(
             "text-[10px] mt-0.5",
-            isActive("/gacha") ? "text-white" : "text-gray-400"
-          )}>Gacha</span>
+            isActive("/booster-packs") ? "text-white" : "text-gray-400"
+          )}>Packs</span>
         </Link>
         
         <Link to="/fitness" className="flex flex-col items-center justify-center flex-1">

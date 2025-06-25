@@ -1,4 +1,3 @@
-
 import { VariantProps, cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ const itemCardVariants = cva(
   {
     variants: {
       type: {
+        "holobot-parts": "bg-gradient-to-br from-orange-900/60 to-orange-950/90 border-orange-500 shadow-neon-orange hover:shadow-neon-orange/50",
         "arena-pass": "bg-gradient-to-br from-purple-900/60 to-purple-950/90 border-purple-500 shadow-neon-purple hover:shadow-neon-purple/50",
         "gacha-ticket": "bg-gradient-to-br from-yellow-900/60 to-yellow-950/90 border-yellow-500 shadow-neon-yellow hover:shadow-neon-yellow/50",
         "energy-refill": "bg-gradient-to-br from-blue-900/60 to-blue-950/90 border-blue-500 shadow-neon-blue hover:shadow-neon-blue/50", 
@@ -30,7 +30,7 @@ export interface ItemCardProps extends VariantProps<typeof itemCardVariants> {
   name: string;
   description: string;
   quantity: number;
-  type: "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost";
+  type: "holobot-parts" | "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "attribute-boost";
   onClick?: () => void;
   actionLabel?: string;
   disabled?: boolean;

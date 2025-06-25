@@ -4,6 +4,7 @@ import { HOLOBOT_STATS } from "@/types/holobot";
 import { ShieldAlert, Swords } from "lucide-react";
 import { UserHolobot } from "@/types/user";
 import { useAuth } from "@/contexts/auth";
+import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
 
 interface QuestBattleBannerProps {
   playerHolobots?: UserHolobot[];
@@ -29,6 +30,7 @@ export const QuestBattleBanner = ({
   onComplete
 }: QuestBattleBannerProps) => {
   const { user } = useAuth();
+  const { getEquippedParts } = useHolobotPartsStore();
   
   const [visible, setVisible] = useState(isVisible);
   const [battlePhase, setBattlePhase] = useState<'intro' | 'battle' | 'result'>('intro');
@@ -65,10 +67,29 @@ export const QuestBattleBanner = ({
       
       console.log(`Applying boosts for ${holobot.name}:`, holobot.boostedAttributes);
       
-      stats.attack += baseStats.attack + (holobot.boostedAttributes?.attack || 0);
-      stats.defense += baseStats.defense + (holobot.boostedAttributes?.defense || 0);
-      stats.health += baseStats.maxHealth + (holobot.boostedAttributes?.health || 0);
-      stats.speed += baseStats.speed + (holobot.boostedAttributes?.speed || 0);
+      // Apply base stats + attribute boosts
+      let holobotAttack = baseStats.attack + (holobot.boostedAttributes?.attack || 0);
+      let holobotDefense = baseStats.defense + (holobot.boostedAttributes?.defense || 0);
+      let holobotHealth = baseStats.maxHealth + (holobot.boostedAttributes?.health || 0);
+      let holobotSpeed = baseStats.speed + (holobot.boostedAttributes?.speed || 0);
+      
+      // Apply parts bonuses
+      const equippedParts = getEquippedParts(holobot.name);
+      if (equippedParts) {
+        Object.values(equippedParts).forEach((part: any) => {
+          if (part?.baseStats) {
+            holobotAttack += part.baseStats.attack || 0;
+            holobotDefense += part.baseStats.defense || 0;
+            holobotSpeed += part.baseStats.speed || 0;
+            // Note: Parts don't add to health directly in quests
+          }
+        });
+      }
+      
+      stats.attack += holobotAttack;
+      stats.defense += holobotDefense;
+      stats.health += holobotHealth;
+      stats.speed += holobotSpeed;
     }
     return stats;
   }, { attack: 0, defense: 0, health: 0, speed: 0 });

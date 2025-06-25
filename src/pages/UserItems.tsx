@@ -1,15 +1,22 @@
-
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { ItemCard } from "@/components/items/ItemCard";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/components/ui/use-toast";
+import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
 
 export default function UserItems() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { inventory } = useHolobotPartsStore();
   
   // Mock data for visual appearance (this would come from user profile in reality)
   const items = [
+    {
+      type: "holobot-parts" as const,
+      name: "Holobot Parts",
+      description: "Collected parts that can be equipped to enhance your Holobots",
+      quantity: inventory.length
+    },
     {
       type: "arena-pass" as const,
       name: "Arena Pass",
@@ -43,10 +50,23 @@ export default function UserItems() {
   ];
 
   const handleUseItem = (type: string, name: string) => {
+    if (type === "holobot-parts") {
+      toast({
+        title: "View Parts",
+        description: "Go to Holobots Info page to equip your parts!",
+      });
+      return;
+    }
+    
     toast({
       title: `Used ${name}`,
       description: `You have used one ${name}. Effects applied!`,
     });
+  };
+
+  const getActionLabel = (type: string) => {
+    if (type === "holobot-parts") return "View Parts";
+    return "Use Item";
   };
 
   return (
@@ -65,8 +85,8 @@ export default function UserItems() {
               quantity={item.quantity}
               type={item.type}
               onClick={() => handleUseItem(item.type, item.name)}
-              actionLabel="Use Item"
-              disabled={item.quantity <= 0}
+              actionLabel={getActionLabel(item.type)}
+              disabled={item.quantity <= 0 && item.type !== "holobot-parts"}
             />
           ))}
         </div>

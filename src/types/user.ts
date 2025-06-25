@@ -1,3 +1,5 @@
+import { HolobotEquipment } from './holobotParts';
+
 export interface UserHolobot {
   name: string;
   level: number;
@@ -40,6 +42,8 @@ export interface UserProfile {
     legendary?: number;
     // other specific item keys can be added here
   };
+  parts?: any[]; // Add parts field to store owned holobot parts
+  equippedParts?: Record<string, HolobotEquipment>; // Add equipped parts field to store equipped parts per holobot
 }
 
 export interface AuthState {
@@ -71,7 +75,9 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       energy_refills: dbProfile.energy_refills || 0,
       rank_skips: dbProfile.rank_skips || 0,
       blueprints: dbProfile.blueprints || {},
-      inventory: dbProfile.inventory || { common: 0, rare: 0, legendary: 0 } // Initialize inventory
+      inventory: dbProfile.inventory || { common: 0, rare: 0, legendary: 0 }, // Initialize inventory
+      parts: dbProfile.parts || [], // Initialize parts array
+      equippedParts: dbProfile.equipped_parts || {} // Initialize equipped parts
     };
   } else {
     // This is from the users table
@@ -94,7 +100,9 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       energy_refills: 0,
       rank_skips: 0,
       blueprints: {},
-      inventory: { common: 0, rare: 0, legendary: 0 } // Initialize inventory
+      inventory: { common: 0, rare: 0, legendary: 0 }, // Initialize inventory
+      parts: [], // Initialize parts array
+      equippedParts: {} // Initialize equipped parts
     };
   }
 }

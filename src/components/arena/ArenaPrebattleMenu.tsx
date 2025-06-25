@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
+import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
 
 // Arena tier definitions
 const ARENA_TIERS = {
@@ -90,6 +91,7 @@ export const ArenaPrebattleMenu = ({
 }: ArenaPrebattleMenuProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getEquippedParts } = useHolobotPartsStore();
   const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
   const [userHolobots, setUserHolobots] = useState<any[]>([]);
   const [selectedTier, setSelectedTier] = useState<keyof typeof ARENA_TIERS>("tutorial");
@@ -198,6 +200,20 @@ export const ArenaPrebattleMenu = ({
                       const userHolobot = getUserHolobotByKey(selectedHolobot);
                       const baseStats: Partial<HolobotStats> = HOLOBOT_STATS[selectedHolobot] || {};
                       const boosts = userHolobot?.boostedAttributes || {};
+                      
+                      // Get parts bonuses
+                      const equippedParts = getEquippedParts(baseStats.name || '');
+                      const partsBonuses = { attack: 0, defense: 0, speed: 0 };
+                      if (equippedParts) {
+                        Object.values(equippedParts).forEach((part: any) => {
+                          if (part?.baseStats) {
+                            partsBonuses.attack += part.baseStats.attack || 0;
+                            partsBonuses.defense += part.baseStats.defense || 0;
+                            partsBonuses.speed += part.baseStats.speed || 0;
+                          }
+                        });
+                      }
+                      
                       return (
                         <div className="flex items-center gap-2 w-full">
                           <Avatar className="h-8 w-8 border border-cyan-400">
@@ -207,15 +223,24 @@ export const ArenaPrebattleMenu = ({
                           <span className="font-semibold text-white mr-2">{userHolobot?.name} <span className="text-cyan-300">Lv.{userHolobot?.level}</span></span>
                           <span className="flex items-center gap-1 text-xs text-white/80">
                             <Sword className="h-4 w-4 text-red-400" />
-                            <span className="font-bold text-cyan-600 dark:text-cyan-300">{baseStats.attack !== undefined ? baseStats.attack + (boosts.attack || 0) : '-'}</span>
+                            <span className="font-bold text-cyan-600 dark:text-cyan-300">
+                              {baseStats.attack !== undefined ? baseStats.attack + (boosts.attack || 0) + partsBonuses.attack : '-'}
+                              {partsBonuses.attack > 0 && <span className="text-purple-400 text-[10px]"> (+{partsBonuses.attack})</span>}
+                            </span>
                           </span>
                           <span className="flex items-center gap-1 text-xs text-white/80">
                             <Shield className="h-4 w-4 text-blue-400" />
-                            <span className="font-bold text-cyan-600 dark:text-cyan-300">{baseStats.defense !== undefined ? baseStats.defense + (boosts.defense || 0) : '-'}</span>
+                            <span className="font-bold text-cyan-600 dark:text-cyan-300">
+                              {baseStats.defense !== undefined ? baseStats.defense + (boosts.defense || 0) + partsBonuses.defense : '-'}
+                              {partsBonuses.defense > 0 && <span className="text-purple-400 text-[10px]"> (+{partsBonuses.defense})</span>}
+                            </span>
                           </span>
                           <span className="flex items-center gap-1 text-xs text-white/80">
                             <Zap className="h-4 w-4 text-yellow-300" />
-                            <span className="font-bold text-cyan-600 dark:text-cyan-300">{baseStats.speed !== undefined ? baseStats.speed + (boosts.speed || 0) : '-'}</span>
+                            <span className="font-bold text-cyan-600 dark:text-cyan-300">
+                              {baseStats.speed !== undefined ? baseStats.speed + (boosts.speed || 0) + partsBonuses.speed : '-'}
+                              {partsBonuses.speed > 0 && <span className="text-purple-400 text-[10px]"> (+{partsBonuses.speed})</span>}
+                            </span>
                           </span>
                         </div>
                       );
