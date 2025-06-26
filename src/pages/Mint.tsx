@@ -127,10 +127,10 @@ export default function Mint() {
         className={`
           relative cursor-pointer transition-all duration-300 transform 
           hover:scale-105 ${isSelected ? 'scale-105' : ''}
-          bg-holobots-card dark:bg-holobots-dark-card rounded-lg p-4 sm:p-6 border-2
-          ${isSelected ? 'border-holobots-accent dark:border-holobots-dark-accent' : 'border-holobots-accent/20 dark:border-holobots-dark-border'}
-          shadow-[0_0_10px_rgba(34,211,238,0.1)]
-          hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]
+          bg-black/30 rounded-lg p-4 sm:p-6 border-2
+          ${isSelected ? 'border-[#33C3F0]' : 'border-gray-600/30'}
+          shadow-[0_0_10px_rgba(51,195,240,0.1)]
+          hover:shadow-[0_0_15px_rgba(51,195,240,0.2)]
           overflow-hidden
         `}
       >
@@ -147,13 +147,13 @@ export default function Mint() {
           </div>
 
           {/* Simplified info section - Just combat style and special move with narrow width on mobile */}
-          <div className="w-full mt-2 sm:mt-4 space-y-2 sm:space-y-3 text-holobots-accent text-xs sm:text-sm max-w-[120px] sm:max-w-full mx-auto">
-            <div className="flex items-center justify-between border-b border-holobots-accent/30 pb-1 sm:pb-2">
+          <div className="w-full mt-2 sm:mt-4 space-y-2 sm:space-y-3 text-[#33C3F0] text-xs sm:text-sm max-w-[120px] sm:max-w-full mx-auto">
+            <div className="flex items-center justify-between border-b border-[#33C3F0]/30 pb-1 sm:pb-2">
               <div className="flex items-center gap-1 sm:gap-2">
                 <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
                 <span className="text-gray-300 font-medium">Style</span>
               </div>
-              <span className="text-holobots-accent font-bold">
+              <span className="text-[#33C3F0] font-bold">
                 {holobotKey === 'ace' ? 'Balanced' : 
                  holobotKey === 'kuma' ? 'Aggressive' : 
                  holobotKey === 'shadow' ? 'Defensive' : 'Standard'}
@@ -165,7 +165,7 @@ export default function Mint() {
                 <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
                 <span className="text-gray-300 font-medium">Special</span>
               </div>
-              <span className="text-holobots-accent font-bold">{holobot.specialMove}</span>
+              <span className="text-[#33C3F0] font-bold">{holobot.specialMove}</span>
             </div>
 
             {holobot.abilityDescription && (
@@ -178,39 +178,39 @@ export default function Mint() {
 
         {/* Selection Indicator */}
         {isSelected && (
-          <div className="absolute -inset-0.5 border-2 border-holobots-accent rounded-lg animate-pulse pointer-events-none" />
+          <div className="absolute -inset-0.5 border-2 border-[#33C3F0] rounded-lg animate-pulse pointer-events-none" />
         )}
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex flex-col items-center justify-center p-2 sm:p-4">
+    <div className="min-h-screen bg-[#1A1F2C] flex flex-col items-center justify-center p-2 sm:p-4">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-5 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-holobots-accent mb-2">Choose Your Genesis Holobot</h1>
-          <p className="text-holobots-text dark:text-holobots-dark-text text-sm sm:text-base">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#33C3F0] mb-2">Choose Your Genesis Holobot</h1>
+          <p className="text-white text-sm sm:text-base">
             Welcome to Holobots Web3! Select your Genesis Holobot to begin your blockchain journey.
           </p>
           
           {/* Genesis Reward Package Display */}
-          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg border border-purple-400/30">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Gift className="w-5 h-5 text-purple-400" />
-              <span className="text-purple-300 font-bold text-sm sm:text-base">Genesis Reward Package</span>
+          <div className="mt-4 sm:mt-6 p-4 sm:p-6 bg-black/30 rounded-lg border border-[#33C3F0]/30 shadow-[0_0_10px_rgba(51,195,240,0.2)]">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Gift className="w-5 h-5 text-[#33C3F0]" />
+              <span className="text-[#33C3F0] font-bold text-sm sm:text-base">Genesis Reward Package</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
-              <div className="flex items-center justify-center gap-1">
-                <div className="w-3 h-3 bg-gray-400 rounded"></div>
-                <span className="text-gray-300">5 Common Boosters</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs sm:text-sm">
+              <div className="flex items-center justify-center gap-2 p-2 bg-[#1A1F2C]/70 rounded-md border border-gray-600/30">
+                <div className="w-3 h-3 bg-gray-400 rounded shadow-sm"></div>
+                <span className="text-white font-medium">5 Common Boosters</span>
               </div>
-              <div className="flex items-center justify-center gap-1">
+              <div className="flex items-center justify-center gap-2 p-2 bg-[#1A1F2C]/70 rounded-md border border-gray-600/30">
                 <Ticket className="w-3 h-3 text-pink-400" />
-                <span className="text-pink-300">10 Gacha Tickets</span>
+                <span className="text-white font-medium">10 Gacha Tickets</span>
               </div>
-              <div className="flex items-center justify-center gap-1">
-                <Trophy className="w-3 h-3 text-gold-400" />
-                <span className="text-yellow-300">5 Arena Passes</span>
+              <div className="flex items-center justify-center gap-2 p-2 bg-[#1A1F2C]/70 rounded-md border border-gray-600/30">
+                <Trophy className="w-3 h-3 text-yellow-400" />
+                <span className="text-white font-medium">5 Arena Passes</span>
               </div>
             </div>
           </div>
@@ -231,7 +231,7 @@ export default function Mint() {
             onClick={handleMintHolobot}
             disabled={!selectedHolobot || isMinting}
             className={`
-              bg-holobots-accent hover:bg-holobots-hover text-black font-bold py-1.5 sm:py-2 px-6 sm:px-8 text-base sm:text-lg
+              bg-[#33C3F0] hover:bg-[#0FA0CE] text-black font-bold py-1.5 sm:py-2 px-6 sm:px-8 text-base sm:text-lg
               ${isMinting ? 'cursor-not-allowed opacity-70' : ''}
               w-[200px] sm:w-auto mx-auto
             `}
@@ -248,7 +248,7 @@ export default function Mint() {
           </Button>
         </div>
         
-        <div className="mt-6 sm:mt-10 text-center text-holobots-text dark:text-holobots-dark-text text-xs sm:text-sm max-w-[280px] sm:max-w-full mx-auto">
+        <div className="mt-6 sm:mt-10 text-center text-white text-xs sm:text-sm max-w-[280px] sm:max-w-full mx-auto">
           <p>You'll be able to unlock additional Holobots and earn HOLOS tokens as you progress through the game!</p>
           <div className="flex items-center justify-center gap-2 mt-2">
             <FileCode2 className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400" />
@@ -256,7 +256,7 @@ export default function Mint() {
           </div>
           <div className="flex items-center justify-center mt-3 sm:mt-4 gap-1 sm:gap-2">
             <Coins className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400" />
-            <span className="text-[10px] sm:text-xs text-gray-400">
+            <span className="text-[10px] sm:text-xs text-gray-300">
               Earn HOLOS tokens in-game which auto-wrap and stake on the blockchain
             </span>
           </div>
