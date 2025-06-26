@@ -25,10 +25,19 @@ export default function Auth() {
   // Extract redirect path from location state
   const from = location.state?.from?.pathname || "/dashboard";
   
-  // Check if user is already logged in
+  // Check if user is already logged in and redirect appropriately
   useEffect(() => {
     if (user) {
-      navigate(from);
+      // Check if user has holobots
+      const hasHolobots = user.holobots && Array.isArray(user.holobots) && user.holobots.length > 0;
+      
+      if (hasHolobots) {
+        // User has holobots, redirect to requested page or dashboard
+        navigate(from);
+      } else {
+        // New user with no holobots, redirect to Genesis mint
+        navigate('/mint');
+      }
     }
   }, [user, navigate, from]);
 

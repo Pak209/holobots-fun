@@ -77,7 +77,15 @@ const Dashboard = () => {
               </div>
             ))
           ) : (
-            <p className="text-[#8E9196] text-sm">No Holobots yet. Visit the Mint page to get your first Holobot!</p>
+            <div className="text-center py-4">
+              <p className="text-[#8E9196] text-sm mb-3">No Holobots yet. Get your Genesis Holobot!</p>
+              <Link 
+                to="/mint" 
+                className="inline-flex items-center px-4 py-2 bg-[#D6BCFA] text-black font-semibold rounded-lg hover:bg-[#C7A7F5] transition-colors"
+              >
+                Start Genesis Mint
+              </Link>
+            </div>
           )}
         </div>
       </div>
