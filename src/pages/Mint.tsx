@@ -68,28 +68,33 @@ export default function Mint() {
         boostedAttributes: {}
       };
       
-      console.log("Adding Web3 Genesis reward package to user");
-      
-      // User gets their first holobot for free and Genesis reward package
-      await updateUser({
-        holobots: [newHolobot],
-        gachaTickets: (user?.gachaTickets || 0) + 10, // Add 10 Gacha Tickets
-        arena_passes: (user?.arena_passes || 0) + 5 // Add 5 Arena Passes
+      console.log("Minting Genesis Holobot with reward package");
+      console.log("Current user state before mint:", {
+        holobots: user?.holobots?.length || 0,
+        gachaTickets: user?.gachaTickets || 0,
+        arena_passes: user?.arena_passes || 0
       });
       
-      // Handle inventory update separately (client-side only)
+      // Ensure we have the current user state
+      const currentHolobots = user?.holobots || [];
       const currentInventory = user?.inventory || { common: 0, rare: 0, legendary: 0 };
-      setTimeout(() => {
-        // Update inventory in a separate call to avoid database issues
-        updateUser({
-          inventory: {
-            ...currentInventory,
-            common: (currentInventory.common || 0) + 5 // Add 5 Common Boosters
-          }
-        }).catch(error => {
-          console.log("Inventory update is client-side only, this is expected:", error);
-        });
-      }, 100);
+      
+      const updateData = {
+        holobots: [...currentHolobots, newHolobot], // Add to existing holobots instead of replacing
+        gachaTickets: Math.max((user?.gachaTickets || 0) + 10, 10), // Ensure at least 10 tickets
+        arena_passes: Math.max((user?.arena_passes || 0) + 5, 5), // Ensure at least 5 passes
+        inventory: {
+          ...currentInventory,
+          common: (currentInventory.common || 0) + 5 // Add 5 Common Boosters
+        }
+      };
+      
+      console.log("Updating user with data:", updateData);
+      
+      // Single atomic update with all changes
+      await updateUser(updateData);
+      
+      console.log("Genesis mint completed successfully");
       
       toast({
         title: "Genesis Holobot Minted!",
