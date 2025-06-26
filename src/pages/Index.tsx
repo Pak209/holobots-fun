@@ -1,7 +1,7 @@
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Trophy, Ticket, Gem, Award } from "lucide-react";
+import { Trophy, Ticket, Gem, Award, Sword, Users, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth";
@@ -11,6 +11,21 @@ import { generateArenaOpponent, calculateArenaRewards } from "@/utils/battleUtil
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { updateHolobotExperience, calculateExperience } from "@/integrations/supabase/client";
+import { BattleLeagueCard } from "../components/asyncBattle/BattleLeagueCard";
+import { BattlePoolCard } from "../components/asyncBattle/BattlePoolCard";
+import { BattleHistoryList } from "../components/asyncBattle/BattleHistoryList";
+import { LEAGUE_CONFIGS, POOL_CONFIGS } from "@/types/asyncBattle";
+import { useAsyncBattleStore } from "@/stores/asyncBattleStore";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Activity, Clock, Zap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { 
+  shouldRefreshDailyTickets, 
+  calculateRefreshedTickets, 
+  getTimeUntilNextRefresh,
+  DAILY_FREE_TICKETS 
+} from "@/utils/asyncBattleUtils";
 
 // Define the type for specific item rewards from arena tiers
 interface ArenaSpecificItemRewards {
@@ -21,6 +36,10 @@ interface ArenaSpecificItemRewards {
 }
 
 const Index = () => {
+  // Battle Mode State (Arena or Async)
+  const [battleMode, setBattleMode] = useState<'arena' | 'async'>('arena');
+  
+  // Arena-specific state
   const [currentRound, setCurrentRound] = useState(1);
   const [victories, setVictories] = useState(0);
   const [hasEntryFee, setHasEntryFee] = useState(false);
@@ -32,8 +51,62 @@ const Index = () => {
   const [currentArenaTierItemRewards, setCurrentArenaTierItemRewards] = useState<ArenaSpecificItemRewards | null>(null);
   const maxRounds = 3;
   const entryFee = 50;
+  
+  // Async battle state  
+  const [activeAsyncTab, setActiveAsyncTab] = useState("leagues");
+  const [isRefreshingTickets, setIsRefreshingTickets] = useState(false);
+  const {
+    battleLeagues,
+    battlePools,
+    userBattles,
+    userRankings,
+    battleTickets,
+    fitnessActivity,
+    getActiveBattles,
+    getCompletedBattles,
+    canEnterLeague,
+    canEnterPool,
+    getTodaysSteps
+  } = useAsyncBattleStore();
+  
   const { toast } = useToast();
   const { user, updateUser } = useAuth();
+
+  // Auto-refresh daily tickets when component mounts and user data is available
+  useEffect(() => {
+    if (user && shouldRefreshDailyTickets(user)) {
+      handleDailyTicketRefresh();
+    }
+  }, [user]);
+
+  const handleDailyTicketRefresh = async () => {
+    if (!user || !updateUser) return;
+    
+    setIsRefreshingTickets(true);
+    
+    try {
+      const refreshedTickets = calculateRefreshedTickets(user);
+      
+      await updateUser({
+        async_battle_tickets: refreshedTickets,
+        last_async_ticket_refresh: new Date().toISOString()
+      });
+      
+      toast({
+        title: "Daily Tickets Refreshed!",
+        description: `You received ${DAILY_FREE_TICKETS} free tickets today!`,
+      });
+    } catch (error) {
+      console.error("Error refreshing daily tickets:", error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh daily tickets. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshingTickets(false);
+    }
+  };
 
   // Get the current opponent based on round
   const getCurrentOpponent = () => {
@@ -299,67 +372,278 @@ const Index = () => {
     setArenaResults(null);
   };
 
-  if (!hasEntryFee) {
+  // Arena content when entry fee not paid
+  const renderArenaPreBattle = () => (
+    <div className="px-4 py-5">
+      <ArenaPrebattleMenu 
+        onHolobotSelect={handleHolobotSelect}
+        onEntryFeeMethod={handleEntryFeeMethod}
+        entryFee={entryFee}
+      />
+    </div>
+  );
+
+  // Arena battle content
+  const renderArenaBattle = () => {
+    const currentOpponentKey = arenaLineup[currentRound - 1];
+    
     return (
-      <div className="px-4 py-5">
-        <ArenaPrebattleMenu 
-          onHolobotSelect={handleHolobotSelect}
-          onEntryFeeMethod={handleEntryFeeMethod}
-          entryFee={entryFee}
+      <div className="px-2 py-3">
+        <div className="mb-4 bg-[#1A1F2C] rounded-lg p-3">
+          <div className="text-center mb-2 text-lg font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">
+            ARENA MODE
+          </div>
+          <div className="flex justify-between items-center mb-2">
+            <div className="bg-black/30 px-3 py-1 rounded-lg">
+              <span className="text-xs text-[#8E9196]">Round</span>
+              <div className="text-md font-bold text-holobots-accent">{currentRound}/{maxRounds}</div>
+            </div>
+            <div className="bg-black/30 px-3 py-1 rounded-lg">
+              <span className="text-xs text-[#8E9196]">Victories</span>
+              <div className="text-md font-bold text-green-500">{victories}</div>
+            </div>
+            <div className="bg-black/30 px-3 py-1 rounded-lg">
+              <span className="text-xs text-[#8E9196]">Opponent Level</span>
+              <div className="text-md font-bold text-yellow-500">
+                {arenaOpponentLevel}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <BattleScene 
+          leftHolobot={selectedHolobot}
+          rightHolobot={currentOpponentKey}
+          isCpuBattle={true}
+          cpuLevel={arenaOpponentLevel}
+          onBattleEnd={handleBattleEnd}
         />
+
+        {/* Results screen */}
+        {showResults && arenaResults && (
+          <QuestResultsScreen
+            isVisible={showResults}
+            isSuccess={arenaResults.isSuccess}
+            squadHolobotKeys={arenaResults.squadHolobotKeys}
+            squadHolobotExp={arenaResults.squadHolobotExp}
+            blueprintRewards={arenaResults.blueprintRewards}
+            holosRewards={arenaResults.holosRewards}
+            itemRewards={arenaResults.itemRewards}
+            gachaTickets={arenaResults.gachaTickets}
+            arenaPass={arenaResults.arenaPass}
+            onClose={handleResultsClose}
+          />
+        )}
       </div>
     );
-  }
+  };
 
-  // Get current opponent from lineup
-  const currentOpponentKey = arenaLineup[currentRound - 1];
+  // Async battle content  
+  const renderAsyncBattles = () => {
+    const ticketsRemaining = user?.async_battle_tickets || 0;
+    const todaysSteps = getTodaysSteps();
+    const activeBattles = getActiveBattles();
+    const completedBattles = getCompletedBattles();
+    const canRefreshToday = shouldRefreshDailyTickets(user!);
+    const timeUntilRefresh = getTimeUntilNextRefresh();
+    
+    return (
+      <div className="min-h-screen bg-[#0A0B14] text-white pb-20">
+        <div className="container mx-auto px-4 py-6">
+          {/* Free Daily Tickets Section */}
+          <div className="mb-6">
+            <Card className="bg-black/60 border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/20">
+              <CardContent className="p-6 text-center bg-gradient-to-b from-cyan-500/20 to-cyan-500/5">
+                <div className="flex items-center justify-center mb-3">
+                  <Ticket className="h-6 w-6 text-cyan-400 mr-2" />
+                  <span className="text-sm font-bold text-cyan-400 tracking-wide">DAILY FREE TICKETS</span>
+                </div>
+                
+                {canRefreshToday ? (
+                  <>
+                    <div className="text-4xl font-bold text-white mb-2">{DAILY_FREE_TICKETS}</div>
+                    <div className="text-sm text-cyan-300 mb-4">Available Today</div>
+                    <Button 
+                      onClick={handleDailyTicketRefresh}
+                      disabled={isRefreshingTickets}
+                      className="bg-cyan-500 hover:bg-cyan-600 text-white"
+                      size="sm"
+                    >
+                      {isRefreshingTickets ? (
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Ticket className="h-4 w-4 mr-2" />
+                      )}
+                      Claim Free Tickets
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-4xl font-bold text-white mb-1">{ticketsRemaining}</div>
+                    <div className="text-sm text-cyan-300 mb-2">Current Tickets</div>
+                    <div className="text-xs text-cyan-400/70">Next refresh: {timeUntilRefresh}</div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            <Card className="bg-black/60 border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/20">
+              <CardContent className="p-6 text-center bg-gradient-to-b from-cyan-500/20 to-cyan-500/5">
+                <div className="flex items-center justify-center mb-3">
+                  <Ticket className="h-6 w-6 text-cyan-400 mr-2" />
+                  <span className="text-sm font-bold text-cyan-400 tracking-wide">TICKETS</span>
+                </div>
+                <div className="text-4xl font-bold text-white mb-1">{ticketsRemaining}</div>
+                <div className="text-sm text-cyan-300">Remaining</div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-black/60 border-2 border-green-500/50 shadow-lg shadow-green-500/20">
+              <CardContent className="p-6 text-center bg-gradient-to-b from-green-500/20 to-green-500/5">
+                <div className="flex items-center justify-center mb-3">
+                  <Activity className="h-6 w-6 text-green-400 mr-2" />
+                  <span className="text-sm font-bold text-green-400 tracking-wide">STEPS</span>
+                </div>
+                <div className="text-4xl font-bold text-white mb-1">{todaysSteps.toLocaleString()}</div>
+                <div className="text-sm text-green-300">Today</div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-black/60 border-2 border-yellow-500/50 shadow-lg shadow-yellow-500/20">
+              <CardContent className="p-6 text-center bg-gradient-to-b from-yellow-500/20 to-yellow-500/5">
+                <div className="flex items-center justify-center mb-3">
+                  <Clock className="h-6 w-6 text-yellow-400 mr-2" />
+                  <span className="text-sm font-bold text-yellow-400 tracking-wide">ACTIVE</span>
+                </div>
+                <div className="text-4xl font-bold text-white mb-1">{activeBattles.length}</div>
+                <div className="text-sm text-yellow-300">Battles</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Tabs */}
+          <Tabs value={activeAsyncTab} onValueChange={setActiveAsyncTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-black/40 border border-cyan-500/20">
+              <TabsTrigger 
+                value="leagues" 
+                className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400"
+              >
+                <Sword className="h-4 w-4 mr-2" />
+                PvE Leagues
+              </TabsTrigger>
+              <TabsTrigger 
+                value="pools"
+                className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                PvP Pools
+              </TabsTrigger>
+              <TabsTrigger 
+                value="history"
+                className="data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-400"
+              >
+                <Trophy className="h-4 w-4 mr-2" />
+                Battle History
+              </TabsTrigger>
+            </TabsList>
+
+            {/* PvE Leagues Tab */}
+            <TabsContent value="leagues" className="space-y-6">
+              <div className="grid gap-4">
+                {Object.entries(LEAGUE_CONFIGS).map(([leagueType, config]) => (
+                  <BattleLeagueCard 
+                    key={leagueType}
+                    leagueType={leagueType as any}
+                    config={config}
+                    userSteps={todaysSteps}
+                    ticketsRemaining={ticketsRemaining}
+                    userHolobots={user?.holobots || []}
+                  />
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* PvP Pools Tab */}
+            <TabsContent value="pools" className="space-y-6">
+              <div className="grid gap-4">
+                {Object.entries(POOL_CONFIGS).map(([poolType, config]) => (
+                  <BattlePoolCard 
+                    key={poolType}
+                    poolType={poolType as any}
+                    config={config}
+                    userSteps={todaysSteps}
+                    ticketsRemaining={ticketsRemaining}
+                    userHolobots={user?.holobots || []}
+                  />
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Battle History Tab */}
+            <TabsContent value="history" className="space-y-6">
+              <BattleHistoryList battles={[...activeBattles, ...completedBattles]} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="px-2 py-3">
-      <div className="mb-4 bg-[#1A1F2C] rounded-lg p-3">
-        <div className="text-center mb-2 text-lg font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">
-          ARENA MODE
-        </div>
-        <div className="flex justify-between items-center mb-2">
-          <div className="bg-black/30 px-3 py-1 rounded-lg">
-            <span className="text-xs text-[#8E9196]">Round</span>
-            <div className="text-md font-bold text-holobots-accent">{currentRound}/{maxRounds}</div>
-          </div>
-          <div className="bg-black/30 px-3 py-1 rounded-lg">
-            <span className="text-xs text-[#8E9196]">Victories</span>
-            <div className="text-md font-bold text-green-500">{victories}</div>
-          </div>
-          <div className="bg-black/30 px-3 py-1 rounded-lg">
-            <span className="text-xs text-[#8E9196]">Opponent Level</span>
-            <div className="text-md font-bold text-yellow-500">
-              {arenaOpponentLevel}
+    <div className="min-h-screen bg-[#1A1F2C] text-white">
+      {/* Battle Mode Toggle */}
+      <div className="bg-black/40 border-b border-cyan-500/20 px-4 py-4">
+        <div className="flex items-center justify-center">
+          <div className="relative bg-black/60 rounded-lg p-1 border border-cyan-500/30">
+            <div 
+              className={cn(
+                "absolute top-1 bottom-1 rounded-md transition-all duration-300 ease-out",
+                "bg-gradient-to-r shadow-lg",
+                battleMode === 'arena' 
+                  ? "left-1 right-1/2 from-cyan-500/40 to-cyan-600/40 border border-cyan-400/50" 
+                  : "left-1/2 right-1 from-purple-500/40 to-purple-600/40 border border-purple-400/50"
+              )}
+            />
+            <div className="relative flex">
+              <button
+                onClick={() => setBattleMode('arena')}
+                className={cn(
+                  "px-8 py-3 text-sm font-medium transition-all duration-200 rounded-md relative z-10",
+                  "flex items-center justify-center gap-2",
+                  battleMode === 'arena'
+                    ? "text-cyan-100 font-bold"
+                    : "text-gray-400 hover:text-gray-300"
+                )}
+              >
+                <Sword className="h-4 w-4" />
+                ARENA
+              </button>
+              <button
+                onClick={() => setBattleMode('async')}
+                className={cn(
+                  "px-8 py-3 text-sm font-medium transition-all duration-200 rounded-md relative z-10",
+                  "flex items-center justify-center gap-2",
+                  battleMode === 'async'
+                    ? "text-purple-100 font-bold"
+                    : "text-gray-400 hover:text-gray-300"
+                )}
+              >
+                <Zap className="h-4 w-4" />
+                ASYNC
+              </button>
             </div>
           </div>
         </div>
       </div>
-      
-      <BattleScene 
-        leftHolobot={selectedHolobot}
-        rightHolobot={currentOpponentKey}
-        isCpuBattle={true}
-        cpuLevel={arenaOpponentLevel}
-        onBattleEnd={handleBattleEnd}
-      />
 
-      {/* Results screen */}
-      {showResults && arenaResults && (
-        <QuestResultsScreen
-          isVisible={showResults}
-          isSuccess={arenaResults.isSuccess}
-          squadHolobotKeys={arenaResults.squadHolobotKeys}
-          squadHolobotExp={arenaResults.squadHolobotExp}
-          blueprintRewards={arenaResults.blueprintRewards}
-          holosRewards={arenaResults.holosRewards}
-          itemRewards={arenaResults.itemRewards}
-          gachaTickets={arenaResults.gachaTickets}
-          arenaPass={arenaResults.arenaPass}
-          onClose={handleResultsClose}
-        />
+      {/* Content based on battle mode */}
+      {battleMode === 'arena' ? (
+        hasEntryFee ? renderArenaBattle() : renderArenaPreBattle()
+      ) : (
+        renderAsyncBattles()
       )}
     </div>
   );

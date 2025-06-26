@@ -14,8 +14,10 @@ interface BoosterPackStore {
   openBoosterPack: (packType: BoosterPackType) => Promise<BoosterPackResult>;
   openMarketplaceBooster: (tier: MarketplaceBoosterTier) => Promise<BoosterPackResult>;
   generateRandomItem: (tier: 'common' | 'rare' | 'epic' | 'legendary') => BoosterPackItem;
+  generateSpecificItem: (type: 'part' | 'blueprint' | 'item', tier: 'common' | 'rare' | 'epic' | 'legendary') => BoosterPackItem;
   clearOpenResult: () => void;
-  addToHistory: (result: BoosterPackResult) => void;
+  addToHistory: (result: BoosterPackResult, updateUser?: (updates: any) => Promise<void>) => Promise<void>;
+  loadHistoryFromUser: (packHistory: BoosterPackResult[]) => void;
 }
 
 // Helper function to get random tier based on rates
@@ -49,6 +51,10 @@ export const useBoosterPackStore = create<BoosterPackStore>((set, get) => ({
   isOpening: false,
   currentOpenResult: null,
 
+  loadHistoryFromUser: (packHistory) => {
+    set({ openedPacks: packHistory || [] });
+  },
+
   generateRandomItem: (tier) => {
     const itemTypes = ['part', 'blueprint', 'currency', 'item'];
     const randomType = itemTypes[Math.floor(Math.random() * itemTypes.length)];
@@ -56,6 +62,56 @@ export const useBoosterPackStore = create<BoosterPackStore>((set, get) => ({
     const baseId = `${randomType}_${tier}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     switch (randomType) {
+      case 'part': {
+        return get().generateSpecificItem('part', tier);
+      }
+      
+      case 'blueprint': {
+        return get().generateSpecificItem('blueprint', tier);
+      }
+      
+      case 'currency': {
+        // Only legendary tier can give HOLOS tokens, all others give gacha tickets
+        const isHolos = tier === 'legendary' ? Math.random() > 0.3 : false; // 70% chance for HOLOS only on legendary, 0% for others
+        
+        if (isHolos) {
+          const amount = tier === 'legendary' ? 500 : tier === 'epic' ? 250 : tier === 'rare' ? 100 : 50;
+          return {
+            id: baseId,
+            type: 'currency' as const,
+            tier,
+            name: 'HOLOS Tokens',
+            description: 'Premium in-game currency',
+            quantity: amount,
+            holosTokens: amount
+          };
+        } else {
+          const amount = tier === 'legendary' ? 50 : tier === 'epic' ? 25 : tier === 'rare' ? 10 : 5;
+          return {
+            id: baseId,
+            type: 'currency' as const,
+            tier,
+            name: 'Gacha Tickets',
+            description: 'Use to open more booster packs',
+            quantity: amount,
+            gachaTickets: amount
+          };
+        }
+      }
+      
+      case 'item': {
+        return get().generateSpecificItem('item', tier);
+      }
+      
+      default:
+        throw new Error(`Unknown item type: ${randomType}`);
+    }
+  },
+
+  generateSpecificItem: (type, tier) => {
+    const baseId = `${type}_${tier}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    switch (type) {
       case 'part': {
         // Get random part from marketplace
         const randomIndex = Math.floor(Math.random() * MARKETPLACE_PARTS.length);
@@ -94,35 +150,6 @@ export const useBoosterPackStore = create<BoosterPackStore>((set, get) => ({
         };
       }
       
-      case 'currency': {
-        // Only legendary tier can give HOLOS tokens, all others give gacha tickets
-        const isHolos = tier === 'legendary' ? Math.random() > 0.3 : false; // 70% chance for HOLOS only on legendary, 0% for others
-        
-        if (isHolos) {
-          const amount = tier === 'legendary' ? 500 : tier === 'epic' ? 250 : tier === 'rare' ? 100 : 50;
-          return {
-            id: baseId,
-            type: 'currency' as const,
-            tier,
-            name: 'HOLOS Tokens',
-            description: 'Premium in-game currency',
-            quantity: amount,
-            holosTokens: amount
-          };
-        } else {
-          const amount = tier === 'legendary' ? 50 : tier === 'epic' ? 25 : tier === 'rare' ? 10 : 5;
-          return {
-            id: baseId,
-            type: 'currency' as const,
-            tier,
-            name: 'Gacha Tickets',
-            description: 'Use to open more booster packs',
-            quantity: amount,
-            gachaTickets: amount
-          };
-        }
-      }
-      
       case 'item': {
         const items = [
           { type: 'arena_pass', name: 'Arena Pass', desc: 'Free entry to premium arena battles' },
@@ -146,7 +173,7 @@ export const useBoosterPackStore = create<BoosterPackStore>((set, get) => ({
       }
       
       default:
-        throw new Error(`Unknown item type: ${randomType}`);
+        throw new Error(`Unknown item type: ${type}`);
     }
   },
 
@@ -156,10 +183,13 @@ export const useBoosterPackStore = create<BoosterPackStore>((set, get) => ({
     const packConfig = BOOSTER_PACK_TYPES[packType];
     const items: BoosterPackItem[] = [];
     
-    // Generate guaranteed items
-    for (let i = 0; i < packConfig.guaranteed; i++) {
+    // GUARANTEED DISTRIBUTION: 1 Blueprint + 1 Part + 1 Item
+    const guaranteedTypes = ['blueprint', 'part', 'item'] as const;
+    
+    // Generate one of each guaranteed type
+    for (const itemType of guaranteedTypes) {
       const tier = getRandomTier(packConfig.rarity);
-      const item = get().generateRandomItem(tier);
+      const item = get().generateSpecificItem(itemType, tier);
       items.push(item);
     }
     
@@ -177,8 +207,6 @@ export const useBoosterPackStore = create<BoosterPackStore>((set, get) => ({
       currentOpenResult: result 
     });
     
-    get().addToHistory(result);
-    
     return result;
   },
 
@@ -192,10 +220,13 @@ export const useBoosterPackStore = create<BoosterPackStore>((set, get) => ({
     const boosterConfig = MARKETPLACE_BOOSTER_TIERS[tier];
     const items: BoosterPackItem[] = [];
     
-    // Generate guaranteed items
-    for (let i = 0; i < boosterConfig.guaranteed; i++) {
+    // GUARANTEED DISTRIBUTION: 1 Blueprint + 1 Part + 1 Item
+    const guaranteedTypes = ['blueprint', 'part', 'item'] as const;
+    
+    // Generate one of each guaranteed type
+    for (const itemType of guaranteedTypes) {
       const itemTier = getRandomTier(boosterConfig.rarity);
-      const item = get().generateRandomItem(itemTier);
+      const item = get().generateSpecificItem(itemType, itemTier);
       items.push(item);
     }
     
@@ -213,14 +244,25 @@ export const useBoosterPackStore = create<BoosterPackStore>((set, get) => ({
       currentOpenResult: result 
     });
     
-    get().addToHistory(result);
-    
     return result;
   },
 
-  addToHistory: (result) => {
+  addToHistory: async (result, updateUser) => {
+    // Add to local state immediately
     set(state => ({
       openedPacks: [result, ...state.openedPacks].slice(0, 50) // Keep last 50 packs
     }));
+
+    // Save to user profile if updateUser function is provided
+    if (updateUser) {
+      try {
+        const currentPacks = get().openedPacks;
+        await updateUser({
+          pack_history: currentPacks
+        });
+      } catch (error) {
+        console.error('Failed to save pack history to user profile:', error);
+      }
+    }
   }
 })); 

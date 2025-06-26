@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Trophy, Crown, Coins, Zap, Medal } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface LeaderboardItem {
   rank: number;
@@ -13,45 +15,117 @@ interface LeaderboardItem {
 
 const Leaderboard = () => {
   const [currentTab, setCurrentTab] = useState("battle");
-  
-  const battleLeaders: LeaderboardItem[] = [
-    { rank: 1, username: "CryptoKing", avatarUrl: "/lovable-uploads/8d33b0c2-676e-40c9-845e-8d81095085d1.png", value: "254 - 12" },
-    { rank: 2, username: "NFTHunter", avatarUrl: "/lovable-uploads/ec4c76d2-330e-4a83-8252-ff1ff19962e8.png", value: "201 - 18" },
-    { rank: 3, username: "BlockMaster", avatarUrl: "/lovable-uploads/ae1e648c-596d-49d0-b944-27cdf423a7e1.png", value: "195 - 26" },
-    { rank: 4, username: "HoloQueen", value: "182 - 34" },
-    { rank: 5, username: "PhantomGamer", value: "173 - 31" },
-    { rank: 6, username: "CyberSamurai", value: "162 - 46" },
-    { rank: 7, username: "MintMaster", value: "154 - 54" },
-    { rank: 8, username: "TokenTrader", value: "147 - 63" },
-    { rank: 9, username: "WalletWarrior", value: "142 - 59" },
-    { rank: 10, username: "ChainChampion", value: "139 - 72" },
-  ];
-  
-  const tokenLeaders: LeaderboardItem[] = [
-    { rank: 1, username: "CryptoKing", avatarUrl: "/lovable-uploads/8d33b0c2-676e-40c9-845e-8d81095085d1.png", value: "245,678" },
-    { rank: 2, username: "NFTHunter", avatarUrl: "/lovable-uploads/ec4c76d2-330e-4a83-8252-ff1ff19962e8.png", value: "198,432" },
-    { rank: 3, username: "BlockMaster", avatarUrl: "/lovable-uploads/ae1e648c-596d-49d0-b944-27cdf423a7e1.png", value: "156,789" },
-    { rank: 4, username: "HoloQueen", value: "132,654" },
-    { rank: 5, username: "PhantomGamer", value: "120,987" },
-    { rank: 6, username: "CyberSamurai", value: "108,765" },
-    { rank: 7, username: "MintMaster", value: "98,432" },
-    { rank: 8, username: "TokenTrader", value: "87,654" },
-    { rank: 9, username: "WalletWarrior", value: "76,543" },
-    { rank: 10, username: "ChainChampion", value: "65,432" },
-  ];
-  
-  const levelLeaders: LeaderboardItem[] = [
-    { rank: 1, username: "CryptoKing", avatarUrl: "/lovable-uploads/8d33b0c2-676e-40c9-845e-8d81095085d1.png", value: "Level 85" },
-    { rank: 2, username: "NFTHunter", avatarUrl: "/lovable-uploads/ec4c76d2-330e-4a83-8252-ff1ff19962e8.png", value: "Level 82" },
-    { rank: 3, username: "BlockMaster", avatarUrl: "/lovable-uploads/ae1e648c-596d-49d0-b944-27cdf423a7e1.png", value: "Level 79" },
-    { rank: 4, username: "HoloQueen", value: "Level 76" },
-    { rank: 5, username: "PhantomGamer", value: "Level 74" },
-    { rank: 6, username: "CyberSamurai", value: "Level 72" },
-    { rank: 7, username: "MintMaster", value: "Level 70" },
-    { rank: 8, username: "TokenTrader", value: "Level 68" },
-    { rank: 9, username: "WalletWarrior", value: "Level 67" },
-    { rank: 10, username: "ChainChampion", value: "Level 65" },
-  ];
+  const [battleLeaders, setBattleLeaders] = useState<LeaderboardItem[]>([]);
+  const [tokenLeaders, setTokenLeaders] = useState<LeaderboardItem[]>([]);
+  const [levelLeaders, setLevelLeaders] = useState<LeaderboardItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchLeaderboardData();
+  }, []);
+
+  const fetchLeaderboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all profiles with necessary data
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('username, wins, losses, holos_tokens, holobots, player_rank')
+        .order('wins', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching leaderboard data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load leaderboard data",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('Fetched profiles:', profiles); // Debug log
+
+      if (!profiles || profiles.length === 0) {
+        console.log('No profiles found, keeping mock data');
+        return;
+      }
+
+      // Process battle leaders (show all users, even with 0 battles)
+      const battleData = profiles
+        .map(profile => ({
+          username: profile.username,
+          wins: profile.wins || 0,
+          losses: profile.losses || 0,
+          totalBattles: (profile.wins || 0) + (profile.losses || 0),
+          winRate: (profile.wins || 0) > 0 ? (profile.wins || 0) / ((profile.wins || 0) + (profile.losses || 0)) : 0
+        }))
+        .sort((a, b) => {
+          // First sort by total battles, then by wins, then by win rate
+          if (b.totalBattles !== a.totalBattles) return b.totalBattles - a.totalBattles;
+          if (b.wins !== a.wins) return b.wins - a.wins;
+          return b.winRate - a.winRate;
+        })
+        .slice(0, 10)
+        .map((profile, index) => ({
+          rank: index + 1,
+          username: profile.username,
+          value: `${profile.wins} - ${profile.losses}`
+        }));
+
+      // Process token leaders (show all users, even with 0 tokens)
+      const tokenData = profiles
+        .sort((a, b) => (b.holos_tokens || 0) - (a.holos_tokens || 0))
+        .slice(0, 10)
+        .map((profile, index) => ({
+          rank: index + 1,
+          username: profile.username,
+          value: (profile.holos_tokens || 0).toLocaleString()
+        }));
+
+      // Process level leaders (calculate highest level holobot, show all users)
+      const levelData = profiles
+        .map(profile => {
+          let maxLevel = 1;
+          if (profile.holobots && Array.isArray(profile.holobots)) {
+            const levels = profile.holobots.map((h: any) => h.level || 1);
+            if (levels.length > 0) {
+              maxLevel = Math.max(...levels);
+            }
+          }
+          return {
+            username: profile.username,
+            maxLevel
+          };
+        })
+        .sort((a, b) => b.maxLevel - a.maxLevel)
+        .slice(0, 10)
+        .map((profile, index) => ({
+          rank: index + 1,
+          username: profile.username,
+          value: `Level ${profile.maxLevel}`
+        }));
+
+      console.log('Battle leaders:', battleData);
+      console.log('Token leaders:', tokenData);
+      console.log('Level leaders:', levelData);
+
+      setBattleLeaders(battleData);
+      setTokenLeaders(tokenData);
+      setLevelLeaders(levelData);
+
+    } catch (error) {
+      console.error('Error in fetchLeaderboardData:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load leaderboard data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -79,35 +153,63 @@ const Leaderboard = () => {
     }
   };
 
-  const renderLeaderboard = (leaders: LeaderboardItem[], valueLabel: string) => (
-    <div className="space-y-2">
-      {leaders.map((leader) => (
-        <div 
-          key={leader.rank}
-          className={`
-            flex items-center justify-between p-3 
-            ${leader.rank <= 3 
-              ? 'bg-holobots-background/50 dark:bg-holobots-dark-background/50 border-2 border-holobots-accent/30 dark:border-holobots-accent/30' 
-              : 'bg-holobots-background/20 dark:bg-holobots-dark-background/20 border border-holobots-border dark:border-holobots-dark-border'
-            }
-            rounded-lg transition-all duration-200 hover:scale-[1.01]
-          `}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-8 flex justify-center">{getRankIcon(leader.rank)}</div>
-            <Avatar className="h-8 w-8 border border-holobots-border dark:border-holobots-dark-border">
-              <AvatarImage src={leader.avatarUrl} />
-              <AvatarFallback className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{leader.username.substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="font-medium text-gray-800 dark:text-gray-200">{leader.username}</span>
-          </div>
-          <div className="text-sm font-semibold text-holobots-accent dark:text-holobots-dark-accent">
-            {leader.value}
-          </div>
+  const renderLeaderboard = (leaders: LeaderboardItem[], valueLabel: string) => {
+    if (loading) {
+      return (
+        <div className="space-y-2">
+          {[...Array(10)].map((_, i) => (
+            <div key={i} className="flex items-center justify-between p-3 bg-holobots-background/20 dark:bg-holobots-dark-background/20 border border-holobots-border dark:border-holobots-dark-border rounded-lg animate-pulse">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                <div className="h-8 w-8 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                <div className="h-4 w-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
+              </div>
+              <div className="h-4 w-16 bg-gray-300 dark:bg-gray-600 rounded"></div>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-  );
+      );
+    }
+
+    if (leaders.length === 0) {
+      return (
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          <p className="mb-2">No players found</p>
+          <p className="text-sm">Check back soon as more players join!</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        {leaders.map((leader) => (
+          <div 
+            key={leader.rank}
+            className={`
+              flex items-center justify-between p-3 
+              ${leader.rank <= 3 
+                ? 'bg-holobots-background/50 dark:bg-holobots-dark-background/50 border-2 border-holobots-accent/30 dark:border-holobots-accent/30' 
+                : 'bg-holobots-background/20 dark:bg-holobots-dark-background/20 border border-holobots-border dark:border-holobots-dark-border'
+              }
+              rounded-lg transition-all duration-200 hover:scale-[1.01]
+            `}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 flex justify-center">{getRankIcon(leader.rank)}</div>
+              <Avatar className="h-8 w-8 border border-holobots-border dark:border-holobots-dark-border">
+                <AvatarImage src={leader.avatarUrl} />
+                <AvatarFallback className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{leader.username.substring(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span className="font-medium text-gray-800 dark:text-gray-200">{leader.username}</span>
+            </div>
+            <div className="text-sm font-semibold text-holobots-accent dark:text-holobots-dark-accent">
+              {leader.value}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background p-4">

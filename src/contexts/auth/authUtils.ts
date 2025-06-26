@@ -1,8 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/user";
 
-// Ensure new users get 500 Holos tokens when they sign up
+// Ensure new users get Genesis reward package when they sign up
 export const ensureWelcomeGift = async (
   userId: string, 
   currentUser: UserProfile | null,
@@ -12,7 +11,7 @@ export const ensureWelcomeGift = async (
     // Get the current user profile
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
-      .select('holos_tokens')
+      .select('holos_tokens, gacha_tickets, arena_passes')
       .eq('id', userId as any)
       .maybeSingle();
     
@@ -21,27 +20,35 @@ export const ensureWelcomeGift = async (
       return;
     }
     
-    // Check if profile is not null and has the holos_tokens property
-    if (profile && 'holos_tokens' in profile && profile.holos_tokens === 0) {
-      console.log("Giving welcome gift of 500 Holos tokens to new user");
+    // Check if profile exists and if they haven't received the Genesis reward package yet
+    // We'll check if they have 0 gacha tickets as an indicator they haven't received the package
+    if (profile && profile.gacha_tickets === 0) {
+      console.log("Giving Genesis reward package to new user");
       
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
-          holos_tokens: 500 
+          gacha_tickets: 10, // Add 10 Gacha Tickets
+          arena_passes: (profile.arena_passes || 0) + 5 // Add 5 Arena Passes
         } as any)
         .eq('id', userId as any);
       
       if (updateError) {
-        console.error("Error giving welcome gift:", updateError);
+        console.error("Error giving Genesis reward package:", updateError);
       } else {
-        console.log("Welcome gift of 500 Holos tokens successfully given");
+        console.log("Genesis reward package successfully given");
         
         // Update local state if this is the current user
         if (currentUser && currentUser.id === userId) {
+          const currentInventory = currentUser.inventory || { common: 0, rare: 0, legendary: 0 };
           setCurrentUser({
             ...currentUser,
-            holosTokens: 500
+            gachaTickets: 10,
+            arena_passes: (currentUser.arena_passes || 0) + 5,
+            inventory: {
+              ...currentInventory,
+              common: (currentInventory.common || 0) + 5 // Add 5 Common Boosters to client-side inventory
+            }
           });
         }
       }

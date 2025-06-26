@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 
 const BoosterPacks: React.FC = () => {
   const { user, updateUser } = useAuth();
-  const { openBoosterPack, isOpening, currentOpenResult, clearOpenResult, openedPacks } = useBoosterPackStore();
+  const { openBoosterPack, isOpening, currentOpenResult, clearOpenResult, openedPacks, addToHistory, loadHistoryFromUser } = useBoosterPackStore();
   const { loadPartsFromUser, loadEquippedPartsFromUser } = useHolobotPartsStore();
   const [selectedTab, setSelectedTab] = useState('packs');
   const navigate = useNavigate();
@@ -27,7 +27,19 @@ const BoosterPacks: React.FC = () => {
     if (user?.equippedParts) {
       loadEquippedPartsFromUser(user.equippedParts);
     }
-  }, [user?.parts, user?.equippedParts, loadPartsFromUser, loadEquippedPartsFromUser]);
+    // Load pack history from user data
+    if (user?.pack_history) {
+      loadHistoryFromUser(user.pack_history);
+    }
+  }, [user?.parts, user?.equippedParts, user?.pack_history, loadPartsFromUser, loadEquippedPartsFromUser, loadHistoryFromUser]);
+
+  const handleClosePackAnimation = async () => {
+    // Add the current pack result to history when closing
+    if (currentOpenResult) {
+      await addToHistory(currentOpenResult, updateUser);
+    }
+    clearOpenResult();
+  };
 
   const handlePurchasePack = async (packType: BoosterPackType, paymentMethod: 'holos' | 'tickets') => {
     if (!user) {
@@ -61,11 +73,14 @@ const BoosterPacks: React.FC = () => {
       // Open the pack
       const result = await openBoosterPack(packType);
       
+      // Note: History will be added when user closes the pack animation
+      
       // Process the results and save to database
       const newParts: any[] = [];
       let holosGained = 0;
       let ticketsGained = 0;
       let blueprintsGained: Record<string, number> = {};
+      let itemsGained: Record<string, number> = {};
       
       result.items.forEach(item => {
         if (item.type === 'part' && item.part) {
@@ -75,6 +90,8 @@ const BoosterPacks: React.FC = () => {
           if (item.gachaTickets) ticketsGained += item.gachaTickets;
         } else if (item.type === 'blueprint' && item.holobotKey && item.blueprintPieces) {
           blueprintsGained[item.holobotKey] = (blueprintsGained[item.holobotKey] || 0) + item.blueprintPieces;
+        } else if (item.type === 'item' && item.itemType) {
+          itemsGained[item.itemType] = (itemsGained[item.itemType] || 0) + item.quantity;
         }
       });
 
@@ -102,6 +119,26 @@ const BoosterPacks: React.FC = () => {
         profileUpdates.blueprints = updatedBlueprints;
       }
 
+      // Add items to user profile
+      if (Object.keys(itemsGained).length > 0) {
+        Object.entries(itemsGained).forEach(([itemType, quantity]) => {
+          switch (itemType) {
+            case 'arena_pass':
+              profileUpdates.arena_passes = (user.arena_passes || 0) + quantity;
+              break;
+            case 'energy_refill':
+              profileUpdates.energy_refills = (user.energy_refills || 0) + quantity;
+              break;
+            case 'exp_booster':
+              profileUpdates.exp_boosters = (user.exp_boosters || 0) + quantity;
+              break;
+            case 'rank_skip':
+              profileUpdates.rank_skips = (user.rank_skips || 0) + quantity;
+              break;
+          }
+        });
+      }
+
       if (Object.keys(profileUpdates).length > 0) {
         await updateUser(profileUpdates);
       }
@@ -116,7 +153,7 @@ const BoosterPacks: React.FC = () => {
   const handleEquipPart = (item: BoosterPackItem) => {
     if (item.type === 'part' && item.part) {
       // Close the pack animation first
-      clearOpenResult();
+      handleClosePackAnimation();
       
       // Navigate to Holobots page where they can equip the part
       navigate('/holobots-info');
@@ -153,14 +190,17 @@ const BoosterPacks: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white">
+    <div className="min-h-screen bg-[#0A0B14] text-white">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-black mb-4 text-shadow-lg bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
-            BOOSTER PACKS
-          </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          <div className="flex items-center justify-center mb-4">
+            <Package className="h-8 w-8 text-purple-400 mr-3" />
+            <h1 className="text-4xl font-bold text-white tracking-wide">
+              BOOSTER PACKS
+            </h1>
+          </div>
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
             Open collectible packs to discover rare Holobot parts, blueprint fragments, and valuable items!
           </p>
         </div>
@@ -334,7 +374,7 @@ const BoosterPacks: React.FC = () => {
       <PackOpeningAnimation
         result={currentOpenResult}
         isOpening={isOpening}
-        onClose={clearOpenResult}
+        onClose={handleClosePackAnimation}
         onEquipPart={handleEquipPart}
       />
     </div>

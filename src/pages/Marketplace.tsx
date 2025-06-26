@@ -4,7 +4,6 @@ import { MarketplaceHolobotCard } from "@/components/marketplace/MarketplaceHolo
 import { MarketplaceItemCard } from "@/components/marketplace/MarketplaceItemCard";
 import { MarketplacePartCard } from "@/components/marketplace/MarketplacePartCard";
 import { BlueprintCard } from "@/components/marketplace/BlueprintCard";
-import MarketplaceBoosterCard from "@/components/marketplace/MarketplaceBoosterCard";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -12,18 +11,14 @@ import {
   ShoppingBag, 
   Plus,
   Search,
-  SlidersHorizontal,
-  Settings
+  SlidersHorizontal
 } from "lucide-react";
 import { HOLOBOT_IMAGE_MAPPING } from "@/utils/holobotImageUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { UserHolobot } from "@/types/user";
 import { MARKETPLACE_PARTS, MarketplacePart, createPartFromMarketplace } from "@/data/marketplaceParts";
 import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
-import { useBoosterPackStore } from "@/stores/boosterPackStore";
 import { Part } from "@/types/holobotParts";
-import { MarketplaceBoosterTier, MARKETPLACE_BOOSTER_TIERS } from "@/types/boosterPack";
-import PackOpeningAnimation from "@/components/boosterpack/PackOpeningAnimation";
 
 const MARKETPLACE_ITEMS = [
   // Holobots
@@ -145,7 +140,7 @@ const MARKETPLACE_ITEMS = [
   {
     id: "i5",
     type: "item",
-    itemType: "gacha-ticket" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
+    itemType: "gacha-ticket" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "async-battle-ticket",
     name: "Gacha Ticket",
     description: "Can be used for one pull in the Gacha system",
     rarity: "rare" as "common" | "rare" | "extremely-rare",
@@ -153,6 +148,18 @@ const MARKETPLACE_ITEMS = [
     seller: "GameShop",
     quantity: 1,
     createdAt: new Date('2023-07-16')
+  },
+  {
+    id: "i6",
+    type: "item",
+    itemType: "async-battle-ticket" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "async-battle-ticket",
+    name: "Async Battle Ticket",
+    description: "Grants entry to one async battle in PvE leagues or PvP pools",
+    rarity: "common" as "common" | "rare" | "extremely-rare",
+    price: 50,  
+    seller: "GameShop",
+    quantity: 1,
+    createdAt: new Date('2023-07-20')
   }
 ];
 
@@ -177,7 +184,7 @@ interface MarketplaceBlueprintItem extends MarketplaceItemBase {
   tier: number;
 }
 
-export type ItemTypeKey = "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip";
+export type ItemTypeKey = "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "async-battle-ticket";
 
 interface MarketplaceConsumableItem extends MarketplaceItemBase {
   type: "item";
@@ -192,12 +199,62 @@ export type AnyMarketplaceItem = MarketplaceHolobotItem | MarketplaceBlueprintIt
 const Marketplace = () => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
-  const [activeNavItem, setActiveNavItem] = useState<string>("browse");
   const [filteredItems, setFilteredItems] = useState(MARKETPLACE_ITEMS as AnyMarketplaceItem[]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isBuying, setIsBuying] = useState(false);
   const { addPart, inventory, loadPartsFromUser, loadEquippedPartsFromUser } = useHolobotPartsStore();
-  const { openMarketplaceBooster, isOpening, currentOpenResult, clearOpenResult } = useBoosterPackStore();
+
+  // Clean up invalid blueprint entries
+  const cleanupInvalidBlueprints = async () => {
+    if (!user || !user.blueprints) return;
+    
+    const validHolobotKeys = Object.keys(HOLOBOT_STATS);
+    const invalidTypes = ['common', 'owned_parts', 'inventory'];
+    
+    // Find invalid blueprint entries
+    const invalidEntries = Object.keys(user.blueprints).filter(key => {
+      // Check if it's an invalid type
+      if (invalidTypes.some(invalid => key.toLowerCase().includes(invalid))) {
+        return true;
+      }
+      
+      // Check if it's not a valid holobot key
+      return !validHolobotKeys.some(validKey => 
+        validKey.toLowerCase() === key.toLowerCase()
+      );
+    });
+    
+    if (invalidEntries.length > 0) {
+      console.log('Cleaning up invalid blueprint entries:', invalidEntries);
+      
+      // Create a new blueprints object without invalid entries
+      const cleanedBlueprints = { ...user.blueprints };
+      invalidEntries.forEach(invalidKey => {
+        delete cleanedBlueprints[invalidKey];
+      });
+      
+      // Update the user's blueprints in the database
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ blueprints: cleanedBlueprints })
+          .eq('id', user.id);
+        
+        if (error) {
+          console.error('Error cleaning up blueprints:', error);
+        } else {
+          // Update the local user state
+          updateUser({ blueprints: cleanedBlueprints });
+          toast({
+            title: "Blueprints Cleaned",
+            description: "Removed invalid blueprint entries from your inventory.",
+          });
+        }
+      } catch (error) {
+        console.error('Error updating blueprints:', error);
+      }
+    }
+  };
 
   // Load user parts when user data is available
   useEffect(() => {
@@ -207,7 +264,10 @@ const Marketplace = () => {
     if (user?.equippedParts) {
       loadEquippedPartsFromUser(user.equippedParts);
     }
-  }, [user?.parts, user?.equippedParts, loadPartsFromUser, loadEquippedPartsFromUser]);
+    
+    // Clean up invalid blueprints when inventory is viewed
+    cleanupInvalidBlueprints();
+  }, [user?.parts, user?.equippedParts, user?.blueprints, loadPartsFromUser, loadEquippedPartsFromUser]);
   
   // Filter items by type
   const holobotItems = MARKETPLACE_ITEMS.filter(item => item.type === "holobot") as MarketplaceHolobotItem[];
@@ -289,6 +349,10 @@ const Marketplace = () => {
           case "rank-skip":
             profileUpdatesForSupabase.rank_skips = (user.rank_skips || 0) + 1;
             updatedUserProfileFields.rank_skips = (user.rank_skips || 0) + 1;
+            break;
+          case "async-battle-ticket":
+            profileUpdatesForSupabase.async_battle_tickets = (user.async_battle_tickets || 0) + 1;
+            updatedUserProfileFields.async_battle_tickets = (user.async_battle_tickets || 0) + 1;
             break;
           default:
             throw new Error(`Unknown item type: ${itemToBuy.itemType}`);
@@ -401,54 +465,6 @@ const Marketplace = () => {
     }
   };
 
-  const handleBuyBooster = async (tier: MarketplaceBoosterTier) => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "Please log in to purchase boosters.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const boosterConfig = MARKETPLACE_BOOSTER_TIERS[tier];
-    
-    if (user.holosTokens < boosterConfig.price) {
-      toast({
-        title: "Insufficient Funds",
-        description: `You need ${boosterConfig.price - user.holosTokens} more HOLOS tokens.`,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsBuying(true);
-    
-    try {
-      // Deduct HOLOS tokens
-      await updateUser({
-        holosTokens: user.holosTokens - boosterConfig.price
-      });
-
-      // Open the booster pack
-      await openMarketplaceBooster(tier);
-      
-      toast({
-        title: "Booster Purchased!",
-        description: `${boosterConfig.name} opened successfully!`,
-      });
-    } catch (error) {
-      console.error("Error purchasing booster:", error);
-      toast({
-        title: "Purchase Failed",
-        description: "Failed to purchase booster. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsBuying(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#111520] text-white">
       <div className="container mx-auto pt-16 px-4 pb-16">
@@ -461,512 +477,171 @@ const Marketplace = () => {
           </p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border border-cyan-900/30 rounded-md overflow-hidden mb-6">
-          <button 
-            className={`flex-1 py-3 px-4 flex items-center justify-center ${activeNavItem === 'browse' 
-              ? 'bg-cyan-500/20 text-white' 
-              : 'bg-[#0D111A] text-gray-400'}`}
-            onClick={() => setActiveNavItem('browse')}
-          >
-            <ShoppingBag className="w-5 h-5 mr-2" />
-            <span className="font-medium">Browse Marketplace</span>
-          </button>
-          <button 
-            className={`flex-1 py-3 px-4 flex items-center justify-center ${activeNavItem === 'inventory' 
-              ? 'bg-cyan-500/20 text-white' 
-              : 'bg-[#0D111A] text-gray-400'}`}
-            onClick={() => setActiveNavItem('inventory')}
-          >
-            <ShoppingBag className="w-5 h-5 mr-2" />
-            <span className="font-medium">My Inventory</span>
-          </button>
-        </div>
-
-        {activeNavItem === 'browse' && (
-          <>
-            {/* Main Content */}
-            <div className="grid grid-cols-1 gap-4">
-              {/* Top Row: Search and Balance */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                {/* Search Bar */}
-                <div className="md:col-span-2 bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <input
-                      type="text"
-                      placeholder="Search marketplace..."
-                      className="w-full py-2 pl-10 pr-4 rounded-md bg-black/40 border border-cyan-900/30 text-white"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <button className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <SlidersHorizontal className="h-5 w-5 text-gray-400" />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-3">
-                    <select className="bg-black/40 border border-cyan-900/30 rounded-md px-3 py-2 text-gray-200">
-                      <option>All Items</option>
-                      <option>Holobots</option>
-                      <option>Blueprints</option>
-                      <option>Items</option>
-                    </select>
-                    <select className="bg-black/40 border border-cyan-900/30 rounded-md px-3 py-2 text-gray-200">
-                      <option>Newest First</option>
-                      <option>Oldest First</option>
-                      <option>Price: Low to High</option>
-                      <option>Price: High to Low</option>
-                    </select>
-                  </div>
-                </div>
-                
-                {/* Balance */}
-                <div className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
-                  <h3 className="text-lg font-bold text-red-400 mb-2 font-orbitron">Balance</h3>
-                  <div className="flex items-center text-cyan-400 text-xl font-bold mb-3">
-                    <div className="w-3 h-3 mr-2 bg-yellow-400 rounded-full"></div>
-                    {user.holosTokens} HOLOS
-                  </div>
-                  
-                  <div className="mt-2">
-                    <h4 className="text-sm font-bold mb-1 text-red-400">Need more HOLOS?</h4>
-                    <Button 
-                      className="w-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center"
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Buy Tokens
-                    </Button>
-                  </div>
-                </div>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 gap-4">
+          {/* Top Row: Search and Balance */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* Search Bar */}
+            <div className="md:col-span-2 bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  placeholder="Search marketplace..."
+                  className="w-full py-2 pl-10 pr-4 rounded-md bg-black/40 border border-cyan-900/30 text-white"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <SlidersHorizontal className="h-5 w-5 text-gray-400" />
+                </button>
               </div>
-
-              {/* Holobots Section - Removed as per user request
-              <div>
-                <div className="flex items-center mb-3">
-                  <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
-                  <h2 className="text-xl font-bold text-white">Holobots</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {holobotItems.map(item => (
-                    <div key={item.id} className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 overflow-hidden">
-                      <div className="p-4">
-                        <div className="flex justify-between mb-3">
-                          <div className="flex items-center">
-                            <span className="text-cyan-400 text-lg font-bold">{item.name}</span>
-                            <span className="ml-2 px-2 py-0.5 bg-cyan-500 rounded-full text-xs text-white">
-                              LV{item.level}
-                            </span>
-                          </div>
-                          <div className="px-2 py-0.5 rounded text-xs uppercase">
-                            {item.level > 10 ? "CHAMPION" : "STARTER"}
-                          </div>
-                        </div>
-                        
-                        <div className="flex space-x-4">
-                          <div className="space-y-1">
-                            <div className="text-xs">HP: {HOLOBOT_STATS[item.name.toLowerCase()].maxHealth}</div>
-                            <div className="text-xs">Attack: {HOLOBOT_STATS[item.name.toLowerCase()].attack}</div>
-                            <div className="text-xs">Defense: {HOLOBOT_STATS[item.name.toLowerCase()].defense}</div>
-                            <div className="text-xs">Speed: {HOLOBOT_STATS[item.name.toLowerCase()].speed}</div>
-                            <div className="text-xs text-cyan-400">
-                              Special: {HOLOBOT_STATS[item.name.toLowerCase()].specialMove || "None"}
-                            </div>
-                          </div>
-                          
-                          <div className="bg-black/40 rounded overflow-hidden w-24 h-24 flex items-center justify-center">
-                            <img 
-                              src={HOLOBOT_IMAGE_MAPPING[item.name.toUpperCase()]} 
-                              alt={item.name}
-                              className="w-20 h-20 object-contain"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-black/20 p-2 flex justify-between items-center">
-                        <div className="text-sm">
-                          Seller: {item.seller}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-yellow-400 font-bold">{item.price} HOLOS</span>
-                          <Button 
-                            className="bg-cyan-500 hover:bg-cyan-600 text-white flex items-center"
-                            onClick={() => handleBuy(item.id)}
-                          >
-                            <span className="mr-1">⭘</span> Buy
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              */}
-
-              {/* Blueprints Section - Removed as per user request
-              <div>
-                <div className="flex items-center mb-3">
-                  <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
-                  <h2 className="text-xl font-bold text-white">Blueprints</h2>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-                  {blueprintItems.map(item => (
-                    <div key={item.id}>
-                      <div className={`
-                        ${item.holobotName === 'KUMA' ? 'bg-green-800' : 
-                         item.holobotName === 'ACE' ? 'bg-blue-800' : 
-                         item.holobotName === 'WOLF' ? 'bg-purple-800' : 
-                         item.holobotName === 'TORA' ? 'bg-green-800' : 'bg-blue-800'}
-                        rounded-lg overflow-hidden h-48 border-2 border-cyan-500/30 relative
-                      `}>
-                        <div className="absolute top-2 right-2 z-10 bg-cyan-500 rounded px-2 py-0.5 text-xs text-white">
-                          FOR SALE
-                        </div>
-                        <div className="flex items-center justify-center h-full p-6">
-                          <img 
-                            src={HOLOBOT_IMAGE_MAPPING[item.holobotName]}
-                            alt={item.holobotName}
-                            className="w-32 h-32 object-contain opacity-50"
-                          />
-                        </div>
-                        <div className="absolute bottom-0 w-full bg-black/50 p-2">
-                          <div className="text-white font-bold text-lg">
-                            {item.holobotName} BLUEPRINT
-                          </div>
-                          <div className="bg-black/50 inline-block px-2 py-0.5 rounded text-xs text-white mt-1">
-                            Tier {item.tier}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-yellow-400 font-bold">{item.price} HOLOS</span>
-                        <Button 
-                          className="bg-cyan-500 hover:bg-cyan-600 text-white flex items-center"
-                          onClick={() => handleBuy(item.id)}
-                        >
-                          <span className="mr-1">⭘</span> Buy
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              */}
-
-              {/* Boosters Section */}
-              <div>
-                <div className="flex items-center mb-3">
-                  <div className="w-4 h-4 bg-yellow-400 rounded-full mr-2"></div>
-                  <h2 className="text-xl font-bold text-white">Rank Boosters</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  <MarketplaceBoosterCard
-                    onPurchase={handleBuyBooster}
-                    disabled={isBuying || isOpening}
-                    userHolos={user?.holosTokens || 0}
-                  />
-                </div>
-                <div className="bg-yellow-900/20 border border-yellow-400/30 rounded-lg p-4 mb-8">
-                  <h3 className="text-yellow-400 font-bold mb-2">🏆 Legendary Rank Boosters</h3>
-                  <p className="text-yellow-300 text-sm">
-                    Legendary Rank Boosters are exclusive rewards for tournament winners and top leaderboard players at the end of each season. 
-                    These premium boosters guarantee the highest tier items with 40% legendary drop rates!
-                  </p>
-                </div>
-              </div>
-
-              {/* Parts Section */}
-              <div>
-                <div className="flex items-center mb-3">
-                  <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
-                  <h2 className="text-xl font-bold text-white">Holobot Parts</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {MARKETPLACE_PARTS.map(part => (
-                    <MarketplacePartCard
-                      key={part.id}
-                      part={part}
-                      onBuy={handleBuyPart}
-                      isBuying={isBuying}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Items Section */}
-              <div>
-                <div className="flex items-center mb-3">
-                  <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
-                  <h2 className="text-xl font-bold text-white">Items</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {itemItems.map(item => (
-                    <div key={item.id} className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
-                      <div className="flex gap-4 mb-4">
-                        <div className={`
-                          h-24 w-20 rounded-lg flex items-center justify-center
-                          ${item.itemType === 'energy-refill' ? 'bg-blue-900/30' : 
-                            item.itemType === 'gacha-ticket' ? 'bg-amber-900/30' : 
-                            item.itemType === 'exp-booster' ? 'bg-green-900/30' : 
-                            item.itemType === 'arena-pass' ? 'bg-purple-900/30' : 'bg-red-900/30'}
-                        `}>
-                          {item.itemType === 'energy-refill' && (
-                            <div className="text-blue-400 text-4xl">⚡</div>
-                          )}
-                          {item.itemType === 'gacha-ticket' && (
-                            <div className="text-amber-400 text-4xl">🎫</div>
-                          )}
-                          {item.itemType === 'exp-booster' && (
-                            <div className="text-green-400 text-4xl">▶▶</div>
-                          )}
-                          {item.itemType === 'arena-pass' && (
-                            <div className="text-purple-400 text-4xl">🏆</div>
-                          )}
-                          {item.itemType === 'rank-skip' && (
-                            <div className="text-red-400 text-4xl">⏫</div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between">
-                            <div>
-                              <h3 className={`
-                                font-bold text-lg
-                                ${item.itemType === 'energy-refill' ? 'text-blue-400' : 
-                                  item.itemType === 'gacha-ticket' ? 'text-purple-400' : 
-                                  item.itemType === 'exp-booster' ? 'text-green-400' : 
-                                  item.itemType === 'arena-pass' ? 'text-purple-400' : 'text-yellow-400'}
-                              `}>
-                                {item.name.split(' ').slice(0,2).join(' ')}
-                              </h3>
-                              <h4 className="text-white">
-                                {item.name.split(' ').slice(2).join(' ')}
-                              </h4>
-                            </div>
-                            <span className={`
-                              text-xs px-2 py-0.5 h-fit rounded-full border
-                              ${item.rarity === 'common' ? 'border-gray-400 text-gray-400' : 
-                                item.rarity === 'rare' ? 'border-purple-400 text-purple-400' : 
-                                'border-yellow-400 text-yellow-400 bg-yellow-400/10'}
-                            `}>
-                              {item.rarity === 'common' ? 'Common' : 
-                               item.rarity === 'rare' ? 'Rare' : 
-                               'Extremely-Rare'}
-                            </span>
-                          </div>
-                          <p className="text-gray-200 text-sm mt-1">
-                            {item.description}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="border-t border-cyan-900/30 pt-3 flex justify-between items-center">
-                        <div className="text-sm text-gray-400">
-                          Seller: {item.seller} 
-                          {item.quantity > 1 && <span className="text-cyan-400 ml-2">x{item.quantity}</span>}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-yellow-400 font-bold">{item.price} HOLOS</span>
-                          <Button 
-                            className="bg-cyan-500 hover:bg-cyan-600 text-white"
-                            onClick={() => handleBuy(item.id)}
-                          >
-                            Buy
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <select className="bg-black/40 border border-cyan-900/30 rounded-md px-3 py-2 text-gray-200">
+                  <option>All Items</option>
+                  <option>Holobots</option>
+                  <option>Blueprints</option>
+                  <option>Items</option>
+                </select>
+                <select className="bg-black/40 border border-cyan-900/30 rounded-md px-3 py-2 text-gray-200">
+                  <option>Newest First</option>
+                  <option>Oldest First</option>
+                  <option>Price: Low to High</option>
+                  <option>Price: High to Low</option>
+                </select>
               </div>
             </div>
-          </>
-        )}
-
-        {activeNavItem === 'inventory' && user && (
-          <div className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-6">
-            <h2 className="text-2xl font-bold text-cyan-400 mb-6 font-orbitron">My Inventory</h2>
             
-            {/* Parts Inventory */}
-            <div className="mb-8">
-              <div className="flex items-center mb-3">
-                <Settings className="w-5 h-5 text-cyan-400 mr-2" />
-                <h3 className="text-xl font-semibold text-white">Holobot Parts ({inventory.length})</h3>
+            {/* Balance */}
+            <div className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
+              <h3 className="text-lg font-bold text-red-400 mb-2 font-orbitron">Balance</h3>
+              <div className="flex items-center text-cyan-400 text-xl font-bold mb-3">
+                <div className="w-3 h-3 mr-2 bg-yellow-400 rounded-full"></div>
+                {user.holosTokens} HOLOS
               </div>
               
-              {inventory.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {inventory.map(part => (
-                    <div key={part.id} className="relative">
-                      <div className="bg-[#0D111A] p-4 rounded-md border border-cyan-700/50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-300 capitalize">
-                            {part.slot}
-                          </span>
-                          <span className={`text-xs px-2 py-1 rounded capitalize ${
-                            part.tier === 'mythic' ? 'bg-purple-500/20 text-purple-400' :
-                            part.tier === 'legendary' ? 'bg-yellow-500/20 text-yellow-400' :
-                            part.tier === 'epic' ? 'bg-purple-400/20 text-purple-300' :
-                            part.tier === 'rare' ? 'bg-blue-400/20 text-blue-300' :
-                            'bg-gray-400/20 text-gray-300'
-                          }`}>
-                            {part.tier}
-                          </span>
-                        </div>
-                        <h4 className="text-lg font-bold text-cyan-300 mb-1">{part.name}</h4>
-                        <p className="text-sm text-gray-400 mb-2 line-clamp-2">{part.description}</p>
-                        <div className="grid grid-cols-2 gap-1 text-xs">
-                          {Object.entries(part.baseStats).map(([stat, value]) => (
-                            <div key={stat} className="flex justify-between">
-                              <span className="text-gray-400 capitalize">{stat}:</span>
-                              <span className={value > 0 ? 'text-green-400' : value < 0 ? 'text-red-400' : 'text-gray-400'}>
-                                {value > 0 ? '+' : ''}{value}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                        OWNED
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 bg-[#0D111A] rounded-md border border-cyan-700/50">
-                  <Settings className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-400">No parts in your inventory yet.</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Purchase parts from the marketplace to enhance your Holobots!
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Holobots */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-white mb-3">My Holobots ({user.holobots?.length || 0})</h3>
-              {user.holobots && user.holobots.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {user.holobots.map((holobot, index) => (
-                    <div key={`${holobot.name}-${index}`} className="bg-[#0D111A] p-4 rounded-md border border-cyan-700/50">
-                      <p className="text-lg font-bold text-cyan-300">{holobot.name}</p>
-                      <p className="text-sm text-gray-300">Level: {holobot.level}</p>
-                      <p className="text-sm text-gray-300">Rank: {holobot.rank}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-400">You don't own any Holobots yet.</p>
-              )}
-            </div>
-
-            {/* Blueprints */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-white mb-3">My Blueprints</h3>
-              {user.blueprints && Object.keys(user.blueprints).length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Object.entries(user.blueprints).map(([holobotName, count]) => {
-                    // Skip entries with 0 count
-                    if (count <= 0) return null;
-                    
-                    // Convert common name variations to a standardized format
-                    // This helps avoid duplicate displays of the same blueprint with different casings
-                    const normalizedName = holobotName.toLowerCase();
-                    
-                    // Check if we've already processed this holobot type (case insensitive)
-                    const isDuplicate = Object.entries(user.blueprints || {})
-                      .some(([name, c]) => 
-                        name.toLowerCase() === normalizedName && 
-                        name !== holobotName && 
-                        c > 0
-                      );
-                      
-                    // Skip if this is a duplicate entry (different case but same holobot)
-                    if (isDuplicate) return null;
-                    
-                    // Combine counts for same blueprint with different casings
-                    const totalCount = Object.entries(user.blueprints || {})
-                      .reduce((sum, [name, c]) => 
-                        name.toLowerCase() === normalizedName ? sum + c : sum, 
-                        0
-                      );
-                      
-                    // Format the display name to be title case (first letter capitalized)
-                    const displayName = normalizedName.charAt(0).toUpperCase() + normalizedName.slice(1);
-                    
-                    return (
-                      <div key={normalizedName} className="bg-[#0D111A] p-3 rounded-md border border-cyan-700/50">
-                        <p className="text-md font-semibold text-cyan-300">{displayName} Blueprint</p>
-                        <p className="text-sm text-gray-300">Quantity: {totalCount}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-gray-400">You don't have any blueprints.</p>
-              )}
-            </div>
-
-            {/* Consumable Items */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-white mb-3">My Items</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {user.gachaTickets > 0 && (
-                  <div className="bg-[#0D111A] p-3 rounded-md border border-cyan-700/50">
-                    <p className="text-md font-semibold text-purple-400">Gacha Tickets</p>
-                    <p className="text-sm text-gray-300">Quantity: {user.gachaTickets}</p>
-                  </div>
-                )}
-                {user.arena_passes > 0 && (
-                  <div className="bg-[#0D111A] p-3 rounded-md border border-cyan-700/50">
-                    <p className="text-md font-semibold text-purple-400">Arena Passes</p>
-                    <p className="text-sm text-gray-300">Quantity: {user.arena_passes}</p>
-                  </div>
-                )}
-                {user.exp_boosters > 0 && (
-                  <div className="bg-[#0D111A] p-3 rounded-md border border-cyan-700/50">
-                    <p className="text-md font-semibold text-green-400">EXP Boosters</p>
-                    <p className="text-sm text-gray-300">Quantity: {user.exp_boosters}</p>
-                  </div>
-                )}
-                {user.energy_refills > 0 && (
-                  <div className="bg-[#0D111A] p-3 rounded-md border border-cyan-700/50">
-                    <p className="text-md font-semibold text-blue-400">Energy Refills</p>
-                    <p className="text-sm text-gray-300">Quantity: {user.energy_refills}</p>
-                  </div>
-                )}
-                {user.rank_skips > 0 && (
-                  <div className="bg-[#0D111A] p-3 rounded-md border border-cyan-700/50">
-                    <p className="text-md font-semibold text-yellow-400">Rank Skips</p>
-                    <p className="text-sm text-gray-300">Quantity: {user.rank_skips}</p>
-                  </div>
-                )}
+              <div className="mt-2">
+                <h4 className="text-sm font-bold mb-1 text-red-400">Need more HOLOS?</h4>
+                <Button 
+                  className="w-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Buy Tokens
+                </Button>
               </div>
-              {(user.gachaTickets === 0 && user.arena_passes === 0 && user.exp_boosters === 0 && user.energy_refills === 0 && user.rank_skips === 0) && (
-                <p className="text-gray-400">You don't have any consumable items.</p>
-              )}
             </div>
-
           </div>
-        )}
 
+          {/* Parts Section */}
+          <div>
+            <div className="flex items-center mb-3">
+              <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
+              <h2 className="text-xl font-bold text-white">Holobot Parts</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {MARKETPLACE_PARTS.map(part => (
+                <MarketplacePartCard
+                  key={part.id}
+                  part={part}
+                  onBuy={handleBuyPart}
+                  isBuying={isBuying}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Items Section */}
+          <div>
+            <div className="flex items-center mb-3">
+              <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
+              <h2 className="text-xl font-bold text-white">Items</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {itemItems.map(item => (
+                <div key={item.id} className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
+                  <div className="flex gap-4 mb-4">
+                    <div className={`
+                      h-24 w-20 rounded-lg flex items-center justify-center
+                      ${item.itemType === 'energy-refill' ? 'bg-blue-900/30' : 
+                        item.itemType === 'gacha-ticket' ? 'bg-amber-900/30' : 
+                        item.itemType === 'exp-booster' ? 'bg-green-900/30' : 
+                        item.itemType === 'arena-pass' ? 'bg-purple-900/30' : 
+                        item.itemType === 'async-battle-ticket' ? 'bg-cyan-900/30' : 'bg-red-900/30'}
+                    `}>
+                      {item.itemType === 'energy-refill' && (
+                        <div className="text-blue-400 text-4xl">⚡</div>
+                      )}
+                      {item.itemType === 'gacha-ticket' && (
+                        <div className="text-amber-400 text-4xl">🎫</div>
+                      )}
+                      {item.itemType === 'exp-booster' && (
+                        <div className="text-green-400 text-4xl">▶▶</div>
+                      )}
+                      {item.itemType === 'arena-pass' && (
+                        <div className="text-purple-400 text-4xl">🏆</div>
+                      )}
+                      {item.itemType === 'async-battle-ticket' && (
+                        <div className="text-cyan-400 text-4xl">⚔️</div>
+                      )}
+                      {item.itemType === 'rank-skip' && (
+                        <div className="text-red-400 text-4xl">⏫</div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <div>
+                          <h3 className={`
+                            font-bold text-lg
+                            ${item.itemType === 'energy-refill' ? 'text-blue-400' : 
+                              item.itemType === 'gacha-ticket' ? 'text-purple-400' : 
+                              item.itemType === 'exp-booster' ? 'text-green-400' : 
+                              item.itemType === 'arena-pass' ? 'text-purple-400' : 
+                              item.itemType === 'async-battle-ticket' ? 'text-cyan-400' : 'text-yellow-400'}
+                          `}>
+                            {item.name.split(' ').slice(0,2).join(' ')}
+                          </h3>
+                          <h4 className="text-white">
+                            {item.name.split(' ').slice(2).join(' ')}
+                          </h4>
+                        </div>
+                        <span className={`
+                          text-xs px-2 py-0.5 h-fit rounded-full border
+                          ${item.rarity === 'common' ? 'border-gray-400 text-gray-400' : 
+                            item.rarity === 'rare' ? 'border-purple-400 text-purple-400' : 
+                            'border-yellow-400 text-yellow-400 bg-yellow-400/10'}
+                        `}>
+                          {item.rarity === 'common' ? 'Common' : 
+                           item.rarity === 'rare' ? 'Rare' : 
+                           'Extremely-Rare'}
+                        </span>
+                      </div>
+                      <p className="text-gray-200 text-sm mt-1">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-cyan-900/30 pt-3 flex justify-between items-center">
+                    <div className="text-sm text-gray-400">
+                      Seller: {item.seller} 
+                      {item.quantity > 1 && <span className="text-cyan-400 ml-2">x{item.quantity}</span>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-400 font-bold">{item.price} HOLOS</span>
+                      <Button 
+                        className="bg-cyan-500 hover:bg-cyan-600 text-white"
+                        onClick={() => handleBuy(item.id)}
+                      >
+                        Buy
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* Pack Opening Animation */}
-      <PackOpeningAnimation
-        result={currentOpenResult}
-        isOpening={isOpening}
-        onClose={clearOpenResult}
-        onEquipPart={(item) => {
-          // Handle equipping parts from booster packs
-          if (item.type === 'part' && item.part) {
-            toast({
-              title: "Part Added",
-              description: `${item.name} has been added to your inventory!`,
-            });
-          }
-        }}
-      />
     </div>
   );
 };

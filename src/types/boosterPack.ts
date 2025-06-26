@@ -56,7 +56,7 @@ export const BOOSTER_PACK_TYPES = {
   standard: {
     id: 'standard',
     name: 'Standard Pack',
-    description: 'Contains 3 random items with standard drop rates',
+    description: 'Contains 1 Blueprint + 1 Part + 1 Item with standard drop rates',
     cost: {
       holosTokens: 100,
       gachaTickets: 10
@@ -67,7 +67,7 @@ export const BOOSTER_PACK_TYPES = {
   premium: {
     id: 'premium',
     name: 'Premium Pack',
-    description: 'Contains 3 items with increased rare+ drop rates',
+    description: 'Contains 1 Blueprint + 1 Part + 1 Item with increased rare+ drop rates',
     cost: {
       holosTokens: 250,
       gachaTickets: 25
@@ -80,20 +80,20 @@ export const BOOSTER_PACK_TYPES = {
       legendary: 0.05
     }
   },
-  legendary: {
-    id: 'legendary',
-    name: 'Legendary Pack',
-    description: 'Contains 3 items with guaranteed Epic+ rarity',
+  elite: {
+    id: 'elite',
+    name: 'Elite Pack',
+    description: 'Contains 1 Blueprint + 1 Part + 1 Item with premium drop rates and high-tier guarantees',
     cost: {
-      holosTokens: 500,
-      gachaTickets: 50
+      holosTokens: 400,
+      gachaTickets: 40
     },
     guaranteed: 3,
     rarity: {
-      common: 0.00,
-      rare: 0.20,
-      epic: 0.60,
-      legendary: 0.20
+      common: 0.15,
+      rare: 0.35,
+      epic: 0.40,
+      legendary: 0.10
     }
   }
 } as const;
@@ -105,7 +105,7 @@ export const MARKETPLACE_BOOSTER_TIERS = {
   common: {
     id: 'common',
     name: 'Common Rank Booster',
-    description: 'Standard drop rates with basic rewards',
+    description: 'Guaranteed 1 Blueprint + 1 Part + 1 Item with standard drop rates',
     price: 50,
     guaranteed: 3,
     rarity: {
@@ -118,7 +118,7 @@ export const MARKETPLACE_BOOSTER_TIERS = {
   champion: {
     id: 'champion',
     name: 'Champion Rank Booster',
-    description: 'Improved drop rates for better rewards',
+    description: 'Guaranteed 1 Blueprint + 1 Part + 1 Item with improved drop rates',
     price: 100,
     guaranteed: 3,
     rarity: {
@@ -131,7 +131,7 @@ export const MARKETPLACE_BOOSTER_TIERS = {
   rare: {
     id: 'rare',
     name: 'Rare Rank Booster',
-    description: 'Enhanced chances for rare and epic items',
+    description: 'Guaranteed 1 Blueprint + 1 Part + 1 Item with enhanced rare+ chances',
     price: 200,
     guaranteed: 3,
     rarity: {
@@ -144,7 +144,7 @@ export const MARKETPLACE_BOOSTER_TIERS = {
   elite: {
     id: 'elite',
     name: 'Elite Rank Booster',
-    description: 'Premium drop rates with high-tier guarantees',
+    description: 'Guaranteed 1 Blueprint + 1 Part + 1 Item with premium drop rates',
     price: 400,
     guaranteed: 3,
     rarity: {
@@ -157,7 +157,7 @@ export const MARKETPLACE_BOOSTER_TIERS = {
   legendary: {
     id: 'legendary',
     name: 'Legendary Rank Booster',
-    description: 'Exclusive tournament and season rewards only',
+    description: 'Guaranteed 1 Blueprint + 1 Part + 1 Item with exclusive high-tier rewards',
     price: 0, // Not purchasable
     guaranteed: 3,
     rarity: {

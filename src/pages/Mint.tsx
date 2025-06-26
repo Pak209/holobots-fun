@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { HolobotCard } from "@/components/HolobotCard";
-import { FileCode2, Coins, Shield, Zap } from "lucide-react";
+import { FileCode2, Coins, Shield, Zap, Gift, Trophy, Ticket } from "lucide-react";
 
 export default function Mint() {
   const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
@@ -68,31 +68,32 @@ export default function Mint() {
         boostedAttributes: {}
       };
       
-      // Ensure tokens are added here
-      console.log("Adding 500 Holos tokens to user");
+      console.log("Adding Web3 Genesis reward package to user");
       
-      // User gets their first holobot for free and some starter tokens
+      // User gets their first holobot for free and Genesis reward package
       await updateUser({
         holobots: [newHolobot],
-        holosTokens: 500
+        gachaTickets: (user?.gachaTickets || 0) + 10, // Add 10 Gacha Tickets
+        arena_passes: (user?.arena_passes || 0) + 5 // Add 5 Arena Passes
       });
       
-      // Double-check the tokens were added
-      setTimeout(async () => {
-        // If user still doesn't have tokens, try again
-        if (user?.holosTokens === 0 || user?.holosTokens === undefined) {
-          console.log("Initial token update may have failed, trying again...");
-          try {
-            await updateUser({ holosTokens: 500 });
-          } catch (retryError) {
-            console.error("Retry token update failed:", retryError);
+      // Handle inventory update separately (client-side only)
+      const currentInventory = user?.inventory || { common: 0, rare: 0, legendary: 0 };
+      setTimeout(() => {
+        // Update inventory in a separate call to avoid database issues
+        updateUser({
+          inventory: {
+            ...currentInventory,
+            common: (currentInventory.common || 0) + 5 // Add 5 Common Boosters
           }
-        }
-      }, 1000);
+        }).catch(error => {
+          console.log("Inventory update is client-side only, this is expected:", error);
+        });
+      }, 100);
       
       toast({
-        title: "Holobot Minted!",
-        description: `${baseStats.name} has joined your team! You've also received 500 Holos tokens to start your journey.`,
+        title: "Genesis Holobot Minted!",
+        description: `${baseStats.name} has joined your team! You've received the Genesis reward package to start your Web3 journey.`,
       });
       
       // Navigate to the dashboard after successful minting
@@ -187,14 +188,31 @@ export default function Mint() {
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex flex-col items-center justify-center p-2 sm:p-4">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-5 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-holobots-accent mb-2">Choose Your First Holobot</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-holobots-accent mb-2">Choose Your Genesis Holobot</h1>
           <p className="text-holobots-text dark:text-holobots-dark-text text-sm sm:text-base">
-            Welcome to Holobots! Select your starter Holobot to begin your journey.
+            Welcome to Holobots Web3! Select your Genesis Holobot to begin your blockchain journey.
           </p>
           
-          <div className="flex items-center justify-center gap-2 mt-3 sm:mt-4">
-            <Coins className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
-            <span className="text-yellow-400 font-semibold text-sm sm:text-base">500 Holos tokens will be added to your account</span>
+          {/* Genesis Reward Package Display */}
+          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg border border-purple-400/30">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Gift className="w-5 h-5 text-purple-400" />
+              <span className="text-purple-300 font-bold text-sm sm:text-base">Genesis Reward Package</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
+              <div className="flex items-center justify-center gap-1">
+                <div className="w-3 h-3 bg-gray-400 rounded"></div>
+                <span className="text-gray-300">5 Common Boosters</span>
+              </div>
+              <div className="flex items-center justify-center gap-1">
+                <Ticket className="w-3 h-3 text-pink-400" />
+                <span className="text-pink-300">10 Gacha Tickets</span>
+              </div>
+              <div className="flex items-center justify-center gap-1">
+                <Trophy className="w-3 h-3 text-gold-400" />
+                <span className="text-yellow-300">5 Arena Passes</span>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -231,7 +249,7 @@ export default function Mint() {
         </div>
         
         <div className="mt-6 sm:mt-10 text-center text-holobots-text dark:text-holobots-dark-text text-xs sm:text-sm max-w-[280px] sm:max-w-full mx-auto">
-          <p>You'll be able to unlock additional Holobots with tokens as you progress through the game!</p>
+          <p>You'll be able to unlock additional Holobots and earn HOLOS tokens as you progress through the game!</p>
           <div className="flex items-center justify-center gap-2 mt-2">
             <FileCode2 className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400" />
             <span>Collect blueprints and resources from quests and battles</span>
@@ -239,7 +257,7 @@ export default function Mint() {
           <div className="flex items-center justify-center mt-3 sm:mt-4 gap-1 sm:gap-2">
             <Coins className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400" />
             <span className="text-[10px] sm:text-xs text-gray-400">
-              Holos tokens earned in-game now will seamlessly transfer to crypto tokens in the future
+              Earn HOLOS tokens in-game which auto-wrap and stake on the blockchain
             </span>
           </div>
         </div>

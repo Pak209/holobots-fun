@@ -1,4 +1,5 @@
 import { HolobotEquipment } from './holobotParts';
+import { BoosterPackResult } from './boosterPack';
 
 export interface UserHolobot {
   name: string;
@@ -35,6 +36,8 @@ export interface UserProfile {
   exp_boosters?: number;
   energy_refills?: number;
   rank_skips?: number;
+  async_battle_tickets?: number; // Add async battle tickets
+  last_async_ticket_refresh?: string; // Track when daily tickets were last refreshed
   blueprints?: Record<string, number>; // Add blueprints field to store blueprint pieces per holobot
   inventory?: { // For storing items like common, rare, legendary from arena/quests
     common?: number;
@@ -44,6 +47,7 @@ export interface UserProfile {
   };
   parts?: any[]; // Add parts field to store owned holobot parts
   equippedParts?: Record<string, HolobotEquipment>; // Add equipped parts field to store equipped parts per holobot
+  pack_history?: BoosterPackResult[]; // Add pack history to store all opened packs
 }
 
 export interface AuthState {
@@ -74,10 +78,13 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       exp_boosters: dbProfile.exp_boosters || 0,
       energy_refills: dbProfile.energy_refills || 0,
       rank_skips: dbProfile.rank_skips || 0,
+      async_battle_tickets: dbProfile.async_battle_tickets || 3, // Default 3 daily tickets
+      last_async_ticket_refresh: dbProfile.last_async_ticket_refresh || new Date().toISOString(),
       blueprints: dbProfile.blueprints || {},
       inventory: dbProfile.inventory || { common: 0, rare: 0, legendary: 0 }, // Initialize inventory
       parts: dbProfile.parts || [], // Initialize parts array
-      equippedParts: dbProfile.equipped_parts || {} // Initialize equipped parts
+      equippedParts: dbProfile.equipped_parts || {}, // Initialize equipped parts
+      pack_history: dbProfile.pack_history || [] // Initialize pack history
     };
   } else {
     // This is from the users table
@@ -99,10 +106,13 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       exp_boosters: 0,
       energy_refills: 0,
       rank_skips: 0,
+      async_battle_tickets: 3, // Default 3 daily tickets
+      last_async_ticket_refresh: new Date().toISOString(),
       blueprints: {},
       inventory: { common: 0, rare: 0, legendary: 0 }, // Initialize inventory
       parts: [], // Initialize parts array
-      equippedParts: {} // Initialize equipped parts
+      equippedParts: {}, // Initialize equipped parts
+      pack_history: [] // Initialize pack history
     };
   }
 }
