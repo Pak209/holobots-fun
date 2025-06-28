@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ensureWelcomeGift } from "./authUtils";
+import { useRewardStore } from "@/stores/rewardStore";
 
 // Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [authInitialized, setAuthInitialized] = useState(false);
   const navigate = useNavigate();
+  const { clearUserData } = useRewardStore();
 
   // Helper function to log debug information
   const logDebug = (...args: any[]) => {
@@ -112,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (event === 'SIGNED_OUT') {
             setCurrentUser(null);
             setError(null);
+            clearUserData(); // Clear reward system data when signing out
           }
           else if (session) {
             // Defer profile fetching to avoid Supabase deadlocks
@@ -220,6 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       setCurrentUser(null);
+      clearUserData(); // Clear reward system data when logging out
       navigate('/');
       
       toast({

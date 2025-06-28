@@ -10,6 +10,7 @@ import { Progress } from "./ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { QuestBattleBanner } from "@/components/quests/QuestBattleBanner";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
+import { useRewardTracking } from "@/hooks/useRewardTracking";
 
 // Quest difficulty tiers
 const EXPLORATION_TIERS = {
@@ -81,6 +82,7 @@ const COOLDOWN_MINUTES = 30;
 export const QuestGrid = () => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  const { trackQuestCompletion } = useRewardTracking();
   
   const [explorationHolobot, setExplorationHolobot] = useState<string>("");
   const [selectedExplorationTier, setSelectedExplorationTier] = useState<keyof typeof EXPLORATION_TIERS>("normal");
@@ -211,6 +213,9 @@ export const QuestGrid = () => {
       const isSuccess = Math.random() < 0.7;
       
       if (isSuccess) {
+        // Track quest completion for rewards
+        trackQuestCompletion();
+        
         // Update user's tokens and energy
         if (user) {
           // Add blueprints rewards - random selection of holobot for exploration
@@ -247,6 +252,9 @@ export const QuestGrid = () => {
           setShowResultsScreen(true);
         }
       } else {
+        // Track quest completion even if failed
+        trackQuestCompletion();
+        
         // Set holobot on cooldown
         setHolobotOnCooldown(explorationHolobot);
         
@@ -338,25 +346,26 @@ export const QuestGrid = () => {
     
     try {
       // Wait for battle banner to complete
-      await new Promise(resolve => setTimeout(resolve, 4000));
+      await new Promise(resolve => setTimeout(resolve, 6000));
       
-      // Calculate squad power (simplified)
-      const squadPower = bossHolobots.reduce((power, holobotKey) => {
-        const holobot = user?.holobots.find(
-          h => h.name.toLowerCase() === HOLOBOT_STATS[holobotKey].name.toLowerCase()
-        );
-        return power + (holobot?.level || 1) * 10;
-      }, 0);
-      
-      // Calculate boss power
-      const bossPower = tier.level * 15;
-      
-      // Determine success (based on squad power vs boss power with randomness)
-      const powerRatio = squadPower / bossPower;
-      const successChance = Math.min(0.9, powerRatio * 0.7); // Cap at 90% success
-      const isSuccess = Math.random() < successChance;
+      // Determine success based on team power vs boss difficulty
+      const isSuccess = Math.random() < 0.8; // 80% success rate for boss quests
       
       if (isSuccess) {
+        // Track quest completion for rewards
+        trackQuestCompletion();
+        
+        // Calculate squad power (simplified)
+        const squadPower = bossHolobots.reduce((power, holobotKey) => {
+          const holobot = user?.holobots.find(
+            h => h.name.toLowerCase() === HOLOBOT_STATS[holobotKey].name.toLowerCase()
+          );
+          return power + (holobot?.level || 1) * 10;
+        }, 0);
+        
+        // Calculate boss power
+        const bossPower = tier.level * 15;
+        
         // Update XP for all Holobots in the squad
         const updatedHolobots = await updateSquadExperience(bossHolobots, tier.rewards.squadXp, tier.rewards.xpMultiplier);
         
@@ -389,6 +398,9 @@ export const QuestGrid = () => {
         setHolosReward(tier.rewards.holosTokens);
         setShowResultsScreen(true);
       } else {
+        // Track quest completion even if failed
+        trackQuestCompletion();
+        
         // Even on failure, Holobots gain some experience (half of success amount)
         const failureXp = Math.floor(tier.rewards.squadXp * 0.5);
         const updatedHolobots = await updateSquadExperience(bossHolobots, failureXp, 1);
@@ -429,9 +441,8 @@ export const QuestGrid = () => {
         setShowResultsScreen(true);
       }
     } catch (error) {
-      console.error("Error during boss quest:", error);
       toast({
-        title: "Error",
+        title: "Error", 
         description: "An error occurred during the boss quest",
         variant: "destructive"
       });

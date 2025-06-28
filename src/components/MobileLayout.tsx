@@ -21,9 +21,9 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
     <div className="relative flex flex-col w-full min-h-screen bg-[#1A1F2C]">
       {/* Header */}
       <header className="fixed top-0 w-full z-50 px-4 py-3 flex items-center justify-between bg-[#1A1F2C]/95 backdrop-blur-md border-b border-cyan-900/30">
-        <div className="text-xl font-bold italic tracking-wider text-cyan-400 font-orbitron">
+        <Link to="/dashboard" className="text-xl font-bold italic tracking-wider text-cyan-400 font-orbitron hover:text-cyan-300 transition-colors">
           HOLOBOTS
-        </div>
+        </Link>
         <NavigationMenu />
       </header>
 

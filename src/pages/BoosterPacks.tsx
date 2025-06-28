@@ -10,13 +10,17 @@ import { useBoosterPackStore } from '../stores/boosterPackStore';
 import { useHolobotPartsStore } from '../stores/holobotPartsStore';
 import { BoosterPackType, BOOSTER_PACK_TYPES, BoosterPackItem } from '../types/boosterPack';
 import { toast } from 'sonner';
-import { Package, History, Coins, Ticket, Trophy, Calendar, Target, Zap } from 'lucide-react';
+import { Package, History, Coins, Ticket, Trophy, Calendar, Target, Zap, Gem } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { RewardsDashboard } from '@/components/rewards/RewardsDashboard';
+import { RewardInfoPopup } from '@/components/rewards/RewardInfoPopup';
+import { useRewardTracking } from '@/hooks/useRewardTracking';
 
 const BoosterPacks: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { openBoosterPack, isOpening, currentOpenResult, clearOpenResult, openedPacks, addToHistory, loadHistoryFromUser } = useBoosterPackStore();
   const { loadPartsFromUser, loadEquippedPartsFromUser } = useHolobotPartsStore();
+  const { trackBoosterPackOpening } = useRewardTracking();
   const [selectedTab, setSelectedTab] = useState('packs');
   const navigate = useNavigate();
 
@@ -70,10 +74,11 @@ const BoosterPacks: React.FC = () => {
       
       await updateUser(updateData);
 
+      // Track pack opening for missions
+      trackBoosterPackOpening();
+
       // Open the pack
       const result = await openBoosterPack(packType);
-      
-      // Note: History will be added when user closes the pack animation
       
       // Process the results and save to database
       const newParts: any[] = [];
@@ -139,6 +144,10 @@ const BoosterPacks: React.FC = () => {
         });
       }
 
+      // Update pack history
+      const updatedPackHistory = [...(user.pack_history || []), result];
+      profileUpdates.pack_history = updatedPackHistory;
+      
       if (Object.keys(profileUpdates).length > 0) {
         await updateUser(profileUpdates);
       }
@@ -200,9 +209,14 @@ const BoosterPacks: React.FC = () => {
               BOOSTER PACKS
             </h1>
           </div>
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed mb-4">
             Open collectible packs to discover rare Holobot parts, blueprint fragments, and valuable items!
           </p>
+          
+          {/* How to Earn Info Button */}
+          <div className="flex justify-center">
+            <RewardInfoPopup />
+          </div>
         </div>
 
         {/* User Currency Display */}
@@ -240,9 +254,9 @@ const BoosterPacks: React.FC = () => {
               <History className="w-4 h-4" />
               <span>History</span>
             </TabsTrigger>
-            <TabsTrigger value="rewards" className="flex items-center space-x-2">
-              <Trophy className="w-4 h-4" />
-              <span>How to Earn</span>
+            <TabsTrigger value="gacha" className="flex items-center space-x-2">
+              <Gem className="w-4 h-4" />
+              <span>Gacha</span>
             </TabsTrigger>
           </TabsList>
 
@@ -324,45 +338,22 @@ const BoosterPacks: React.FC = () => {
             </Card>
           </TabsContent>
 
-          {/* How to Earn Tab */}
-          <TabsContent value="rewards" className="mt-8">
+          {/* Gacha Tab - Navigate to existing Gacha page */}
+          <TabsContent value="gacha" className="mt-8">
             <Card className="bg-black/20 border-white/10">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Trophy className="w-5 h-5" />
-                  <span>How to Earn Gacha Tickets</span>
+                  <Gem className="w-5 h-5" />
+                  <span>Gacha System</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {getRewardMethods().map((method, index) => (
-                    <Card key={index} className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 border-blue-400/30">
-                      <CardContent className="p-6">
-                        <div className="flex items-start space-x-4">
-                          <div className="p-3 bg-blue-500/20 rounded-lg">
-                            {method.icon}
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-lg font-bold mb-2">{method.title}</h3>
-                            <p className="text-gray-300 mb-3">{method.description}</p>
-                            <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-400/30">
-                              {method.reward}
-                            </Badge>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                
-                <div className="mt-8 p-6 bg-gradient-to-r from-yellow-900/30 to-orange-900/30 rounded-lg border border-yellow-400/30">
-                  <h3 className="text-xl font-bold mb-4 text-yellow-400">Pro Tips:</h3>
-                  <ul className="space-y-2 text-gray-300">
-                    <li>• Save up tickets for Premium or Legendary packs for better rewards</li>
-                    <li>• Complete daily missions consistently for steady ticket income</li>
-                    <li>• Arena win streaks provide the highest ticket rewards</li>
-                    <li>• Sync Training streaks are the most reliable source of weekly tickets</li>
-                  </ul>
+                <div className="text-center py-12">
+                  <Gem className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+                  <p className="text-gray-300 text-lg mb-4">Explore the Gacha system for more ways to collect items!</p>
+                  <Button onClick={() => navigate('/gacha')} className="bg-purple-600 hover:bg-purple-700">
+                    Go to Gacha Page
+                  </Button>
                 </div>
               </CardContent>
             </Card>

@@ -8,6 +8,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import BackgroundEffect from "@/components/BackgroundEffect";
+import { WalletConnectButton } from "@/components/WalletConnectButton";
 
 const Landing = () => {
   const [api, setApi] = useState<any>();
@@ -124,6 +125,17 @@ const Landing = () => {
               ))}
             </CarouselContent>
           </Carousel>
+        </div>
+
+        {/* Wallet Connect Section */}
+        <div className="mb-10">
+          <div className="bg-holobots-card dark:bg-holobots-dark-card rounded-lg p-6 flex flex-col items-center text-center">
+            <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">🔗 Connect Your Wallet</h3>
+            <p className="text-sm text-muted-foreground dark:text-gray-400 mb-6">
+              Connect your wallet to access Holobot smart contracts on Base Sepolia
+            </p>
+            <WalletConnectButton />
+          </div>
         </div>
 
         {/* CTA */}

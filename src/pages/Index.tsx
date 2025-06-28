@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, Clock, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useRewardTracking } from "@/hooks/useRewardTracking";
 import { 
   shouldRefreshDailyTickets, 
   calculateRefreshedTickets, 
@@ -71,6 +72,7 @@ const Index = () => {
   
   const { toast } = useToast();
   const { user, updateUser } = useAuth();
+  const { trackArenaBattle, trackDailyLogin, trackLeagueTierCompletion } = useRewardTracking();
 
   // Auto-refresh daily tickets when component mounts and user data is available
   useEffect(() => {
@@ -78,6 +80,13 @@ const Index = () => {
       handleDailyTicketRefresh();
     }
   }, [user]);
+
+  // Track daily login when component mounts
+  useEffect(() => {
+    if (user) {
+      trackDailyLogin();
+    }
+  }, [user, trackDailyLogin]);
 
   const handleDailyTicketRefresh = async () => {
     if (!user || !updateUser) return;
@@ -387,6 +396,75 @@ const Index = () => {
   const renderArenaBattle = () => {
     const currentOpponentKey = arenaLineup[currentRound - 1];
     
+    const handleBattleComplete = async (winner: string, battleData: any) => {
+      if (!user) return;
+
+      const playerWon = winner === "player";
+      
+      // Track arena battle for rewards system
+      trackArenaBattle(playerWon);
+
+      if (playerWon) {
+        setVictories(prev => prev + 1);
+        
+        if (currentRound < maxRounds) {
+          setCurrentRound(prev => prev + 1);
+          // Generate new opponent for next round
+          const newOpponent = generateArenaOpponent(user, currentRound + 1);
+          setArenaOpponentLevel(newOpponent.level);
+        } else {
+          // Arena completed successfully
+          const rewards = calculateArenaRewards(currentRound, victories + 1);
+          
+          // Award rewards
+          const updatedUser = {
+            ...user,
+            holosTokens: user.holosTokens + rewards.holosTokens,
+            gachaTickets: (user.gachaTickets || 0) + rewards.gachaTickets
+          };
+
+          if (rewards.arenaPass > 0) {
+            updatedUser.arena_passes = (user.arena_passes || 0) + rewards.arenaPass;
+          }
+
+          await updateUser(updatedUser);
+          
+          setArenaResults({
+            isSuccess: true,
+            squadHolobotKeys: [selectedHolobot],
+            squadHolobotExp: [],
+            blueprintRewards: rewards.blueprintReward,
+            holosRewards: rewards.holosTokens,
+            itemRewards: currentArenaTierItemRewards,
+            gachaTickets: rewards.gachaTickets,
+            arenaPass: rewards.arenaPass
+          });
+          
+          setShowResults(true);
+          
+          // Reset arena
+          setCurrentRound(1);
+          setVictories(0);
+        }
+      } else {
+        // Player lost - reset arena
+        setArenaResults({
+          isSuccess: false,
+          squadHolobotKeys: [selectedHolobot],
+          squadHolobotExp: [],
+          blueprintRewards: undefined,
+          holosRewards: 0,
+          itemRewards: null,
+          gachaTickets: 0,
+          arenaPass: 0
+        });
+        
+        setShowResults(true);
+        setCurrentRound(1);
+        setVictories(0);
+      }
+    };
+
     return (
       <div className="px-2 py-3">
         <div className="mb-4 bg-[#1A1F2C] rounded-lg p-3">

@@ -5,10 +5,11 @@ import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Battery, Swords, Trophy, AlertCircle } from "lucide-react";
+import { Swords, Trophy, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { calculateBattleExperience, updateHolobotExperience } from "@/utils/battleUtils";
 import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
+import { useRewardTracking } from "@/hooks/useRewardTracking";
 
 // CPU difficulty levels
 const DIFFICULTY_LEVELS = {
@@ -32,6 +33,7 @@ const Training = () => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const { getEquippedParts } = useHolobotPartsStore();
+  const { trackTrainingSession } = useRewardTracking();
 
   // Reset battle result when selections change
   useEffect(() => {
@@ -171,6 +173,9 @@ const Training = () => {
         variant: won ? "default" : "destructive"
       });
 
+      // Track training session completion
+      trackTrainingSession();
+
     } catch (error) {
       toast({
         title: "Error",
@@ -185,13 +190,47 @@ const Training = () => {
   // Get the user's holobot with boosted attributes
   const userHolobot = getSelectedHolobotObject();
   
+  // Get opponent holobot from user's collection if they own it
+  const getOpponentHolobotObject = () => {
+    if (!user?.holobots || !selectedOpponent) return null;
+    return user.holobots.find(h => h.name.toLowerCase() === HOLOBOT_STATS[selectedOpponent].name.toLowerCase());
+  };
+  
+  const opponentUserHolobot = getOpponentHolobotObject();
+  
   // Get base stats for the selected holobot
   const baseStats = selectedHolobot ? HOLOBOT_STATS[selectedHolobot] : null;
+  const opponentBaseStats = selectedOpponent ? HOLOBOT_STATS[selectedOpponent] : null;
   
   // Apply all boosts (attributes + parts) if available
   const boostedStats = baseStats && userHolobot 
     ? applyAllBoosts(baseStats, userHolobot)
     : baseStats;
+    
+  // Scale opponent stats based on difficulty
+  const scaleOpponentStats = (baseStats, difficultyLevel: number) => {
+    if (!baseStats) return baseStats;
+    
+    const scaleFactor = difficultyLevel / 10; // Scale factor based on difficulty level
+    
+    return {
+      ...baseStats,
+      level: difficultyLevel,
+      maxHealth: Math.floor(baseStats.maxHealth * (1 + scaleFactor * 0.3)),
+      attack: Math.floor(baseStats.attack * (1 + scaleFactor * 0.25)),
+      defense: Math.floor(baseStats.defense * (1 + scaleFactor * 0.25)),
+      speed: Math.floor(baseStats.speed * (1 + scaleFactor * 0.2))
+    };
+  };
+
+  // Apply boosts to opponent if user owns that holobot, then scale with difficulty
+  let opponentBoostedStats = opponentBaseStats && opponentUserHolobot
+    ? applyAllBoosts(opponentBaseStats, opponentUserHolobot)
+    : opponentBaseStats;
+    
+  // Scale opponent stats based on selected difficulty
+  const difficultyLevel = DIFFICULTY_LEVELS[selectedDifficulty].level;
+  opponentBoostedStats = scaleOpponentStats(opponentBoostedStats, difficultyLevel);
 
   return (
     <div className="min-h-screen bg-[#1A1F2C] text-white">
@@ -203,14 +242,6 @@ const Training = () => {
           <p className="text-gray-400 text-sm mb-4">
             Train your Holobots and gain experience
           </p>
-          
-          {/* Energy Display */}
-          <Card className="inline-flex items-center gap-2 px-4 py-2 bg-black/40 border-cyan-500/20">
-            <Battery className="w-4 h-4 text-green-500" />
-            <span className="text-sm">
-              Energy: {user?.dailyEnergy}/{user?.maxDailyEnergy}
-            </span>
-          </Card>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -251,7 +282,8 @@ const Training = () => {
                 <HolobotCard
                   stats={{
                     ...boostedStats,
-                    name: userHolobot?.name || HOLOBOT_STATS[selectedHolobot].name
+                    name: userHolobot?.name || HOLOBOT_STATS[selectedHolobot].name,
+                    level: userHolobot?.level || 1
                   }}
                   variant="blue"
                 />
@@ -284,7 +316,11 @@ const Training = () => {
             {selectedOpponent && (
               <div className="mt-4">
                 <HolobotCard
-                  stats={HOLOBOT_STATS[selectedOpponent]}
+                  stats={{
+                    ...(opponentBoostedStats || HOLOBOT_STATS[selectedOpponent]),
+                    name: opponentUserHolobot?.name || HOLOBOT_STATS[selectedOpponent].name,
+                    level: opponentBoostedStats?.level || difficultyLevel
+                  }}
                   variant="red"
                 />
               </div>

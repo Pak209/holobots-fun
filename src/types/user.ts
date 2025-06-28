@@ -1,5 +1,6 @@
 import { HolobotEquipment } from './holobotParts';
 import { BoosterPackResult } from './boosterPack';
+import { RewardSystem } from './rewards';
 
 export interface UserHolobot {
   name: string;
@@ -48,6 +49,7 @@ export interface UserProfile {
   parts?: any[]; // Add parts field to store owned holobot parts
   equippedParts?: Record<string, HolobotEquipment>; // Add equipped parts field to store equipped parts per holobot
   pack_history?: BoosterPackResult[]; // Add pack history to store all opened packs
+  rewardSystem?: RewardSystem; // Add reward system tracking
 }
 
 export interface AuthState {
@@ -55,6 +57,32 @@ export interface AuthState {
   loading: boolean;
   error: string | null;
 }
+
+// Helper function to create initial reward system
+const createInitialRewardSystem = (): RewardSystem => ({
+  dailyMissions: [],
+  trainingStreak: {
+    currentStreak: 0,
+    longestStreak: 0,
+    lastActiveDate: '',
+    weeklyTicketsEarned: 0,
+    lastWeeklyReward: ''
+  },
+  arenaStreak: {
+    currentWinStreak: 0,
+    longestWinStreak: 0,
+    lastBattleDate: '',
+    streakRewardsEarned: 0,
+    lastStreakReward: 0
+  },
+  leagueProgression: {
+    currentTier: 'junkyard',
+    tiersCompleted: [],
+    lastTierCompletedDate: '',
+    tierRewardsEarned: 0
+  },
+  lastDailyMissionReset: new Date().toISOString()
+});
 
 // Add database profile mapping helper
 export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
@@ -84,7 +112,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       inventory: dbProfile.inventory || { common: 0, rare: 0, legendary: 0 }, // Initialize inventory
       parts: dbProfile.parts || [], // Initialize parts array
       equippedParts: dbProfile.equipped_parts || {}, // Initialize equipped parts
-      pack_history: dbProfile.pack_history || [] // Initialize pack history
+      pack_history: dbProfile.pack_history || [], // Initialize pack history
+      rewardSystem: dbProfile.reward_system || createInitialRewardSystem() // Initialize reward system
     };
   } else {
     // This is from the users table
@@ -112,7 +141,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       inventory: { common: 0, rare: 0, legendary: 0 }, // Initialize inventory
       parts: [], // Initialize parts array
       equippedParts: {}, // Initialize equipped parts
-      pack_history: [] // Initialize pack history
+      pack_history: [], // Initialize pack history
+      rewardSystem: createInitialRewardSystem() // Initialize reward system
     };
   }
 }

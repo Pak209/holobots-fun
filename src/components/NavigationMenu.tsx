@@ -10,7 +10,8 @@ import {
   BarChart4,
   Wheat,
   Award,
-  Package
+  Package,
+  Zap
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -128,12 +129,22 @@ export const NavigationMenu = () => {
             <span className="text-xs text-gray-500 dark:text-gray-400">Available Refills: {user.energy_refills || 0}</span>
             <Button
               size="sm"
-              className="ml-2 bg-holobots-primary hover:bg-holobots-primary-hover text-white dark:bg-holobots-dark-primary dark:hover:bg-holobots-dark-primary-hover dark:text-holobots-dark-text px-2 py-0.5 rounded"
+              className="ml-2 bg-[#33C3F0] hover:bg-[#0FA0CE] text-black font-semibold px-2 py-0.5 rounded disabled:opacity-50"
               onClick={handleRefill}
               disabled={isRefilling || (user.energy_refills || 0) <= 0 || user.dailyEnergy === user.maxDailyEnergy}
               aria-label="Refill Daily Energy"
             >
-              {isRefilling ? 'Refilling...' : 'Refill'}
+              {isRefilling ? (
+                <>
+                  <Zap className="h-3 w-3 mr-1 animate-pulse" />
+                  Refilling...
+                </>
+              ) : (
+                <>
+                  <Zap className="h-3 w-3 mr-1" />
+                  Quick Refill
+                </>
+              )}
             </Button>
           </div>
           

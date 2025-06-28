@@ -9,6 +9,7 @@ import { WorkoutRewards } from "@/components/fitness/WorkoutRewards";
 import { HolobotSelector } from "@/components/fitness/HolobotSelector";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { useRewardTracking } from "@/hooks/useRewardTracking";
 
 interface HolobotRank {
   name: string;
@@ -31,6 +32,7 @@ const TARGET_WORKOUT_TIME = 30 * 60; // 30 minutes workout in seconds
 export default function Fitness() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  const { trackTrainingSession, trackFitnessGoal } = useRewardTracking();
   const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
   const [isTracking, setIsTracking] = useState(false);
   const [workoutTime, setWorkoutTime] = useState(0);
@@ -150,11 +152,17 @@ export default function Fitness() {
 
   const completeWorkout = () => {
     if (workoutSteps > 0 && user && selectedHolobot) {
+      // Track training session for rewards
+      trackTrainingSession();
+      
       // Calculate final rewards
       const expEarned = Math.floor(workoutSteps / STEPS_PER_EXP);
       const milesCompleted = workoutSteps / STEPS_PER_MILE;
       const rankMultiplier = getHolobotRankMultiplier();
       const holosEarned = Math.floor(milesCompleted * HOLOS_PER_MILE * rankMultiplier);
+      
+      // Track fitness goal achievement
+      trackFitnessGoal(steps);
       
       // Find the selected holobot
       const selectedHolobotObj = user.holobots.find(
@@ -185,7 +193,7 @@ export default function Fitness() {
         
         toast({
           title: "Workout Complete!",
-          description: `You earned ${holosEarned} Holos and ${expEarned} EXP!`,
+          description: `You earned ${holosEarned} Holos and ${expEarned} EXP! Training streak updated.`,
         });
       }
     }
