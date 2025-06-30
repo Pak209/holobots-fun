@@ -49,7 +49,7 @@ export interface BattlePool {
   description: string;
   entry_requirements: {
     min_level?: number;
-    min_steps?: number;
+    min_player_rank?: string;
     min_rating?: number;
   };
   rewards: {
@@ -227,11 +227,12 @@ export const LEAGUE_CONFIGS: Record<LeagueType, {
   name: string;
   description: string;
   icon: string;
-  minSteps: number;
+  minPlayerRank: string;
   energyCost: number;
   cpuLevelRange: [number, number];
   rewards: {
-    holos: number;
+    boosters: string;
+    booster_count: number;
     exp: number;
     parts?: number;
     legendary_parts?: number;
@@ -241,37 +242,37 @@ export const LEAGUE_CONFIGS: Record<LeagueType, {
     name: 'Junkyard League',
     description: 'Easy league for beginners',
     icon: '🔧',
-    minSteps: 2000,
+    minPlayerRank: 'Champion',
     energyCost: 5,
     cpuLevelRange: [5, 10],
-    rewards: { holos: 50, exp: 100 }
+    rewards: { boosters: 'Common', booster_count: 1, exp: 100 }
   },
   city_scraps: {
     name: 'City Scraps League',
     description: 'Medium difficulty league',
     icon: '🏙️',
-    minSteps: 4000,
+    minPlayerRank: 'Rare',
     energyCost: 10,
     cpuLevelRange: [15, 25],
-    rewards: { holos: 100, exp: 200, parts: 1 }
+    rewards: { boosters: 'Premium', booster_count: 1, exp: 200, parts: 1 }
   },
   neon_core: {
     name: 'Neon Core League',
     description: 'Hard league for advanced players',
     icon: '💎',
-    minSteps: 6000,
+    minPlayerRank: 'Elite',
     energyCost: 15,
     cpuLevelRange: [30, 40],
-    rewards: { holos: 200, exp: 400, parts: 2 }
+    rewards: { boosters: 'Elite', booster_count: 1, exp: 400, parts: 2 }
   },
   overlord: {
     name: 'Overlord League',
-    description: 'Endgame AI bosses',
+    description: 'Weekly Legend Tournament - Top 10 get rewards',
     icon: '👑',
-    minSteps: 8000,
+    minPlayerRank: 'Legend',
     energyCost: 20,
     cpuLevelRange: [45, 50],
-    rewards: { holos: 500, exp: 800, parts: 3, legendary_parts: 1 }
+    rewards: { boosters: 'Legendary', booster_count: 1, exp: 800, parts: 3, legendary_parts: 1 }
   }
 };
 
@@ -289,11 +290,12 @@ export const POOL_CONFIGS: Record<BattlePoolType, {
   description: string;
   entryRequirements: {
     min_level?: number;
-    min_steps?: number;
+    min_player_rank?: string;
     min_rating?: number;
   };
   rewards: {
-    holos: number;
+    boosters: string;
+    booster_count: number;
     exp: number;
     rating_points?: number;
   };
@@ -302,13 +304,13 @@ export const POOL_CONFIGS: Record<BattlePoolType, {
     name: 'Casual Battle Pool',
     description: 'Relaxed PvP battles',
     entryRequirements: { min_level: 1 },
-    rewards: { holos: 25, exp: 50 }
+    rewards: { boosters: 'Premium', booster_count: 1, exp: 50 }
   },
   ranked: {
     name: 'Ranked Battle Pool',
     description: 'Competitive PvP battles',
-    entryRequirements: { min_level: 5, min_steps: 1000 },
-    rewards: { holos: 100, exp: 200, rating_points: 25 }
+    entryRequirements: { min_level: 5, min_player_rank: 'Rare' },
+    rewards: { boosters: 'Elite', booster_count: 1, exp: 200, rating_points: 25 }
   }
 };
 

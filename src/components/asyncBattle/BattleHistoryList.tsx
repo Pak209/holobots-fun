@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Trophy, 
   Clock, 
@@ -11,224 +12,306 @@ import {
   X,
   Sword,
   Users,
-  Calendar
+  Calendar,
+  Star,
+  Coins,
+  RefreshCw,
+  Bot
 } from "lucide-react";
 import { AsyncBattle } from "@/types/asyncBattle";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/auth";
 
-interface BattleHistoryListProps {
-  battles: AsyncBattle[];
+interface BattleEntry {
+  id: number;
+  battle_type: 'pool_entry' | 'pve_league';
+  created_at: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  holobot_name: string;
+  opponent_name: string;
+  rewards?: {
+    holos?: number;
+    exp?: number;
+    rating_points?: number;
+  };
+  pool_type?: string;
+  league_name?: string;
 }
 
-export function BattleHistoryList({ battles }: BattleHistoryListProps) {
-  const [selectedBattle, setSelectedBattle] = useState<AsyncBattle | null>(null);
+export function BattleHistoryList() {
+  const [battles, setBattles] = useState<BattleEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  const activeBattles = battles.filter(b => 
-    b.battle_status === 'pending' || b.battle_status === 'in_progress'
-  );
-  const completedBattles = battles.filter(b => b.battle_status === 'completed');
+  useEffect(() => {
+    if (user) {
+      fetchBattleHistory();
+    }
+  }, [user]);
 
-  const getBattleTypeIcon = (battleType: string) => {
-    return battleType === 'pve_league' ? <Sword className="h-4 w-4" /> : <Users className="h-4 w-4" />;
+  const fetchBattleHistory = async () => {
+    try {
+      setLoading(true);
+      
+      if (!user?.id) {
+        setBattles([]);
+        return;
+      }
+
+      // Fetch pool entries
+      const { data: poolData, error: poolError } = await supabase
+        .from('battle_pool_entries' as any)
+        .select('id, pool_id, holobot_name, submitted_at, holobot_stats')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('submitted_at', { ascending: false })
+        .limit(25);
+
+      // Fetch league battles
+      const { data: battleData, error: battleError } = await supabase
+        .from('async_battles' as any)
+        .select('id, battle_type, league_id, player1_holobot, player2_holobot, battle_status, rewards, created_at')
+        .eq('player1_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(25);
+
+      if (poolError) {
+        console.error('Error fetching pool entries:', poolError);
+      }
+      
+      if (battleError) {
+        console.error('Error fetching battle history:', battleError);
+      }
+
+      // Format and combine all battles
+      const allBattles: BattleEntry[] = [];
+
+      // Add pool entries
+      if (poolData) {
+        const poolEntries = ((poolData as any) || []).map((entry: any) => {
+          const poolType = entry.pool_id === 1 ? 'casual' : 'ranked';
+          return {
+            id: entry.id,
+            battle_type: 'pool_entry' as const,
+            created_at: entry.submitted_at || new Date().toISOString(),
+            status: 'pending' as const,
+            holobot_name: entry.holobot_name || 'Unknown',
+            opponent_name: 'Waiting for opponent...',
+            pool_type: poolType,
+            rewards: {
+              holos: poolType === 'ranked' ? 100 : 50,
+              exp: poolType === 'ranked' ? 200 : 100,
+              rating_points: poolType === 'ranked' ? 25 : undefined
+            }
+          };
+        });
+        allBattles.push(...poolEntries);
+      }
+
+      // Add league battles
+      if (battleData) {
+        const leagueBattles = ((battleData as any) || []).map((battle: any) => {
+          const status = battle.battle_status || 'pending';
+          return {
+            id: battle.id,
+            battle_type: 'pve_league' as const,
+            created_at: battle.created_at || new Date().toISOString(),
+            status: status as 'pending' | 'in_progress' | 'completed',
+            holobot_name: battle.player1_holobot?.name || 'Unknown',
+            opponent_name: battle.player2_holobot?.name || 'AI Opponent',
+            league_name: getLeagueName(battle.league_id || 1),
+            rewards: {
+              holos: battle.rewards?.holos || 50,
+              exp: battle.rewards?.exp || 100
+            }
+          };
+        });
+        allBattles.push(...leagueBattles);
+      }
+
+      // Sort all battles by creation date
+      allBattles.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      console.log('Fetched user battles:', allBattles);
+      setBattles(allBattles);
+    } catch (error) {
+      console.error('Error fetching battle history:', error);
+      setBattles([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getBattleTypeColor = (battleType: string) => {
-    return battleType === 'pve_league' ? 'text-cyan-400' : 'text-purple-400';
+  const getLeagueName = (leagueId: number) => {
+    const leagues = {
+      1: 'Junkyard League',
+      2: 'City Scraps League', 
+      3: 'Neon Core League',
+      4: 'Overlord League'
+    };
+    return leagues[leagueId as keyof typeof leagues] || 'Unknown League';
+  };
+
+  const getBattleTypeIcon = (battleType: string) => {
+    switch (battleType) {
+      case 'pool_entry':
+        return <Users className="h-4 w-4" />;
+      case 'pve_league':
+        return <Bot className="h-4 w-4" />;
+      default:
+        return <Sword className="h-4 w-4" />;
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'text-yellow-400 border-yellow-500';
-      case 'in_progress': return 'text-orange-400 border-orange-500';
-      case 'completed': return 'text-green-400 border-green-500';
-      case 'cancelled': return 'text-red-400 border-red-500';
-      default: return 'text-gray-400 border-gray-500';
+      case 'completed':
+        return 'bg-green-500';
+      case 'in_progress':
+        return 'bg-yellow-500';
+      case 'pending':
+        return 'bg-blue-500';
+      default:
+        return 'bg-gray-500';
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+      return `${diffInMinutes}m ago`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays}d ago`;
+    }
   };
 
-  const BattleCard = ({ battle }: { battle: AsyncBattle }) => (
-    <Card className="bg-black/40 border-gray-700/50 hover:border-gray-600/50 transition-colors">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            <div className={getBattleTypeColor(battle.battle_type)}>
-              {getBattleTypeIcon(battle.battle_type)}
-            </div>
-            <Badge 
-              variant="outline" 
-              className={cn("text-xs", getBattleTypeColor(battle.battle_type))}
-            >
-              {battle.battle_type === 'pve_league' ? 'PvE League' : 'PvP Pool'}
-            </Badge>
-          </div>
-          <Badge variant="outline" className={cn("text-xs", getStatusColor(battle.battle_status))}>
-            {battle.battle_status}
-          </Badge>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-medium">{battle.player1_holobot.name}</span>
-            <span className="text-gray-400 text-sm">vs</span>
-            <span className="font-medium">{battle.player2_holobot.name}</span>
-          </div>
-          
-          <div className="flex items-center justify-between text-sm text-gray-400">
-            <div className="flex items-center space-x-1">
-              <Calendar className="h-3 w-3" />
-              <span>{formatDate(battle.created_at)}</span>
-            </div>
-            {battle.battle_status === 'completed' && battle.winner_id && (
-              <div className="flex items-center space-x-1">
-                <Trophy className="h-3 w-3 text-yellow-400" />
-                <span className="text-yellow-400">
-                  {battle.winner_id === battle.player1_id ? battle.player1_holobot.name : battle.player2_holobot.name} Won
-                </span>
-              </div>
-            )}
-          </div>
-
-          {battle.battle_status === 'completed' && (
-            <div className="flex items-center justify-between pt-2 border-t border-gray-700/50">
-              <div className="text-xs text-gray-400">
-                Rewards: {battle.rewards.holos || 0} Holos, {battle.rewards.exp || 0} EXP
-              </div>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setSelectedBattle(battle)}
-                className="text-xs"
-              >
-                <Eye className="h-3 w-3 mr-1" />
-                View Replay
-              </Button>
-            </div>
-          )}
-
-          {battle.battle_status === 'pending' && (
-            <div className="flex items-center justify-between pt-2 border-t border-gray-700/50">
-              <div className="text-xs text-yellow-400">
-                <Clock className="h-3 w-3 inline mr-1" />
-                Waiting for battle simulation...
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  if (battles.length === 0) {
+  if (loading) {
     return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800/50 flex items-center justify-center">
-          <Clock className="h-8 w-8 text-gray-400" />
-        </div>
-        <h3 className="text-lg font-medium text-gray-300 mb-2">No Battles Yet</h3>
-        <p className="text-gray-400 text-sm">
-          Enter a league or battle pool to start your first async battle!
-        </p>
-      </div>
+      <Card className="bg-gray-900/50 border-gray-700">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg text-cyan-400 flex items-center">
+            <Clock className="h-5 w-5 mr-2" />
+            Battle History
+          </CardTitle>
+          <CardDescription>Loading your recent battles...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw className="h-6 w-6 animate-spin text-cyan-400" />
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="active" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-black/40 border border-gray-700/50">
-          <TabsTrigger value="active" className="data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-400">
-            Active ({activeBattles.length})
-          </TabsTrigger>
-          <TabsTrigger value="completed" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">
-            Completed ({completedBattles.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="active" className="space-y-4">
-          {activeBattles.length > 0 ? (
-            activeBattles.map((battle) => (
-              <BattleCard key={battle.id} battle={battle} />
-            ))
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-400">No active battles</p>
+    <Card className="bg-gray-900/50 border-gray-700">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg text-cyan-400 flex items-center">
+          <Clock className="h-5 w-5 mr-2" />
+          Battle History
+        </CardTitle>
+        <CardDescription>
+          Your recent battle entries and results ({battles.length} total)
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-96">
+          {battles.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">No Battle History</p>
+              <p className="text-sm">Enter a battle pool or league to get started!</p>
             </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="completed" className="space-y-4">
-          {completedBattles.length > 0 ? (
-            completedBattles.map((battle) => (
-              <BattleCard key={battle.id} battle={battle} />
-            ))
           ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-400">No completed battles</p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            <div className="space-y-3">
+              {battles.map((battle) => (
+                <div 
+                  key={battle.id}
+                  className="p-4 border border-gray-700/50 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition-colors"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      {getBattleTypeIcon(battle.battle_type)}
+                      <Badge 
+                        variant="outline" 
+                        className={cn(
+                          "text-xs",
+                          battle.battle_type === 'pool_entry' ? "border-blue-500 text-blue-400" : "border-purple-500 text-purple-400"
+                        )}
+                      >
+                        {battle.battle_type === 'pool_entry' ? 
+                          `${battle.pool_type?.toUpperCase()} POOL` : 
+                          battle.league_name?.toUpperCase()
+                        }
+                      </Badge>
+                      <div className={cn("w-2 h-2 rounded-full", getStatusColor(battle.status))} />
+                      <span className="text-xs text-gray-400 capitalize">{battle.status}</span>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {formatTimeAgo(battle.created_at)}
+                    </span>
+                  </div>
 
-      {/* Battle Replay Modal */}
-      {selectedBattle && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-gray-900 border-gray-700">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Battle Replay</CardTitle>
-                <CardDescription>
-                  {selectedBattle.player1_holobot.name} vs {selectedBattle.player2_holobot.name}
-                </CardDescription>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setSelectedBattle(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="overflow-y-auto max-h-96">
-              {selectedBattle.battle_log.length > 0 ? (
-                <div className="space-y-2">
-                  {selectedBattle.battle_log.map((logEntry, index) => (
-                    <div 
-                      key={index} 
-                      className="p-2 bg-black/40 rounded border border-gray-700/50 text-sm"
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-gray-400">Round {logEntry.round}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {logEntry.action}
-                        </Badge>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div>
+                        <div className="font-medium text-white text-sm">{battle.holobot_name}</div>
+                        <div className="text-xs text-gray-400">vs {battle.opponent_name}</div>
                       </div>
-                      <p className="text-gray-200">{logEntry.message}</p>
-                      {logEntry.damage && logEntry.damage > 0 && (
-                        <p className="text-xs text-red-400 mt-1">
-                          Damage: {logEntry.damage}
-                        </p>
+                    </div>
+                    
+                    {battle.status === 'completed' && (
+                      <div className="flex items-center space-x-1">
+                        <Trophy className="h-4 w-4 text-yellow-400" />
+                        <span className="text-xs text-yellow-400">Victory</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Rewards Section */}
+                  {battle.rewards && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {battle.rewards.holos && (
+                        <div className="flex items-center justify-between bg-yellow-500/10 rounded px-2 py-1 border border-yellow-500/20">
+                          <Coins className="h-3 w-3 text-yellow-400" />
+                          <span className="text-xs font-medium text-yellow-400">
+                            +{battle.rewards.holos}
+                          </span>
+                        </div>
+                      )}
+                      {battle.rewards.exp && (
+                        <div className="flex items-center justify-between bg-purple-500/10 rounded px-2 py-1 border border-purple-500/20">
+                          <Star className="h-3 w-3 text-purple-400" />
+                          <span className="text-xs font-medium text-purple-400">
+                            +{battle.rewards.exp}
+                          </span>
+                        </div>
+                      )}
+                      {battle.rewards.rating_points && (
+                        <div className="flex items-center justify-between bg-orange-500/10 rounded px-2 py-1 border border-orange-500/20">
+                          <Trophy className="h-3 w-3 text-orange-400" />
+                          <span className="text-xs font-medium text-orange-400">
+                            +{battle.rewards.rating_points}
+                          </span>
+                        </div>
                       )}
                     </div>
-                  ))}
+                  )}
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-400">No battle log available</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-    </div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 } 

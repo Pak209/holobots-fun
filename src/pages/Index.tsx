@@ -21,6 +21,7 @@ import { Activity, Clock, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useRewardTracking } from "@/hooks/useRewardTracking";
+import { calculatePlayerRank } from "@/types/playerRank";
 import { 
   shouldRefreshDailyTickets, 
   calculateRefreshedTickets, 
@@ -410,7 +411,7 @@ const Index = () => {
         if (currentRound < maxRounds) {
           setCurrentRound(prev => prev + 1);
           // Generate new opponent for next round
-          const newOpponent = generateArenaOpponent(user, currentRound + 1);
+          const newOpponent = generateArenaOpponent(currentRound + 1);
           setArenaOpponentLevel(newOpponent.level);
         } else {
           // Arena completed successfully
@@ -524,6 +525,15 @@ const Index = () => {
     const completedBattles = getCompletedBattles();
     const canRefreshToday = shouldRefreshDailyTickets(user!);
     const timeUntilRefresh = getTimeUntilNextRefresh();
+
+    // Calculate user's player rank from their holobots
+    const userPlayerRank = user?.holobots ? calculatePlayerRank({
+      championCount: user.holobots.filter(h => h.rank === 'Champion').length,
+      rareCount: user.holobots.filter(h => h.rank === 'Rare').length,
+      eliteCount: user.holobots.filter(h => h.rank === 'Elite').length,
+      legendaryCount: user.holobots.filter(h => h.rank === 'Legendary').length,
+      prestigedCount: user.holobots.filter(h => h.prestiged).length
+    }) : 'Rookie';
     
     return (
       <div className="min-h-screen bg-[#0A0B14] text-white pb-20">
@@ -631,14 +641,15 @@ const Index = () => {
             {/* PvE Leagues Tab */}
             <TabsContent value="leagues" className="space-y-6">
               <div className="grid gap-4">
-                {Object.entries(LEAGUE_CONFIGS).map(([leagueType, config]) => (
+                {Object.entries(LEAGUE_CONFIGS).map(([leagueType, config], index) => (
                   <BattleLeagueCard 
                     key={leagueType}
                     leagueType={leagueType as any}
                     config={config}
-                    userSteps={todaysSteps}
+                    userPlayerRank={userPlayerRank}
                     ticketsRemaining={ticketsRemaining}
                     userHolobots={user?.holobots || []}
+                    leagueId={index + 1}
                   />
                 ))}
               </div>
@@ -652,7 +663,7 @@ const Index = () => {
                     key={poolType}
                     poolType={poolType as any}
                     config={config}
-                    userSteps={todaysSteps}
+                    userPlayerRank={userPlayerRank}
                     ticketsRemaining={ticketsRemaining}
                     userHolobots={user?.holobots || []}
                   />
@@ -662,7 +673,7 @@ const Index = () => {
 
             {/* Battle History Tab */}
             <TabsContent value="history" className="space-y-6">
-              <BattleHistoryList battles={[...activeBattles, ...completedBattles]} />
+                              <BattleHistoryList />
             </TabsContent>
           </Tabs>
         </div>
