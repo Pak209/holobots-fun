@@ -7,6 +7,8 @@ import { StatusBar } from "@/components/HealthBar";
 import { FitnessStat } from "@/components/fitness/FitnessStat";
 import { WorkoutRewards } from "@/components/fitness/WorkoutRewards";
 import { HolobotSelector } from "@/components/fitness/HolobotSelector";
+import { SyncPointsInput } from "@/components/fitness/SyncPointsInput";
+import { SyncPointsDashboard } from "@/components/fitness/SyncPointsDashboard";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useRewardTracking } from "@/hooks/useRewardTracking";
@@ -39,6 +41,7 @@ export default function Fitness() {
   const [steps, setSteps] = useState(0);
   const [workoutSteps, setWorkoutSteps] = useState(0);
   const [stamina, setStamina] = useState(100);
+  const [showSyncPoints, setShowSyncPoints] = useState(true); // Show sync points by default for testing
   const [rewards, setRewards] = useState({
     exp: 0,
     holos: 0,
@@ -213,12 +216,47 @@ export default function Fitness() {
           FITNESS SYNC
         </h1>
         
-        {/* Holobot selector */}
-        <HolobotSelector 
-          holobots={user?.holobots || []}
-          selectedHolobot={selectedHolobot}
-          onSelect={setSelectedHolobot}
-        />
+        {/* Toggle between Sync Points and Workout modes */}
+        <div className="flex mb-6 bg-black/30 backdrop-blur-md rounded-lg p-1 border border-cyan-500/30">
+          <Button
+            onClick={() => setShowSyncPoints(true)}
+            className={cn(
+              "flex-1 text-sm font-medium",
+              showSyncPoints 
+                ? "bg-cyan-500 text-white" 
+                : "bg-transparent text-cyan-300 hover:bg-cyan-500/20"
+            )}
+          >
+            SYNC POINTS
+          </Button>
+          <Button
+            onClick={() => setShowSyncPoints(false)}
+            className={cn(
+              "flex-1 text-sm font-medium",
+              !showSyncPoints 
+                ? "bg-cyan-500 text-white" 
+                : "bg-transparent text-cyan-300 hover:bg-cyan-500/20"
+            )}
+          >
+            WORKOUT MODE
+          </Button>
+        </div>
+
+        {showSyncPoints ? (
+          /* Sync Points Mode */
+          <div className="space-y-6">
+            <SyncPointsInput />
+            <SyncPointsDashboard />
+          </div>
+        ) : (
+          /* Original Workout Mode */
+          <>
+            {/* Holobot selector */}
+            <HolobotSelector 
+              holobots={user?.holobots || []}
+              selectedHolobot={selectedHolobot}
+              onSelect={setSelectedHolobot}
+            />
 
         {/* Main workout interface */}
         <div className="bg-black/30 backdrop-blur-md rounded-xl border border-cyan-500/30 shadow-[0_0_15px_rgba(0,255,255,0.15)] p-4 mb-6">
@@ -393,6 +431,8 @@ export default function Fitness() {
             <p className="text-center text-sm text-gray-500">No Holobot selected</p>
           )}
         </div>
+          </>
+        )}
       </div>
     </div>
   );
