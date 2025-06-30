@@ -114,17 +114,17 @@ export function AttributeUpgrade({ holobotId, holobotName }: AttributeUpgradePro
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Sync Bond Display */}
-        <div className="p-3 bg-black/40 rounded-lg border border-purple-500/20">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-purple-400 text-sm">SYNC BOND</span>
-            <Badge className="bg-purple-500 text-white">
+        <div className="p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg border border-purple-400/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-purple-300 text-sm font-semibold">SYNC BOND</span>
+            <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold px-3 py-1 text-sm shadow-lg">
               Level {syncBond.level}
             </Badge>
           </div>
-          <Progress value={syncBond.progress} className="h-2 bg-gray-800" />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>Ability Boost: +{syncBond.abilityBoost}%</span>
-            <span>Part Compat: +{syncBond.partCompatibility}%</span>
+          <Progress value={syncBond.progress} className="h-3 bg-gray-800" />
+          <div className="flex justify-between text-sm text-purple-200 mt-2 font-medium">
+            <span>Ability Boost: <span className="text-purple-300 font-bold">+{syncBond.abilityBoost}%</span></span>
+            <span>Part Compat: <span className="text-purple-300 font-bold">+{syncBond.partCompatibility}%</span></span>
           </div>
         </div>
 
@@ -165,7 +165,14 @@ export function AttributeUpgrade({ holobotId, holobotName }: AttributeUpgradePro
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={isMaxed ? "default" : "outline"} className="text-xs">
+                    <Badge 
+                      variant={isMaxed ? "default" : "outline"} 
+                      className={`text-sm font-bold px-2 py-1 ${
+                        isMaxed 
+                          ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg" 
+                          : "bg-gradient-to-r from-gray-700 to-gray-600 text-white border-gray-500"
+                      }`}
+                    >
                       {isMaxed ? "MAX" : `Lv ${currentLevel}`}
                     </Badge>
                     {isMaxed ? (

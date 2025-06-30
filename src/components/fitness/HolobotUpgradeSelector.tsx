@@ -59,10 +59,10 @@ export function HolobotUpgradeSelector() {
                       <div className="flex flex-col items-start">
                         <span className="font-semibold text-white">{selectedHolobotData.name}</span>
                         <div className="flex gap-2">
-                          <Badge className="bg-purple-500 text-white text-xs">
+                          <Badge className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-bold px-2 py-1 shadow-lg">
                             {selectedHolobotData.rank || "Champion"}
                           </Badge>
-                          <Badge className="bg-yellow-500 text-black text-xs">
+                          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-sm font-bold px-2 py-1 shadow-lg">
                             Lv {selectedHolobotData.level || 1}
                           </Badge>
                         </div>
@@ -88,14 +88,14 @@ export function HolobotUpgradeSelector() {
                       <div className="flex flex-col items-start">
                         <span className="font-semibold text-white">{holobot.name}</span>
                         <div className="flex gap-2">
-                          <Badge className="bg-purple-500 text-white text-xs">
+                          <Badge className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-bold px-2 py-1">
                             {holobot.rank || "Champion"}
                           </Badge>
-                          <Badge className="bg-yellow-500 text-black text-xs">
+                          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-sm font-bold px-2 py-1">
                             Lv {holobot.level || 1}
                           </Badge>
                           {holobot.experience && (
-                            <Badge className="bg-blue-500 text-white text-xs">
+                            <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-bold px-2 py-1">
                               {holobot.experience} EXP
                             </Badge>
                           )}
