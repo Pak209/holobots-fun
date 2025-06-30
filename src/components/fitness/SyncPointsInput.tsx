@@ -109,8 +109,9 @@ export function SyncPointsInput() {
           
           <div className="text-xs text-gray-400 space-y-1">
             <p>• {DEFAULT_SYNC_CONFIG.stepsPerSyncPoint} steps = 1 Sync Point</p>
-            <p>• Minimum {DEFAULT_SYNC_CONFIG.minimumStepsForReward} steps required</p>
+            <p>• Minimum {DEFAULT_SYNC_CONFIG.minimumStepsForReward.toLocaleString()} steps required</p>
             <p>• Streak bonuses apply for consecutive days</p>
+            <p>• Sync Training earns {DEFAULT_SYNC_CONFIG.syncTrainingPointsPerMinute} SP/min (+50% bonus)</p>
           </div>
           
           <Button 

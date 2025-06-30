@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 export function SyncPointsDashboard() {
-  const { stats, entries, calculateStats, resetDailyEntries } = useSyncPointsStore();
+  const { stats, entries, calculateStats, resetAllData } = useSyncPointsStore();
 
   useEffect(() => {
     calculateStats();
@@ -38,13 +38,13 @@ export function SyncPointsDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center space-x-2 mb-2">
               <Zap className="w-5 h-5 text-cyan-400" />
-              <span className="text-xs text-cyan-300">TOTAL SYNC POINTS</span>
+              <span className="text-xs text-cyan-300">AVAILABLE SP</span>
             </div>
             <div className="text-2xl font-bold text-cyan-400">
-              {stats.totalSyncPoints.toLocaleString()}
+              {stats.availableSyncPoints.toLocaleString()}
             </div>
             <div className="text-xs text-gray-400">
-              From {stats.totalSteps.toLocaleString()} steps
+              {stats.totalSyncPoints.toLocaleString()} earned • {stats.totalSpent.toLocaleString()} spent
             </div>
           </CardContent>
         </Card>
@@ -159,9 +159,13 @@ export function SyncPointsDashboard() {
           
           <div className="pt-2 border-t border-blue-500/20">
             <div className="text-xs text-gray-400 space-y-1">
-              <p>• Sync Points rate: {DEFAULT_SYNC_CONFIG.stepsPerSyncPoint} steps = 1 point</p>
+              <p>• Steps: {DEFAULT_SYNC_CONFIG.stepsPerSyncPoint} steps = 1 SP</p>
+              <p>• Sync Training: {DEFAULT_SYNC_CONFIG.syncTrainingPointsPerMinute} SP/min (+50% bonus)</p>
               <p>• Streak multiplier: up to ×{Math.max(...DEFAULT_SYNC_CONFIG.bonusMultipliers.streak)}</p>
-              <p>• Weekly goal bonus: +{(DEFAULT_SYNC_CONFIG.bonusMultipliers.weeklyGoal - 1) * 100}%</p>
+              <p>• Weekly training: {stats.weeklySyncTrainingMinutes} minutes</p>
+              {stats.xHolosWeight > 0 && (
+                <p>• xHolos Weight: {stats.xHolosWeight.toFixed(1)} (hidden)</p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -171,7 +175,7 @@ export function SyncPointsDashboard() {
       <Card className="bg-black/30 backdrop-blur-md border-red-500/30 shadow-[0_0_15px_rgba(255,0,0,0.15)]">
         <CardContent className="p-4">
           <Button
-            onClick={resetDailyEntries}
+            onClick={resetAllData}
             variant="destructive"
             className="w-full bg-red-500 hover:bg-red-600"
           >
@@ -179,7 +183,7 @@ export function SyncPointsDashboard() {
             RESET ALL DATA (Testing Only)
           </Button>
           <p className="text-xs text-gray-400 mt-2 text-center">
-            This will clear all sync points data for testing purposes
+            This will clear all sync points, upgrades, and bonds for testing
           </p>
         </CardContent>
       </Card>

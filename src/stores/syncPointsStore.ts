@@ -1,29 +1,64 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SyncPointsEntry, SyncPointsStats, DEFAULT_SYNC_CONFIG } from '@/types/syncPoints';
+import { 
+  SyncPointsEntry, 
+  SyncPointsStats, 
+  AttributeUpgrade,
+  SpecialAttackUnlock,
+  AbilityChipUnlock,
+  SyncBond,
+  DEFAULT_SYNC_CONFIG,
+  calculateAttributeUpgradeCost,
+  calculateSyncBondLevel,
+  calculateXHolosWeight,
+} from '@/types/syncPoints';
 
 interface SyncPointsStore {
   entries: SyncPointsEntry[];
   stats: SyncPointsStats;
+  attributeUpgrades: AttributeUpgrade[];
+  specialAttacks: SpecialAttackUnlock[];
+  abilityChips: AbilityChipUnlock[];
+  syncBonds: Record<string, SyncBond>; // holobotId -> SyncBond
   isLoading: boolean;
   
-  // Actions
+  // Earning Actions
   addStepsEntry: (steps: number) => void;
+  addSyncTrainingEntry: (minutes: number, holobotId?: string) => void;
+  addMissionBonus: (syncPoints: number) => void;
+  
+  // Spending Actions
+  upgradeAttribute: (holobotId: string, attribute: 'hp' | 'attack' | 'speed' | 'defense' | 'special') => boolean;
+  unlockSpecialAttack: (attackId: string) => boolean;
+  unlockAbilityChip: (chipId: string, tierLevel: number) => boolean;
+  
+  // Utility Actions
   calculateStats: () => void;
-  resetDailyEntries: () => void;
-  getEntriesForDateRange: (startDate: Date, endDate: Date) => SyncPointsEntry[];
-  getTotalSyncPoints: () => number;
+  resetAllData: () => void;
+  getHolobotSyncBond: (holobotId: string) => SyncBond;
+  getAvailableSyncPoints: () => number;
+  getHolobotAttributeLevel: (holobotId: string, attribute: string) => number;
+  canAffordUpgrade: (cost: number) => boolean;
 }
 
-const calculateSyncPoints = (steps: number, streak: number = 0): number => {
-  if (steps < DEFAULT_SYNC_CONFIG.minimumStepsForReward) {
-    return 0;
-  }
-
-  // Base sync points
-  const baseSyncPoints = Math.floor(steps / DEFAULT_SYNC_CONFIG.stepsPerSyncPoint);
+const calculateSyncPoints = (
+  steps: number = 0, 
+  syncTrainingMinutes: number = 0, 
+  streak: number = 0,
+  activityType: 'steps' | 'sync_training' | 'mission_bonus' = 'steps'
+): number => {
+  let baseSyncPoints = 0;
   
-  // Streak multiplier
+  if (activityType === 'steps') {
+    if (steps < DEFAULT_SYNC_CONFIG.minimumStepsForReward) return 0;
+    baseSyncPoints = Math.floor(steps / DEFAULT_SYNC_CONFIG.stepsPerSyncPoint);
+  } else if (activityType === 'sync_training') {
+    baseSyncPoints = Math.floor(syncTrainingMinutes * DEFAULT_SYNC_CONFIG.syncTrainingPointsPerMinute);
+    // Apply Sync Training bonus
+    baseSyncPoints = Math.floor(baseSyncPoints * DEFAULT_SYNC_CONFIG.bonusMultipliers.syncTrainingBonus);
+  }
+  
+  // Apply streak multiplier
   const streakIndex = Math.min(streak - 1, DEFAULT_SYNC_CONFIG.bonusMultipliers.streak.length - 1);
   const streakMultiplier = streak > 0 ? DEFAULT_SYNC_CONFIG.bonusMultipliers.streak[streakIndex] : 1;
   
@@ -55,6 +90,16 @@ const getStreakCount = (entries: SyncPointsEntry[]): number => {
   return streak;
 };
 
+const createDefaultSyncBond = (): SyncBond => ({
+  level: 0,
+  progress: 0,
+  totalSyncPoints: 0,
+  syncTrainingHours: 0,
+  abilityBoost: 0,
+  partCompatibility: 0,
+  specialUnlocks: [],
+});
+
 export const useSyncPointsStore = create<SyncPointsStore>()(
   persist(
     (set, get) => ({
@@ -62,11 +107,19 @@ export const useSyncPointsStore = create<SyncPointsStore>()(
       stats: {
         totalSteps: 0,
         totalSyncPoints: 0,
+        totalSpent: 0,
+        availableSyncPoints: 0,
         weeklySteps: 0,
         weeklySyncPoints: 0,
+        weeklySyncTrainingMinutes: 0,
         dailyAverage: 0,
         streak: 0,
+        xHolosWeight: 0,
       },
+      attributeUpgrades: [],
+      specialAttacks: [],
+      abilityChips: [],
+      syncBonds: {},
       isLoading: false,
 
       addStepsEntry: (steps: number) => {
@@ -74,29 +127,29 @@ export const useSyncPointsStore = create<SyncPointsStore>()(
         const today = new Date().toISOString().split('T')[0];
         
         // Check if entry already exists for today
-        const existingEntryIndex = state.entries.findIndex(entry => entry.date === today);
+        const existingEntryIndex = state.entries.findIndex(
+          entry => entry.date === today && entry.activityType === 'steps'
+        );
         
-        // Calculate streak for sync points calculation
         const currentStreak = getStreakCount(state.entries);
         const newStreak = existingEntryIndex >= 0 ? currentStreak : currentStreak + 1;
         
-        const syncPoints = calculateSyncPoints(steps, newStreak);
+        const syncPoints = calculateSyncPoints(steps, 0, newStreak, 'steps');
         
         const newEntry: SyncPointsEntry = {
-          id: `${today}-${Date.now()}`,
+          id: `${today}-steps-${Date.now()}`,
           date: today,
           steps,
           syncPoints,
+          activityType: 'steps',
           timestamp: Date.now(),
         };
 
         let updatedEntries;
         if (existingEntryIndex >= 0) {
-          // Update existing entry
           updatedEntries = [...state.entries];
           updatedEntries[existingEntryIndex] = newEntry;
         } else {
-          // Add new entry
           updatedEntries = [...state.entries, newEntry];
         }
 
@@ -104,19 +157,156 @@ export const useSyncPointsStore = create<SyncPointsStore>()(
         get().calculateStats();
       },
 
+      addSyncTrainingEntry: (minutes: number, holobotId?: string) => {
+        const state = get();
+        const today = new Date().toISOString().split('T')[0];
+        
+        const currentStreak = getStreakCount(state.entries);
+        const syncPoints = calculateSyncPoints(0, minutes, currentStreak, 'sync_training');
+        
+        const newEntry: SyncPointsEntry = {
+          id: `${today}-training-${Date.now()}`,
+          date: today,
+          steps: 0,
+          syncPoints,
+          syncTrainingMinutes: minutes,
+          activityType: 'sync_training',
+          timestamp: Date.now(),
+        };
+
+        set({ entries: [...state.entries, newEntry] });
+        
+        // Update Sync Bond if holobotId provided
+        if (holobotId) {
+          const syncBond = state.syncBonds[holobotId] || createDefaultSyncBond();
+          const updatedSyncBond = {
+            ...syncBond,
+            totalSyncPoints: syncBond.totalSyncPoints + syncPoints,
+            syncTrainingHours: syncBond.syncTrainingHours + (minutes / 60),
+          };
+          
+          const { level, progress } = calculateSyncBondLevel(updatedSyncBond.totalSyncPoints);
+          updatedSyncBond.level = level;
+          updatedSyncBond.progress = progress;
+          updatedSyncBond.abilityBoost = level * 5; // 5% per level
+          updatedSyncBond.partCompatibility = level * 3; // 3% per level
+          
+          set({
+            syncBonds: {
+              ...state.syncBonds,
+              [holobotId]: updatedSyncBond,
+            }
+          });
+        }
+        
+        get().calculateStats();
+      },
+
+      addMissionBonus: (syncPoints: number) => {
+        const state = get();
+        const today = new Date().toISOString().split('T')[0];
+        
+        const newEntry: SyncPointsEntry = {
+          id: `${today}-mission-${Date.now()}`,
+          date: today,
+          steps: 0,
+          syncPoints,
+          activityType: 'mission_bonus',
+          timestamp: Date.now(),
+        };
+
+        set({ entries: [...state.entries, newEntry] });
+        get().calculateStats();
+      },
+
+      upgradeAttribute: (holobotId: string, attribute: 'hp' | 'attack' | 'speed' | 'defense' | 'special') => {
+        const state = get();
+        const currentLevel = get().getHolobotAttributeLevel(holobotId, attribute);
+        const upgradeCost = calculateAttributeUpgradeCost(currentLevel);
+        
+        if (!get().canAffordUpgrade(upgradeCost) || currentLevel >= DEFAULT_SYNC_CONFIG.maxAttributeLevel) {
+          return false;
+        }
+        
+        // Find existing upgrade or create new one
+        const existingUpgradeIndex = state.attributeUpgrades.findIndex(
+          upgrade => upgrade.holobotId === holobotId && upgrade.attribute === attribute
+        );
+        
+        let updatedUpgrades;
+        if (existingUpgradeIndex >= 0) {
+          updatedUpgrades = [...state.attributeUpgrades];
+          updatedUpgrades[existingUpgradeIndex] = {
+            ...updatedUpgrades[existingUpgradeIndex],
+            level: currentLevel + 1,
+            syncPointsInvested: updatedUpgrades[existingUpgradeIndex].syncPointsInvested + upgradeCost,
+          };
+        } else {
+          const newUpgrade: AttributeUpgrade = {
+            holobotId,
+            attribute,
+            level: 1,
+            syncPointsInvested: upgradeCost,
+          };
+          updatedUpgrades = [...state.attributeUpgrades, newUpgrade];
+        }
+        
+        set({ attributeUpgrades: updatedUpgrades });
+        get().calculateStats();
+        return true;
+      },
+
+      unlockSpecialAttack: (attackId: string) => {
+        const state = get();
+        const attack = state.specialAttacks.find(a => a.id === attackId);
+        
+        if (!attack || attack.unlocked || !get().canAffordUpgrade(attack.syncPointCost)) {
+          return false;
+        }
+        
+        const updatedAttacks = state.specialAttacks.map(a => 
+          a.id === attackId ? { ...a, unlocked: true } : a
+        );
+        
+        set({ specialAttacks: updatedAttacks });
+        get().calculateStats();
+        return true;
+      },
+
+      unlockAbilityChip: (chipId: string, tierLevel: number) => {
+        const state = get();
+        const chip = state.abilityChips.find(c => c.chipId === chipId && c.tierLevel === tierLevel);
+        
+        if (!chip || chip.unlocked || !get().canAffordUpgrade(chip.syncPointCost)) {
+          return false;
+        }
+        
+        const updatedChips = state.abilityChips.map(c => 
+          c.chipId === chipId && c.tierLevel === tierLevel ? { ...c, unlocked: true } : c
+        );
+        
+        set({ abilityChips: updatedChips });
+        get().calculateStats();
+        return true;
+      },
+
       calculateStats: () => {
         const state = get();
-        const { entries } = state;
+        const { entries, attributeUpgrades, specialAttacks, abilityChips } = state;
         
         if (entries.length === 0) {
           set({
             stats: {
               totalSteps: 0,
               totalSyncPoints: 0,
+              totalSpent: 0,
+              availableSyncPoints: 0,
               weeklySteps: 0,
               weeklySyncPoints: 0,
+              weeklySyncTrainingMinutes: 0,
               dailyAverage: 0,
               streak: 0,
+              xHolosWeight: 0,
             }
           });
           return;
@@ -125,43 +315,72 @@ export const useSyncPointsStore = create<SyncPointsStore>()(
         const totalSteps = entries.reduce((sum, entry) => sum + entry.steps, 0);
         const totalSyncPoints = entries.reduce((sum, entry) => sum + entry.syncPoints, 0);
         
+        // Calculate total spent
+        const totalSpent = 
+          attributeUpgrades.reduce((sum, upgrade) => sum + upgrade.syncPointsInvested, 0) +
+          specialAttacks.filter(a => a.unlocked).reduce((sum, attack) => sum + attack.syncPointCost, 0) +
+          abilityChips.filter(c => c.unlocked).reduce((sum, chip) => sum + chip.syncPointCost, 0);
+        
+        const availableSyncPoints = totalSyncPoints - totalSpent;
+        
         // Calculate weekly stats (last 7 days)
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
         const weeklyEntries = entries.filter(entry => new Date(entry.date) >= weekAgo);
         const weeklySteps = weeklyEntries.reduce((sum, entry) => sum + entry.steps, 0);
         const weeklySyncPoints = weeklyEntries.reduce((sum, entry) => sum + entry.syncPoints, 0);
+        const weeklySyncTrainingMinutes = weeklyEntries.reduce((sum, entry) => sum + (entry.syncTrainingMinutes || 0), 0);
         
         const dailyAverage = entries.length > 0 ? Math.floor(totalSteps / entries.length) : 0;
         const streak = getStreakCount(entries);
+        const xHolosWeight = calculateXHolosWeight(totalSyncPoints);
 
         set({
           stats: {
             totalSteps,
             totalSyncPoints,
+            totalSpent,
+            availableSyncPoints,
             weeklySteps,
             weeklySyncPoints,
+            weeklySyncTrainingMinutes,
             dailyAverage,
             streak,
+            xHolosWeight,
           }
         });
       },
 
-      resetDailyEntries: () => {
-        set({ entries: [] });
+      resetAllData: () => {
+        set({ 
+          entries: [],
+          attributeUpgrades: [],
+          specialAttacks: [],
+          abilityChips: [],
+          syncBonds: {},
+        });
         get().calculateStats();
       },
 
-      getEntriesForDateRange: (startDate: Date, endDate: Date) => {
-        const { entries } = get();
-        return entries.filter(entry => {
-          const entryDate = new Date(entry.date);
-          return entryDate >= startDate && entryDate <= endDate;
-        });
+      getHolobotSyncBond: (holobotId: string) => {
+        const state = get();
+        return state.syncBonds[holobotId] || createDefaultSyncBond();
       },
 
-      getTotalSyncPoints: () => {
-        return get().stats.totalSyncPoints;
+      getAvailableSyncPoints: () => {
+        return get().stats.availableSyncPoints;
+      },
+
+      getHolobotAttributeLevel: (holobotId: string, attribute: string) => {
+        const state = get();
+        const upgrade = state.attributeUpgrades.find(
+          u => u.holobotId === holobotId && u.attribute === attribute
+        );
+        return upgrade?.level || 0;
+      },
+
+      canAffordUpgrade: (cost: number) => {
+        return get().getAvailableSyncPoints() >= cost;
       },
     }),
     {

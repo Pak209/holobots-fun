@@ -9,6 +9,8 @@ import { WorkoutRewards } from "@/components/fitness/WorkoutRewards";
 import { HolobotSelector } from "@/components/fitness/HolobotSelector";
 import { SyncPointsInput } from "@/components/fitness/SyncPointsInput";
 import { SyncPointsDashboard } from "@/components/fitness/SyncPointsDashboard";
+import { SyncTrainingInput } from "@/components/fitness/SyncTrainingInput";
+import { AttributeUpgrade } from "@/components/fitness/AttributeUpgrade";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useRewardTracking } from "@/hooks/useRewardTracking";
@@ -41,7 +43,7 @@ export default function Fitness() {
   const [steps, setSteps] = useState(0);
   const [workoutSteps, setWorkoutSteps] = useState(0);
   const [stamina, setStamina] = useState(100);
-  const [showSyncPoints, setShowSyncPoints] = useState(true); // Show sync points by default for testing
+  const [activeTab, setActiveTab] = useState<'steps' | 'training' | 'upgrades'>('steps'); // Default to steps for testing
   const [rewards, setRewards] = useState({
     exp: 0,
     holos: 0,
@@ -216,40 +218,81 @@ export default function Fitness() {
           FITNESS SYNC
         </h1>
         
-        {/* Toggle between Sync Points and Workout modes */}
+        {/* Tab Navigation */}
         <div className="flex mb-6 bg-black/30 backdrop-blur-md rounded-lg p-1 border border-cyan-500/30">
           <Button
-            onClick={() => setShowSyncPoints(true)}
+            onClick={() => setActiveTab('steps')}
             className={cn(
-              "flex-1 text-sm font-medium",
-              showSyncPoints 
-                ? "bg-cyan-500 text-white" 
-                : "bg-transparent text-cyan-300 hover:bg-cyan-500/20"
+              "flex-1 text-xs font-medium",
+              activeTab === 'steps'
+                ? "bg-green-500 text-white" 
+                : "bg-transparent text-green-300 hover:bg-green-500/20"
             )}
           >
-            SYNC POINTS
+            STEPS
           </Button>
           <Button
-            onClick={() => setShowSyncPoints(false)}
+            onClick={() => setActiveTab('training')}
             className={cn(
-              "flex-1 text-sm font-medium",
-              !showSyncPoints 
+              "flex-1 text-xs font-medium",
+              activeTab === 'training'
+                ? "bg-orange-500 text-white" 
+                : "bg-transparent text-orange-300 hover:bg-orange-500/20"
+            )}
+          >
+            SYNC TRAINING
+          </Button>
+          <Button
+            onClick={() => setActiveTab('upgrades')}
+            className={cn(
+              "flex-1 text-xs font-medium",
+              activeTab === 'upgrades'
                 ? "bg-cyan-500 text-white" 
                 : "bg-transparent text-cyan-300 hover:bg-cyan-500/20"
             )}
           >
-            WORKOUT MODE
+            UPGRADES
           </Button>
         </div>
 
-        {showSyncPoints ? (
-          /* Sync Points Mode */
+        {activeTab === 'steps' && (
+          /* Steps Input Mode */
           <div className="space-y-6">
             <SyncPointsInput />
             <SyncPointsDashboard />
           </div>
-        ) : (
-          /* Original Workout Mode */
+        )}
+
+        {activeTab === 'training' && (
+          /* Sync Training Mode */
+          <div className="space-y-6">
+            <SyncTrainingInput />
+            <SyncPointsDashboard />
+          </div>
+        )}
+
+        {activeTab === 'upgrades' && (
+          /* Attribute Upgrades Mode */
+          <div className="space-y-6">
+            <SyncPointsDashboard />
+            {user?.holobots && user.holobots.length > 0 ? (
+              user.holobots.map((holobot) => (
+                <AttributeUpgrade 
+                  key={holobot.name}
+                  holobotId={holobot.name}
+                  holobotName={holobot.name}
+                />
+              ))
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                No Holobots available for upgrades
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Original Sync Training Mode (hidden, preserved for reference) */}
+        {false && (
           <>
             {/* Holobot selector */}
             <HolobotSelector 
