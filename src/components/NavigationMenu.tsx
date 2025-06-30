@@ -8,20 +8,16 @@ import {
   ShoppingBag,
   Database,
   BarChart4,
-  Wheat,
-  Award,
   Package,
   Zap
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -111,7 +107,6 @@ export const NavigationMenu = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border text-gray-700 dark:text-gray-300">
-        <DropdownMenuLabel className="text-center font-bold">{user.username || 'User'}</DropdownMenuLabel>
         <DropdownMenuSeparator className="border-holobots-border dark:border-holobots-dark-border" />
         
         <div className="p-2 space-y-2">
@@ -158,22 +153,6 @@ export const NavigationMenu = () => {
           
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
-              <Package className="h-4 w-4 text-green-500" />
-              <span>Gacha Tickets:</span>
-            </div>
-            <span className="font-semibold">{user.gachaTickets || 0}</span>
-          </div>
-          
-          <div className="flex items-center justify-between px-2 py-1">
-            <div className="flex items-center gap-2">
-              <Award className="h-4 w-4 text-holobots-accent dark:text-holobots-dark-accent" />
-              <span>Arena Passes:</span>
-            </div>
-            <span className="font-semibold">{user.arena_passes || 0}</span>
-          </div>
-          
-          <div className="flex items-center justify-between px-2 py-1">
-            <div className="flex items-center gap-2">
               <Trophy className="h-4 w-4 text-holobots-accent dark:text-holobots-dark-accent" />
               <span>Win/Loss:</span>
             </div>
@@ -210,19 +189,6 @@ export const NavigationMenu = () => {
             <span>Leaderboard</span>
           </DropdownMenuItem>
         </Link>
-        
-        <Link to="/holos-farm">
-          <DropdownMenuItem className="cursor-pointer focus:bg-holobots-hover dark:focus:bg-holobots-dark-hover focus:text-holobots-accent dark:focus:text-holobots-dark-accent">
-            <Wheat className="mr-2 h-4 w-4" />
-            <span>Holos Farm</span>
-          </DropdownMenuItem>
-        </Link>
-        
-        <DropdownMenuSeparator className="border-holobots-border dark:border-holobots-dark-border" />
-        
-        <div className="p-2 flex justify-center">
-          <ThemeToggle />
-        </div>
         
         <DropdownMenuSeparator className="border-holobots-border dark:border-holobots-dark-border" />
         
