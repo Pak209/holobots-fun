@@ -24,12 +24,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { PlayerRankCard } from './PlayerRankCard';
 import React from 'react';
+import { useSyncPointsStore } from '@/stores/syncPointsStore';
 
 export const NavigationMenu = () => {
   const { user, logout, updateUser } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isRefilling, setIsRefilling] = React.useState(false);
+  const { getAvailableSyncPoints } = useSyncPointsStore();
 
   const handleLogout = async () => {
     try {
@@ -149,6 +151,14 @@ export const NavigationMenu = () => {
               <span>Holos Tokens:</span>
             </div>
             <span className="font-semibold">{user.holosTokens}</span>
+          </div>
+          
+          <div className="flex items-center justify-between px-2 py-1">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-[#33C3F0]" />
+              <span>Sync Points:</span>
+            </div>
+            <span className="font-semibold">{getAvailableSyncPoints()}</span>
           </div>
           
           <div className="flex items-center justify-between px-2 py-1">
