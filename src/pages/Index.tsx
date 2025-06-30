@@ -292,38 +292,26 @@ const Index = () => {
         updates.holobots = updatedHolobots;
       }
       
-      // >>> ADD BLUEPRINT UPDATE LOGIC HERE <<<
+      // Add blueprint update logic
       if (baseRewards.blueprintReward && baseRewards.blueprintReward.holobotKey && baseRewards.blueprintReward.amount > 0) {
         const { holobotKey, amount } = baseRewards.blueprintReward;
-        const currentBlueprints = user.blueprints || {}; // Get current blueprints or default to empty object
-        const currentAmount = currentBlueprints[holobotKey] || 0; // Get current amount for this key or default to 0
+        const currentBlueprints = user.blueprints || {};
+        const currentAmount = currentBlueprints[holobotKey] || 0;
         const newAmount = currentAmount + amount;
 
-        // Add/update the blueprints field in the updates object
         updates.blueprints = {
-          ...currentBlueprints, // Keep existing blueprints
-          [holobotKey]: newAmount // Update the specific holobot's count
+          ...currentBlueprints,
+          [holobotKey]: newAmount
         };
         
         console.log(`Updating blueprints for ${holobotKey}: ${currentAmount} -> ${newAmount}`);
       }
       
-      // Save all the updates to the user
+      // Save all the updates to the user and wait for completion
       await updateUser(updates);
       
-      // Verify user object after update
-      console.log("User state immediately after updateUser call:", JSON.parse(JSON.stringify(user)));
-      console.log("Blueprints in user state after updateUser:", JSON.parse(JSON.stringify(user?.blueprints)));
-      console.log("Inventory in user state after updateUser:", JSON.parse(JSON.stringify(user?.inventory))); // Log old inventory field if needed for comparison
-      console.log("Specific items in user state after updateUser:", {
-          energy_refills: user?.energy_refills,
-          exp_boosters: user?.exp_boosters,
-          rank_skips: user?.rank_skips
-      });
-      console.log("Applied updates object:", JSON.parse(JSON.stringify(updates)));
-
-      // Save the results to show in the results screen
-      setArenaResults({
+      // Save the results to show in the results screen immediately
+      const results = {
         isSuccess: victories > 0,
         squadHolobotKeys: [selectedHolobot],
         squadHolobotExp: experienceRewards,
@@ -337,10 +325,15 @@ const Index = () => {
           exp_boosters: currentArenaTierItemRewards?.exp_boosters || 0,
           rank_skips: currentArenaTierItemRewards?.rank_skips || 0
         } 
-      });
+      };
       
-      // Show the results screen
+      console.log("💰 Setting arena results:", results);
+      setArenaResults(results);
+      
+      // Show the results screen immediately after updating user
+      console.log("🎭 Showing arena rewards screen");
       setShowResults(true);
+      
     } catch (error) {
       console.error("Error distributing rewards:", error);
       toast({
@@ -352,13 +345,22 @@ const Index = () => {
   };
 
   const handleBattleEnd = (result: 'victory' | 'defeat') => {
+    console.log("🎯 Arena battle ended with result:", result);
+    console.log("Current round:", currentRound, "Victories:", victories);
+    
     if (result === 'victory') {
-      setVictories(prev => prev + 1);
+      const newVictories = victories + 1;
+      setVictories(newVictories);
+      
       if (currentRound < maxRounds) {
         // Move to next round with next opponent in lineup
         setCurrentRound(prev => prev + 1);
+        // Show intermediate rewards after each round victory
+        console.log("✨ Round victory - showing intermediate rewards");
+        distributeRewards();
       } else {
         // Final round completed
+        console.log("🏆 Arena completed - distributing final rewards");
         distributeRewards();
         setCurrentRound(1);
         setVictories(0);
@@ -368,6 +370,7 @@ const Index = () => {
       }
     } else {
       // Battle lost
+      console.log("💥 Arena lost - distributing rewards");
       distributeRewards();
       setCurrentRound(1);
       setVictories(0);
@@ -396,75 +399,6 @@ const Index = () => {
   // Arena battle content
   const renderArenaBattle = () => {
     const currentOpponentKey = arenaLineup[currentRound - 1];
-    
-    const handleBattleComplete = async (winner: string, battleData: any) => {
-      if (!user) return;
-
-      const playerWon = winner === "player";
-      
-      // Track arena battle for rewards system
-      trackArenaBattle(playerWon);
-
-      if (playerWon) {
-        setVictories(prev => prev + 1);
-        
-        if (currentRound < maxRounds) {
-          setCurrentRound(prev => prev + 1);
-          // Generate new opponent for next round
-          const newOpponent = generateArenaOpponent(currentRound + 1);
-          setArenaOpponentLevel(newOpponent.level);
-        } else {
-          // Arena completed successfully
-          const rewards = calculateArenaRewards(currentRound, victories + 1);
-          
-          // Award rewards
-          const updatedUser = {
-            ...user,
-            holosTokens: user.holosTokens + rewards.holosTokens,
-            gachaTickets: (user.gachaTickets || 0) + rewards.gachaTickets
-          };
-
-          if (rewards.arenaPass > 0) {
-            updatedUser.arena_passes = (user.arena_passes || 0) + rewards.arenaPass;
-          }
-
-          await updateUser(updatedUser);
-          
-          setArenaResults({
-            isSuccess: true,
-            squadHolobotKeys: [selectedHolobot],
-            squadHolobotExp: [],
-            blueprintRewards: rewards.blueprintReward,
-            holosRewards: rewards.holosTokens,
-            itemRewards: currentArenaTierItemRewards,
-            gachaTickets: rewards.gachaTickets,
-            arenaPass: rewards.arenaPass
-          });
-          
-          setShowResults(true);
-          
-          // Reset arena
-          setCurrentRound(1);
-          setVictories(0);
-        }
-      } else {
-        // Player lost - reset arena
-        setArenaResults({
-          isSuccess: false,
-          squadHolobotKeys: [selectedHolobot],
-          squadHolobotExp: [],
-          blueprintRewards: undefined,
-          holosRewards: 0,
-          itemRewards: null,
-          gachaTickets: 0,
-          arenaPass: 0
-        });
-        
-        setShowResults(true);
-        setCurrentRound(1);
-        setVictories(0);
-      }
-    };
 
     return (
       <div className="px-2 py-3">
@@ -510,6 +444,7 @@ const Index = () => {
             itemRewards={arenaResults.itemRewards}
             gachaTickets={arenaResults.gachaTickets}
             arenaPass={arenaResults.arenaPass}
+            title={arenaResults.isSuccess ? "Arena Victory!" : "Arena Defeat"}
             onClose={handleResultsClose}
           />
         )}

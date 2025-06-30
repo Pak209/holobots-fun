@@ -97,7 +97,7 @@ export function BattleHistoryList() {
             created_at: entry.submitted_at || new Date().toISOString(),
             status: 'pending' as const,
             holobot_name: entry.holobot_name || 'Unknown',
-            opponent_name: 'Waiting for opponent...',
+            opponent_name: 'Matchmaking in progress...',
             pool_type: poolType,
             rewards: {
               holos: poolType === 'ranked' ? 100 : 50,
@@ -221,6 +221,10 @@ export function BattleHistoryList() {
         </CardTitle>
         <CardDescription>
           Your recent battle entries and results ({battles.length} total)
+          <br />
+          <span className="text-xs text-cyan-400">
+            Pool entries show "Matchmaking" while waiting for opponents
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -254,7 +258,11 @@ export function BattleHistoryList() {
                         }
                       </Badge>
                       <div className={cn("w-2 h-2 rounded-full", getStatusColor(battle.status))} />
-                      <span className="text-xs text-gray-400 capitalize">{battle.status}</span>
+                      <span className="text-xs text-gray-400 capitalize">
+                        {battle.status === 'pending' && battle.battle_type === 'pool_entry' 
+                          ? 'Matchmaking' 
+                          : battle.status}
+                      </span>
                     </div>
                     <span className="text-xs text-gray-500">
                       {formatTimeAgo(battle.created_at)}

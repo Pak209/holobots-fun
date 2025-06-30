@@ -22,6 +22,7 @@ interface QuestResultsScreenProps {
     exp_boosters: number; 
     rank_skips: number; 
   };
+  title?: string; // Optional custom title
   onClose: () => void;
 }
 
@@ -35,6 +36,7 @@ export const QuestResultsScreen = ({
   gachaTickets,
   arenaPass,
   itemRewards,
+  title,
   onClose
 }: QuestResultsScreenProps) => {
   const [animation, setAnimation] = useState<"entering" | "active" | "exiting" | "hidden">("hidden");
@@ -72,7 +74,7 @@ export const QuestResultsScreen = ({
         <div className="bg-[#1A1F2C] rounded-lg border-2 border-cyan-500 p-6 shadow-neon">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-cyan-400 font-orbitron">
-              Quest {isSuccess ? "Successful!" : "Failed"}
+              {title || `Quest ${isSuccess ? "Successful!" : "Failed"}`}
             </h2>
             <button onClick={handleClose} className="text-gray-200 hover:text-white">
               <XCircle className="h-5 w-5" />

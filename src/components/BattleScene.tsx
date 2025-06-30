@@ -254,19 +254,78 @@ export const BattleScene = ({
   };
 
   const handleHack = (type: 'attack' | 'speed' | 'heal') => {
-    if (leftHack >= 100) {
-      const currentStats = leftStats; // Has defined level and maxHealth
-      const updatedStatsFromUtil = applyHackBoost(currentStats, type);
-      setLeftStats({ 
-        ...defaultBattleStats, // Ensure all keys from default are present
-        ...updatedStatsFromUtil, // Spread the util result
-        level: currentStats.level, // Explicitly keep current level
-        maxHealth: currentStats.maxHealth // Explicitly keep current maxHealth (if not changed by util)
-                                  // or updatedStatsFromUtil.maxHealth if util can change it
-      });
-      setLeftHack(0);
-      addToBattleLog(`${leftStats.name} used hack: ${type}!`);
+    // Determine hack tier based on current gauge
+    const isFullPower = leftHack >= 100;
+    const isWeakPower = leftHack >= 50 && leftHack < 100;
+    const canHeal = leftHack >= 75;
+    
+    if (type === 'heal' && !canHeal) return; // Heal requires 75%+
+    if ((type === 'attack' || type === 'speed') && leftHack < 50) return; // Attack/Speed require 50%+
+
+    const currentStats = leftStats;
+    let newStats = { ...currentStats };
+    let hackCost = 0;
+    let logMessage = '';
+
+    switch (type) {
+      case 'attack':
+        if (isFullPower) {
+          // Strong boost: +30% attack
+          newStats.attack = Math.floor(currentStats.attack * 1.3);
+          hackCost = 100;
+          logMessage = `${leftStats.name} used STRONG hack boost! Attack greatly increased!`;
+        } else if (isWeakPower) {
+          // Weak boost: +15% attack
+          newStats.attack = Math.floor(currentStats.attack * 1.15);
+          hackCost = leftHack; // Consume all available
+          logMessage = `${leftStats.name} used weak hack boost! Attack slightly increased!`;
+        }
+        break;
+        
+      case 'speed':
+        if (isFullPower) {
+          // Strong boost: +30% speed
+          newStats.speed = Math.floor(currentStats.speed * 1.3);
+          hackCost = 100;
+          logMessage = `${leftStats.name} used STRONG hack boost! Speed greatly increased!`;
+        } else if (isWeakPower) {
+          // Weak boost: +15% speed
+          newStats.speed = Math.floor(currentStats.speed * 1.15);
+          hackCost = leftHack; // Consume all available
+          logMessage = `${leftStats.name} used weak hack boost! Speed slightly increased!`;
+        }
+        break;
+        
+      case 'heal':
+        if (isFullPower) {
+          // Large heal: 50% of max health
+          const healAmount = Math.floor(currentStats.maxHealth * 0.5);
+          setLeftHealth(prev => Math.min(currentStats.maxHealth, prev + healAmount));
+          hackCost = 100;
+          logMessage = `${leftStats.name} used STRONG hack heal! Large amount of health restored!`;
+        } else if (canHeal) {
+          // Small heal: 25% of max health
+          const healAmount = Math.floor(currentStats.maxHealth * 0.25);
+          setLeftHealth(prev => Math.min(currentStats.maxHealth, prev + healAmount));
+          hackCost = 75;
+          logMessage = `${leftStats.name} used weak hack heal! Small amount of health restored!`;
+        }
+        break;
     }
+
+    // Apply stat changes for attack/speed
+    if (type === 'attack' || type === 'speed') {
+      setLeftStats({ 
+        ...defaultBattleStats,
+        ...newStats,
+        level: currentStats.level,
+        maxHealth: currentStats.maxHealth
+      });
+    }
+
+    // Consume hack gauge
+    setLeftHack(prev => Math.max(0, prev - hackCost));
+    addToBattleLog(logMessage);
   };
 
   const handleHolosHack = () => {
@@ -325,8 +384,8 @@ export const BattleScene = ({
   const handleStartBattle = () => {
     if (isBattleStarted) {
       setIsBattleStarted(false);
-      setLeftHealth(100);
-      setRightHealth(100);
+      setLeftHealth(leftStats.maxHealth || 100);
+      setRightHealth(rightStats.maxHealth || 100);
       setLeftSpecial(0);
       setRightSpecial(0);
       setLeftHack(0);
@@ -339,8 +398,8 @@ export const BattleScene = ({
     }
     
     setIsBattleStarted(true);
-    setLeftHealth(100);
-    setRightHealth(100);
+    setLeftHealth(leftStats.maxHealth || 100);
+    setRightHealth(rightStats.maxHealth || 100);
     setLeftSpecial(0);
     setRightSpecial(0);
     setLeftHack(0);
@@ -370,7 +429,7 @@ export const BattleScene = ({
       if (!user) return;
 
       if (winner === selectedLeftHolobot) {
-        const totalDamage = 100 - rightHealth;
+        const totalDamage = (rightStats.maxHealth || 100) - rightHealth;
         const battleXp = Math.floor(totalDamage * 2);
         const newTotalXp = leftXp + battleXp;
         const newLevel = getNewLevel(newTotalXp, leftLevel);
@@ -662,6 +721,8 @@ export const BattleScene = ({
             <BattleMeters
               leftHealth={leftHealth}
               rightHealth={rightHealth}
+              leftMaxHealth={leftStats.maxHealth || 100}
+              rightMaxHealth={rightStats.maxHealth || 100}
               leftSpecial={leftSpecial}
               rightSpecial={rightSpecial}
               leftHack={leftHack}

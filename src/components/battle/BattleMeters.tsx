@@ -4,6 +4,8 @@ import { StatusBar } from "../HealthBar";
 interface BattleMetersProps {
   leftHealth: number;
   rightHealth: number;
+  leftMaxHealth: number;
+  rightMaxHealth: number;
   leftSpecial: number;
   rightSpecial: number;
   leftHack: number;
@@ -13,6 +15,8 @@ interface BattleMetersProps {
 export const BattleMeters = ({
   leftHealth,
   rightHealth,
+  leftMaxHealth,
+  rightMaxHealth,
   leftSpecial,
   rightSpecial,
   leftHack,
@@ -22,7 +26,7 @@ export const BattleMeters = ({
     <div className="space-y-0.5 md:space-y-1">
       <div className="flex justify-between items-center gap-2 md:gap-4">
         <div className="flex-1 space-y-0.5 md:space-y-1">
-          <StatusBar current={leftHealth} max={100} isLeft={true} type="health" />
+          <StatusBar current={leftHealth} max={leftMaxHealth} isLeft={true} type="health" />
           <StatusBar current={leftSpecial} max={100} isLeft={true} type="special" />
           <StatusBar current={leftHack} max={100} isLeft={true} type="hack" />
         </div>
@@ -30,7 +34,7 @@ export const BattleMeters = ({
           <span className="text-white font-bold text-xs md:text-sm">VS</span>
         </div>
         <div className="flex-1 space-y-0.5 md:space-y-1">
-          <StatusBar current={rightHealth} max={100} isLeft={false} type="health" />
+          <StatusBar current={rightHealth} max={rightMaxHealth} isLeft={false} type="health" />
           <StatusBar current={rightSpecial} max={100} isLeft={false} type="special" />
           <StatusBar current={rightHack} max={100} isLeft={false} type="hack" />
         </div>

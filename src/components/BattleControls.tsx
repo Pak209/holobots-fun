@@ -44,14 +44,26 @@ export const BattleControls = ({
       >
         <Rocket className="w-3 h-3 md:w-4 md:h-4" /> Hype
       </Button>
-      <Select onValueChange={(value) => onHack(value as 'attack' | 'speed' | 'heal')} disabled={hackGauge < 100 || !isBattleStarted}>
+      <Select onValueChange={(value) => onHack(value as 'attack' | 'speed' | 'heal')} disabled={hackGauge < 50 || !isBattleStarted}>
         <SelectTrigger className="h-9 bg-red-500 hover:bg-red-600 text-white border-none text-xs shadow-neon">
           <Zap className="w-3 h-3 md:w-4 md:h-4" /> Hack ({Math.floor(hackGauge)}%)
         </SelectTrigger>
         <SelectContent className="bg-holobots-card border-holobots-border">
-          <SelectItem value="attack" className="text-holobots-text hover:bg-holobots-accent hover:text-white">Boost Attack</SelectItem>
-          <SelectItem value="speed" className="text-holobots-text hover:bg-holobots-accent hover:text-white">Boost Speed</SelectItem>
-          <SelectItem value="heal" className="text-holobots-text hover:bg-holobots-accent hover:text-white">Heal</SelectItem>
+          {hackGauge >= 50 && (
+            <SelectItem value="attack" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
+              Boost Attack {hackGauge >= 100 ? "(Strong)" : "(Weak)"}
+            </SelectItem>
+          )}
+          {hackGauge >= 50 && (
+            <SelectItem value="speed" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
+              Boost Speed {hackGauge >= 100 ? "(Strong)" : "(Weak)"}
+            </SelectItem>
+          )}
+          {hackGauge >= 75 && (
+            <SelectItem value="heal" className="text-holobots-text hover:bg-holobots-accent hover:text-white">
+              Heal {hackGauge >= 100 ? "(Large)" : "(Small)"}
+            </SelectItem>
+          )}
         </SelectContent>
       </Select>
       <Button
