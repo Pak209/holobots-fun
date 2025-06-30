@@ -58,7 +58,14 @@ export default {
           text: "hsl(var(--foreground))",      
           card: "hsl(var(--card))",      
           border: "hsl(var(--border))",    
-          hover: "#0FA0CE"      
+          hover: "#0FA0CE",
+          // Dark theme colors
+          "dark-background": "#0A0A0A",
+          "dark-card": "#1A1F2C", 
+          "dark-border": "#374151",
+          "dark-accent": "#33C3F0",
+          "dark-text": "#F9FAFB",
+          "dark-hover": "#0FA0CE"
         }
       },
       boxShadow: {

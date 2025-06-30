@@ -145,9 +145,9 @@ const HolobotsInfo = () => {
   }, [user, updateUser, toast]);
 
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background text-holobots-text dark:text-holobots-dark-text p-4">
+    <div className="min-h-screen bg-[#1A1F2C] text-[#F9FAFB] p-4">
       <div className="max-w-7xl mx-auto pt-16">
-        <h1 className="text-3xl font-bold text-center mb-8 text-holobots-accent dark:text-holobots-dark-accent">
+        <h1 className="text-3xl font-bold text-center mb-8 text-[#33C3F0]">
           HOLOBOTS INFO
         </h1>
         

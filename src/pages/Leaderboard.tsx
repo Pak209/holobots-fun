@@ -276,7 +276,7 @@ const Leaderboard = () => {
       case 3:
         return <Medal className="h-5 w-5 text-amber-700" />;
       default:
-        return <span className="text-sm font-medium text-muted-foreground dark:text-gray-400">#{rank}</span>;
+        return <span className="text-sm font-medium text-gray-400">#{rank}</span>;
     }
   };
 
@@ -330,13 +330,13 @@ const Leaderboard = () => {
       return (
         <div className="space-y-2">
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="flex items-center justify-between p-3 bg-holobots-background/20 dark:bg-holobots-dark-background/20 border border-holobots-border dark:border-holobots-dark-border rounded-lg animate-pulse">
+            <div key={i} className="flex items-center justify-between p-3 bg-[#374151]/20 border border-[#374151] rounded-lg animate-pulse">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                <div className="h-8 w-8 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-                <div className="h-4 w-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                <div className="w-8 h-8 bg-gray-600 rounded"></div>
+                <div className="h-8 w-8 bg-gray-600 rounded-full"></div>
+                <div className="h-4 w-24 bg-gray-600 rounded"></div>
               </div>
-              <div className="h-4 w-16 bg-gray-300 dark:bg-gray-600 rounded"></div>
+              <div className="h-4 w-16 bg-gray-600 rounded"></div>
             </div>
           ))}
         </div>
@@ -345,7 +345,7 @@ const Leaderboard = () => {
 
     if (leaders.length === 0) {
       return (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-8 text-gray-400">
           <p className="mb-2">No players found</p>
           <p className="text-sm">Check back soon as more players join!</p>
         </div>
@@ -365,8 +365,8 @@ const Leaderboard = () => {
                 ${isCurrentUser 
                   ? 'bg-gradient-to-r from-cyan-900/30 to-purple-900/30 border-2 border-cyan-500/50' 
                   : leader.rank <= 3 
-                    ? 'bg-holobots-background/50 dark:bg-holobots-dark-background/50 border-2 border-holobots-accent/30 dark:border-holobots-accent/30' 
-                    : 'bg-holobots-background/20 dark:bg-holobots-dark-background/20 border border-holobots-border dark:border-holobots-dark-border'
+                    ? 'bg-[#374151]/50 border-2 border-[#33C3F0]/30' 
+                    : 'bg-[#374151]/20 border border-[#374151]'
                 }
                 rounded-lg transition-all duration-200 hover:scale-[1.01]
               `}
@@ -376,16 +376,16 @@ const Leaderboard = () => {
                   <User className="h-4 w-4 text-cyan-400" />
                 )}
                 <div className="w-8 flex justify-center">{getRankIcon(leader.rank)}</div>
-                <Avatar className={`h-8 w-8 border ${isCurrentUser ? 'border-cyan-500' : 'border-holobots-border dark:border-holobots-dark-border'}`}>
+                <Avatar className={`h-8 w-8 border ${isCurrentUser ? 'border-cyan-500' : 'border-[#374151]'}`}>
                   <AvatarImage src={leader.avatarUrl} />
-                  <AvatarFallback className={`${isCurrentUser ? 'bg-cyan-900 text-cyan-100' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>{leader.username.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className={`${isCurrentUser ? 'bg-cyan-900 text-cyan-100' : 'bg-gray-700 text-gray-300'}`}>{leader.username.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <span className={`font-medium ${isCurrentUser ? 'text-cyan-100 font-bold' : 'text-gray-800 dark:text-gray-200'}`}>
+                <span className={`font-medium ${isCurrentUser ? 'text-cyan-100 font-bold' : 'text-gray-200'}`}>
                   {leader.username}
                   {isCurrentUser && <span className="text-cyan-400 ml-2">(You)</span>}
                 </span>
               </div>
-              <div className={`text-sm font-semibold ${isCurrentUser ? 'text-cyan-400' : 'text-holobots-accent dark:text-holobots-dark-accent'}`}>
+              <div className={`text-sm font-semibold ${isCurrentUser ? 'text-cyan-400' : 'text-cyan-300'}`}>
                 {leader.value}
               </div>
             </div>
@@ -409,30 +409,30 @@ const Leaderboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background p-4">
+    <div className="min-h-screen bg-[#1A1F2C] p-4">
       <div className="max-w-7xl mx-auto pt-16">
-        <h1 className="text-3xl font-bold text-center mb-6 text-holobots-accent dark:text-holobots-dark-accent">
+        <h1 className="text-3xl font-bold text-center mb-6 text-[#33C3F0]">
           LEADERBOARDS
         </h1>
         
         <Tabs defaultValue="battle" className="w-full" onValueChange={setCurrentTab}>
-          <TabsList className="bg-holobots-background/60 p-1 text-gray-700 mb-6">
-            <TabsTrigger value="battle" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent">Battle</TabsTrigger>
-            <TabsTrigger value="tokens" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent">Tokens</TabsTrigger>
-            <TabsTrigger value="level" className="data-[state=active]:bg-holobots-card data-[state=active]:text-holobots-accent">Level</TabsTrigger>
+          <TabsList className="bg-[#374151] p-1 text-gray-300 mb-6">
+            <TabsTrigger value="battle" className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">Battle</TabsTrigger>
+            <TabsTrigger value="tokens" className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">Tokens</TabsTrigger>
+            <TabsTrigger value="level" className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">Level</TabsTrigger>
           </TabsList>
           
           {/* Show user's position at the top */}
           {renderUserPosition(getCurrentUserPosition())}
           
-          <Card className="bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border shadow-lg">
+          <Card className="bg-[#1A1F2C] border-[#374151] shadow-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center text-xl text-gray-800 dark:text-gray-200">
+              <CardTitle className="flex items-center text-xl text-gray-200">
                 {getLeaderboardIcon(currentTab)}
                 {currentTab === "battle" && "Battle Champions"}
                 {currentTab === "tokens" && "Token Masters"}
                 {currentTab === "level" && "Level Leaders"}
-                <span className="ml-auto text-sm font-normal text-gray-500">Top 20 Players</span>
+                <span className="ml-auto text-sm font-normal text-gray-400">Top 20 Players</span>
               </CardTitle>
             </CardHeader>
             

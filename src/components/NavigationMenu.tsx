@@ -84,10 +84,10 @@ export const NavigationMenu = () => {
       <Button 
         variant="outline" 
         size="sm" 
-        className="flex items-center gap-1 bg-background/90 border-holobots-accent px-2 py-1 text-gray-700"
+        className="flex items-center gap-1 bg-[#1A1F2C] border-[#33C3F0] px-2 py-1 text-gray-200"
         onClick={() => navigate('/auth')}
       >
-        <User className="h-4 w-4 text-holobots-accent" />
+        <User className="h-4 w-4 text-[#33C3F0]" />
         <span>Sign In</span>
       </Button>
     );
@@ -99,29 +99,29 @@ export const NavigationMenu = () => {
         <Button 
           variant="outline" 
           size="sm" 
-          className="flex items-center gap-1 bg-background/90 dark:bg-holobots-dark-card border-holobots-accent dark:border-holobots-dark-accent px-2 py-1 text-gray-700 dark:text-gray-200"
+          className="flex items-center gap-1 bg-[#1A1F2C] border-[#33C3F0] px-2 py-1 text-gray-200"
         >
-          <User className="h-4 w-4 text-holobots-accent dark:text-holobots-dark-accent" />
+          <User className="h-4 w-4 text-[#33C3F0]" />
           <span className="mr-1">{user.username || 'User'}</span>
-          <ChevronDown className="h-3 w-3 text-gray-700 dark:text-gray-200" />
+          <ChevronDown className="h-3 w-3 text-gray-200" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 bg-holobots-card dark:bg-holobots-dark-card border-holobots-border dark:border-holobots-dark-border text-gray-700 dark:text-gray-300">
-        <DropdownMenuSeparator className="border-holobots-border dark:border-holobots-dark-border" />
+      <DropdownMenuContent align="end" className="w-64 bg-[#1A1F2C] border-[#374151] text-gray-300">
+        <DropdownMenuSeparator className="border-[#374151]" />
         
         <div className="p-2 space-y-2">
           <PlayerRankCard user={user} />
           
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
-              <Battery className="h-4 w-4 text-holobots-accent dark:text-holobots-dark-accent" />
+              <Battery className="h-4 w-4 text-[#33C3F0]" />
               <span>Daily Energy:</span>
             </div>
             <span className="font-semibold">{user.dailyEnergy}/{user.maxDailyEnergy}</span>
           </div>
           
           <div className="flex items-center justify-between px-2 py-1 pl-7">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Available Refills: {user.energy_refills || 0}</span>
+            <span className="text-xs text-gray-400">Available Refills: {user.energy_refills || 0}</span>
             <Button
               size="sm"
               className="ml-2 bg-[#33C3F0] hover:bg-[#0FA0CE] text-black font-semibold px-2 py-0.5 rounded disabled:opacity-50"
@@ -145,7 +145,7 @@ export const NavigationMenu = () => {
           
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
-              <Coins className="h-4 w-4 text-holobots-accent dark:text-holobots-dark-accent" />
+              <Coins className="h-4 w-4 text-[#33C3F0]" />
               <span>Holos Tokens:</span>
             </div>
             <span className="font-semibold">{user.holosTokens}</span>
@@ -153,46 +153,46 @@ export const NavigationMenu = () => {
           
           <div className="flex items-center justify-between px-2 py-1">
             <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-holobots-accent dark:text-holobots-dark-accent" />
+              <Trophy className="h-4 w-4 text-[#33C3F0]" />
               <span>Win/Loss:</span>
             </div>
             <span className="font-semibold">{user.stats.wins}/{user.stats.losses}</span>
           </div>
         </div>
         
-        <DropdownMenuSeparator className="border-holobots-border dark:border-holobots-dark-border" />
+        <DropdownMenuSeparator className="border-[#374151]" />
         
         <Link to="/holobots-info">
-          <DropdownMenuItem className="cursor-pointer focus:bg-holobots-hover dark:focus:bg-holobots-dark-hover focus:text-holobots-accent dark:focus:text-holobots-dark-accent">
+          <DropdownMenuItem className="cursor-pointer focus:bg-[#374151] focus:text-[#33C3F0]">
             <Database className="mr-2 h-4 w-4" />
             <span>Holobots Info</span>
           </DropdownMenuItem>
         </Link>
         
         <Link to="/gacha?tab=items">
-          <DropdownMenuItem className="cursor-pointer focus:bg-holobots-hover dark:focus:bg-holobots-dark-hover focus:text-holobots-accent dark:focus:text-holobots-dark-accent">
+          <DropdownMenuItem className="cursor-pointer focus:bg-[#374151] focus:text-[#33C3F0]">
             <Package className="mr-2 h-4 w-4" />
             <span>Your Items</span>
           </DropdownMenuItem>
         </Link>
         
         <Link to="/booster-packs">
-          <DropdownMenuItem className="cursor-pointer focus:bg-holobots-hover dark:focus:bg-holobots-dark-hover focus:text-holobots-accent dark:focus:text-holobots-dark-accent">
+          <DropdownMenuItem className="cursor-pointer focus:bg-[#374151] focus:text-[#33C3F0]">
             <ShoppingBag className="mr-2 h-4 w-4" />
             <span>Booster Packs</span>
           </DropdownMenuItem>
         </Link>
         
         <Link to="/leaderboard">
-          <DropdownMenuItem className="cursor-pointer focus:bg-holobots-hover dark:focus:bg-holobots-dark-hover focus:text-holobots-accent dark:focus:text-holobots-dark-accent">
+          <DropdownMenuItem className="cursor-pointer focus:bg-[#374151] focus:text-[#33C3F0]">
             <BarChart4 className="mr-2 h-4 w-4" />
             <span>Leaderboard</span>
           </DropdownMenuItem>
         </Link>
         
-        <DropdownMenuSeparator className="border-holobots-border dark:border-holobots-dark-border" />
+        <DropdownMenuSeparator className="border-[#374151]" />
         
-        <DropdownMenuItem onClick={handleLogout} className="text-red-500 dark:text-red-400 cursor-pointer focus:bg-red-100 dark:focus:bg-red-900/50 focus:text-red-600 dark:focus:text-red-300">
+        <DropdownMenuItem onClick={handleLogout} className="text-red-400 cursor-pointer focus:bg-red-900/50 focus:text-red-300">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Logout</span>
         </DropdownMenuItem>
