@@ -96,7 +96,7 @@ export const DAILY_MISSION_CONFIGS: Record<DailyMissionType, {
     name: 'Fitness Sync',
     description: 'Reach your daily step goal',
     baseTarget: 10000,
-    baseReward: { gachaTickets: 3, holosTokens: 200 }
+    baseReward: { gachaTickets: 10, holosTokens: 200 }
   },
   level_up_holobot: {
     name: 'Level Master',

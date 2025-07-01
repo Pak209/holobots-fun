@@ -50,6 +50,7 @@ export interface UserProfile {
   equippedParts?: Record<string, HolobotEquipment>; // Add equipped parts field to store equipped parts per holobot
   pack_history?: BoosterPackResult[]; // Add pack history to store all opened packs
   rewardSystem?: RewardSystem; // Add reward system tracking
+  isDevAccount?: boolean; // Add dev access flag for testing features
 }
 
 export interface AuthState {
@@ -113,7 +114,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       parts: dbProfile.parts || [], // Initialize parts array
       equippedParts: dbProfile.equipped_parts || {}, // Initialize equipped parts
       pack_history: dbProfile.pack_history || [], // Initialize pack history
-      rewardSystem: dbProfile.reward_system || createInitialRewardSystem() // Initialize reward system
+      rewardSystem: dbProfile.reward_system || createInitialRewardSystem(), // Initialize reward system
+      isDevAccount: dbProfile.is_dev_account || false // Initialize dev access flag
     };
   } else {
     // This is from the users table
@@ -142,7 +144,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       parts: [], // Initialize parts array
       equippedParts: {}, // Initialize equipped parts
       pack_history: [], // Initialize pack history
-      rewardSystem: createInitialRewardSystem() // Initialize reward system
+      rewardSystem: createInitialRewardSystem(), // Initialize reward system
+      isDevAccount: false // Initialize dev access flag
     };
   }
 }

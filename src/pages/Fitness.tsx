@@ -14,6 +14,8 @@ import { HolobotUpgradeSelector } from "@/components/fitness/HolobotUpgradeSelec
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useRewardTracking } from "@/hooks/useRewardTracking";
+import { DevAccessWrapper, DevSwitcher } from "@/components/DevAccessWrapper";
+import { useDevAccess } from "@/hooks/useDevAccess";
 
 interface HolobotRank {
   name: string;
@@ -37,6 +39,7 @@ export default function Fitness() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const { trackTrainingSession, trackFitnessGoal } = useRewardTracking();
+  const hasDevAccess = useDevAccess();
   const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
   const [isTracking, setIsTracking] = useState(false);
   const [workoutTime, setWorkoutTime] = useState(0);
@@ -218,55 +221,76 @@ export default function Fitness() {
           FITNESS SYNC
         </h1>
         
-        {/* Tab Navigation */}
-        <div className="flex mb-6 bg-black/30 backdrop-blur-md rounded-lg p-1 border border-cyan-500/30">
-          <Button
-            onClick={() => setActiveTab('steps')}
-            className={cn(
-              "flex-1 text-xs font-medium",
-              activeTab === 'steps'
-                ? "bg-green-500 text-white" 
-                : "bg-transparent text-green-300 hover:bg-green-500/20"
-            )}
-          >
-            STEPS
-          </Button>
-          <Button
-            onClick={() => setActiveTab('training')}
-            className={cn(
-              "flex-1 text-xs font-medium",
-              activeTab === 'training'
-                ? "bg-orange-500 text-white" 
-                : "bg-transparent text-orange-300 hover:bg-orange-500/20"
-            )}
-          >
-            SYNC TRAINING
-          </Button>
-          <Button
-            onClick={() => setActiveTab('upgrades')}
-            className={cn(
-              "flex-1 text-xs font-medium",
-              activeTab === 'upgrades'
-                ? "bg-cyan-500 text-white" 
-                : "bg-transparent text-cyan-300 hover:bg-cyan-500/20"
-            )}
-          >
-            UPGRADES
-          </Button>
-        </div>
-
-        {activeTab === 'steps' && (
-          /* Steps Input Mode */
-          <div className="space-y-6">
-            <SyncPointsInput />
-            <SyncPointsDashboard />
+        <DevAccessWrapper
+          fallback={
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-bold text-cyan-400 mb-4">🚧 FITNESS SYNC - COMING SOON</h2>
+              <p className="text-gray-400 mb-6">
+                We're working hard to bring you the ultimate fitness experience.<br/>
+                The Sync Points system will help you train your Holobots using real-world activity!
+              </p>
+              <div className="bg-black/30 backdrop-blur-md rounded-xl border border-cyan-500/30 p-6">
+                <h3 className="text-lg font-bold text-cyan-300 mb-3">Coming Features:</h3>
+                <ul className="text-left text-gray-300 space-y-2">
+                  <li>🏃 Track your daily steps and workouts</li>
+                  <li>⚡ Earn Sync Points for every step you take</li>
+                  <li>🤖 Train and upgrade your Holobots with fitness activity</li>
+                  <li>🏆 Compete in fitness leaderboards</li>
+                  <li>🎁 Unlock exclusive rewards for staying active</li>
+                </ul>
+              </div>
+            </div>
+          }
+        >
+          {/* Tab Navigation */}
+          <div className="flex mb-6 bg-black/30 backdrop-blur-md rounded-lg p-1 border border-cyan-500/30">
+            <Button
+              onClick={() => setActiveTab('steps')}
+              className={cn(
+                "flex-1 text-xs font-medium",
+                activeTab === 'steps'
+                  ? "bg-green-500 text-white" 
+                  : "bg-transparent text-green-300 hover:bg-green-500/20"
+              )}
+            >
+              STEPS
+            </Button>
+            <Button
+              onClick={() => setActiveTab('training')}
+              className={cn(
+                "flex-1 text-xs font-medium",
+                activeTab === 'training'
+                  ? "bg-orange-500 text-white" 
+                  : "bg-transparent text-orange-300 hover:bg-orange-500/20"
+              )}
+            >
+              SYNC TRAINING
+            </Button>
+            <Button
+              onClick={() => setActiveTab('upgrades')}
+              className={cn(
+                "flex-1 text-xs font-medium",
+                activeTab === 'upgrades'
+                  ? "bg-cyan-500 text-white" 
+                  : "bg-transparent text-cyan-300 hover:bg-cyan-500/20"
+              )}
+            >
+              UPGRADES
+            </Button>
           </div>
-        )}
 
-        {activeTab === 'training' && (
-          /* Sync Training Mode */
-          <div className="space-y-6">
-            <SyncTrainingInput />
+          {activeTab === 'steps' && (
+            /* Steps Input Mode */
+            <div className="space-y-6">
+              <SyncPointsInput />
+              <SyncPointsDashboard />
+            </div>
+          )}
+
+          {activeTab === 'training' && (
+            /* Sync Training Mode */
+            <div className="space-y-6">
+              <SyncTrainingInput />
             
             {/* Original Fitness Interface */}
             <div>
@@ -644,6 +668,7 @@ export default function Fitness() {
         </div>
           </>
         )}
+      </DevAccessWrapper>
       </div>
     </div>
   );

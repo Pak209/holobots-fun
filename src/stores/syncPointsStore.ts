@@ -12,6 +12,7 @@ import {
   calculateSyncBondLevel,
   calculateXHolosWeight,
 } from '@/types/syncPoints';
+import { useRewardStore } from './rewardStore';
 
 interface SyncPointsStore {
   entries: SyncPointsEntry[];
@@ -31,6 +32,12 @@ interface SyncPointsStore {
   upgradeAttribute: (holobotId: string, attribute: 'hp' | 'attack' | 'speed' | 'defense' | 'special') => boolean;
   unlockSpecialAttack: (attackId: string) => boolean;
   unlockAbilityChip: (chipId: string, tierLevel: number) => boolean;
+  
+  // Reward Actions
+  canClaimWeeklyReward: () => boolean;
+  canClaimStreakReward: () => boolean;
+  claimWeeklyReward: () => number; // Returns tickets earned
+  claimStreakReward: () => number; // Returns tickets earned
   
   // Utility Actions
   calculateStats: () => void;
@@ -100,6 +107,13 @@ const createDefaultSyncBond = (): SyncBond => ({
   specialUnlocks: [],
 });
 
+const getWeekOfYear = (date: Date): number => {
+  const start = new Date(date.getFullYear(), 0, 1);
+  const diff = date.getTime() - start.getTime();
+  const day = Math.floor(diff / (1000 * 60 * 60 * 24));
+  return Math.ceil((day + start.getDay() + 1) / 7);
+};
+
 export const useSyncPointsStore = create<SyncPointsStore>()(
   persist(
     (set, get) => ({
@@ -115,6 +129,10 @@ export const useSyncPointsStore = create<SyncPointsStore>()(
         dailyAverage: 0,
         streak: 0,
         xHolosWeight: 0,
+        weeklyRewardClaimed: false,
+        streakRewardClaimed: false,
+        lastWeeklyRewardDate: '',
+        lastStreakRewardDate: '',
       },
       attributeUpgrades: [],
       specialAttacks: [],
@@ -146,7 +164,10 @@ export const useSyncPointsStore = create<SyncPointsStore>()(
         };
 
         let updatedEntries;
+        let previousStepsToday = 0;
+        
         if (existingEntryIndex >= 0) {
+          previousStepsToday = state.entries[existingEntryIndex].steps;
           updatedEntries = [...state.entries];
           updatedEntries[existingEntryIndex] = newEntry;
         } else {
@@ -155,6 +176,15 @@ export const useSyncPointsStore = create<SyncPointsStore>()(
 
         set({ entries: updatedEntries });
         get().calculateStats();
+        
+        // Update daily mission progress for fitness sync
+        try {
+          const { setMissionProgress } = useRewardStore.getState();
+          // Set mission progress to the total steps for today
+          setMissionProgress('sync_fitness', steps);
+        } catch (error) {
+          console.error('Failed to update mission progress:', error);
+        }
       },
 
       addSyncTrainingEntry: (minutes: number, holobotId?: string) => {
@@ -307,6 +337,10 @@ export const useSyncPointsStore = create<SyncPointsStore>()(
               dailyAverage: 0,
               streak: 0,
               xHolosWeight: 0,
+              weeklyRewardClaimed: state.stats.weeklyRewardClaimed || false,
+              streakRewardClaimed: state.stats.streakRewardClaimed || false,
+              lastWeeklyRewardDate: state.stats.lastWeeklyRewardDate || '',
+              lastStreakRewardDate: state.stats.lastStreakRewardDate || '',
             }
           });
           return;
@@ -335,6 +369,17 @@ export const useSyncPointsStore = create<SyncPointsStore>()(
         const streak = getStreakCount(entries);
         const xHolosWeight = calculateXHolosWeight(totalSyncPoints);
 
+        // Check if weekly reward needs to be reset
+        const currentWeek = getWeekOfYear(new Date());
+        const lastWeeklyRewardWeek = state.stats.lastWeeklyRewardDate ? 
+          getWeekOfYear(new Date(state.stats.lastWeeklyRewardDate)) : 0;
+        const weeklyRewardClaimed = currentWeek === lastWeeklyRewardWeek ? state.stats.weeklyRewardClaimed : false;
+
+        // Check if streak reward needs to be reset
+        const today = new Date().toISOString().split('T')[0];
+        const lastStreakRewardDate = state.stats.lastStreakRewardDate.split('T')[0];
+        const streakRewardClaimed = today === lastStreakRewardDate ? state.stats.streakRewardClaimed : false;
+
         set({
           stats: {
             totalSteps,
@@ -347,6 +392,10 @@ export const useSyncPointsStore = create<SyncPointsStore>()(
             dailyAverage,
             streak,
             xHolosWeight,
+            weeklyRewardClaimed,
+            streakRewardClaimed,
+            lastWeeklyRewardDate: state.stats.lastWeeklyRewardDate,
+            lastStreakRewardDate: state.stats.lastStreakRewardDate,
           }
         });
       },
@@ -381,6 +430,49 @@ export const useSyncPointsStore = create<SyncPointsStore>()(
 
       canAffordUpgrade: (cost: number) => {
         return get().getAvailableSyncPoints() >= cost;
+      },
+
+      // Reward claiming functions
+      canClaimWeeklyReward: () => {
+        const state = get();
+        return state.stats.weeklySteps >= DEFAULT_SYNC_CONFIG.weeklyStepGoal && !state.stats.weeklyRewardClaimed;
+      },
+
+      canClaimStreakReward: () => {
+        const state = get();
+        return state.stats.streak >= 7 && !state.stats.streakRewardClaimed;
+      },
+
+      claimWeeklyReward: () => {
+        const state = get();
+        if (!get().canClaimWeeklyReward()) return 0;
+        
+        const today = new Date().toISOString();
+        set(prevState => ({
+          stats: {
+            ...prevState.stats,
+            weeklyRewardClaimed: true,
+            lastWeeklyRewardDate: today,
+          }
+        }));
+        
+        return 25; // Premium booster pack tickets
+      },
+
+      claimStreakReward: () => {
+        const state = get();
+        if (!get().canClaimStreakReward()) return 0;
+        
+        const today = new Date().toISOString();
+        set(prevState => ({
+          stats: {
+            ...prevState.stats,
+            streakRewardClaimed: true,
+            lastStreakRewardDate: today,
+          }
+        }));
+        
+        return 25; // Premium booster pack tickets
       },
     }),
     {

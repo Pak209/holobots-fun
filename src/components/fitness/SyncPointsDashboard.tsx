@@ -5,21 +5,43 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSyncPointsStore } from "@/stores/syncPointsStore";
 import { DEFAULT_SYNC_CONFIG } from "@/types/syncPoints";
+import { useAuth } from "@/contexts/auth";
+import { useToast } from "@/components/ui/use-toast";
+import { useRewardStore } from "@/stores/rewardStore";
 import { 
   TrendingUp, 
   Trophy, 
   Target, 
   Calendar, 
   Zap,
-  RotateCcw
+  RotateCcw,
+  Gift
 } from "lucide-react";
 
 export function SyncPointsDashboard() {
-  const { stats, entries, calculateStats, resetAllData } = useSyncPointsStore();
+  const { 
+    stats, 
+    entries, 
+    calculateStats, 
+    resetAllData,
+    canClaimWeeklyReward,
+    canClaimStreakReward,
+    claimWeeklyReward,
+    claimStreakReward
+  } = useSyncPointsStore();
+  const { user, updateUser } = useAuth();
+  const { toast } = useToast();
+  const { dailyMissions, claimMissionReward, initializeRewardSystem } = useRewardStore();
 
   useEffect(() => {
     calculateStats();
   }, [calculateStats]);
+
+  useEffect(() => {
+    if (user?.id) {
+      initializeRewardSystem(user.id);
+    }
+  }, [user?.id, initializeRewardSystem]);
 
   // Get today's entry
   const today = new Date().toISOString().split('T')[0];
@@ -29,6 +51,69 @@ export function SyncPointsDashboard() {
 
   // Get weekly progress
   const weeklyProgress = (stats.weeklySteps / DEFAULT_SYNC_CONFIG.weeklyStepGoal) * 100;
+
+  // Get daily fitness mission
+  const fitnessSyncMission = dailyMissions.find(mission => mission.type === 'sync_fitness');
+  const canClaimDailyReward = fitnessSyncMission?.completed && !fitnessSyncMission?.claimed;
+
+  // Reward claiming handlers
+  const handleClaimWeeklyReward = async () => {
+    if (!user) return;
+    
+    const ticketsEarned = claimWeeklyReward();
+    if (ticketsEarned > 0) {
+      await updateUser({
+        gachaTickets: (user.gachaTickets || 0) + ticketsEarned
+      });
+      
+      toast({
+        title: "Weekly Reward Claimed!",
+        description: `Earned ${ticketsEarned} tickets for a Premium Booster Pack!`,
+      });
+    }
+  };
+
+  const handleClaimStreakReward = async () => {
+    if (!user) return;
+    
+    const ticketsEarned = claimStreakReward();
+    if (ticketsEarned > 0) {
+      await updateUser({
+        gachaTickets: (user.gachaTickets || 0) + ticketsEarned
+      });
+      
+      toast({
+        title: "Streak Reward Claimed!",
+        description: `Earned ${ticketsEarned} tickets for a Premium Booster Pack!`,
+      });
+    }
+  };
+
+  const handleClaimDailyReward = async () => {
+    if (!user || !fitnessSyncMission) return;
+    
+    try {
+      const rewards = await claimMissionReward(fitnessSyncMission.id);
+      
+      if (rewards.gachaTickets > 0 || rewards.holosTokens > 0) {
+        await updateUser({
+          gachaTickets: (user.gachaTickets || 0) + rewards.gachaTickets,
+          holosTokens: (user.holosTokens || 0) + rewards.holosTokens
+        });
+
+        toast({
+          title: "Daily Goal Reward Claimed!",
+          description: `Earned ${rewards.gachaTickets} Gacha Tickets${rewards.holosTokens > 0 ? ` and ${rewards.holosTokens} Holos` : ''}`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to claim daily reward",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -92,9 +177,25 @@ export function SyncPointsDashboard() {
           </div>
           
           {todayProgress >= 100 && (
-            <Badge className="bg-green-500 text-white">
-              🎉 Daily Goal Achieved!
-            </Badge>
+            <div className="space-y-3">
+              <Badge className="bg-green-500 text-white">
+                🎉 Daily Goal Achieved!
+              </Badge>
+              
+              {canClaimDailyReward ? (
+                <Button
+                  onClick={handleClaimDailyReward}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Gift className="w-4 h-4 mr-2" />
+                  Claim 10 Tickets (Standard Booster)
+                </Button>
+              ) : fitnessSyncMission?.completed && fitnessSyncMission?.claimed ? (
+                <Badge className="w-full justify-center py-2 bg-gray-600 text-gray-300">
+                  Daily Reward Claimed ✓
+                </Badge>
+              ) : null}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -132,6 +233,81 @@ export function SyncPointsDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Reward Claims */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Weekly Reward */}
+        <Card className="bg-black/30 backdrop-blur-md border-orange-500/30 shadow-[0_0_15px_rgba(255,165,0,0.15)]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-orange-400 flex items-center gap-2">
+              <Gift className="w-5 h-5" />
+              WEEKLY REWARD
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-sm text-orange-300">
+              Complete 70,000+ steps in a week
+            </div>
+            <div className="text-xs text-gray-400">
+              Reward: 25 Tickets (Premium Booster Pack)
+            </div>
+            
+            {canClaimWeeklyReward() ? (
+              <Button
+                onClick={handleClaimWeeklyReward}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                <Gift className="w-4 h-4 mr-2" />
+                Claim Weekly Reward
+              </Button>
+            ) : weeklyProgress >= 100 ? (
+              <Badge className="w-full justify-center py-2 bg-gray-600 text-gray-300">
+                Already Claimed This Week
+              </Badge>
+            ) : (
+              <Badge className="w-full justify-center py-2 bg-gray-800 text-gray-400">
+                {Math.round(100 - weeklyProgress)}% to go
+              </Badge>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Streak Reward */}
+        <Card className="bg-black/30 backdrop-blur-md border-pink-500/30 shadow-[0_0_15px_rgba(255,20,147,0.15)]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-pink-400 flex items-center gap-2">
+              <Gift className="w-5 h-5" />
+              STREAK REWARD
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-sm text-pink-300">
+              Maintain a 7+ day streak
+            </div>
+            <div className="text-xs text-gray-400">
+              Reward: 25 Tickets (Premium Booster Pack)
+            </div>
+            
+            {canClaimStreakReward() ? (
+              <Button
+                onClick={handleClaimStreakReward}
+                className="w-full bg-pink-500 hover:bg-pink-600 text-white"
+              >
+                <Gift className="w-4 h-4 mr-2" />
+                Claim Streak Reward
+              </Button>
+            ) : stats.streak >= 7 ? (
+              <Badge className="w-full justify-center py-2 bg-gray-600 text-gray-300">
+                Already Claimed Today
+              </Badge>
+            ) : (
+              <Badge className="w-full justify-center py-2 bg-gray-800 text-gray-400">
+                {7 - stats.streak} days to go
+              </Badge>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Additional Stats */}
       <Card className="bg-black/30 backdrop-blur-md border-blue-500/30 shadow-[0_0_15px_rgba(0,100,255,0.15)]">

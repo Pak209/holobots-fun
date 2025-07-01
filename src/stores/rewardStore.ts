@@ -26,6 +26,7 @@ interface RewardStoreState {
   initializeRewardSystem: (userId: string) => void;
   clearUserData: () => void;
   updateMissionProgress: (missionType: DailyMissionType, progress: number) => void;
+  setMissionProgress: (missionType: DailyMissionType, progress: number) => void;
   claimMissionReward: (missionId: string) => Promise<{ gachaTickets: number; holosTokens: number; exp: number }>;
   updateTrainingStreak: (active: boolean) => void;
   updateArenaStreak: (won: boolean) => void;
@@ -82,14 +83,28 @@ const generateDailyMissions = (): DailyMission[] => {
     resetDaily: true
   });
   
-  // Randomly select 2-3 additional missions
+  // Always include fitness sync mission (core to sync points system)
+  missions.push({
+    id: `sync_fitness_${Date.now()}`,
+    type: 'sync_fitness',
+    name: DAILY_MISSION_CONFIGS.sync_fitness.name,
+    description: DAILY_MISSION_CONFIGS.sync_fitness.description,
+    target: DAILY_MISSION_CONFIGS.sync_fitness.baseTarget,
+    progress: 0,
+    completed: false,
+    claimed: false,
+    reward: DAILY_MISSION_CONFIGS.sync_fitness.baseReward,
+    resetDaily: true
+  });
+  
+  // Randomly select 1-2 additional missions from remaining types
   const availableMissions = Object.keys(DAILY_MISSION_CONFIGS).filter(
-    type => type !== 'daily_login'
+    type => type !== 'daily_login' && type !== 'sync_fitness'
   ) as DailyMissionType[];
   
   const selectedMissions = availableMissions
     .sort(() => Math.random() - 0.5)
-    .slice(0, Math.floor(Math.random() * 2) + 2); // 2-3 additional missions
+    .slice(0, Math.floor(Math.random() * 2) + 1); // 1-2 additional missions
   
   selectedMissions.forEach(type => {
     const config = DAILY_MISSION_CONFIGS[type];
@@ -180,6 +195,31 @@ export const useRewardStore = create<RewardStoreState>()(
           const updatedMissions = currentMissions.map(mission => {
             if (mission.type === missionType && !mission.completed) {
               const newProgress = Math.min(mission.progress + progress, mission.target);
+              const completed = newProgress >= mission.target;
+              
+              return {
+                ...mission,
+                progress: newProgress,
+                completed
+              };
+            }
+            return mission;
+          });
+          
+          return {
+            dailyMissions: updatedMissions
+          };
+        });
+      },
+
+      // Set mission progress to absolute value
+      setMissionProgress: (missionType: DailyMissionType, progress: number) => {
+        set(state => {
+          const currentMissions = state.dailyMissions;
+          
+          const updatedMissions = currentMissions.map(mission => {
+            if (mission.type === missionType && !mission.completed) {
+              const newProgress = Math.min(progress, mission.target);
               const completed = newProgress >= mission.target;
               
               return {

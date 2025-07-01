@@ -19,6 +19,10 @@ export interface SyncPointsStats {
   dailyAverage: number;
   streak: number;
   xHolosWeight: number; // Hidden conversion for Stockpile rewards
+  weeklyRewardClaimed: boolean; // Has claimed weekly 70k reward this week
+  streakRewardClaimed: boolean; // Has claimed 7-day streak reward
+  lastWeeklyRewardDate: string; // ISO date of last weekly reward claim
+  lastStreakRewardDate: string; // ISO date of last streak reward claim
 }
 
 export interface SyncBond {

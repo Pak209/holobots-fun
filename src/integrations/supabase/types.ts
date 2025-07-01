@@ -282,6 +282,7 @@ export type Database = {
           holobots: Json | null
           holos_tokens: number | null
           id: string
+          is_dev_account: boolean | null
           last_daily_pull: string | null
           last_energy_refresh: string | null
           losses: number | null
@@ -304,6 +305,7 @@ export type Database = {
           holobots?: Json | null
           holos_tokens?: number | null
           id: string
+          is_dev_account?: boolean | null
           last_daily_pull?: string | null
           last_energy_refresh?: string | null
           losses?: number | null
@@ -326,6 +328,7 @@ export type Database = {
           holobots?: Json | null
           holos_tokens?: number | null
           id?: string
+          is_dev_account?: boolean | null
           last_daily_pull?: string | null
           last_energy_refresh?: string | null
           losses?: number | null
