@@ -286,16 +286,35 @@ const Marketplace = () => {
     
     setIsBuying(true);
 
-    const itemToBuy = MARKETPLACE_ITEMS.find(item => item.id === itemId) as AnyMarketplaceItem | undefined;
+    // Type-safe item lookup without unsafe type assertion
+    const itemToBuy = MARKETPLACE_ITEMS.find(item => item.id === itemId);
 
     if (!itemToBuy) {
-      toast({ title: "Error", description: "Item not found.", variant: "destructive" });
+      toast({ 
+        title: "Error", 
+        description: "Item not found.", 
+        variant: "destructive" 
+      });
       setIsBuying(false);
       return;
     }
 
+    // Additional validation to ensure itemToBuy has expected properties
+    if (!itemToBuy.type || !itemToBuy.price || !itemToBuy.name) {
+      toast({ 
+        title: "Error", 
+        description: "Invalid item data.", 
+        variant: "destructive" 
+      });
+      setIsBuying(false);
+      return;
+    }
+
+    // Type-safe access after validation
+    const validatedItem = itemToBuy as AnyMarketplaceItem;
+
     // Prevent buying Holobots
-    if (itemToBuy.type === "holobot") {
+    if (validatedItem.type === "holobot") {
       toast({
         title: "Buying Disabled",
         description: "Holobot purchasing from the marketplace is temporarily disabled.",
@@ -305,10 +324,10 @@ const Marketplace = () => {
       return;
     }
 
-    if (user.holosTokens < itemToBuy.price) {
+    if (user.holosTokens < validatedItem.price) {
       toast({
         title: "Insufficient Funds",
-        description: `You need ${itemToBuy.price - user.holosTokens} more HOLOS tokens to purchase this item.`,
+        description: `You need ${validatedItem.price - user.holosTokens} more HOLOS tokens to purchase this item.`,
         variant: "destructive",
       });
       setIsBuying(false);
@@ -316,20 +335,20 @@ const Marketplace = () => {
     }
     
     try {
-      const newHolosTokens = user.holosTokens - itemToBuy.price;
+      const newHolosTokens = user.holosTokens - validatedItem.price;
       let profileUpdatesForSupabase: any = { holos_tokens: newHolosTokens };
       let updatedUserProfileFields: Partial<typeof user> = { holosTokens: newHolosTokens };
 
-      if (itemToBuy.type === "blueprint") {
+      if (validatedItem.type === "blueprint") {
         const currentBlueprints = user.blueprints || {};
         const updatedBlueprints = {
           ...currentBlueprints,
-          [itemToBuy.holobotName]: (currentBlueprints[itemToBuy.holobotName] || 0) + 1,
+          [validatedItem.holobotName]: (currentBlueprints[validatedItem.holobotName] || 0) + 1,
         };
         profileUpdatesForSupabase.blueprints = updatedBlueprints;
         updatedUserProfileFields.blueprints = updatedBlueprints;
-      } else if (itemToBuy.type === "item") {
-        switch (itemToBuy.itemType) {
+      } else if (validatedItem.type === "item") {
+        switch (validatedItem.itemType) {
           case "gacha-ticket":
             profileUpdatesForSupabase.gacha_tickets = (user.gachaTickets || 0) + 1;
             updatedUserProfileFields.gachaTickets = (user.gachaTickets || 0) + 1;
@@ -355,7 +374,7 @@ const Marketplace = () => {
             updatedUserProfileFields.async_battle_tickets = (user.async_battle_tickets || 0) + 1;
             break;
           default:
-            throw new Error(`Unknown item type: ${itemToBuy.itemType}`);
+            throw new Error(`Unknown item type: ${validatedItem.itemType}`);
         }
       }
 
@@ -376,7 +395,7 @@ const Marketplace = () => {
 
       toast({
         title: "Purchase Successful",
-        description: `You've purchased ${itemToBuy.name} for ${itemToBuy.price} HOLOS tokens.`,
+        description: `You've purchased ${validatedItem.name} for ${validatedItem.price} HOLOS tokens.`,
       });
 
     } catch (error: any) {

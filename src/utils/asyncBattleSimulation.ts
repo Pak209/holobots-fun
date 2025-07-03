@@ -235,7 +235,15 @@ export class AsyncBattleSimulator {
    * Apply fitness bonuses to a Holobot
    */
   private applyFitnessBonuses(holobot: BattleHolobot, steps: number): BattleHolobot {
-    const enhanced = { ...holobot };
+    // Create a deep copy to avoid mutating the original object
+    const enhanced: BattleHolobot = {
+      ...holobot,
+      // Deep copy nested objects
+      fitness_bonuses: { ...holobot.fitness_bonuses },
+      boosted_attributes: { ...holobot.boosted_attributes },
+      equipped_parts: holobot.equipped_parts ? { ...holobot.equipped_parts } : undefined
+    };
+    
     const bonuses: FitnessBonus = {};
 
     // Calculate fitness bonuses based on steps
