@@ -24,6 +24,7 @@ import Leaderboard from "@/pages/Leaderboard";
 import { MobileLayout } from "@/components/MobileLayout";
 import Bytepaper from "./pages/Bytepaper";
 import Mint from "@/pages/Mint";
+import MintGenesisPage from "@/pages/MintGenesis";
 import Fitness from "@/pages/Fitness";
 import BoosterPacks from "@/pages/BoosterPacks";
 
@@ -42,6 +43,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/bytepaper" element={<Bytepaper />} />
+            <Route path="/mint-genesis" element={<MintGenesisPage />} />
             
             {/* Protected Routes with Mobile Layout */}
             <Route path="/mint" element={
