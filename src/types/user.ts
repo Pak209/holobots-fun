@@ -1,6 +1,7 @@
 import { HolobotEquipment } from './holobotParts';
 import { BoosterPackResult } from './boosterPack';
 import { RewardSystem } from './rewards';
+import { SeasonalRental } from '@/integrations/holos';
 
 export interface UserHolobot {
   name: string;
@@ -50,6 +51,7 @@ export interface UserProfile {
   equippedParts?: Record<string, HolobotEquipment>; // Add equipped parts field to store equipped parts per holobot
   pack_history?: BoosterPackResult[]; // Add pack history to store all opened packs
   rewardSystem?: RewardSystem; // Add reward system tracking
+  rental_holobots?: SeasonalRental[]; // Add seasonal rental holobots
 }
 
 export interface AuthState {

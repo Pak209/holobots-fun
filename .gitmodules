@@ -1,0 +1,3 @@
+[submodule "contracts/holos"]
+	path = contracts/holos
+	url = https://github.com/Pak209/HolosContract.git

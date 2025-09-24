@@ -1,0 +1,83 @@
+[
+  {
+    "inputs": [
+      {"name": "_holobotNFT", "type": "address"},
+      {"name": "_treasury", "type": "address"},
+      {"name": "_stockpile", "type": "address"},
+      {"name": "_holosToken", "type": "address"},
+      {"name": "_usdcToken", "type": "address"},
+      {"name": "_genesisNFTMinter", "type": "address"},
+      {"name": "_priceOracle", "type": "address"}
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {"name": "tier", "type": "uint8"},
+      {"name": "holobotData", "type": "bytes"}
+    ],
+    "name": "convertWithEth",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"name": "tier", "type": "uint8"},
+      {"name": "usdcAmount", "type": "uint256"},
+      {"name": "holobotData", "type": "bytes"}
+    ],
+    "name": "convertWithUsdc",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"name": "tier", "type": "uint8"},
+      {"name": "holosAmount", "type": "uint256"},
+      {"name": "holobotData", "type": "bytes"}
+    ],
+    "name": "convertWithHolos",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "", "type": "uint8"}],
+    "name": "tierPricing",
+    "outputs": [
+      {"name": "usdCents", "type": "uint256"},
+      {"name": "ethPrice", "type": "uint256"},
+      {"name": "usdcPrice", "type": "uint256"},
+      {"name": "holosPrice", "type": "uint256"},
+      {"name": "isActive", "type": "bool"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"name": "player", "type": "address"},
+      {"name": "tier", "type": "uint8"}
+    ],
+    "name": "calculateDiscountedPrice",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "name": "player", "type": "address"},
+      {"indexed": true, "name": "tokenId", "type": "uint256"},
+      {"indexed": false, "name": "tier", "type": "uint8"},
+      {"indexed": false, "name": "originalPrice", "type": "uint256"},
+      {"indexed": false, "name": "finalPrice", "type": "uint256"},
+      {"indexed": false, "name": "paymentMethod", "type": "string"}
+    ],
+    "name": "RentalConverted",
+    "type": "event"
+  }
+]

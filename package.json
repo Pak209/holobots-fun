@@ -8,7 +8,15 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "metadata:validate:genesis": "node scripts/metadata/validate-metadata.js genesis",
+    "metadata:validate:parts": "node scripts/metadata/validate-metadata.js parts",
+    "metadata:upload:genesis": "node scripts/metadata/upload-to-ipfs.js genesis",
+    "metadata:upload:parts": "node scripts/metadata/upload-to-ipfs.js parts",
+    "metadata:upload:web3:genesis": "node scripts/metadata/web3-storage-upload.js genesis",
+    "metadata:upload:web3:parts": "node scripts/metadata/web3-storage-upload.js parts",
+    "metadata:upload:pinata:genesis": "node scripts/metadata/simple-ipfs-upload.js genesis",
+    "metadata:upload:pinata:parts": "node scripts/metadata/simple-ipfs-upload.js parts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -60,6 +68,7 @@
     "embla-carousel-autoplay": "^8.5.2",
     "embla-carousel-react": "^8.3.0",
     "ethers": "^6.13.5",
+    "form-data": "^4.0.4",
     "framer-motion": "^12.0.6",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
