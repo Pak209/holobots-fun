@@ -14,6 +14,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
+import { useSyncPointsStore } from "@/stores/syncPointsStore";
 
 // Arena tier definitions
 const ARENA_TIERS = {
@@ -92,6 +93,7 @@ export const ArenaPrebattleMenu = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const { getEquippedParts } = useHolobotPartsStore();
+  const { getHolobotAttributeLevel } = useSyncPointsStore();
   const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
   const [userHolobots, setUserHolobots] = useState<any[]>([]);
   const [selectedTier, setSelectedTier] = useState<keyof typeof ARENA_TIERS>("tutorial");
@@ -214,6 +216,14 @@ export const ArenaPrebattleMenu = ({
                         });
                       }
                       
+                      // Get SP upgrade bonuses (2 points per level)
+                      const holobotId = userHolobot?.name || baseStats.name || selectedHolobot;
+                      const spBonuses = {
+                        attack: getHolobotAttributeLevel(holobotId, 'attack') * 2,
+                        defense: getHolobotAttributeLevel(holobotId, 'defense') * 2,
+                        speed: getHolobotAttributeLevel(holobotId, 'speed') * 2,
+                      };
+                      
                       return (
                         <div className="flex items-center gap-2 w-full">
                           <Avatar className="h-8 w-8 border border-cyan-400">
@@ -224,22 +234,25 @@ export const ArenaPrebattleMenu = ({
                           <span className="flex items-center gap-1 text-xs text-white/80">
                             <Sword className="h-4 w-4 text-red-400" />
                             <span className="font-bold text-cyan-600 dark:text-cyan-300">
-                              {baseStats.attack !== undefined ? baseStats.attack + (boosts.attack || 0) + partsBonuses.attack : '-'}
+                              {baseStats.attack !== undefined ? baseStats.attack + (boosts.attack || 0) + partsBonuses.attack + spBonuses.attack : '-'}
                               {partsBonuses.attack > 0 && <span className="text-purple-400 text-[10px]"> (+{partsBonuses.attack})</span>}
+                              {spBonuses.attack > 0 && <span className="text-green-400 text-[10px]"> (+{spBonuses.attack} SP)</span>}
                             </span>
                           </span>
                           <span className="flex items-center gap-1 text-xs text-white/80">
                             <Shield className="h-4 w-4 text-blue-400" />
                             <span className="font-bold text-cyan-600 dark:text-cyan-300">
-                              {baseStats.defense !== undefined ? baseStats.defense + (boosts.defense || 0) + partsBonuses.defense : '-'}
+                              {baseStats.defense !== undefined ? baseStats.defense + (boosts.defense || 0) + partsBonuses.defense + spBonuses.defense : '-'}
                               {partsBonuses.defense > 0 && <span className="text-purple-400 text-[10px]"> (+{partsBonuses.defense})</span>}
+                              {spBonuses.defense > 0 && <span className="text-green-400 text-[10px]"> (+{spBonuses.defense} SP)</span>}
                             </span>
                           </span>
                           <span className="flex items-center gap-1 text-xs text-white/80">
                             <Zap className="h-4 w-4 text-yellow-300" />
                             <span className="font-bold text-cyan-600 dark:text-cyan-300">
-                              {baseStats.speed !== undefined ? baseStats.speed + (boosts.speed || 0) + partsBonuses.speed : '-'}
+                              {baseStats.speed !== undefined ? baseStats.speed + (boosts.speed || 0) + partsBonuses.speed + spBonuses.speed : '-'}
                               {partsBonuses.speed > 0 && <span className="text-purple-400 text-[10px]"> (+{partsBonuses.speed})</span>}
+                              {spBonuses.speed > 0 && <span className="text-green-400 text-[10px]"> (+{spBonuses.speed} SP)</span>}
                             </span>
                           </span>
                         </div>

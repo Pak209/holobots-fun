@@ -4,6 +4,7 @@ import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NavigationMenu } from "@/components/NavigationMenu";
+import { DevModeToggle } from "@/components/DevModeToggle";
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -20,11 +21,16 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
   return (
     <div className="relative flex flex-col w-full min-h-screen bg-[#1A1F2C]">
       {/* Header */}
-      <header className="fixed top-0 w-full z-50 px-4 py-3 flex items-center justify-between bg-[#1A1F2C]/95 backdrop-blur-md border-b border-cyan-900/30">
-        <Link to="/dashboard" className="text-xl font-bold italic tracking-wider text-cyan-400 font-orbitron hover:text-cyan-300 transition-colors">
-          HOLOBOTS
-        </Link>
-        <NavigationMenu />
+      <header className="fixed top-0 w-full z-50 px-4 py-3 bg-[#1A1F2C]/95 backdrop-blur-md border-b border-cyan-900/30">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <Link to="/dashboard" className="text-xl font-bold italic tracking-wider text-cyan-400 font-orbitron hover:text-cyan-300 transition-colors">
+              HOLOBOTS
+            </Link>
+            <DevModeToggle />
+          </div>
+          <NavigationMenu />
+        </div>
       </header>
 
       {/* Main Content with padding for header and footer */}

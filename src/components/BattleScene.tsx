@@ -18,6 +18,7 @@ import {
   incrementComboChain
 } from "@/utils/battleUtils";
 import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
+import { useSyncPointsStore } from "@/stores/syncPointsStore";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "./ui/dialog";
@@ -53,6 +54,7 @@ export const BattleScene = ({
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const { getEquippedParts } = useHolobotPartsStore();
+  const { getHolobotAttributeLevel } = useSyncPointsStore();
   const [leftHealth, setLeftHealth] = useState(100);
   const [rightHealth, setRightHealth] = useState(100);
   const [leftSpecial, setLeftSpecial] = useState(0);
@@ -166,7 +168,21 @@ export const BattleScene = ({
       });
     }
 
-    console.log("Battle stats for", baseStats.name, "including parts:", completeStats);
+    // Apply SP upgrade bonuses (2 points per level)
+    const holobotId = leftUserHolobot?.name || baseStats.name;
+    const spBonuses = {
+      attack: getHolobotAttributeLevel(holobotId, 'attack') * 2,
+      defense: getHolobotAttributeLevel(holobotId, 'defense') * 2,
+      speed: getHolobotAttributeLevel(holobotId, 'speed') * 2,
+      hp: getHolobotAttributeLevel(holobotId, 'hp') * 2,
+    };
+    
+    completeStats.attack += spBonuses.attack;
+    completeStats.defense += spBonuses.defense;
+    completeStats.speed += spBonuses.speed;
+    completeStats.maxHealth += spBonuses.hp;
+
+    console.log("Battle stats for", baseStats.name, "including parts and SP:", completeStats);
 
     setLeftStats(completeStats);
     setLeftHealth(completeStats.maxHealth);

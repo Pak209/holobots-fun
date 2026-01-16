@@ -19,6 +19,13 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# Firebase sensitive files
+**/firebase-service-account.json
+scripts/profiles.json
+scripts/supabase-auth-users.csv
+scripts/.npm-cache
+.npm-cache
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
