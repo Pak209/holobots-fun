@@ -234,21 +234,11 @@ const Marketplace = () => {
       
       // Update the user's blueprints in the database
       try {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ blueprints: cleanedBlueprints })
-          .eq('id', user.id);
-        
-        if (error) {
-          console.error('Error cleaning up blueprints:', error);
-        } else {
-          // Update the local user state
-          updateUser({ blueprints: cleanedBlueprints });
-          toast({
-            title: "Blueprints Cleaned",
-            description: "Removed invalid blueprint entries from your inventory.",
-          });
-        }
+        await updateUser({ blueprints: cleanedBlueprints });
+        toast({
+          title: "Blueprints Cleaned",
+          description: "Removed invalid blueprint entries from your inventory.",
+        });
       } catch (error) {
         console.error('Error updating blueprints:', error);
       }
@@ -316,7 +306,6 @@ const Marketplace = () => {
     
     try {
       const newHolosTokens = user.holosTokens - itemToBuy.price;
-      let profileUpdatesForSupabase: any = { holos_tokens: newHolosTokens };
       let updatedUserProfileFields: Partial<typeof user> = { holosTokens: newHolosTokens };
 
       if (itemToBuy.type === "blueprint") {
@@ -325,32 +314,25 @@ const Marketplace = () => {
           ...currentBlueprints,
           [itemToBuy.holobotName]: (currentBlueprints[itemToBuy.holobotName] || 0) + 1,
         };
-        profileUpdatesForSupabase.blueprints = updatedBlueprints;
         updatedUserProfileFields.blueprints = updatedBlueprints;
       } else if (itemToBuy.type === "item") {
         switch (itemToBuy.itemType) {
           case "gacha-ticket":
-            profileUpdatesForSupabase.gacha_tickets = (user.gachaTickets || 0) + 1;
             updatedUserProfileFields.gachaTickets = (user.gachaTickets || 0) + 1;
             break;
           case "arena-pass":
-            profileUpdatesForSupabase.arena_passes = (user.arena_passes || 0) + 1;
             updatedUserProfileFields.arena_passes = (user.arena_passes || 0) + 1;
             break;
           case "exp-booster":
-            profileUpdatesForSupabase.exp_boosters = (user.exp_boosters || 0) + 1;
             updatedUserProfileFields.exp_boosters = (user.exp_boosters || 0) + 1;
             break;
           case "energy-refill":
-            profileUpdatesForSupabase.energy_refills = (user.energy_refills || 0) + 1;
             updatedUserProfileFields.energy_refills = (user.energy_refills || 0) + 1;
             break;
           case "rank-skip":
-            profileUpdatesForSupabase.rank_skips = (user.rank_skips || 0) + 1;
             updatedUserProfileFields.rank_skips = (user.rank_skips || 0) + 1;
             break;
           case "async-battle-ticket":
-            profileUpdatesForSupabase.async_battle_tickets = (user.async_battle_tickets || 0) + 1;
             updatedUserProfileFields.async_battle_tickets = (user.async_battle_tickets || 0) + 1;
             break;
           default:
@@ -358,20 +340,7 @@ const Marketplace = () => {
         }
       }
 
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update(profileUpdatesForSupabase)
-        .eq("id", user.id);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      if (updateUser) {
-        await updateUser(updatedUserProfileFields); 
-      } else {
-        console.error("updateUser function is not available from useAuth. Local state may be stale.");
-      }
+      await updateUser(updatedUserProfileFields); 
 
       toast({
         title: "Purchase Successful",

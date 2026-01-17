@@ -26,7 +26,10 @@ export const Web3ModalLogin = ({ isLoading }: { isLoading: boolean }) => {
 
       // Generate nonce
       const nonce = `Sign in to Holobots Dapp at ${new Date().toISOString()}`;
-      const signature = await signMessageAsync({ message: nonce });
+      const signature = await signMessageAsync({ 
+        message: nonce,
+        account: address
+      });
 
       // Verify signature and create session using Firebase Cloud Function
       const result = await verifyWallet({ address, nonce, signature, type: 'evm' });

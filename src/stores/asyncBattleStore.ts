@@ -13,6 +13,7 @@ import {
   BattlePoolType 
 } from '@/types/asyncBattle';
 import { PlayerRank } from '@/types/playerRank';
+import { HOLOBOT_STATS } from '@/types/holobot';
 import { auth } from '@/lib/firebase';
 import { 
   getUserProfile, 
@@ -161,6 +162,15 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
 
           console.log('✅ Selected holobot found:', selectedHolobot);
 
+          const baseStats = HOLOBOT_STATS[holobotName.toLowerCase()] || {
+            attack: 100,
+            defense: 100,
+            speed: 100,
+            maxHealth: 100,
+            specialMove: 'Basic Attack',
+            intelligence: 100
+          };
+
           // Create battle pool entry
           const poolEntryId = await createBattlePoolEntry({
             poolId,
@@ -169,12 +179,12 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
             holobotStats: {
               name: selectedHolobot.name,
               level: selectedHolobot.level || 1,
-              attack: selectedHolobot.attack || 100,
-              defense: selectedHolobot.defense || 100,
-              speed: selectedHolobot.speed || 100,
-              maxHealth: selectedHolobot.maxHealth || 100,
-              specialMove: selectedHolobot.specialMove || 'Basic Attack',
-              intelligence: selectedHolobot.intelligence || 100,
+              attack: baseStats.attack || 100,
+              defense: baseStats.defense || 100,
+              speed: baseStats.speed || 100,
+              maxHealth: baseStats.maxHealth || 100,
+              specialMove: baseStats.specialMove || 'Basic Attack',
+              intelligence: baseStats.intelligence || 100,
             },
             fitnessBonus: {}, // Will be calculated by the fitness system
             isActive: true
@@ -244,6 +254,15 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
 
           console.log('✅ Selected holobot found:', selectedHolobot);
 
+          const baseStats = HOLOBOT_STATS[holobotName.toLowerCase()] || {
+            attack: 100,
+            defense: 100,
+            speed: 100,
+            maxHealth: 100,
+            specialMove: 'Basic Attack',
+            intelligence: 100
+          };
+
           // Create async battle for PvE league
           const battleId = await createAsyncBattle({
             battleType: 'pve_league',
@@ -252,13 +271,13 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
             player1Holobot: {
               name: selectedHolobot.name,
               level: selectedHolobot.level || 1,
-              attack: selectedHolobot.attack || 100,
-              defense: selectedHolobot.defense || 100,
-              speed: selectedHolobot.speed || 100,
-              maxHealth: selectedHolobot.maxHealth || 100,
-              health: selectedHolobot.maxHealth || 100,
-              specialMove: selectedHolobot.specialMove || 'Basic Attack',
-              intelligence: selectedHolobot.intelligence || 100,
+              attack: baseStats.attack || 100,
+              defense: baseStats.defense || 100,
+              speed: baseStats.speed || 100,
+              maxHealth: baseStats.maxHealth || 100,
+              health: baseStats.maxHealth || 100,
+              specialMove: baseStats.specialMove || 'Basic Attack',
+              intelligence: baseStats.intelligence || 100,
               is_cpu: false,
             },
             player2Id: null, // PvE has no second player

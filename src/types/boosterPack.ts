@@ -95,6 +95,22 @@ export const BOOSTER_PACK_TYPES = {
       epic: 0.40,
       legendary: 0.10
     }
+  },
+  legendary: {
+    id: 'legendary',
+    name: 'Legendary Pack',
+    description: 'Contains 1 Blueprint + 1 Part + 1 Item with exclusive high-tier rewards',
+    cost: {
+      holosTokens: 1000,
+      gachaTickets: 100
+    },
+    guaranteed: 3,
+    rarity: {
+      common: 0.00,
+      rare: 0.10,
+      epic: 0.50,
+      legendary: 0.40
+    }
   }
 } as const;
 
