@@ -250,16 +250,18 @@ const Index = () => {
     }];
   }
 
-  const distributeRewards = async () => {
+  const distributeRewards = async (overrideVictories?: number) => {
     try {
       if (!user) return;
       
+      const currentVictories = overrideVictories !== undefined ? overrideVictories : victories;
+      
       // Calculate base rewards (tokens, gacha, blueprint, arena pass)
       // Item rewards from tier are now handled directly from currentArenaTierItemRewards state
-      const baseRewards = calculateArenaRewards(currentRound, victories);
+      const baseRewards = calculateArenaRewards(currentRound, currentVictories);
       
       // Calculate experience for the holobot
-      const experienceRewards = calculateExperienceRewards(victories);
+      const experienceRewards = calculateExperienceRewards(currentVictories);
       const selectedHolobotName = HOLOBOT_STATS[selectedHolobot].name;
       
       // Update user with rewards
@@ -312,7 +314,7 @@ const Index = () => {
       
       // Save the results to show in the results screen immediately
       const results = {
-        isSuccess: victories > 0,
+        isSuccess: currentVictories > 0,
         squadHolobotKeys: [selectedHolobot],
         squadHolobotExp: experienceRewards,
         blueprintRewards: baseRewards.blueprintReward,
@@ -346,7 +348,10 @@ const Index = () => {
 
   const handleBattleEnd = (result: 'victory' | 'defeat') => {
     console.log("🎯 Arena battle ended with result:", result);
-    console.log("Current round:", currentRound, "Victories:", victories);
+    console.log("Current round:", currentRound, "Current victories in state:", victories);
+    
+    // Track the battle result for the mission system
+    trackArenaBattle(result === 'victory');
     
     if (result === 'victory') {
       const newVictories = victories + 1;
@@ -356,12 +361,12 @@ const Index = () => {
         // Move to next round with next opponent in lineup
         setCurrentRound(prev => prev + 1);
         // Show intermediate rewards after each round victory
-        console.log("✨ Round victory - showing intermediate rewards");
-        distributeRewards();
+        console.log("✨ Round victory - showing intermediate rewards with victories:", newVictories);
+        distributeRewards(newVictories);
       } else {
         // Final round completed
-        console.log("🏆 Arena completed - distributing final rewards");
-        distributeRewards();
+        console.log("🏆 Arena completed - distributing final rewards with victories:", newVictories);
+        distributeRewards(newVictories);
         setCurrentRound(1);
         setVictories(0);
         setHasEntryFee(false);
@@ -370,8 +375,8 @@ const Index = () => {
       }
     } else {
       // Battle lost
-      console.log("💥 Arena lost - distributing rewards");
-      distributeRewards();
+      console.log("💥 Arena lost - distributing rewards with current victories:", victories);
+      distributeRewards(victories);
       setCurrentRound(1);
       setVictories(0);
       setHasEntryFee(false);

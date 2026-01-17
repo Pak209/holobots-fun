@@ -22,6 +22,8 @@ import { useSyncPointsStore } from "@/stores/syncPointsStore";
 import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "./ui/dialog";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 // Define a default structure for safety
 const defaultBattleStats = {
@@ -197,16 +199,9 @@ export const BattleScene = ({
         maxHealth: baseStats?.maxHealth || defaultBattleStats.maxHealth
     };
 
-    // Apply randomized attribute upgrades based on tier level
-    let upgradesToApply = 0;
-    if (initialRightStats.level === 5) { // Tier 1
-      upgradesToApply = 5;
-    } else if (initialRightStats.level === 20) { // Tier 2
-      upgradesToApply = 20;
-    } else if (initialRightStats.level === 40) { // Tier 3
-      upgradesToApply = 40;
-    }
-
+    // Apply randomized attribute upgrades based on level
+    let upgradesToApply = rightLevel; // Give CPU 1 point per level, same as player
+    
     const attributes: Array<keyof typeof initialRightStats> = ['attack', 'defense', 'speed'];
     const boostedStats = { ...initialRightStats };
 
@@ -219,7 +214,7 @@ export const BattleScene = ({
     
     // Log the boosted stats for verification
     if (upgradesToApply > 0) {
-        console.log(`Applied ${upgradesToApply} upgrades to opponent ${selectedRightHolobot} (Lvl ${initialRightStats.level}). New Stats:`, boostedStats);
+        console.log(`Applied ${upgradesToApply} proportional upgrades to opponent ${selectedRightHolobot} (Lvl ${initialRightStats.level}). New Stats:`, boostedStats);
     }
 
     setRightStats(boostedStats);
@@ -444,7 +439,28 @@ export const BattleScene = ({
     try {
       if (!user) return;
 
-      if (winner === selectedLeftHolobot) {
+      const isVictory = winner === selectedLeftHolobot;
+      const opponentName = rightStats.name || 'Unknown';
+      
+      // 1. Record the battle in the 'battles' collection (Audit Database Sync)
+      try {
+        await addDoc(collection(db, "battles"), {
+          userId: user.id,
+          playerHolobot: selectedLeftHolobot,
+          opponentHolobot: selectedRightHolobot,
+          result: isVictory ? 'victory' : 'defeat',
+          timestamp: serverTimestamp(),
+          playerFinalHealth: leftHealth,
+          opponentFinalHealth: rightHealth,
+          isCpuBattle
+        });
+        console.log("Battle record created in Firestore");
+      } catch (err) {
+        console.error("Failed to create battle record:", err);
+      }
+
+      // 2. Update user stats and holobot XP
+      if (isVictory) {
         const totalDamage = (rightStats.maxHealth || 100) - rightHealth;
         const battleXp = Math.floor(totalDamage * 2);
         const newTotalXp = leftXp + battleXp;
@@ -457,7 +473,7 @@ export const BattleScene = ({
           newLevel
         );
         
-        console.log("Updating user holobots with:", updatedHolobots);
+        console.log("Updating user holobots with victory:", updatedHolobots);
         
         await updateUser({ 
           holobots: updatedHolobots,
@@ -479,6 +495,7 @@ export const BattleScene = ({
           });
         }
       } else {
+        console.log("Updating user holobots with defeat");
         await updateUser({ 
           stats: {
             wins: user.stats?.wins || 0,
@@ -499,43 +516,45 @@ export const BattleScene = ({
   useEffect(() => {
     if (!isBattleStarted) return;
 
+    if (leftHealth <= 0 || rightHealth <= 0) {
+      console.log("🏁 Battle end detected! Left HP:", leftHealth, "Right HP:", rightHealth);
+      setIsBattleStarted(false);
+      
+      const winnerIsLeft = leftHealth > 0;
+      const winnerName = winnerIsLeft ? leftStats.name : rightStats.name;
+      const loserName = winnerIsLeft ? rightStats.name : leftStats.name;
+      
+      const finalLeftStats = {
+          ...defaultBattleStats,
+          ...leftStats,
+          level: leftStats.level || defaultBattleStats.level,
+          maxHealth: leftStats.maxHealth || defaultBattleStats.maxHealth,
+          intelligence: Math.min(10, (leftStats.intelligence || defaultBattleStats.intelligence) + (winnerIsLeft ? 1 : -1))
+      };
+      const finalRightStats = {
+          ...defaultBattleStats,
+          ...rightStats,
+          level: rightStats.level || defaultBattleStats.level,
+          maxHealth: rightStats.maxHealth || defaultBattleStats.maxHealth,
+          intelligence: Math.min(10, (rightStats.intelligence || defaultBattleStats.intelligence) + (winnerIsLeft ? -1 : 1))
+      };
+
+      setLeftStats(finalLeftStats);
+      setRightStats(finalRightStats);
+      
+      // Sequence the cleanup and rewards
+      setLeftComboChain(0);
+      setRightComboChain(0);
+      addToBattleLog(`Battle ended! ${winnerName} is victorious!`);
+      addToBattleLog(`${winnerName}'s intelligence increased! ${loserName}'s intelligence decreased!`);
+      
+      // Trigger completion callbacks
+      onBattleEnd?.(winnerIsLeft ? 'victory' : 'defeat');
+      saveBattleResults(winnerIsLeft ? selectedLeftHolobot : selectedRightHolobot);
+      return;
+    }
+
     const interval = setInterval(() => {
-      if (leftHealth <= 0 || rightHealth <= 0) {
-        setIsBattleStarted(false);
-        const winnerIsLeft = leftHealth > 0;
-        const winnerName = winnerIsLeft ? leftStats.name : rightStats.name;
-        const loserName = winnerIsLeft ? rightStats.name : leftStats.name;
-        
-        const finalLeftStats = {
-            ...defaultBattleStats,
-            ...leftStats,
-            level: leftStats.level || defaultBattleStats.level, // Ensure level is defined
-            maxHealth: leftStats.maxHealth || defaultBattleStats.maxHealth, // Ensure maxHealth is defined
-            intelligence: Math.min(10, (leftStats.intelligence || defaultBattleStats.intelligence) + (winnerIsLeft ? 1 : -1))
-        };
-        const finalRightStats = {
-            ...defaultBattleStats,
-            ...rightStats,
-            level: rightStats.level || defaultBattleStats.level, // Ensure level is defined
-            maxHealth: rightStats.maxHealth || defaultBattleStats.maxHealth, // Ensure maxHealth is defined
-            intelligence: Math.min(10, (rightStats.intelligence || defaultBattleStats.intelligence) + (winnerIsLeft ? -1 : 1))
-        };
-
-        setLeftStats(finalLeftStats);
-        setRightStats(finalRightStats);
-        
-        onBattleEnd?.(winnerIsLeft ? 'victory' : 'defeat');
-        saveBattleResults(winnerIsLeft ? selectedLeftHolobot : selectedRightHolobot);
-        
-        setLeftComboChain(0);
-        setRightComboChain(0);
-        
-        addToBattleLog(`Battle ended! ${winnerName} is victorious!`);
-        addToBattleLog(`${winnerName}'s intelligence increased! ${loserName}'s intelligence decreased!`);
-        clearInterval(interval);
-        return;
-      }
-
       if (isDefenseMode) {
         const maxDefenseRounds = leftStats.intelligence >= 7 ? 3 : 2;
         setDefenseModeRounds(prev => {
@@ -599,7 +618,7 @@ export const BattleScene = ({
                   ...defaultBattleStats,
                   ...boostedStats, 
                   level: currentLeftStats.level, 
-                  maxHealth: currentLeftStats.maxHealth // Or boostedStats.maxHealth if special can change it
+                  maxHealth: currentLeftStats.maxHealth
               });
               setLeftSpecial(0);
               addToBattleLog(`${leftStats.name} used their special move!`);
@@ -659,7 +678,7 @@ export const BattleScene = ({
                   ...defaultBattleStats,
                   ...boostedStats, 
                   level: currentRightStats.level, 
-                  maxHealth: currentRightStats.maxHealth // Or boostedStats.maxHealth
+                  maxHealth: currentRightStats.maxHealth
               });
               setRightSpecial(0);
               addToBattleLog(`${rightStats.name} used their special move!`);
@@ -685,7 +704,7 @@ export const BattleScene = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth, isDefenseMode, leftXp, displayLeftXp, leftComboChain, rightComboChain, leftStats, rightStats]);
+  }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth, isDefenseMode, leftXp, displayLeftXp, leftComboChain, rightComboChain, leftStats, rightStats, leftSpecial, rightSpecial]);
 
   return (
     <div className="flex flex-col gap-1">

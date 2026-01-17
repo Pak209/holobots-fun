@@ -90,8 +90,8 @@ export default function Auth() {
         description: "Redirecting you to the dashboard",
       });
       
-      // Navigating to dashboard will happen through the useEffect above
-      // when the AuthProvider updates the user state
+      // Perform immediate navigation for better UX
+      navigate(from);
     } catch (error: any) {
       console.error('Auth error:', error);
       

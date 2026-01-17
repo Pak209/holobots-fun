@@ -14,8 +14,8 @@ export const calculateDamage = (attacker: HolobotStats, defender: HolobotStats) 
     defenseValue: defender.defense
   });
 
-  const evasionChance = (defender.speed - attacker.speed) * 0.05;
-  const willEvade = Math.random() < Math.max(0, Math.min(0.25, evasionChance));
+  const evasionChance = (defender.speed - attacker.speed) * 0.03; // Reduced from 0.05
+  const willEvade = Math.random() < Math.max(0, Math.min(0.18, evasionChance)); // Reduced cap from 0.25 to 0.18
 
   if (willEvade) {
     return 0;

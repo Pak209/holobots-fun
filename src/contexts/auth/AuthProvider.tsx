@@ -12,7 +12,7 @@ import {
   User 
 } from "@/lib/firebase";
 import { 
-  getUserProfile, 
+  getUserProfile as getFirestoreUserProfile, 
   createUserProfile, 
   updateUserProfile, 
   searchPlayers as firestoreSearchPlayers 
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       logDebug('Fetching profile for user:', userId);
       
-      const profile = await getUserProfile(userId);
+      const profile = await getFirestoreUserProfile(userId);
       
       if (!profile) {
         logDebug('No profile found for user:', userId);
@@ -187,6 +187,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       logDebug('Login successful:', userCredential.user.uid);
       
+      // Fetch profile and set user immediately to speed up redirect
+      const userProfile = await fetchUserProfile(userCredential.user.uid);
+      if (userProfile) {
+        setCurrentUser(userProfile);
+      }
+      
       toast({
         title: "Login Successful",
         description: "You have been logged in",
@@ -263,6 +269,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       logDebug('Signup successful:', userCredential.user.uid);
+      
+      // Fetch profile and set user immediately to speed up redirect
+      const userProfile = await fetchUserProfile(userCredential.user.uid);
+      if (userProfile) {
+        setCurrentUser(userProfile);
+      }
       
       toast({
         title: "Signup Successful",
