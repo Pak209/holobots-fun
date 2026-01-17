@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Swords, Target, Gem, Ticket, Clock, Flame, Trophy, Star } from "lucide-react";
 import { Progress } from "./ui/progress";
-import { supabase } from "@/integrations/supabase/client";
 import { QuestBattleBanner } from "@/components/quests/QuestBattleBanner";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 import { useRewardTracking } from "@/hooks/useRewardTracking";

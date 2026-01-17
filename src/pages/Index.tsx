@@ -10,7 +10,7 @@ import { ArenaPrebattleMenu } from "@/components/arena/ArenaPrebattleMenu";
 import { generateArenaOpponent, calculateArenaRewards } from "@/utils/battleUtils";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 import { HOLOBOT_STATS } from "@/types/holobot";
-import { updateHolobotExperience, calculateExperience } from "@/integrations/supabase/client";
+import { updateHolobotExperience, calculateExperience } from "@/lib/firebase";
 import { BattleLeagueCard } from "../components/asyncBattle/BattleLeagueCard";
 import { BattlePoolCard } from "../components/asyncBattle/BattlePoolCard";
 import { BattleHistoryList } from "../components/asyncBattle/BattleHistoryList";

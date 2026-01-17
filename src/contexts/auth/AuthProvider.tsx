@@ -1,9 +1,22 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType } from "./types";
-import { UserProfile, mapDatabaseToUserProfile } from "@/types/user";
+import { UserProfile } from "@/types/user";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { 
+  auth, 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut,
+  User 
+} from "@/lib/firebase";
+import { 
+  getUserProfile, 
+  createUserProfile, 
+  updateUserProfile, 
+  searchPlayers as firestoreSearchPlayers 
+} from "@/lib/firestore";
 import { useNavigate } from "react-router-dom";
 import { ensureWelcomeGift } from "./authUtils";
 import { useRewardStore } from "@/stores/rewardStore";
@@ -35,16 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       logDebug('Fetching profile for user:', userId);
       
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (profileError) {
-        logDebug('Error fetching profile:', profileError);
-        throw profileError;
-      }
+      const profile = await getUserProfile(userId);
       
       if (!profile) {
         logDebug('No profile found for user:', userId);
@@ -52,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       logDebug('Profile found:', profile);
-      return mapDatabaseToUserProfile(profile);
+      return profile;
     } catch (err) {
       logDebug('Exception in fetchUserProfile:', err);
       throw err;
@@ -105,49 +109,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         logDebug('Setting up auth state listener');
         
-        // First set up the auth state change listener
-        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-          logDebug('Auth state changed:', event, session?.user?.id);
+        // Set up Firebase auth state listener
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          logDebug('Auth state changed:', firebaseUser?.uid);
           
           if (!isMounted) return;
           
-          if (event === 'SIGNED_OUT') {
+          if (!firebaseUser) {
             setCurrentUser(null);
             setError(null);
             clearUserData(); // Clear reward system data when signing out
-          }
-          else if (session) {
-            // Defer profile fetching to avoid Supabase deadlocks
-            setTimeout(async () => {
-              if (!isMounted) return;
-              await handleSession(session);
-            }, 0);
+            setLoading(false);
+            setAuthInitialized(true);
+          } else {
+            // User is signed in, fetch their profile
+            try {
+              const userProfile = await fetchUserProfile(firebaseUser.uid);
+              
+              if (!userProfile) {
+                logDebug('No profile found for user, may be new user');
+                setError("Profile not found. Please complete registration.");
+                setCurrentUser(null);
+              } else {
+                setCurrentUser(userProfile);
+                setError(null);
+                
+                // Process welcome gift outside of critical path
+                setTimeout(() => {
+                  ensureWelcomeGift(firebaseUser.uid, userProfile, setCurrentUser)
+                    .catch(err => logDebug('Welcome gift error:', err));
+                }, 0);
+              }
+            } catch (err) {
+              logDebug('Error fetching user profile:', err);
+              setError(err instanceof Error ? err.message : "Failed to load user profile");
+              setCurrentUser(null);
+            }
+            
+            setLoading(false);
+            setAuthInitialized(true);
           }
         });
         
-        // Then check for existing session
-        logDebug('Checking for existing session');
-        const { data } = await supabase.auth.getSession();
-        
-        if (data.session) {
-          logDebug('Found existing session:', data.session.user.id);
-          await handleSession(data.session);
-        } else {
-          logDebug('No existing session found');
-          setCurrentUser(null);
-        }
-        
-        if (isMounted) {
-          setLoading(false);
-          setAuthInitialized(true);
-        }
-        
         return () => {
           isMounted = false;
-          if (authListener?.subscription) {
-            logDebug('Cleaning up auth listener');
-            authListener.subscription.unsubscribe();
-          }
+          unsubscribe();
         };
       } catch (err) {
         logDebug('Error initializing auth:', err);
@@ -173,20 +179,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       logDebug('Attempting login for:', email);
       
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      if (signInError) {
-        throw signInError;
+      if (!userCredential.user) {
+        throw new Error("Login successful but no user returned");
       }
       
-      if (!data.session) {
-        throw new Error("Login successful but no session returned");
-      }
-      
-      logDebug('Login successful:', data.session.user.id);
+      logDebug('Login successful:', userCredential.user.uid);
       
       toast({
         title: "Login Successful",
@@ -194,12 +193,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       return;
-    } catch (err) {
+    } catch (err: any) {
       logDebug('Login error:', err);
-      setError(err instanceof Error ? err.message : "Login failed");
+      const errorMessage = err.code === 'auth/invalid-credential' 
+        ? "Invalid email or password" 
+        : err.message || "Login failed";
+      setError(errorMessage);
       toast({
         title: "Login Failed",
-        description: err instanceof Error ? err.message : "Failed to log in",
+        description: errorMessage,
         variant: "destructive",
       });
       throw err;
@@ -216,11 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       logDebug('Attempting logout');
       
-      const { error: signOutError } = await supabase.auth.signOut();
-      
-      if (signOutError) {
-        throw signOutError;
-      }
+      await signOut(auth);
       
       setCurrentUser(null);
       clearUserData(); // Clear reward system data when logging out
@@ -251,32 +249,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       logDebug('Attempting signup for:', email);
       
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username: username,
-          }
-        }
-      });
+      // Create Firebase Auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      if (signUpError) {
-        throw signUpError;
+      if (!userCredential.user) {
+        throw new Error("Signup successful but no user returned");
       }
       
-      logDebug('Signup successful, session:', data.session?.user.id || 'No session');
+      // Create user profile in Firestore
+      await createUserProfile(userCredential.user.uid, {
+        username,
+        email,
+      });
+      
+      logDebug('Signup successful:', userCredential.user.uid);
       
       toast({
         title: "Signup Successful",
         description: "Your account has been created",
       });
-    } catch (err) {
+    } catch (err: any) {
       logDebug('Signup error:', err);
-      setError(err instanceof Error ? err.message : "Signup failed");
+      const errorMessage = err.code === 'auth/email-already-in-use'
+        ? "Email is already in use"
+        : err.code === 'auth/weak-password'
+        ? "Password is too weak"
+        : err.message || "Signup failed";
+      setError(errorMessage);
       toast({
         title: "Signup Failed",
-        description: err instanceof Error ? err.message : "Failed to create account",
+        description: errorMessage,
         variant: "destructive",
       });
       throw err;
@@ -299,48 +301,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       logDebug('Updating user profile:', updates);
       
-      const dbUpdates: any = {};
-      
-      if (updates.username) dbUpdates.username = updates.username;
-      if (updates.holosTokens !== undefined) dbUpdates.holos_tokens = updates.holosTokens;
-      if (updates.gachaTickets !== undefined) dbUpdates.gacha_tickets = updates.gachaTickets;
-      if (updates.dailyEnergy !== undefined) dbUpdates.daily_energy = updates.dailyEnergy;
-      if (updates.maxDailyEnergy !== undefined) dbUpdates.max_daily_energy = updates.maxDailyEnergy;
-      if (updates.lastEnergyRefresh) dbUpdates.last_energy_refresh = updates.lastEnergyRefresh;
-      if (updates.stats?.wins !== undefined) dbUpdates.wins = updates.stats.wins;
-      if (updates.stats?.losses !== undefined) dbUpdates.losses = updates.stats.losses;
-      
-      if (updates.arena_passes !== undefined) dbUpdates.arena_passes = updates.arena_passes;
-      if (updates.exp_boosters !== undefined) dbUpdates.exp_boosters = updates.exp_boosters;
-      if (updates.energy_refills !== undefined) dbUpdates.energy_refills = updates.energy_refills;
-      if (updates.rank_skips !== undefined) dbUpdates.rank_skips = updates.rank_skips;
-      
-      if (updates.holobots) {
-        dbUpdates.holobots = updates.holobots;
-      }
-      
-      if (updates.blueprints) {
-        dbUpdates.blueprints = updates.blueprints;
-      }
-      
-      if (updates.parts) {
-        dbUpdates.parts = updates.parts;
-      }
-      
-      if (updates.equippedParts) {
-        dbUpdates.equipped_parts = updates.equippedParts;
-      }
-      
-      logDebug('Database updates:', dbUpdates);
-      
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update(dbUpdates)
-        .eq('id', currentUser.id);
-      
-      if (updateError) {
-        throw updateError;
-      }
+      // Use Firestore update function
+      await updateUserProfile(currentUser.id, updates);
       
       // Update the local user state with the new values
       const updatedUser = { ...currentUser, ...updates };
@@ -367,17 +329,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       logDebug('Searching players with query:', query);
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .ilike('username', `%${query}%`)
-        .limit(10);
+      const players = await firestoreSearchPlayers(query, 10);
       
-      if (error) {
-        throw error;
-      }
-      
-      return data.map(profile => mapDatabaseToUserProfile(profile));
+      return players;
     } catch (error) {
       logDebug('Error searching players:', error);
       toast({
@@ -406,9 +360,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     return {
       checkSession: async () => {
-        const { data } = await supabase.auth.getSession();
-        console.log('Current session:', data.session);
-        return data.session;
+        const currentFirebaseUser = auth.currentUser;
+        console.log('Current Firebase user:', currentFirebaseUser);
+        return currentFirebaseUser;
       },
       resetAuthState: () => {
         setLoading(false);

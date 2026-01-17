@@ -14,7 +14,6 @@ import {
   SlidersHorizontal
 } from "lucide-react";
 import { HOLOBOT_IMAGE_MAPPING } from "@/utils/holobotImageUtils";
-import { supabase } from "@/integrations/supabase/client";
 import { UserHolobot } from "@/types/user";
 import { MARKETPLACE_PARTS, MarketplacePart, createPartFromMarketplace } from "@/data/marketplaceParts";
 import { useHolobotPartsStore } from "@/stores/holobotPartsStore";

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Wallet } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { verifyWallet } from "@/lib/firebase";
 
 export const Web3ModalLogin = ({ isLoading }: { isLoading: boolean }) => {
   const { open } = useWeb3Modal();
@@ -20,21 +20,22 @@ export const Web3ModalLogin = ({ isLoading }: { isLoading: boolean }) => {
         return;
       }
 
+      if (!address) {
+        throw new Error("No wallet address found");
+      }
+
       // Generate nonce
       const nonce = `Sign in to Holobots Dapp at ${new Date().toISOString()}`;
       const signature = await signMessageAsync({ message: nonce });
 
-      // Verify signature and create session
-      const { data, error } = await supabase.functions.invoke('verify-wallet', {
-        body: { address, nonce, signature, type: 'evm' }
-      });
+      // Verify signature and create session using Firebase Cloud Function
+      const result = await verifyWallet({ address, nonce, signature, type: 'evm' });
 
-      if (error) throw error;
-
-      // Set the session in Supabase
-      if (data?.session) {
-        const { error: sessionError } = await supabase.auth.setSession(data.session);
-        if (sessionError) throw sessionError;
+      if (result.data?.token) {
+        // Sign in to Firebase with custom token
+        const { signInWithCustomToken } = await import('@/lib/firebase');
+        const { auth } = await import('@/lib/firebase');
+        await signInWithCustomToken(auth, result.data.token);
       }
 
       toast({

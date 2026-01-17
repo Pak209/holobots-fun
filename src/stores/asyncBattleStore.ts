@@ -13,7 +13,14 @@ import {
   BattlePoolType 
 } from '@/types/asyncBattle';
 import { PlayerRank } from '@/types/playerRank';
-import { supabase } from '@/integrations/supabase/client';
+import { auth } from '@/lib/firebase';
+import { 
+  getUserProfile, 
+  createBattlePoolEntry, 
+  createAsyncBattle, 
+  updateUserEnergy, 
+  getLeagueBattleCounts 
+} from '@/lib/firestore';
 
 // Helper function to compare player ranks
 const getPlayerRankOrder = (rank: string): number => {
@@ -119,51 +126,31 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
           console.log('Pool ID:', poolId);
           console.log('Holobot Name:', holobotName);
 
-          const { data: { user } } = await supabase.auth.getUser();
+          const user = auth.currentUser;
           
           if (!user) {
             throw new Error('User not authenticated');
           }
 
-          console.log('✅ User authenticated:', user.id);
+          console.log('✅ User authenticated:', user.uid);
 
           // Get the selected holobot's stats from the user profile
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('holobots, username, daily_energy')
-            .eq('id', user.id)
-            .single();
+          const profile = await getUserProfile(user.uid);
 
-          if (profileError) {
-            console.error('❌ Profile error:', profileError);
-            throw new Error(`Failed to get user profile: ${profileError.message}`);
+          if (!profile) {
+            console.error('❌ Profile not found');
+            throw new Error('Failed to get user profile');
           }
 
           console.log('✅ Profile data retrieved:', {
             username: profile.username,
-            daily_energy: profile.daily_energy,
-            holobots_type: typeof profile.holobots,
-            holobots_count: Array.isArray(profile.holobots) ? profile.holobots.length : 'not array'
+            daily_energy: profile.dailyEnergy,
+            holobots_count: profile.holobots?.length || 0
           });
 
-          // Parse holobots JSON and find selected holobot
-          let holobots: any[] = [];
-          try {
-            if (Array.isArray(profile.holobots)) {
-              holobots = profile.holobots;
-            } else if (typeof profile.holobots === 'string') {
-              holobots = JSON.parse(profile.holobots);
-            } else if (profile.holobots && typeof profile.holobots === 'object') {
-              holobots = [profile.holobots];
-            } else {
-              holobots = [];
-            }
-            console.log('✅ Parsed holobots successfully:', holobots.length, 'holobots found');
-            console.log('Holobot names:', holobots.map(h => h.name));
-          } catch (e) {
-            console.error('❌ Error parsing holobots JSON:', e);
-            throw new Error('Failed to parse holobots data');
-          }
+          const holobots = profile.holobots || [];
+          console.log('✅ Holobots found:', holobots.length);
+          console.log('Holobot names:', holobots.map(h => h.name));
 
           const selectedHolobot = holobots.find((h: any) => h.name === holobotName);
           
@@ -174,12 +161,12 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
 
           console.log('✅ Selected holobot found:', selectedHolobot);
 
-          // Use the correct battle_pool_entries table instead of battles
-          const poolEntryData = {
-            pool_id: poolId,
-            user_id: user.id,
-            holobot_name: holobotName,
-            holobot_stats: {
+          // Create battle pool entry
+          const poolEntryId = await createBattlePoolEntry({
+            poolId,
+            userId: user.uid,
+            holobotName,
+            holobotStats: {
               name: selectedHolobot.name,
               level: selectedHolobot.level || 1,
               attack: selectedHolobot.attack || 100,
@@ -189,46 +176,18 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
               specialMove: selectedHolobot.specialMove || 'Basic Attack',
               intelligence: selectedHolobot.intelligence || 100,
             },
-            fitness_bonus: {}, // Will be calculated by the fitness system
-            is_active: true
-          };
+            fitnessBonus: {}, // Will be calculated by the fitness system
+            isActive: true
+          });
 
-          console.log('📝 Pool entry data to insert:', JSON.stringify(poolEntryData, null, 2));
-
-          const { error: insertError, data: insertedData } = await supabase
-            .from('battle_pool_entries' as any)
-            .insert(poolEntryData)
-            .select();
-
-          if (insertError) {
-            console.error('❌ Insert error:', insertError);
-            console.error('Insert error details:', {
-              message: insertError.message,
-              details: insertError.details,
-              hint: insertError.hint,
-              code: insertError.code
-            });
-            throw new Error(`Failed to create pool entry: ${insertError.message}`);
-          }
-
-          console.log('✅ Pool entry created successfully:', insertedData);
+          console.log('✅ Pool entry created successfully:', poolEntryId);
 
           // Deduct energy
-          const newEnergyLevel = Math.max(0, (profile.daily_energy || 10) - 1);
-          console.log('⚡ Updating energy from', profile.daily_energy, 'to', newEnergyLevel);
+          const newEnergyLevel = Math.max(0, (profile.dailyEnergy || 10) - 1);
+          console.log('⚡ Updating energy from', profile.dailyEnergy, 'to', newEnergyLevel);
 
-          const { error: energyError } = await supabase
-            .from('profiles')
-            .update({ 
-              daily_energy: newEnergyLevel
-            })
-            .eq('id', user.id);
-
-          if (energyError) {
-            console.warn('⚠️ Failed to deduct energy (non-critical):', energyError);
-          } else {
-            console.log('✅ Energy deducted successfully');
-          }
+          await updateUserEnergy(user.uid, newEnergyLevel);
+          console.log('✅ Energy deducted successfully');
           
           set({ isLoading: false });
           console.log('🎉 Successfully entered battle pool!');
@@ -250,51 +209,31 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
           console.log('League ID:', leagueId);
           console.log('Holobot Name:', holobotName);
 
-          const { data: { user } } = await supabase.auth.getUser();
+          const user = auth.currentUser;
           
           if (!user) {
             throw new Error('User not authenticated');
           }
 
-          console.log('✅ User authenticated:', user.id);
+          console.log('✅ User authenticated:', user.uid);
 
           // Get the selected holobot's stats from the user profile
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('holobots, username, daily_energy')
-            .eq('id', user.id)
-            .single();
+          const profile = await getUserProfile(user.uid);
 
-          if (profileError) {
-            console.error('❌ Profile error:', profileError);
-            throw new Error(`Failed to get user profile: ${profileError.message}`);
+          if (!profile) {
+            console.error('❌ Profile not found');
+            throw new Error('Failed to get user profile');
           }
 
           console.log('✅ Profile data retrieved:', {
             username: profile.username,
-            daily_energy: profile.daily_energy,
-            holobots_type: typeof profile.holobots,
-            holobots_count: Array.isArray(profile.holobots) ? profile.holobots.length : 'not array'
+            daily_energy: profile.dailyEnergy,
+            holobots_count: profile.holobots?.length || 0
           });
 
-          // Parse holobots JSON and find selected holobot
-          let holobots: any[] = [];
-          try {
-            if (Array.isArray(profile.holobots)) {
-              holobots = profile.holobots;
-            } else if (typeof profile.holobots === 'string') {
-              holobots = JSON.parse(profile.holobots);
-            } else if (profile.holobots && typeof profile.holobots === 'object') {
-              holobots = [profile.holobots];
-            } else {
-              holobots = [];
-            }
-            console.log('✅ Parsed holobots successfully:', holobots.length, 'holobots found');
-            console.log('Holobot names:', holobots.map(h => h.name));
-          } catch (e) {
-            console.error('❌ Error parsing holobots JSON:', e);
-            throw new Error('Failed to parse holobots data');
-          }
+          const holobots = profile.holobots || [];
+          console.log('✅ Holobots found:', holobots.length);
+          console.log('Holobot names:', holobots.map(h => h.name));
 
           const selectedHolobot = holobots.find((h: any) => h.name === holobotName);
           
@@ -305,12 +244,12 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
 
           console.log('✅ Selected holobot found:', selectedHolobot);
 
-          // Use the correct async_battles table for PvE league battles
-          const battleData = {
-            battle_type: 'pve_league',
-            league_id: leagueId,
-            player1_id: user.id,
-            player1_holobot: {
+          // Create async battle for PvE league
+          const battleId = await createAsyncBattle({
+            battleType: 'pve_league',
+            leagueId,
+            player1Id: user.uid,
+            player1Holobot: {
               name: selectedHolobot.name,
               level: selectedHolobot.level || 1,
               attack: selectedHolobot.attack || 100,
@@ -322,8 +261,8 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
               intelligence: selectedHolobot.intelligence || 100,
               is_cpu: false,
             },
-            player2_id: null, // PvE has no second player
-            player2_holobot: {
+            player2Id: null, // PvE has no second player
+            player2Holobot: {
               name: 'AI Opponent',
               level: 5 + leagueId,
               attack: 90 + (leagueId * 10),
@@ -335,50 +274,22 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
               intelligence: 90 + (leagueId * 10),
               is_cpu: true,
             },
-            battle_status: 'pending',
+            battleStatus: 'pending',
             rewards: {
               holos: 50 + (leagueId * 25),
               exp: 100 + (leagueId * 50)
             },
-            scheduled_at: new Date().toISOString()
-          };
+            scheduledAt: new Date().toISOString()
+          });
 
-          console.log('📝 League battle data to insert:', JSON.stringify(battleData, null, 2));
-
-          const { error: insertError, data: insertedData } = await supabase
-            .from('async_battles' as any)
-            .insert(battleData)
-            .select();
-
-          if (insertError) {
-            console.error('❌ Insert error:', insertError);
-            console.error('Insert error details:', {
-              message: insertError.message,
-              details: insertError.details,
-              hint: insertError.hint,
-              code: insertError.code
-            });
-            throw new Error(`Failed to create league battle: ${insertError.message}`);
-          }
-
-          console.log('✅ League battle created successfully:', insertedData);
+          console.log('✅ League battle created successfully:', battleId);
 
           // Deduct energy
-          const newEnergyLevel = Math.max(0, (profile.daily_energy || 10) - 1);
-          console.log('⚡ Updating energy from', profile.daily_energy, 'to', newEnergyLevel);
+          const newEnergyLevel = Math.max(0, (profile.dailyEnergy || 10) - 1);
+          console.log('⚡ Updating energy from', profile.dailyEnergy, 'to', newEnergyLevel);
 
-          const { error: energyError } = await supabase
-            .from('profiles')
-            .update({ 
-              daily_energy: newEnergyLevel
-            })
-            .eq('id', user.id);
-
-          if (energyError) {
-            console.warn('⚠️ Failed to deduct energy (non-critical):', energyError);
-          } else {
-            console.log('✅ Energy deducted successfully');
-          }
+          await updateUserEnergy(user.uid, newEnergyLevel);
+          console.log('✅ Energy deducted successfully');
           
           set({ isLoading: false });
           console.log('🎉 Successfully entered battle league!');
@@ -518,35 +429,18 @@ export const useAsyncBattleStore = create<AsyncBattleState>()(
         set({ isLoading: true, error: null });
         
         try {
-          const { data: { user } } = await supabase.auth.getUser();
+          const user = auth.currentUser;
           
           if (!user) {
             throw new Error('User not authenticated');
           }
 
-          console.log('✅ User authenticated:', user.id);
+          console.log('✅ User authenticated:', user.uid);
 
           // Fetch all league battles for counting
-          const { data: leagueBattles, error: countsError } = await supabase
-            .from('async_battles' as any)
-            .select('league_id')
-            .eq('battle_type', 'pve_league')
-            .not('battle_status', 'eq', 'completed');
+          const counts = await getLeagueBattleCounts();
 
-          if (countsError) {
-            console.error('❌ Error fetching league battles:', countsError);
-            throw new Error('Failed to fetch league battles');
-          }
-
-          console.log('✅ League battles retrieved:', leagueBattles);
-
-          // Count battles per league
-          const counts: Record<number, number> = {};
-          leagueBattles?.forEach((battle: any) => {
-            if (battle.league_id) {
-              counts[battle.league_id] = (counts[battle.league_id] || 0) + 1;
-            }
-          });
+          console.log('✅ League battle counts retrieved:', counts);
 
           set({ isLoading: false });
           return counts;

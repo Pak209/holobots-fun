@@ -20,7 +20,8 @@ import {
 } from "lucide-react";
 import { AsyncBattle } from "@/types/asyncBattle";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { useAuth } from "@/contexts/auth";
 
 interface BattleEntry {
@@ -59,76 +60,71 @@ export function BattleHistoryList() {
         return;
       }
 
-      // Fetch pool entries
-      const { data: poolData, error: poolError } = await supabase
-        .from('battle_pool_entries' as any)
-        .select('id, pool_id, holobot_name, submitted_at, holobot_stats')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .order('submitted_at', { ascending: false })
-        .limit(25);
+      // Fetch pool entries from Firestore
+      const poolEntriesRef = collection(db, 'battle_pool_entries');
+      const poolQuery = query(
+        poolEntriesRef,
+        where('userId', '==', user.id),
+        where('isActive', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(25)
+      );
 
-      // Fetch league battles
-      const { data: battleData, error: battleError } = await supabase
-        .from('async_battles' as any)
-        .select('id, battle_type, league_id, player1_holobot, player2_holobot, battle_status, rewards, created_at')
-        .eq('player1_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(25);
+      // Fetch league battles from Firestore
+      const battlesRef = collection(db, 'async_battles');
+      const battleQuery = query(
+        battlesRef,
+        where('player1Id', '==', user.id),
+        orderBy('createdAt', 'desc'),
+        limit(25)
+      );
 
-      if (poolError) {
-        console.error('Error fetching pool entries:', poolError);
-      }
-      
-      if (battleError) {
-        console.error('Error fetching battle history:', battleError);
-      }
+      const [poolSnapshot, battleSnapshot] = await Promise.all([
+        getDocs(poolQuery),
+        getDocs(battleQuery)
+      ]);
 
       // Format and combine all battles
       const allBattles: BattleEntry[] = [];
 
       // Add pool entries
-      if (poolData) {
-        const poolEntries = ((poolData as any) || []).map((entry: any) => {
-          const poolType = entry.pool_id === 1 ? 'casual' : 'ranked';
-          return {
-            id: entry.id,
-            battle_type: 'pool_entry' as const,
-            created_at: entry.submitted_at || new Date().toISOString(),
-            status: 'pending' as const,
-            holobot_name: entry.holobot_name || 'Unknown',
-            opponent_name: 'Matchmaking in progress...',
-            pool_type: poolType,
-            rewards: {
-              holos: poolType === 'ranked' ? 100 : 50,
-              exp: poolType === 'ranked' ? 200 : 100,
-              rating_points: poolType === 'ranked' ? 25 : undefined
-            }
-          };
+      poolSnapshot.docs.forEach((doc) => {
+        const entry = doc.data();
+        const poolType = entry.poolId === 1 ? 'casual' : 'ranked';
+        allBattles.push({
+          id: parseInt(doc.id) || Date.now(),
+          battle_type: 'pool_entry' as const,
+          created_at: entry.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          status: 'pending' as const,
+          holobot_name: entry.holobotName || 'Unknown',
+          opponent_name: 'Matchmaking in progress...',
+          pool_type: poolType,
+          rewards: {
+            holos: poolType === 'ranked' ? 100 : 50,
+            exp: poolType === 'ranked' ? 200 : 100,
+            rating_points: poolType === 'ranked' ? 25 : undefined
+          }
         });
-        allBattles.push(...poolEntries);
-      }
+      });
 
       // Add league battles
-      if (battleData) {
-        const leagueBattles = ((battleData as any) || []).map((battle: any) => {
-          const status = battle.battle_status || 'pending';
-          return {
-            id: battle.id,
-            battle_type: 'pve_league' as const,
-            created_at: battle.created_at || new Date().toISOString(),
-            status: status as 'pending' | 'in_progress' | 'completed',
-            holobot_name: battle.player1_holobot?.name || 'Unknown',
-            opponent_name: battle.player2_holobot?.name || 'AI Opponent',
-            league_name: getLeagueName(battle.league_id || 1),
-            rewards: {
-              holos: battle.rewards?.holos || 50,
-              exp: battle.rewards?.exp || 100
-            }
-          };
+      battleSnapshot.docs.forEach((doc) => {
+        const battle = doc.data();
+        const status = battle.battleStatus || 'pending';
+        allBattles.push({
+          id: parseInt(doc.id) || Date.now(),
+          battle_type: 'pve_league' as const,
+          created_at: battle.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          status: status as 'pending' | 'in_progress' | 'completed',
+          holobot_name: battle.player1Holobot?.name || 'Unknown',
+          opponent_name: battle.player2Holobot?.name || 'AI Opponent',
+          league_name: getLeagueName(battle.leagueId || 1),
+          rewards: {
+            holos: battle.rewards?.holos || 50,
+            exp: battle.rewards?.exp || 100
+          }
         });
-        allBattles.push(...leagueBattles);
-      }
+      });
 
       // Sort all battles by creation date
       allBattles.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());

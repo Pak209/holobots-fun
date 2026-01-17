@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Trophy, Crown, Coins, Zap, Medal, User, Star } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 
@@ -41,30 +42,29 @@ const Leaderboard = () => {
     try {
       setLoading(true);
       
-      // First try the normal query
-      console.log('Fetching all profiles from database...');
-      let { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('username, wins, losses, holos_tokens, holobots, player_rank, id, created_at')
-        .order('created_at', { ascending: false });
-
-      // Log the query results
-      console.log('Direct query error:', error);
-      console.log('Direct query result count:', profiles?.length || 0);
+      // Fetch all profiles from Firestore
+      console.log('Fetching all profiles from Firestore...');
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
       
-      if (error) {
-        console.error('Error fetching leaderboard data:', error);
-        toast({
-          title: "Database Error",
-          description: "Failed to load leaderboard data. This may be due to database permissions.",
-          variant: "destructive"
-        });
-        return;
-      }
+      let profiles = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          username: data.username,
+          wins: data.wins || 0,
+          losses: data.losses || 0,
+          holos_tokens: data.holosTokens || 0,
+          holobots: data.holobots || [],
+          player_rank: data.playerRank || 'Rookie',
+          created_at: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+        };
+      });
 
-      console.log(`Found ${profiles?.length || 0} total profiles:`, profiles);
+      console.log(`Found ${profiles.length} total profiles:`, profiles);
 
-      if (!profiles || profiles.length === 0) {
+      if (profiles.length === 0) {
         console.log('No profiles found in database');
         return;
       }

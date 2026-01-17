@@ -22,7 +22,8 @@ import { HolobotSelector } from "./HolobotSelector";
 import { cn } from "@/lib/utils";
 import { useAsyncBattleStore } from "@/stores/asyncBattleStore";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { useAuth } from "@/contexts/auth";
 
 interface BattlePoolCardProps {
@@ -84,48 +85,56 @@ export function BattlePoolCard({
       // Get the pool ID based on pool type
       const poolId = poolType === 'casual' ? 1 : 2;
       
-      const { data, error } = await supabase
-        .from('battle_pool_entries' as any)
-        .select(`
-          id, 
-          user_id, 
-          holobot_name, 
-          submitted_at, 
-          holobot_stats,
-          profiles!inner(username)
-        `)
-        .eq('pool_id', poolId)
-        .eq('is_active', true)
-        .order('submitted_at', { ascending: false })
-        .limit(10);
+      // Query Firestore for battle pool entries
+      const entriesRef = collection(db, 'battle_pool_entries');
+      const q = query(
+        entriesRef,
+        where('poolId', '==', poolId),
+        where('isActive', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(10)
+      );
 
-      if (error) {
-        console.error('Error fetching pool entries:', error);
-        setPoolEntries([]);
-      } else {
-        // Format pool entries from battle_pool_entries table
-        const poolBattles = ((data as any) || [])
-          .map((entry: any) => {
+      const querySnapshot = await getDocs(q);
+      
+      // Format pool entries from Firestore
+      const poolBattles = await Promise.all(
+        querySnapshot.docs.map(async (doc) => {
+          try {
+            const entry = doc.data();
+            
+            // Fetch username from users collection
+            let username = `User ${entry.userId?.slice(-4) || 'Unknown'}`;
             try {
-              return {
-                id: entry.id,
-                user_id: entry.user_id,
-                holobot_name: entry.holobot_name || 'Unknown',
-                submitted_at: entry.submitted_at || new Date().toISOString(),
-                profiles: {
-                  username: entry.profiles?.username || `User ${entry.user_id.slice(-4)}`
-                }
-              };
+              const userDoc = await getDocs(
+                query(collection(db, 'users'), where('__name__', '==', entry.userId), limit(1))
+              );
+              if (!userDoc.empty) {
+                username = userDoc.docs[0].data().username || username;
+              }
             } catch (e) {
-              console.error('Error parsing pool entry:', e);
-              return null;
+              console.error('Error fetching username:', e);
             }
-          })
-          .filter((entry: any) => entry !== null);
+            
+            return {
+              id: parseInt(doc.id) || Date.now(),
+              user_id: entry.userId,
+              holobot_name: entry.holobotName || 'Unknown',
+              submitted_at: entry.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+              profiles: {
+                username
+              }
+            };
+          } catch (e) {
+            console.error('Error parsing pool entry:', e);
+            return null;
+          }
+        })
+      );
 
-        console.log('Fetched pool entries:', poolBattles);
-        setPoolEntries(poolBattles as PoolEntry[]);
-      }
+      const validEntries = poolBattles.filter((entry) => entry !== null);
+      console.log('Fetched pool entries:', validEntries);
+      setPoolEntries(validEntries as PoolEntry[]);
     } catch (error) {
       console.error('Error fetching pool entries:', error);
       setPoolEntries([]);

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/auth";
@@ -20,7 +19,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, login, signup } = useAuth();
   
   // Extract redirect path from location state
   const from = location.state?.from?.pathname || "/dashboard";
@@ -70,18 +69,12 @@ export default function Auth() {
           return;
         }
         
-        // Handle sign up through AuthProvider
-        await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { username },
-          }
-        });
+        // Handle sign up through AuthProvider (which uses Firebase)
+        await signup(email, password, username);
 
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account, then sign in.",
+          description: "Your account has been created successfully.",
         });
         
         // Switch to sign in view after successful signup
@@ -89,31 +82,26 @@ export default function Auth() {
         return;
       } 
       
-      // Handle sign in through AuthProvider
-      const { data: { session }, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Handle sign in through AuthProvider (which uses Firebase)
+      await login(email, password);
+      
+      toast({
+        title: "Login successful",
+        description: "Redirecting you to the dashboard",
       });
       
-      if (error) throw error;
-      
-      if (session) {
-        toast({
-          title: "Login successful",
-          description: "Redirecting you to the dashboard",
-        });
-        
-        // Navigating to dashboard will happen through the useEffect above
-        // when the AuthProvider updates the user state
-      }
+      // Navigating to dashboard will happen through the useEffect above
+      // when the AuthProvider updates the user state
     } catch (error: any) {
       console.error('Auth error:', error);
       
-      // Handle specific error cases
-      if (error.message?.includes('Email not confirmed')) {
-        setAuthError("Please check your email and confirm your account before signing in.");
-      } else if (error.message?.includes('Invalid login credentials')) {
+      // Handle specific Firebase error codes
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         setAuthError("Invalid email or password. Please try again.");
+      } else if (error.code === 'auth/email-already-in-use') {
+        setAuthError("Email is already in use. Please use a different email or sign in.");
+      } else if (error.code === 'auth/weak-password') {
+        setAuthError("Password is too weak. Please use a stronger password.");
       } else {
         setAuthError(error.message || "An error occurred during authentication");
       }

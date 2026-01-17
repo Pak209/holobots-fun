@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { supabase } from "@/integrations/supabase/client";
+import { verifyWallet, signInWithCustomToken, auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Wallet } from "lucide-react";
@@ -32,18 +32,14 @@ export const SolanaWalletLogin = ({ isLoading }: { isLoading: boolean }) => {
       }
       
       const signedMessage = await provider.signMessage!(encodedMessage);
+      const signature = Buffer.from(signedMessage).toString('hex');
 
-      // Verify signature and create session
-      const { data, error } = await supabase.functions.invoke('verify-wallet', {
-        body: { address, nonce, signedMessage, type: 'solana' }
-      });
+      // Verify signature and create session using Firebase Cloud Function
+      const result = await verifyWallet({ address, nonce, signature, type: 'solana' });
 
-      if (error) throw error;
-
-      // Set the session in Supabase
-      if (data?.session) {
-        const { data: { session }, error: sessionError } = await supabase.auth.setSession(data.session);
-        if (sessionError) throw sessionError;
+      if (result.data?.token) {
+        // Sign in to Firebase with custom token
+        await signInWithCustomToken(auth, result.data.token);
       }
 
       toast({

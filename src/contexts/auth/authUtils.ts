@@ -1,4 +1,3 @@
-import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/user";
 
 // Ensure new users get Genesis reward package when they sign up
