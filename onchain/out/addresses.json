@@ -1,0 +1,11 @@
+{
+  "baseSepolia": {
+    "Holobots721A": "0x94089f4b4b39bdbF0a39d27c60c8d7D92FC53acf",
+    "HolobotPublicMint": "0x311abdffdFB4A062fE55C215c8EdDBA222bd42af",
+    "Parts1155": "0xbed055bc7a9fFe187Acf0f500515B4702970f3aB"
+  },
+  "base": {
+    "Holobots721A": "0x0000000000000000000000000000000000000000",
+    "Parts1155": "0x0000000000000000000000000000000000000000"
+  }
+}

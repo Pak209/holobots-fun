@@ -1,0 +1,24 @@
+{
+  "name": "Holobot Legs - Sprint Module",
+  "description": "Ultra-lightweight leg components designed for speed and agility. Perfect for tracking running and high-intensity workouts.",
+  "image": "ipfs://bafybeib6abc.../parts/legs_sprint.png",
+  "external_url": "https://holobots.fun/parts/3",
+  "attributes": [
+    {
+      "trait_type": "Part Type",
+      "value": "Legs"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Boost",
+      "value": "Speed +20"
+    },
+    {
+      "trait_type": "Compatibility",
+      "value": "All Genesis"
+    }
+  ]
+}

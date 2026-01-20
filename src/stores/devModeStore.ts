@@ -15,7 +15,7 @@ export const useDevModeStore = create<DevModeState>()(
       setDevMode: (enabled: boolean) => set({ isDevModeEnabled: enabled }),
     }),
     {
-      name: 'dev-mode-storage', // unique name for localStorage
+      name: 'dev-mode-storage',
     }
   )
 ); 

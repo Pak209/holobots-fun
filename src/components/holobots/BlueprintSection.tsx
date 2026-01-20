@@ -12,6 +12,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Clock, Star, Calendar, DollarSign, Wallet } from "lucide-react";
+import { useWeb3RentalConversion } from "@/hooks/useWeb3RentalConversion";
+import { PaymentMethodModal } from "@/components/rental/PaymentMethodModal";
 
 export const BLUEPRINT_TIERS = {
   common: { required: 5, name: "Common", color: "blue", startLevel: 1 },
@@ -95,6 +98,14 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [selectedTab, setSelectedTab] = useState("new");
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedRental, setSelectedRental] = useState<any>(null);
+  
+  // Web3 conversion hook
+  const { 
+    convertRentalToNFT, 
+    isConverting: isWeb3Converting, 
+  } = useWeb3RentalConversion();
   
   const blueprintCount = user?.blueprints?.[holobotKey] || 0;
   const currentTier = calculateMintTier(blueprintCount);
@@ -277,10 +288,22 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
           
           {currentTier && (
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-[#374151] text-gray-300">
-                <TabsTrigger value="new" className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">Mint New</TabsTrigger>
-                <TabsTrigger value="upgrade" disabled={!userOwnsHolobot} className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">Upgrade Existing</TabsTrigger>
-              </TabsList>
+            <TabsList className="grid w-full grid-cols-4 bg-[#374151] text-gray-300">
+              <TabsTrigger value="new" className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">Mint New</TabsTrigger>
+              <TabsTrigger value="upgrade" disabled={!userOwnsHolobot} className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">Upgrade Existing</TabsTrigger>
+              <TabsTrigger value="seasonal" className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Create Rental
+                </span>
+              </TabsTrigger>
+              <TabsTrigger value="rentals" className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">
+                <span className="flex items-center gap-1">
+                  <Star className="h-3 w-3" />
+                  My Rentals
+                </span>
+              </TabsTrigger>
+            </TabsList>
               
               <TabsContent value="new">
                 {userOwnsHolobot ? (
@@ -395,10 +418,307 @@ export const BlueprintSection = ({ holobotKey, holobotName }: BlueprintSectionPr
                   </Alert>
                 )}
               </TabsContent>
+
+              {/* NEW: Seasonal Rental Creation Option */}
+              <TabsContent value="seasonal" className="space-y-3">
+                <Alert className="bg-orange-50/10 border-orange-400/30">
+                  <Calendar className="h-4 w-4" />
+                  <AlertTitle className="text-orange-400">Season 1 Active</AlertTitle>
+                  <AlertDescription className="text-orange-300 text-xs">
+                    Create <strong>90-day seasonal rentals</strong> instead of permanent Holobots. 
+                    Convert to permanent NFTs before they expire!
+                  </AlertDescription>
+                </Alert>
+
+                {!currentTier ? (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Insufficient Blueprint Pieces</AlertTitle>
+                    <AlertDescription>
+                      You need at least 5 blueprint pieces to create a seasonal rental.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-holobots-accent">Select rental tier:</p>
+                      <RadioGroup value={selectedTier || ""} onValueChange={setSelectedTier} className="space-y-1">
+                        {Object.entries(BLUEPRINT_TIERS).map(([key, tier]) => {
+                          const hasEnoughBlueprints = blueprintCount >= tier.required;
+                          const tierPricing = {
+                            Common: 5, Champion: 15, Rare: 35, Elite: 75, Legendary: 125
+                          };
+                          const nftPrice = tierPricing[tier.name as keyof typeof tierPricing];
+                          
+                          return (
+                            <div key={key} className="flex items-center space-x-2">
+                              <RadioGroupItem 
+                                value={tier.name} 
+                                id={`seasonal-tier-${key}`}
+                                disabled={!hasEnoughBlueprints}
+                              />
+                              <Label 
+                                htmlFor={`seasonal-tier-${key}`}
+                                className={`flex-1 cursor-pointer ${!hasEnoughBlueprints ? 'opacity-50' : ''}`}
+                              >
+                                <div className="flex items-center justify-between p-2 border rounded border-gray-600 hover:border-holobots-accent/50">
+                                  <div className="flex items-center gap-2">
+                                    <Badge className={`${getTierColor(tier.name)} text-white text-xs`}>
+                                      {tier.name}
+                                    </Badge>
+                                    <span className="text-xs text-white">
+                                      Level {tier.startLevel} ({tier.required} pieces)
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 text-green-400 text-xs">
+                                      <DollarSign className="h-3 w-3" />
+                                      {nftPrice} NFT
+                                    </div>
+                                    {!hasEnoughBlueprints && (
+                                      <span className="text-red-400 text-xs">
+                                        Need {tier.required - blueprintCount} more
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </Label>
+                            </div>
+                          );
+                        })}
+                      </RadioGroup>
+                    </div>
+                    
+                    <Button 
+                      onClick={async () => {
+                        if (!selectedTier) return;
+                        
+                        try {
+                          setIsRedeeming(true);
+                          
+                          // Create rental in database (90-day expiry)
+                          const rentalExpiry = new Date();
+                          rentalExpiry.setDate(rentalExpiry.getDate() + 90);
+                          
+                          const rentalHolobot = {
+                            id: `rental_${holobotKey}_${Date.now()}`,
+                            holobotKey,
+                            name: holobotName,
+                            tier: selectedTier,
+                            level: BLUEPRINT_TIERS[selectedTier.toLowerCase() as keyof typeof BLUEPRINT_TIERS]?.startLevel || 1,
+                            experience: 0,
+                            seasonId: 'season1',
+                            createdAt: new Date().toISOString(),
+                            expiresAt: rentalExpiry.toISOString(),
+                            isExpired: false,
+                            canConvert: true
+                          };
+                          
+                          // Update user's blueprint count and add rental
+                          const tierRequired = BLUEPRINT_TIERS[selectedTier.toLowerCase() as keyof typeof BLUEPRINT_TIERS]?.required || 0;
+                          const currentBlueprints = user.blueprints || {};
+                          const updatedBlueprints = {
+                            ...currentBlueprints,
+                            [holobotKey]: Math.max(0, (currentBlueprints[holobotKey] || 0) - tierRequired)
+                          };
+                          
+                          const currentRentals = user.rental_holobots || [];
+                          const updatedRentals = [...currentRentals, rentalHolobot];
+                          
+                          await updateUser({
+                            blueprints: updatedBlueprints,
+                            rental_holobots: updatedRentals
+                          });
+                          
+                          setSelectedTier(null);
+                          
+                          toast({
+                            title: `🎉 ${selectedTier} Rental Created!`,
+                            description: `You now have a 90-day ${selectedTier} ${holobotName} rental! Convert to NFT before it expires.`,
+                          });
+                          
+                        } catch (error) {
+                          console.error("Error creating rental:", error);
+                          toast({
+                            title: "Rental Creation Failed",
+                            description: "There was an error creating your rental. Please try again.",
+                            variant: "destructive"
+                          });
+                        } finally {
+                          setIsRedeeming(false);
+                        }
+                      }}
+                      disabled={!selectedTier || isRedeeming}
+                      className="w-full py-1 h-8 text-sm bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      {isRedeeming ? (
+                        "Creating Rental..."
+                      ) : (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Create 90-Day Rental
+                        </span>
+                      )}
+                    </Button>
+
+                    <Alert className="bg-blue-50/10 border-blue-400/30">
+                      <Star className="h-4 w-4" />
+                      <AlertTitle className="text-blue-400">Rental Benefits</AlertTitle>
+                      <AlertDescription className="text-blue-300 text-xs space-y-1">
+                        <div>• Use in battles and quests for 90 days</div>
+                        <div>• Convert to permanent NFT anytime</div>
+                        <div>• Discounts available for HOLOS holders</div>
+                        <div>• Full trading rights after conversion</div>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* NEW: My Rentals Tab */}
+              <TabsContent value="rentals" className="space-y-3">
+                {user?.rental_holobots?.filter(r => r.holobotKey === holobotKey && !r.isExpired).length === 0 ? (
+                  <Alert>
+                    <Clock className="h-4 w-4" />
+                    <AlertTitle>No Active Rentals</AlertTitle>
+                    <AlertDescription>
+                      You don't have any active {holobotName} rentals. Create one in the "Create Rental" tab!
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <div className="space-y-3">
+                    {user?.rental_holobots?.filter(r => r.holobotKey === holobotKey && !r.isExpired).map((rental) => {
+                      const expiryDate = new Date(rental.expiresAt);
+                      const now = new Date();
+                      const daysLeft = Math.ceil((expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+                      const isExpiring = daysLeft <= 7;
+                      const progressPercent = Math.max(0, Math.min(100, (daysLeft / 90) * 100));
+                      
+                      const tierPricing = {
+                        Common: 5, Champion: 15, Rare: 35, Elite: 75, Legendary: 125
+                      };
+                      const nftPrice = tierPricing[rental.tier as keyof typeof tierPricing];
+                      
+                      return (
+                        <div key={rental.id} className={`border rounded-lg p-3 ${isExpiring ? 'border-orange-400/50 bg-orange-50/5' : 'border-gray-600 bg-gray-800/20'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <Badge className={`${getTierColor(rental.tier)} text-white text-xs`}>
+                                {rental.tier}
+                              </Badge>
+                              <span className="text-white font-medium">Level {rental.level} {rental.name}</span>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm text-white">
+                                {daysLeft > 0 ? `${daysLeft} days left` : 'Expired'}
+                              </div>
+                              {isExpiring && daysLeft > 0 && (
+                                <div className="text-xs text-orange-400">⚠️ Expiring soon!</div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Progress bar */}
+                          <div className="mb-3">
+                            <div className="flex justify-between text-xs text-gray-400 mb-1">
+                              <span>Rental Period</span>
+                              <span>{Math.max(0, daysLeft)} days remaining</span>
+                            </div>
+                            <Progress 
+                              value={progressPercent} 
+                              className={`h-2 ${isExpiring ? 'bg-orange-100' : 'bg-gray-600'}`}
+                            />
+                          </div>
+                          
+                          {/* Convert to NFT button */}
+                          {daysLeft > 0 && (
+                            <Button
+                              onClick={() => {
+                                setSelectedRental(rental);
+                                setPaymentModalOpen(true);
+                              }}
+                              disabled={isWeb3Converting}
+                              size="sm"
+                              className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                            >
+                              <span className="flex items-center gap-1">
+                                {isWeb3Converting && selectedRental?.id === rental.id ? (
+                                  <>
+                                    <Clock className="h-3 w-3 animate-spin" />
+                                    Converting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Wallet className="h-3 w-3" />
+                                    Convert to NFT (from ${nftPrice})
+                                  </>
+                                )}
+                              </span>
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </TabsContent>
             </Tabs>
           )}
         </div>
       </div>
+
+      {/* Payment Method Modal */}
+      {selectedRental && (
+        <PaymentMethodModal
+          isOpen={paymentModalOpen}
+          onClose={() => {
+            setPaymentModalOpen(false);
+            setSelectedRental(null);
+          }}
+          onConfirm={async (paymentMethod) => {
+            setPaymentModalOpen(false);
+            
+            const success = await convertRentalToNFT({
+              rentalId: selectedRental.id,
+              tier: selectedRental.tier,
+              paymentMethod,
+              holobotData: `${selectedRental.holobotKey}-${selectedRental.tier}-${Date.now()}`
+            });
+            
+            if (success) {
+              // Mark rental as converted in database
+              const updatedRentals = user?.rental_holobots?.map(r => 
+                r.id === selectedRental.id ? { ...r, isExpired: true } : r
+              );
+              
+              // Add a new permanent holobot
+              const newHolobot = {
+                name: selectedRental.name,
+                level: selectedRental.level,
+                experience: selectedRental.experience,
+                nextLevelExp: 100 * Math.pow(selectedRental.level, 2),
+                boostedAttributes: {},
+                rank: selectedRental.tier,
+                attributePoints: getAttributePointsForTier(selectedRental.tier)
+              };
+              
+              const updatedHolobots = [...(user?.holobots || []), newHolobot];
+              
+              await updateUser({
+                rental_holobots: updatedRentals,
+                holobots: updatedHolobots
+              });
+
+              toast({
+                title: "NFT Minted!",
+                description: `Your ${selectedRental.name} is now a permanent NFT!`,
+              });
+            }
+          }}
+          tier={selectedRental.tier}
+          isConverting={isWeb3Converting}
+        />
+      )}
     </div>
   );
 };

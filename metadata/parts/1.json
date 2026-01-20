@@ -1,0 +1,24 @@
+{
+  "name": "Holobot Head - Alpha",
+  "description": "A premium head component for Holobot customization. Enhances cognitive processing and fitness tracking capabilities.",
+  "image": "ipfs://bafybeib6abc.../parts/head_alpha.png",
+  "external_url": "https://holobots.fun/parts/1",
+  "attributes": [
+    {
+      "trait_type": "Part Type",
+      "value": "Head"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Alpha"
+    },
+    {
+      "trait_type": "Boost",
+      "value": "Cognitive +15"
+    },
+    {
+      "trait_type": "Compatibility",
+      "value": "All Genesis"
+    }
+  ]
+}

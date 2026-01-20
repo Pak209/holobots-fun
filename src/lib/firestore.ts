@@ -1,4 +1,3 @@
-// Firestore helper functions for database operations
 import { 
   doc, 
   getDoc, 
@@ -18,7 +17,6 @@ import {
 import { db } from './firebase';
 import { UserProfile, UserHolobot } from '@/types/user';
 
-// Collection names
 export const COLLECTIONS = {
   USERS: 'users',
   BOTS: 'bots',
@@ -27,7 +25,6 @@ export const COLLECTIONS = {
   BATTLE_POOL_ENTRIES: 'battle_pool_entries',
 } as const;
 
-// Default values for new user profiles
 const DEFAULT_USER_PROFILE = {
   dailyEnergy: 100,
   maxDailyEnergy: 100,
@@ -46,16 +43,15 @@ const DEFAULT_USER_PROFILE = {
   equippedParts: {},
   holobots: [],
   isDevAccount: false,
+  rentalHolobots: [],
 };
 
-// Interface for creating a new user profile
 interface CreateUserProfileData {
   username: string;
   email?: string;
   walletAddress?: string;
 }
 
-// Interface for Firestore user document
 interface FirestoreUserDocument {
   username: string;
   email?: string;
@@ -80,6 +76,7 @@ interface FirestoreUserDocument {
   createdAt: Timestamp;
   lastEnergyRefresh: Timestamp;
   isDevAccount: boolean;
+  rentalHolobots?: UserHolobot[]; // seasonal rentals
   syncPoints?: number;
   prestigeCount?: number;
   lastDailyPull?: Timestamp;
@@ -88,9 +85,6 @@ interface FirestoreUserDocument {
   rewardSystem?: any;
 }
 
-/**
- * Create a new user profile in Firestore
- */
 export async function createUserProfile(
   userId: string, 
   data: CreateUserProfileData
@@ -101,8 +95,8 @@ export async function createUserProfile(
   const userData: FirestoreUserDocument = {
     ...DEFAULT_USER_PROFILE,
     username: data.username,
-    email: data.email,
-    walletAddress: data.walletAddress,
+    ...(data.email && { email: data.email }),
+    ...(data.walletAddress && { walletAddress: data.walletAddress }),
     createdAt: now,
     lastEnergyRefresh: now,
     lastAsyncTicketRefresh: now,
@@ -113,9 +107,6 @@ export async function createUserProfile(
   return mapFirestoreToUserProfile(userId, userData);
 }
 
-/**
- * Get a user profile from Firestore
- */
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
   const userRef = doc(db, COLLECTIONS.USERS, userId);
   const userSnap = await getDoc(userRef);
@@ -127,16 +118,11 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   return mapFirestoreToUserProfile(userId, userSnap.data() as FirestoreUserDocument);
 }
 
-/**
- * Update a user profile in Firestore
- */
 export async function updateUserProfile(
   userId: string, 
   updates: Partial<UserProfile>
 ): Promise<void> {
   const userRef = doc(db, COLLECTIONS.USERS, userId);
-  
-  // Map UserProfile fields to Firestore field names
   const firestoreUpdates: Record<string, any> = {};
   
   if (updates.username !== undefined) firestoreUpdates.username = updates.username;
@@ -161,19 +147,14 @@ export async function updateUserProfile(
   if (updates.pack_history !== undefined) firestoreUpdates.packHistory = updates.pack_history;
   if (updates.rewardSystem !== undefined) firestoreUpdates.rewardSystem = updates.rewardSystem;
   if (updates.isDevAccount !== undefined) firestoreUpdates.isDevAccount = updates.isDevAccount;
+  if (updates.rental_holobots !== undefined) firestoreUpdates.rentalHolobots = updates.rental_holobots;
+  if (updates.onboardingPath !== undefined) firestoreUpdates.onboardingPath = updates.onboardingPath;
   
   await updateDoc(userRef, firestoreUpdates);
 }
 
-/**
- * Search players by username
- */
 export async function searchPlayers(searchQuery: string, maxResults: number = 10): Promise<UserProfile[]> {
   const usersRef = collection(db, COLLECTIONS.USERS);
-  
-  // Firestore doesn't support case-insensitive search natively
-  // We search for usernames that start with the query (case-sensitive)
-  // For a production app, consider using Algolia or similar
   const q = query(
     usersRef,
     where('username', '>=', searchQuery),
@@ -188,9 +169,6 @@ export async function searchPlayers(searchQuery: string, maxResults: number = 10
   );
 }
 
-/**
- * Get user by wallet address
- */
 export async function getUserByWalletAddress(walletAddress: string): Promise<UserProfile | null> {
   const usersRef = collection(db, COLLECTIONS.USERS);
   const q = query(
@@ -209,9 +187,6 @@ export async function getUserByWalletAddress(walletAddress: string): Promise<Use
   return mapFirestoreToUserProfile(doc.id, doc.data() as FirestoreUserDocument);
 }
 
-/**
- * Map Firestore document to UserProfile type
- */
 function mapFirestoreToUserProfile(userId: string, data: FirestoreUserDocument): UserProfile {
   return {
     id: userId,
@@ -240,12 +215,11 @@ function mapFirestoreToUserProfile(userId: string, data: FirestoreUserDocument):
     pack_history: data.packHistory ?? [],
     rewardSystem: data.rewardSystem ?? createInitialRewardSystem(),
     isDevAccount: data.isDevAccount ?? false,
+    rental_holobots: data.rentalHolobots ?? [],
+    onboardingPath: (data as any).onboardingPath,
   };
 }
 
-/**
- * Create initial reward system structure
- */
 function createInitialRewardSystem() {
   return {
     dailyMissions: [],
@@ -273,10 +247,6 @@ function createInitialRewardSystem() {
   };
 }
 
-// ============================================
-// Battle-related Firestore operations
-// ============================================
-
 interface BattlePoolEntryData {
   poolId: number;
   userId: string;
@@ -286,9 +256,6 @@ interface BattlePoolEntryData {
   isActive: boolean;
 }
 
-/**
- * Create a battle pool entry
- */
 export async function createBattlePoolEntry(data: BattlePoolEntryData): Promise<string> {
   const entriesRef = collection(db, COLLECTIONS.BATTLE_POOL_ENTRIES);
   const entryRef = doc(entriesRef);
@@ -314,24 +281,30 @@ interface AsyncBattleData {
   scheduledAt: string;
 }
 
-/**
- * Create an async battle
- */
 export async function createAsyncBattle(data: AsyncBattleData): Promise<string> {
   const battlesRef = collection(db, COLLECTIONS.ASYNC_BATTLES);
   const battleRef = doc(battlesRef);
   
-  await setDoc(battleRef, {
-    ...data,
+  const battleData: any = {
+    battleType: data.battleType,
+    player1Id: data.player1Id,
+    player1Holobot: data.player1Holobot,
+    player2Id: data.player2Id,
+    player2Holobot: data.player2Holobot,
+    battleStatus: data.battleStatus,
+    rewards: data.rewards,
+    scheduledAt: data.scheduledAt,
     createdAt: serverTimestamp(),
-  });
+  };
+  
+  if (data.leagueId !== undefined) battleData.leagueId = data.leagueId;
+  if (data.poolId !== undefined) battleData.poolId = data.poolId;
+  
+  await setDoc(battleRef, battleData);
   
   return battleRef.id;
 }
 
-/**
- * Get league battle counts
- */
 export async function getLeagueBattleCounts(): Promise<Record<number, number>> {
   const battlesRef = collection(db, COLLECTIONS.ASYNC_BATTLES);
   const q = query(
@@ -353,9 +326,6 @@ export async function getLeagueBattleCounts(): Promise<Record<number, number>> {
   return counts;
 }
 
-/**
- * Update user energy
- */
 export async function updateUserEnergy(userId: string, newEnergy: number): Promise<void> {
   const userRef = doc(db, COLLECTIONS.USERS, userId);
   await updateDoc(userRef, { dailyEnergy: newEnergy });

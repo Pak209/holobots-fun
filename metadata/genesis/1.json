@@ -1,0 +1,28 @@
+{
+  "name": "Holobot #1",
+  "description": "Genesis Holobot - A pioneering digital fitness companion designed to track, motivate, and reward your Web3 wellness journey.",
+  "image": "ipfs://bafybeigdyrxyz.../images/1.png",
+  "external_url": "https://holobots.fun/holobot/1",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Genesis"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Energy Level",
+      "value": 95
+    },
+    {
+      "trait_type": "Generation",
+      "value": 0
+    },
+    {
+      "trait_type": "Fitness Class",
+      "value": "Endurance"
+    }
+  ]
+}

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType } from "./types";
 import { UserProfile } from "@/types/user";
@@ -15,17 +14,14 @@ import {
   getUserProfile as getFirestoreUserProfile, 
   createUserProfile, 
   updateUserProfile, 
-  searchPlayers as firestoreSearchPlayers 
+  searchPlayers as firestoreSearchPlayers
 } from "@/lib/firestore";
 import { useNavigate } from "react-router-dom";
 import { ensureWelcomeGift } from "./authUtils";
 import { useRewardStore } from "@/stores/rewardStore";
 
-// Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Define a debug mode flag for development environments
-const AUTH_DEBUG = process.env.NODE_ENV === 'development';
+const AUTH_DEBUG = import.meta.env.MODE === 'development';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
@@ -36,15 +32,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { clearUserData } = useRewardStore();
 
-  // Helper function to log debug information
-  const logDebug = (...args: any[]) => {
+  function logDebug(...args: any[]) {
     if (AUTH_DEBUG) {
       console.log('[Auth Debug]', ...args);
     }
-  };
+  }
 
-  // Function to fetch user profile
-  const fetchUserProfile = async (userId: string) => {
+  async function fetchUserProfile(userId: string) {
     try {
       logDebug('Fetching profile for user:', userId);
       
@@ -61,10 +55,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logDebug('Exception in fetchUserProfile:', err);
       throw err;
     }
-  };
+  }
 
-  // Function to handle user session
-  const handleSession = async (session: any) => {
+  async function handleUserProfile(userId: string, userProfile: UserProfile | null) {
+    if (!userProfile) {
+      logDebug('No profile found for user:', userId);
+      setError("Profile not found. Please try logging out and in again.");
+      setCurrentUser(null);
+      return;
+    }
+    
+    setCurrentUser(userProfile);
+    setError(null);
+    
+    setTimeout(() => {
+      ensureWelcomeGift(userId, userProfile, setCurrentUser)
+        .catch(err => logDebug('Welcome gift error:', err));
+    }, 0);
+  }
+
+  async function handleSession(session: any) {
     logDebug('Handling session:', session?.user?.id || 'No session');
     
     if (!session?.user) {
@@ -75,41 +85,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const userId = session.user.id;
       const userProfile = await fetchUserProfile(userId);
-      
-      if (!userProfile) {
-        logDebug('No profile after handling session, user may be new');
-        setError("Profile not found. Please try logging out and in again.");
-        return;
-      }
-      
-      setCurrentUser(userProfile);
-      setError(null);
-      
-      // Process welcome gift outside of critical path
-      setTimeout(() => {
-        ensureWelcomeGift(userId, currentUser, setCurrentUser)
-          .catch(err => logDebug('Welcome gift error:', err));
-      }, 0);
+      await handleUserProfile(userId, userProfile);
     } catch (err) {
       logDebug('Error in handleSession:', err);
       setError(err instanceof Error ? err.message : "Failed to load user profile");
       setCurrentUser(null);
     }
-  };
+  }
 
-  // Set up auth state management
   useEffect(() => {
     logDebug('Auth provider initialized');
     setLoading(true);
-    
-    // Create a flag to prevent state updates after unmount
     let isMounted = true;
     
-    const initializeAuth = async () => {
+    async function initializeAuth() {
       try {
         logDebug('Setting up auth state listener');
-        
-        // Set up Firebase auth state listener
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
           logDebug('Auth state changed:', firebaseUser?.uid);
           
@@ -118,34 +109,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!firebaseUser) {
             setCurrentUser(null);
             setError(null);
-            clearUserData(); // Clear reward system data when signing out
+            clearUserData();
             setLoading(false);
             setAuthInitialized(true);
           } else {
-            // User is signed in, fetch their profile
             try {
               const userProfile = await fetchUserProfile(firebaseUser.uid);
-              
-              if (!userProfile) {
-                logDebug('No profile found for user, may be new user');
-                setError("Profile not found. Please complete registration.");
-                setCurrentUser(null);
-              } else {
-                setCurrentUser(userProfile);
-                setError(null);
-                
-                // Process welcome gift outside of critical path
-                setTimeout(() => {
-                  ensureWelcomeGift(firebaseUser.uid, userProfile, setCurrentUser)
-                    .catch(err => logDebug('Welcome gift error:', err));
-                }, 0);
-              }
+              await handleUserProfile(firebaseUser.uid, userProfile);
             } catch (err) {
               logDebug('Error fetching user profile:', err);
               setError(err instanceof Error ? err.message : "Failed to load user profile");
               setCurrentUser(null);
             }
-            
             setLoading(false);
             setAuthInitialized(true);
           }
@@ -164,15 +139,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return () => { isMounted = false; };
       }
-    };
+    }
     
     initializeAuth();
     
     return () => { isMounted = false; };
   }, []);
 
-  // Login function
-  const login = async (email: string, password: string) => {
+  async function login(email: string, password: string) {
     setLoading(true);
     setError(null);
     
@@ -184,10 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!userCredential.user) {
         throw new Error("Login successful but no user returned");
       }
-      
       logDebug('Login successful:', userCredential.user.uid);
       
-      // Fetch profile and set user immediately to speed up redirect
       const userProfile = await fetchUserProfile(userCredential.user.uid);
       if (userProfile) {
         setCurrentUser(userProfile);
@@ -214,10 +186,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  // Logout function
-  const logout = async () => {
+  async function logout() {
     setLoading(true);
     setError(null);
     
@@ -227,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await signOut(auth);
       
       setCurrentUser(null);
-      clearUserData(); // Clear reward system data when logging out
+      clearUserData();
       navigate('/');
       
       toast({
@@ -245,32 +216,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  // Signup function
-  const signup = async (email: string, password: string, username: string) => {
+  async function signup(email: string, password: string, username: string, onboardingPath?: 'owner' | 'rental') {
     setLoading(true);
     setError(null);
     
     try {
       logDebug('Attempting signup for:', email);
       
-      // Create Firebase Auth user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
       if (!userCredential.user) {
         throw new Error("Signup successful but no user returned");
       }
       
-      // Create user profile in Firestore
       await createUserProfile(userCredential.user.uid, {
         username,
         email,
+        onboardingPath
       });
       
       logDebug('Signup successful:', userCredential.user.uid);
       
-      // Fetch profile and set user immediately to speed up redirect
       const userProfile = await fetchUserProfile(userCredential.user.uid);
       if (userProfile) {
         setCurrentUser(userProfile);
@@ -297,10 +265,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  // Update user function
-  const updateUser = async (updates: Partial<UserProfile>): Promise<void> => {
+  async function updateUser(updates: Partial<UserProfile>): Promise<void> {
     if (!currentUser) {
       toast({
         title: "Error",
@@ -313,10 +280,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       logDebug('Updating user profile:', updates);
       
-      // Use Firestore update function
       await updateUserProfile(currentUser.id, updates);
-      
-      // Update the local user state with the new values
       const updatedUser = { ...currentUser, ...updates };
       setCurrentUser(updatedUser);
       
@@ -334,10 +298,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
     }
-  };
+  }
 
-  // Search players function
-  const searchPlayers = async (query: string): Promise<UserProfile[]> => {
+  async function searchPlayers(query: string): Promise<UserProfile[]> {
     try {
       logDebug('Searching players with query:', query);
       
@@ -353,10 +316,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       return [];
     }
-  };
+  }
 
-  // Get user profile function
-  const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  async function getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
       logDebug('Getting user profile for:', userId);
       return await fetchUserProfile(userId);
@@ -364,11 +326,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logDebug('Error getting user profile:', error);
       return null;
     }
-  };
+  }
 
-  // Debug function for development use
-  const debugAuth = () => {
-    if (process.env.NODE_ENV !== 'development') return null;
+  function debugAuth() {
+    if (import.meta.env.MODE !== 'development') return null;
     
     return {
       checkSession: async () => {
@@ -388,9 +349,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: currentUser,
       }
     };
-  };
+  }
 
-  // Create the context value
   const contextValue: AuthContextType = {
     user: currentUser,
     loading,
@@ -411,7 +371,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Custom hook to use the auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

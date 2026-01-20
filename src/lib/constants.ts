@@ -1,5 +1,5 @@
 export const CONTRACT_ADDRESSES = {
-  holobotNFT: "0x94089f4b4b39bdbF0a39d27c60c8d7D92FC53acf",
+  holobotNFT: "0x311abdffdFB4A062fE55C215c8EdDBA222bd42af", // HolobotPublicMint - Public minting enabled!
   stockpile: "0x087E6a57b63a251b2D1a9cc5D5d0d843dDF4ea58",
   treasury: "0xF79863969CdaAb03792Ff9fc8914daF25BA7f27C",
   boosterStaker: "0x02F2A3739626D1772D4f6862101fd811D32267A7",

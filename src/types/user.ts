@@ -1,6 +1,7 @@
 import { HolobotEquipment } from './holobotParts';
 import { BoosterPackResult } from './boosterPack';
 import { RewardSystem } from './rewards';
+import { SeasonalRental } from '@/integrations/holos';
 
 export interface UserHolobot {
   name: string;
@@ -51,6 +52,7 @@ export interface UserProfile {
   pack_history?: BoosterPackResult[]; // Add pack history to store all opened packs
   rewardSystem?: RewardSystem; // Add reward system tracking
   isDevAccount?: boolean; // Add dev access flag for testing features
+  rental_holobots?: SeasonalRental[]; // Add seasonal rentals
 }
 
 export interface AuthState {
@@ -115,7 +117,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       equippedParts: dbProfile.equipped_parts || {}, // Initialize equipped parts
       pack_history: dbProfile.pack_history || [], // Initialize pack history
       rewardSystem: dbProfile.reward_system || createInitialRewardSystem(), // Initialize reward system
-      isDevAccount: dbProfile.is_dev_account || false // Initialize dev access flag
+      isDevAccount: dbProfile.is_dev_account || false, // Initialize dev access flag
+      rental_holobots: dbProfile.rental_holobots || [] // Initialize seasonal rentals
     };
   } else {
     // This is from the users table
@@ -145,7 +148,8 @@ export function mapDatabaseToUserProfile(dbProfile: any): UserProfile {
       equippedParts: {}, // Initialize equipped parts
       pack_history: [], // Initialize pack history
       rewardSystem: createInitialRewardSystem(), // Initialize reward system
-      isDevAccount: false // Initialize dev access flag
+      isDevAccount: false, // Initialize dev access flag
+      rental_holobots: [] // Initialize seasonal rentals
     };
   }
 }
