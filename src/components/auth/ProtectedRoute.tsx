@@ -32,7 +32,7 @@ export const ProtectedRoute = ({
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin mx-auto text-holobots-accent mb-4" />
           <p className="text-lg font-medium">Authenticating...</p>
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.MODE === 'development' && (
             <div className="mt-4 max-w-md mx-auto bg-black/50 p-4 rounded-md text-left text-xs font-mono overflow-auto">
               <p className="text-green-400">Debug Info:</p>
               <p>Loading: {loading ? 'true' : 'false'}</p>
@@ -59,7 +59,7 @@ export const ProtectedRoute = ({
             Return to Login
           </button>
           
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.MODE === 'development' && (
             <div className="mt-4 bg-black/50 p-4 rounded-md text-left text-xs font-mono overflow-auto">
               <p className="text-yellow-400">Debug Info:</p>
               <p>Error: {error}</p>

@@ -1,9 +1,10 @@
 import { useAuth } from "@/contexts/auth";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { DailyMissionsPanel } from "@/components/rewards/DailyMissionsPanel";
+import { SeasonalRentalCard } from "@/components/rental/SeasonalRentalCard";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -15,6 +16,8 @@ const Dashboard = () => {
   const uniqueHolobots = Array.from(new Map(allUserHolobots.map(bot =>
     [`${bot.name}-${bot.level}`, bot])).values()
   );
+
+  const activeRentals = (user?.rental_holobots || []).filter(r => !r.isExpired);
 
   return (
     <div className="flex flex-col gap-5 px-4 py-2">
@@ -28,6 +31,30 @@ const Dashboard = () => {
         </div>
         <DailyMissionsPanel />
       </div>
+      
+      {/* Seasonal Rentals Section */}
+      {activeRentals.length > 0 && (
+        <div className="rounded-xl bg-[#1A1F2C] p-4">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Clock className="h-5 w-5 text-orange-400" />
+              Seasonal Rentals
+            </h2>
+            <Link to="/app" className="text-[#D6BCFA] text-sm flex items-center">
+              View blueprints <ArrowRight className="h-4 w-4 ml-1" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {activeRentals.map((rental) => (
+              <SeasonalRentalCard 
+                key={rental.id} 
+                rental={rental}
+                stockpileStakeAmount={0} // TODO: Get from stockpile store if needed
+              />
+            ))}
+          </div>
+        </div>
+      )}
       
       {/* Recent Battles Section */}
       <div className="rounded-xl bg-[#1A1F2C] p-4">

@@ -16,25 +16,29 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [onboardingPath, setOnboardingPath] = useState<'owner' | 'rental' | null>('rental');
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { user, loading: authLoading, login, signup } = useAuth();
-  
-  // Extract redirect path from location state
   const from = location.state?.from?.pathname || "/dashboard";
   
-  // Check if user is already logged in and redirect appropriately
   useEffect(() => {
     if (user) {
-      // Check if user has holobots
+      // Check if user has holobots or has chosen a path
       const hasHolobots = user.holobots && Array.isArray(user.holobots) && user.holobots.length > 0;
+      const hasRental = user.rental_holobots && Array.isArray(user.rental_holobots) && user.rental_holobots.length > 0;
       
-      if (hasHolobots) {
-        // User has holobots, redirect to requested page or dashboard
+      if (hasHolobots || hasRental) {
+        // User has assets, redirect to requested page or dashboard
         navigate(from);
+      } else if (user.onboardingPath === 'rental') {
+        // User chose rental but hasn't received it yet? 
+        // We should handle the rental assignment logic
+        navigate('/dashboard');
       } else {
-        // New user with no holobots, redirect to Genesis mint
+        // New user with no assets and no choice yet, or owner path
         navigate('/mint');
       }
     }
@@ -70,7 +74,7 @@ export default function Auth() {
         }
         
         // Handle sign up through AuthProvider (which uses Firebase)
-        await signup(email, password, username);
+        await signup(email, password, username, onboardingPath || 'owner');
 
         toast({
           title: "Account created!",
@@ -122,15 +126,145 @@ export default function Auth() {
     );
   }
 
+  // Initial Onboarding Choice Screen
+  if (isSignUp && !onboardingPath) {
+    return (
+      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700">
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
+              Choose Your Path
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-400">
+              Start your journey in the Holobots universe
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Path A: Owner Path */}
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-holobots-accent to-purple-600 rounded-xl blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative flex flex-col h-full bg-white dark:bg-gray-900 p-8 rounded-xl border border-gray-100 dark:border-gray-800">
+                <div className="mb-6 bg-blue-50 dark:bg-blue-900/30 p-4 rounded-full w-fit">
+                  <Shield className="h-10 w-10 text-holobots-accent" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Own Your Holobot</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6 flex-grow">
+                  For players ready to commit and own assets. Mint a unique Genesis Holobot NFT on-chain.
+                </p>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Zap className="h-4 w-4 text-yellow-500 mr-2" />
+                    <span>True on-chain ownership (Base)</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Sparkles className="h-4 w-4 text-purple-500 mr-2" />
+                    <span>Eligible for Genesis-only rewards</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Infinity className="h-4 w-4 text-green-500 mr-2" />
+                    <span>Season carryover & permanence</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Trophy className="h-4 w-4 text-blue-500 mr-2" />
+                    <span>Full marketplace trading</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Requirements</p>
+                  <div className="flex items-center text-xs text-gray-500">
+                    <Wallet className="h-3 w-3 mr-2" />
+                    <span>Wallet connection (Base / EVM)</span>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => setOnboardingPath('owner')}
+                  className="mt-8 w-full bg-holobots-accent hover:bg-holobots-hover text-white font-bold py-4 rounded-lg shadow-lg transform transition active:scale-95"
+                >
+                  Choose Owner Path
+                </Button>
+              </div>
+            </div>
+
+            {/* Path B: Rental Path */}
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative flex flex-col h-full bg-white dark:bg-gray-900 p-8 rounded-xl border border-gray-100 dark:border-gray-800">
+                <div className="mb-6 bg-green-50 dark:bg-green-900/30 p-4 rounded-full w-fit">
+                  <Mail className="h-10 w-10 text-green-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Play Free Forever</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6 flex-grow">
+                  Play immediately with no wallet required. Get a permanent in-game rental asset you can upgrade.
+                </p>
+
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Infinity className="h-4 w-4 text-green-500 mr-2" />
+                    <span>1 Permanent Rental Holobot</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Zap className="h-4 w-4 text-yellow-500 mr-2" />
+                    <span>Fully playable & upgradeable</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Trophy className="h-4 w-4 text-blue-500 mr-2" />
+                    <span>Convert to NFT later for free</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Sparkles className="h-4 w-4 text-purple-500 mr-2" />
+                    <span>Seasonal persistence (No expiry)</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Requirements</p>
+                  <div className="flex items-center text-xs text-gray-500">
+                    <Mail className="h-3 w-3 mr-2" />
+                    <span>Email / OAuth only</span>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => setOnboardingPath('rental')}
+                  variant="outline"
+                  className="mt-8 w-full border-2 border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 font-bold py-4 rounded-lg shadow-md transform transition active:scale-95"
+                >
+                  Choose Free Path
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <Button
+              variant="link"
+              onClick={() => {
+                setIsSignUp(false);
+                setAuthError(null);
+              }}
+              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            >
+              Already have an account? Sign In
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {isSignUp ? "Create Account" : "Welcome Back"}
+            {isSignUp ? "Create Your Account" : "Welcome Back"}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {isSignUp ? "Sign up to start your journey" : "Sign in to continue"}
+            {isSignUp ? "Sign up to start playing Holobots for free" : "Sign in to continue"}
           </p>
         </div>
 
@@ -140,6 +274,7 @@ export default function Auth() {
             <p className="text-sm text-red-600 dark:text-red-300">{authError}</p>
           </div>
         )}
+
 
         <form onSubmit={handleAuth} className="space-y-4">
           {isSignUp && (
@@ -226,6 +361,8 @@ export default function Auth() {
             variant="link"
             onClick={() => {
               setIsSignUp(!isSignUp);
+              // Keep onboardingPath as 'rental' for free-to-play
+              setOnboardingPath('rental');
               setAuthError(null);
             }}
             className="text-blue-600 dark:text-holobots-accent hover:underline"
@@ -235,7 +372,7 @@ export default function Auth() {
           </Button>
         </div>
         
-        {process.env.NODE_ENV === 'development' && (
+        {import.meta.env.MODE === 'development' && (
           <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
             <details className="text-xs text-gray-500">
               <summary className="cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">Debug Info</summary>
@@ -245,6 +382,7 @@ export default function Auth() {
                 <p>Auth Loading: {authLoading ? 'true' : 'false'}</p>
                 <p>Form Loading: {loading ? 'true' : 'false'}</p>
                 <p>Auth Error: {authError || 'none'}</p>
+                <p>Path: {onboardingPath || 'none'}</p>
               </div>
             </details>
           </div>

@@ -1,0 +1,24 @@
+{
+  "name": "Holobot Torso - Power Core",
+  "description": "An advanced torso component containing a high-efficiency power core. Dramatically improves energy generation and fitness syncing capabilities.",
+  "image": "ipfs://bafybeib6abc.../parts/torso_power.png",
+  "external_url": "https://holobots.fun/parts/2",
+  "attributes": [
+    {
+      "trait_type": "Part Type",
+      "value": "Torso"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Boost",
+      "value": "Energy +25"
+    },
+    {
+      "trait_type": "Compatibility",
+      "value": "All Genesis"
+    }
+  ]
+}
