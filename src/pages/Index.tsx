@@ -10,6 +10,7 @@ import { ArenaPrebattleMenu } from "@/components/arena/ArenaPrebattleMenu";
 import { generateArenaOpponent, calculateArenaRewards } from "@/utils/battleUtils";
 import { QuestResultsScreen } from "@/components/quests/QuestResultsScreen";
 import { HOLOBOT_STATS } from "@/types/holobot";
+import { getHolobotImagePath } from "@/utils/holobotImageUtils";
 import { updateHolobotExperience, calculateExperience } from "@/lib/firebase";
 import { BattleLeagueCard } from "../components/asyncBattle/BattleLeagueCard";
 import { BattlePoolCard } from "../components/asyncBattle/BattlePoolCard";
@@ -28,6 +29,9 @@ import {
   getTimeUntilNextRefresh,
   DAILY_FREE_TICKETS 
 } from "@/utils/asyncBattleUtils";
+import { BattleArenaView } from "@/components/arena/BattleArenaView";
+import { useArenaBattleStore } from "@/stores/arena-battle-store";
+import type { ArenaFighter, ArenaBattleConfig } from "@/types/arena";
 
 // Define the type for specific item rewards from arena tiers
 interface ArenaSpecificItemRewards {
@@ -37,9 +41,256 @@ interface ArenaSpecificItemRewards {
   // gacha_tickets and arena_passes are handled by calculateArenaRewards for now
 }
 
+// Arena V2 Wrapper Component
+const ArenaV2Wrapper = () => {
+  const { 
+    currentBattle,
+    isLoading,
+    error,
+    initializeBattle,
+  } = useArenaBattleStore();
+  const { user } = useAuth();
+  const [showPrebattleMenu, setShowPrebattleMenu] = useState(true);
+  const [selectedHolobotKey, setSelectedHolobotKey] = useState<string>('ace');
+
+  const handleHolobotSelect = (holobotKey: string) => {
+    setSelectedHolobotKey(holobotKey);
+  };
+
+  const { toast } = useToast();
+
+  const handleEntryFeeMethod = async (
+    method: 'tokens' | 'pass',
+    selectedHolobot: string,
+    opponentHolobots: string[],
+    opponentLevel: number,
+    specificItemRewards: any,
+    tier: number = 1
+  ) => {
+    // Deduct entry fee before starting battle
+    try {
+      const { doc, updateDoc, increment } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firestore');
+      
+      if (!user?.id) {
+        console.error('[Arena V2] No user ID found');
+        toast({
+          title: "Error",
+          description: "User not found. Please log in again.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const userRef = doc(db, 'users', user.id);
+      
+      // Calculate entry fee based on tier
+      const tierEntryFees: Record<number, number> = {
+        0: 50,  // Tutorial
+        1: 100, // Tier 1
+        2: 125, // Tier 2
+        3: 150, // Tier 3
+      };
+      const entryFee = tierEntryFees[tier] || 100;
+      
+      if (method === 'tokens') {
+        // Deduct HOLOS tokens (not arena tokens!)
+        await updateDoc(userRef, {
+          holosTokens: increment(-entryFee)
+        });
+        console.log(`[Arena V2] Deducted ${entryFee} HOLOS tokens`);
+        toast({
+          title: "Entry Fee Paid",
+          description: `${entryFee} HOLOS tokens deducted`,
+        });
+      } else if (method === 'pass') {
+        // Deduct arena pass
+        await updateDoc(userRef, {
+          arena_passes: increment(-1)
+        });
+        console.log('[Arena V2] Used 1 arena pass');
+        toast({
+          title: "Arena Pass Used",
+          description: "1 Arena Pass consumed",
+        });
+      }
+    } catch (error) {
+      console.error('[Arena V2] Failed to deduct entry fee:', error);
+      toast({
+        title: "Payment Failed",
+        description: "Could not process entry fee. Please try again.",
+        variant: "destructive"
+      });
+      return; // Don't start battle if payment failed
+    }
+    
+    // Hide prebattle menu and start the battle
+    setShowPrebattleMenu(false);
+    setSelectedHolobotKey(selectedHolobot);
+    
+    // Initialize battle with selected holobot
+    if (!currentBattle && !isLoading) {
+      // Get user's actual holobot data
+      const userHolobotKey = selectedHolobot;
+      const userHolobotStats = HOLOBOT_STATS[userHolobotKey] || HOLOBOT_STATS['ace'];
+      
+      // Find the user's holobot to get level and boosts
+      const userHolobot = user?.holobots?.find(h => 
+        h.name.toLowerCase() === userHolobotKey.toLowerCase()
+      );
+      
+      const holobotLevel = userHolobot?.level || 1;
+      const boostedAttrs = userHolobot?.boostedAttributes || {};
+      
+      // Calculate level-based stat scaling (5% per level)
+      const levelBonus = 1 + ((holobotLevel - 1) * 0.05);
+      
+      // Apply level bonus + boosted attributes
+      const baseHP = userHolobotStats?.hp || 100;
+      const baseAttack = userHolobotStats?.attack || 50;
+      const baseDefense = userHolobotStats?.defense || 40;
+      const baseSpeed = userHolobotStats?.speed || 60;
+      const baseIntelligence = userHolobotStats?.intelligence || 55;
+      
+      const finalHP = Math.floor(baseHP * levelBonus) + (boostedAttrs.health || 0);
+      const finalAttack = Math.floor(baseAttack * levelBonus) + (boostedAttrs.attack || 0);
+      const finalDefense = Math.floor(baseDefense * levelBonus) + (boostedAttrs.defense || 0);
+      const finalSpeed = Math.floor(baseSpeed * levelBonus) + (boostedAttrs.speed || 0);
+      const finalIntelligence = Math.floor(baseIntelligence * levelBonus);
+
+      // Create player fighter
+      const player: ArenaFighter = {
+        holobotId: 'player-holobot-1',
+        userId: user?.id || 'user-1',
+        name: String(userHolobotKey).toUpperCase(),
+        avatar: getHolobotImagePath(userHolobotKey),
+        archetype: 'balanced',
+        level: holobotLevel,
+        
+        maxHP: finalHP,
+        currentHP: finalHP,
+        attack: finalAttack,
+        defense: finalDefense,
+        speed: finalSpeed,
+        intelligence: finalIntelligence,
+        
+        stamina: 6,
+        maxStamina: 7,
+        specialMeter: 0,
+        
+        staminaState: 'fresh',
+        isInDefenseMode: false,
+        comboCounter: 0,
+        lastActionTime: 0,
+        
+        statusEffects: [],
+        
+        staminaEfficiency: 1.0,
+        defenseTimingWindow: 500,
+        counterDamageBonus: 1.3,
+        damageMultiplier: 1.0,
+        speedBonus: 0,
+        
+        hand: [],
+        
+        totalDamageDealt: 0,
+        perfectDefenses: 0,
+        combosCompleted: 0,
+      };
+
+      // Use first opponent from the lineup (for now - could cycle through for rounds)
+      const opponentKey = opponentHolobots[0] || Object.keys(HOLOBOT_STATS).filter(key => key !== userHolobotKey)[0];
+      const opponentBaseStats = HOLOBOT_STATS[opponentKey] || {
+        hp: 100,
+        attack: 55,
+        defense: 35,
+        speed: 65,
+        intelligence: 50,
+      };
+      
+      // Opponent level based on the selected tier's opponentLevel
+      const opponentLevelBonus = 1 + ((opponentLevel - 1) * 0.05);
+      
+      const opponentHP = Math.floor((opponentBaseStats.hp || 100) * opponentLevelBonus);
+      const opponentAttack = Math.floor((opponentBaseStats.attack || 55) * opponentLevelBonus);
+      const opponentDefense = Math.floor((opponentBaseStats.defense || 35) * opponentLevelBonus);
+      const opponentSpeed = Math.floor((opponentBaseStats.speed || 65) * opponentLevelBonus);
+      const opponentIntelligence = Math.floor((opponentBaseStats.intelligence || 50) * opponentLevelBonus);
+
+      const opponent: ArenaFighter = {
+        ...player,
+        holobotId: 'opponent-holobot-1',
+        userId: 'ai-opponent',
+        name: String(opponentKey).toUpperCase(),
+        avatar: getHolobotImagePath(opponentKey),
+        archetype: 'striker',
+        level: opponentLevel,
+        maxHP: opponentHP,
+        currentHP: opponentHP,
+        attack: opponentAttack,
+        defense: opponentDefense,
+        speed: opponentSpeed,
+        intelligence: opponentIntelligence,
+      };
+
+      const config: ArenaBattleConfig = {
+        battleType: 'pve',
+        playerHolobotId: player.holobotId,
+        opponentHolobotId: opponent.holobotId,
+        allowPlayerControl: true, // Manual control
+        aiDifficulty: 'medium',
+        maxTurns: 50,
+        tier, // Pass tier for reward calculation
+      } as any;
+
+      initializeBattle(config, player, opponent, opponentHolobots);
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[600px] bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-white text-lg">Initializing Arena V2...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-[600px] bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900">
+        <div className="text-center">
+          <p className="text-red-500 text-xl mb-4">Battle Error</p>
+          <p className="text-white">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show prebattle menu before battle
+  if (showPrebattleMenu || !currentBattle) {
+    return (
+      <div className="px-4 py-5">
+        <ArenaPrebattleMenu 
+          onHolobotSelect={handleHolobotSelect}
+          onEntryFeeMethod={handleEntryFeeMethod}
+          entryFee={50}
+        />
+      </div>
+    );
+  }
+
+  // Main battle view
+  return <BattleArenaView />;
+};
+
 const Index = () => {
-  // Battle Mode State (Arena or Async)
-  const [battleMode, setBattleMode] = useState<'arena' | 'async'>('arena');
+  // Battle Mode State (Arena, Arena V2, or Async)
+  const [battleMode, setBattleMode] = useState<'arena' | 'arena-v2' | 'async'>('arena');
   
   // Arena-specific state
   const [currentRound, setCurrentRound] = useState(1);
@@ -632,15 +883,17 @@ const Index = () => {
                 "absolute top-1 bottom-1 rounded-md transition-all duration-300 ease-out",
                 "bg-gradient-to-r shadow-lg",
                 battleMode === 'arena' 
-                  ? "left-1 right-1/2 from-cyan-500/40 to-cyan-600/40 border border-cyan-400/50" 
-                  : "left-1/2 right-1 from-purple-500/40 to-purple-600/40 border border-purple-400/50"
+                  ? "left-1 w-1/3 from-cyan-500/40 to-cyan-600/40 border border-cyan-400/50" 
+                  : battleMode === 'arena-v2'
+                  ? "left-1/3 w-1/3 from-yellow-500/40 to-orange-600/40 border border-yellow-400/50"
+                  : "left-2/3 right-1 from-purple-500/40 to-purple-600/40 border border-purple-400/50"
               )}
             />
             <div className="relative flex">
               <button
                 onClick={() => setBattleMode('arena')}
                 className={cn(
-                  "px-8 py-3 text-sm font-medium transition-all duration-200 rounded-md relative z-10",
+                  "px-6 py-3 text-sm font-medium transition-all duration-200 rounded-md relative z-10",
                   "flex items-center justify-center gap-2",
                   battleMode === 'arena'
                     ? "text-cyan-100 font-bold"
@@ -648,12 +901,26 @@ const Index = () => {
                 )}
               >
                 <Sword className="h-4 w-4" />
-                ARENA
+                CLASSIC
+              </button>
+              <button
+                onClick={() => setBattleMode('arena-v2')}
+                className={cn(
+                  "px-6 py-3 text-sm font-medium transition-all duration-200 rounded-md relative z-10",
+                  "flex items-center justify-center gap-2",
+                  battleMode === 'arena-v2'
+                    ? "text-yellow-100 font-bold"
+                    : "text-gray-400 hover:text-gray-300"
+                )}
+              >
+                <Activity className="h-4 w-4" />
+                ARENA V2
+                <Badge className="ml-1 bg-yellow-500/20 text-yellow-300 text-xs">NEW</Badge>
               </button>
               <button
                 onClick={() => setBattleMode('async')}
                 className={cn(
-                  "px-8 py-3 text-sm font-medium transition-all duration-200 rounded-md relative z-10",
+                  "px-6 py-3 text-sm font-medium transition-all duration-200 rounded-md relative z-10",
                   "flex items-center justify-center gap-2",
                   battleMode === 'async'
                     ? "text-purple-100 font-bold"
@@ -671,6 +938,8 @@ const Index = () => {
       {/* Content based on battle mode */}
       {battleMode === 'arena' ? (
         hasEntryFee ? renderArenaBattle() : renderArenaPreBattle()
+      ) : battleMode === 'arena-v2' ? (
+        <ArenaV2Wrapper />
       ) : (
         renderAsyncBattles()
       )}

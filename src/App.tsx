@@ -27,6 +27,7 @@ import Mint from "@/pages/Mint";
 import MintGenesisPage from "@/pages/MintGenesis";
 import Fitness from "@/pages/Fitness";
 import BoosterPacks from "@/pages/BoosterPacks";
+import ArenaV2Screen from "@/pages/ArenaV2Screen";
 
 // Create a client for React Query
 const queryClient = new QueryClient();
@@ -134,6 +135,13 @@ function App() {
               <ProtectedRoute>
                 <MobileLayout>
                   <BoosterPacks />
+                </MobileLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/arena-v2" element={
+              <ProtectedRoute>
+                <MobileLayout>
+                  <ArenaV2Screen />
                 </MobileLayout>
               </ProtectedRoute>
             } />
