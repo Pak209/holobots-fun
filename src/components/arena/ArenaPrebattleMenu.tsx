@@ -21,6 +21,7 @@ const ARENA_TIERS = {
   tutorial: {
     level: 1,
     entryFee: 50,
+    tierNumber: 0,
     rewards: {
       items: {
         energy_refills: 1,
@@ -31,7 +32,8 @@ const ARENA_TIERS = {
   },
   tier1: {
     level: 5,
-    entryFee: 50,
+    entryFee: 100,
+    tierNumber: 1,
     rewards: {
       items: {
         energy_refills: 2,
@@ -42,7 +44,8 @@ const ARENA_TIERS = {
   },
   tier2: {
     level: 20,
-    entryFee: 50,
+    entryFee: 125,
+    tierNumber: 2,
     rewards: {
       items: {
         energy_refills: 3,
@@ -53,7 +56,8 @@ const ARENA_TIERS = {
   },
   tier3: {
     level: 40,
-    entryFee: 100,
+    entryFee: 150,
+    tierNumber: 3,
     rewards: {
       holosTokens: 200,
       items: {
@@ -165,7 +169,8 @@ export const ArenaPrebattleMenu = ({
       });
       return;
     }
-    onEntryFeeMethod('tokens', selectedHolobot, opponentHolobots, ARENA_TIERS[selectedTier].level, ARENA_TIERS[selectedTier].rewards.items);
+    const tierNumber = ARENA_TIERS[selectedTier].tierNumber;
+    onEntryFeeMethod('tokens', selectedHolobot, opponentHolobots, ARENA_TIERS[selectedTier].level, ARENA_TIERS[selectedTier].rewards.items, tierNumber);
   };
 
   const handleUseArenaPass = () => {
@@ -177,7 +182,8 @@ export const ArenaPrebattleMenu = ({
       });
       return;
     }
-    onEntryFeeMethod('pass', selectedHolobot, opponentHolobots, ARENA_TIERS[selectedTier].level, ARENA_TIERS[selectedTier].rewards.items);
+    const tierNumber = ARENA_TIERS[selectedTier].tierNumber;
+    onEntryFeeMethod('pass', selectedHolobot, opponentHolobots, ARENA_TIERS[selectedTier].level, ARENA_TIERS[selectedTier].rewards.items, tierNumber);
   };
 
   // Helper to get user holobot by key
