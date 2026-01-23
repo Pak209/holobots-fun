@@ -174,6 +174,10 @@ const ArenaV2Wrapper = () => {
         speed: finalSpeed,
         intelligence: finalIntelligence,
         
+        // TCG Card Display Fields
+        specialMove: userHolobotStats?.specialMove || 'UNKNOWN',
+        abilityDescription: userHolobotStats?.abilityDescription || 'No ability description available.',
+        
         stamina: 6,
         maxStamina: 7,
         specialMeter: 0,
@@ -231,6 +235,10 @@ const ArenaV2Wrapper = () => {
         defense: opponentDefense,
         speed: opponentSpeed,
         intelligence: opponentIntelligence,
+        
+        // TCG Card Display Fields
+        specialMove: opponentBaseStats?.specialMove || 'UNKNOWN',
+        abilityDescription: opponentBaseStats?.abilityDescription || 'No ability description available.',
       };
 
       const config: ArenaBattleConfig = {
@@ -274,7 +282,7 @@ const ArenaV2Wrapper = () => {
   // Show prebattle menu before battle
   if (showPrebattleMenu || !currentBattle) {
     return (
-      <div className="px-4 py-5">
+      <div className="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-5">
         <ArenaPrebattleMenu 
           onHolobotSelect={handleHolobotSelect}
           onEntryFeeMethod={handleEntryFeeMethod}

@@ -11,6 +11,8 @@ import type {
   CardGenerationConfig,
 } from '@/types/arena';
 
+import { generateUUID } from '@/utils/uuid';
+
 // Card templates would normally come from Supabase
 // For now, we'll define them here as a fallback
 
@@ -512,7 +514,7 @@ export class CardPoolGenerator {
     effects?: any[];
   }): ActionCard {
     return {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       templateId: params.name.toLowerCase().replace(/\s+/g, '_'),
       name: params.name,
       type: params.type,

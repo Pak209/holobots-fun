@@ -44,7 +44,7 @@ export function ActionCardComponent({ card, onPlay, disabled = false }: ActionCa
       onMouseLeave={() => setIsHovered(false)}
       disabled={!canPlay}
       className={`
-        relative w-28 h-40 rounded-lg p-2 shrink-0
+        relative w-20 h-28 sm:w-24 sm:h-36 md:w-28 md:h-40 rounded-lg p-1.5 sm:p-2 shrink-0
         flex flex-col items-center justify-between
         border-2 transition-all duration-200
         ${getCardTypeColor(card.type)}
@@ -56,13 +56,13 @@ export function ActionCardComponent({ card, onPlay, disabled = false }: ActionCa
       `}
     >
       {/* Card Type Badge */}
-      <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs px-2 py-0.5 rounded-full uppercase">
+      <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-black/70 text-white text-[8px] sm:text-[10px] md:text-xs px-1.5 sm:px-2 py-0.5 rounded-full uppercase">
         {card.type}
       </div>
 
       {/* Card Icon/Visual */}
-      <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mt-2">
-        <span className="text-3xl">
+      <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-white/10 rounded-full flex items-center justify-center mt-1 sm:mt-2">
+        <span className="text-xl sm:text-2xl md:text-3xl">
           {card.type === 'strike' && '👊'}
           {card.type === 'defense' && '🛡️'}
           {card.type === 'combo' && '⚡'}
@@ -72,18 +72,18 @@ export function ActionCardComponent({ card, onPlay, disabled = false }: ActionCa
       </div>
 
       {/* Card Name */}
-      <span className="text-xs font-bold text-white text-center leading-tight">
+      <span className="text-[9px] sm:text-[10px] md:text-xs font-bold text-white text-center leading-tight">
         {card.name}
       </span>
 
       {/* Stamina Cost */}
-      <div className="absolute top-2 right-2 w-7 h-7 bg-black/80 rounded-full flex items-center justify-center border border-yellow-400">
-        <span className="text-xs text-yellow-400 font-bold">{card.staminaCost}</span>
+      <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 bg-black/80 rounded-full flex items-center justify-center border border-yellow-400">
+        <span className="text-[9px] sm:text-[10px] md:text-xs text-yellow-400 font-bold">{card.staminaCost}</span>
       </div>
 
       {/* Damage (for strike cards) */}
       {card.baseDamage > 0 && (
-        <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-red-600 rounded text-xs text-white font-bold">
+        <div className="absolute bottom-1.5 sm:bottom-2 left-1.5 sm:left-2 px-1.5 sm:px-2 py-0.5 bg-red-600 rounded text-[9px] sm:text-[10px] md:text-xs text-white font-bold">
           {card.baseDamage}
         </div>
       )}

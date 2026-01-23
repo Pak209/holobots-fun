@@ -16,6 +16,7 @@ import type {
 import { ArenaCombatEngine } from '@/lib/arena/combat-engine';
 import { ArenaAI } from '@/lib/arena/ai-controller';
 import { CardPoolGenerator } from '@/lib/arena/card-generator';
+import { generateUUID } from '@/utils/uuid';
 
 // ============================================================================
 // Store Interface
@@ -626,7 +627,7 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
       const finisherCard = battle.playerCardPool.finisherCards[0];
       const newFinisher = {
         ...finisherCard,
-        id: crypto.randomUUID(),
+        id: generateUUID(),
       };
       
       // Add finisher to hand

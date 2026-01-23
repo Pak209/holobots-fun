@@ -44,6 +44,10 @@ export interface ArenaFighter {
   speed: number;
   intelligence: number;
   
+  // Optional TCG Card Display Fields
+  specialMove?: string;
+  abilityDescription?: string;
+  
   // Arena-Specific State
   stamina: number; // current hand size (number of cards)
   maxStamina: number; // maximum hand size
