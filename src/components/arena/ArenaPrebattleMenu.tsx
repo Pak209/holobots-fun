@@ -191,16 +191,16 @@ export const ArenaPrebattleMenu = ({
 
   return (
     <Card className="border border-holobots-border bg-[#1A1F2C]">
-      <CardHeader>
-        <CardTitle className="text-center text-2xl text-white font-orbitron italic">Arena Battle</CardTitle>
+      <CardHeader className="py-3 sm:py-4 md:py-6">
+        <CardTitle className="text-center text-lg sm:text-xl md:text-2xl text-white font-orbitron italic">Arena Battle</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-col space-y-6">
+      <CardContent className="p-3 sm:p-4 md:p-6">
+        <div className="flex flex-col space-y-3 sm:space-y-4 md:space-y-6">
           {/* First Row: Holobot Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
             {/* User Holobot Selection */}
             <div className="flex flex-col">
-              <h3 className="text-red-400 mb-2 text-center md:text-left font-orbitron italic">Select Your Holobot</h3>
+              <h3 className="text-red-400 mb-1 sm:mb-1.5 md:mb-2 text-center md:text-left font-orbitron italic text-sm sm:text-base">Select Your Holobot</h3>
               <Select value={selectedHolobot || undefined} onValueChange={handleHolobotSelect}>
                 <SelectTrigger className="w-full bg-[#1A1F2C] text-white border-holobots-border">
                   {selectedHolobot ? (
@@ -287,7 +287,7 @@ export const ArenaPrebattleMenu = ({
 
             {/* Opponents Header */}
             <div className="flex flex-col">
-              <h4 className="text-red-400 mb-2 text-center md:text-left font-orbitron italic">Your Opponents</h4>
+              <h4 className="text-red-400 mb-1 sm:mb-1.5 md:mb-2 text-center md:text-left font-orbitron italic text-sm sm:text-base">Your Opponents</h4>
             </div>
           </div>
 
@@ -297,84 +297,84 @@ export const ArenaPrebattleMenu = ({
             <div className="flex-1 flex justify-center">
               {selectedHolobot && (
                 <div className="flex flex-col items-center">
-                  <Avatar className="h-20 w-20 border-4 border-cyan-400 shadow-lg">
+                  <Avatar className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 border-2 sm:border-3 md:border-4 border-cyan-400 shadow-lg">
                     <AvatarImage src={getHolobotImagePath(getUserHolobotByKey(selectedHolobot)?.name || selectedHolobot)} alt={getUserHolobotByKey(selectedHolobot)?.name || selectedHolobot} />
                     <AvatarFallback>{getUserHolobotByKey(selectedHolobot)?.name?.slice(0,2).toUpperCase() || "??"}</AvatarFallback>
                   </Avatar>
-                  <div className="text-center text-base text-holobots-accent mt-1 font-semibold">
-                    {getUserHolobotByKey(selectedHolobot)?.name} (Lv.{getUserHolobotByKey(selectedHolobot)?.level})
+                  <div className="text-center text-xs sm:text-sm md:text-base text-holobots-accent mt-0.5 sm:mt-1 font-semibold">
+                    {getUserHolobotByKey(selectedHolobot)?.name} <span className="hidden sm:inline">(Lv.{getUserHolobotByKey(selectedHolobot)?.level})</span>
                   </div>
                 </div>
               )}
             </div>
 
             {/* VS Component */}
-            <div className="flex flex-col items-center mx-4">
-              <div className="text-holobots-accent font-bold text-xl">VS</div>
-              <div className="text-sm text-gray-400">3 Rounds</div>
+            <div className="flex flex-col items-center mx-2 sm:mx-3 md:mx-4">
+              <div className="text-holobots-accent font-bold text-base sm:text-lg md:text-xl">VS</div>
+              <div className="text-[10px] sm:text-xs md:text-sm text-gray-400">3 Rounds</div>
             </div>
 
             {/* Opponents */}
             <div className="flex-1 flex justify-center">
               <div className="flex flex-col items-center">
-                <div className="flex gap-2 justify-center">
+                <div className="flex gap-1 sm:gap-1.5 md:gap-2 justify-center">
                   {opponentHolobots.map((opponentKey, idx) => (
                     <div key={idx} className="flex flex-col items-center">
-                      <Avatar className="h-12 w-12 border-2 border-red-400">
+                      <Avatar className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border border-red-400 sm:border-2">
                         <AvatarImage src={getHolobotImagePath(HOLOBOT_STATS[opponentKey].name)} alt={HOLOBOT_STATS[opponentKey].name} />
                         <AvatarFallback>{HOLOBOT_STATS[opponentKey].name.slice(0,2).toUpperCase()}</AvatarFallback>
                       </Avatar>
-                      <div className="text-center text-xs text-red-400 mt-1">Round {idx + 1}</div>
+                      <div className="text-center text-[9px] sm:text-[10px] md:text-xs text-red-400 mt-0.5 sm:mt-1">R{idx + 1}</div>
                     </div>
                   ))}
                 </div>
-                <div className="text-xs text-gray-400 text-center mt-1">Face a new random Holobot each round</div>
+                <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-400 text-center mt-0.5 sm:mt-1 hidden sm:block">Face a new random Holobot each round</div>
               </div>
             </div>
           </div>
 
           {/* Third Row: Payment Options */}
-          <div className="flex flex-col md:flex-row gap-4 w-full border-t border-gray-700 pt-4">
+          <div className="flex flex-col md:flex-row gap-2 sm:gap-3 md:gap-4 w-full border-t border-gray-700 pt-2 sm:pt-3 md:pt-4">
             <div className="flex-1">
-              <p className="text-[#8E9196] mb-2 text-center">Entry fee: {ARENA_TIERS[selectedTier].entryFee} Holos tokens</p>
-              <p className="text-[#8E9196] mb-4 text-center">Your balance: {user?.holosTokens || 0} Holos</p>
+              <p className="text-[#8E9196] mb-1 text-center text-xs sm:text-sm">Entry fee: {ARENA_TIERS[selectedTier].entryFee} Holos</p>
+              <p className="text-[#8E9196] mb-2 sm:mb-3 md:mb-4 text-center text-xs sm:text-sm">Balance: {user?.holosTokens || 0} Holos</p>
             </div>
             
-            <div className="border-t md:border-t-0 md:border-l border-gray-700 md:pl-4 pt-4 md:pt-0 flex-1">
-              <p className="text-[#8E9196] mb-2 text-center">Your Arena Passes: {user?.arena_passes || 0}</p>
+            <div className="border-t md:border-t-0 md:border-l border-gray-700 md:pl-4 pt-2 md:pt-0 flex-1">
+              <p className="text-[#8E9196] mb-1 sm:mb-2 text-center text-xs sm:text-sm">Arena Passes: {user?.arena_passes || 0}</p>
             </div>
           </div>
           
           {/* Payment Buttons Row */}
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4">
             <Button 
               onClick={handlePayWithTokens}
               disabled={!user || user.holosTokens < ARENA_TIERS[selectedTier].entryFee || !selectedHolobot}
-              className="flex-1 bg-holobots-accent hover:bg-holobots-hover text-white py-2"
+              className="flex-1 bg-holobots-accent hover:bg-holobots-hover text-white py-2 text-sm sm:text-base"
             >
-              <Gem className="mr-2 h-4 w-4" />
+              <Gem className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Pay Entry Fee
             </Button>
             
             <Button
               onClick={handleUseArenaPass}
               disabled={!user || !user.arena_passes || user.arena_passes <= 0 || !selectedHolobot}
-              className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-2"
+              className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-2 text-sm sm:text-base"
             >
-              <Award className="mr-2 h-4 w-4" />
+              <Award className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Use Arena Pass
             </Button>
           </div>
 
           {/* Fourth Row: Tier Selection - Compact Version */}
-          <div className="border-t border-gray-700 pt-4">
-            <h3 className="text-holobots-accent mb-2 text-center font-orbitron">Select Arena Tier</h3>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="border-t border-gray-700 pt-2 sm:pt-3 md:pt-4">
+            <h3 className="text-holobots-accent mb-1 sm:mb-1.5 md:mb-2 text-center font-orbitron text-sm sm:text-base">Select Arena Tier</h3>
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
               {(Object.entries(ARENA_TIERS) as [keyof typeof ARENA_TIERS, typeof ARENA_TIERS[keyof typeof ARENA_TIERS]][]).map(([key, tier]) => (
                 <div 
                   key={key}
                   className={`
-                    flex justify-between items-center p-2 rounded-lg cursor-pointer border
+                    flex justify-between items-center p-1.5 sm:p-2 rounded-lg cursor-pointer border
                     ${selectedTier === key 
                       ? 'bg-holobots-accent bg-opacity-20 border-holobots-accent' 
                       : 'bg-black/40 border-holobots-border hover:border-holobots-accent/50'}
@@ -382,45 +382,45 @@ export const ArenaPrebattleMenu = ({
                   onClick={() => setSelectedTier(key)}
                 >
                   {/* Tier Info */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
                     <div className={`
-                      p-1.5 rounded-full 
+                      p-1 sm:p-1.5 rounded-full 
                       ${selectedTier === key ? 'bg-holobots-accent text-white' : 'bg-gray-800 text-holobots-accent'}
                     `}>
-                      <Trophy className="h-3.5 w-3.5" />
+                      <Trophy className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-white capitalize">{key}</h4>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-gray-400">Lv.{tier.level}+</span>
-                        <span className="text-xs font-medium text-yellow-400">{tier.entryFee} Holos</span>
+                      <h4 className="text-xs sm:text-sm font-semibold text-white capitalize">{key}</h4>
+                      <div className="flex items-center gap-0.5 sm:gap-1">
+                        <span className="text-[9px] sm:text-[10px] md:text-xs text-gray-400">Lv.{tier.level}+</span>
+                        <span className="text-[9px] sm:text-[10px] md:text-xs font-medium text-yellow-400">{tier.entryFee} Holos</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Tier Rewards - Compact */}
-                  <div className="flex items-center gap-1 text-xs">
+                  <div className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] md:text-xs">
                     {'holosTokens' in tier.rewards && tier.rewards.holosTokens && tier.rewards.holosTokens > 0 && (
-                      <div className="flex items-center mr-1">
-                        <Gem className="h-3 w-3 text-yellow-400 mr-0.5" />
+                      <div className="flex items-center mr-0.5 sm:mr-1">
+                        <Gem className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 text-yellow-400 mr-0.5" />
                         <span className="text-yellow-400 font-medium">{tier.rewards.holosTokens}</span>
                       </div>
                     )}
                     {tier.rewards.items.energy_refills > 0 && (
-                    <div className="flex items-center mr-1">
-                      <Star className="h-3 w-3 text-white mr-0.5" /> {/* Assuming Energy Refill is common display */}
+                    <div className="flex items-center mr-0.5 sm:mr-1">
+                      <Star className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 text-white mr-0.5" /> {/* Assuming Energy Refill is common display */}
                       <span className="text-white">ER x{tier.rewards.items.energy_refills}</span>
                     </div>
                     )}
                     {tier.rewards.items.exp_boosters > 0 && (
-                    <div className="flex items-center mr-1">
-                      <Star className="h-3 w-3 text-blue-400 mr-0.5" /> {/* Assuming EXP Booster is rare display */}
+                    <div className="flex items-center mr-0.5 sm:mr-1">
+                      <Star className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 text-blue-400 mr-0.5" /> {/* Assuming EXP Booster is rare display */}
                       <span className="text-blue-400">EB x{tier.rewards.items.exp_boosters}</span>
                     </div>
                     )}
                     {tier.rewards.items.rank_skips > 0 && (
                     <div className="flex items-center">
-                      <Star className="h-3 w-3 text-purple-400 mr-0.5" /> {/* Assuming Rank Skip is legendary display */}
+                      <Star className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 text-purple-400 mr-0.5" /> {/* Assuming Rank Skip is legendary display */}
                       <span className="text-purple-400">RS x{tier.rewards.items.rank_skips}</span>
                     </div>
                     )}

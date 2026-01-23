@@ -24,6 +24,8 @@ import {
   TEMPO_RESET_DELAY_MS,
 } from '@/types/arena';
 
+import { generateUUID } from '@/utils/uuid';
+
 // ============================================================================
 // Combat Engine Class
 // ============================================================================
@@ -159,7 +161,7 @@ export class ArenaCombatEngine {
         const finisherCard = cardPool.finisherCards[0];
         return {
           ...finisherCard,
-          id: crypto.randomUUID(),
+          id: generateUUID(),
         };
       }
     }
@@ -173,7 +175,7 @@ export class ArenaCombatEngine {
     // Create a new instance with unique ID
     return {
       ...baseCard,
-      id: crypto.randomUUID(), // Give it a new unique ID
+      id: generateUUID(), // Give it a new unique ID
     };
   }
   
@@ -202,7 +204,7 @@ export class ArenaCombatEngine {
     
     // Create battle action
     const action: BattleAction = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       battleId: state.battleId,
       turnNumber: state.turnNumber,
       actionOrder: state.actionHistory.filter(a => a.turnNumber === state.turnNumber).length,
@@ -635,7 +637,7 @@ export class ArenaCombatEngine {
         case 'status':
           // Apply status effect
           const statusEffect: StatusEffect = {
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             type: 'damage_over_time', // default, would need more logic here
             value: effect.value,
             duration: effect.duration || 1,

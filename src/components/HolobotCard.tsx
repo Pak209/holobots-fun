@@ -25,9 +25,9 @@ export const HolobotCard = ({
   console.log(`Rendering HolobotCard for ${holobotName} with image path: ${imagePath}`);
   
   return (
-    <div className={`w-[130px] md:w-[180px] h-auto rounded-lg ${
+    <div className={`w-[100px] sm:w-[130px] md:w-[180px] h-auto rounded-lg ${
       variant === "red" ? "bg-red-900/80 border-red-400" : rankColor
-    } border-2 p-1.5 flex flex-col font-mono text-[8px] transition-all duration-300 hover:scale-105 shadow-lg`}>
+    } border-2 p-1 sm:p-1.5 flex flex-col font-mono text-[7px] sm:text-[8px] transition-all duration-300 hover:scale-105 shadow-lg`}>
       <div className="flex items-center justify-between mb-1 bg-black/40 px-1.5 py-0.5 rounded-md border border-white/20">
         <span className="font-bold italic text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
           HOLOBOTS
