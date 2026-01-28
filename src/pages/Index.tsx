@@ -32,6 +32,7 @@ import {
 import { BattleArenaView } from "@/components/arena/BattleArenaView";
 import { useArenaBattleStore } from "@/stores/arena-battle-store";
 import type { ArenaFighter, ArenaBattleConfig } from "@/types/arena";
+import { RealtimeBattleRoom } from "@/components/arena/RealtimeBattleRoom";
 
 // Define the type for specific item rewards from arena tiers
 interface ArenaSpecificItemRewards {
@@ -297,8 +298,8 @@ const ArenaV2Wrapper = () => {
 };
 
 const Index = () => {
-  // Battle Mode State (Arena, Arena V2, or Async)
-  const [battleMode, setBattleMode] = useState<'arena' | 'arena-v2' | 'async'>('arena');
+  // Battle Mode State (Arena, Arena V2, or PvP)
+  const [battleMode, setBattleMode] = useState<'arena' | 'arena-v2' | 'pvp'>('arena');
   
   // Arena-specific state
   const [currentRound, setCurrentRound] = useState(1);
@@ -894,7 +895,7 @@ const Index = () => {
                   ? "left-1 w-1/3 from-cyan-500/40 to-cyan-600/40 border border-cyan-400/50" 
                   : battleMode === 'arena-v2'
                   ? "left-1/3 w-1/3 from-yellow-500/40 to-orange-600/40 border border-yellow-400/50"
-                  : "left-2/3 right-1 from-purple-500/40 to-purple-600/40 border border-purple-400/50"
+                  : "left-2/3 right-1 from-purple-500/40 to-fuchsia-600/40 border border-purple-400/50"
               )}
             />
             <div className="relative flex">
@@ -926,17 +927,18 @@ const Index = () => {
                 <Badge className="ml-1 bg-yellow-500/20 text-yellow-300 text-xs">NEW</Badge>
               </button>
               <button
-                onClick={() => setBattleMode('async')}
+                onClick={() => setBattleMode('pvp')}
                 className={cn(
                   "px-6 py-3 text-sm font-medium transition-all duration-200 rounded-md relative z-10",
                   "flex items-center justify-center gap-2",
-                  battleMode === 'async'
+                  battleMode === 'pvp'
                     ? "text-purple-100 font-bold"
                     : "text-gray-400 hover:text-gray-300"
                 )}
               >
-                <Zap className="h-4 w-4" />
-                ASYNC
+                <Users className="h-4 w-4" />
+                PvP
+                <Badge className="ml-1 bg-purple-500/20 text-purple-300 text-xs">LIVE</Badge>
               </button>
             </div>
           </div>
@@ -949,7 +951,7 @@ const Index = () => {
       ) : battleMode === 'arena-v2' ? (
         <ArenaV2Wrapper />
       ) : (
-        renderAsyncBattles()
+        <RealtimeBattleRoom />
       )}
     </div>
   );

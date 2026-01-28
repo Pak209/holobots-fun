@@ -202,6 +202,17 @@ export class ArenaCombatEngine {
       return state;
     }
     
+    // CHECK ATTACK COOLDOWN: Did actor just use defense? Can't attack yet!
+    if (card.type !== 'defense' && actor.defenseActive && actor.defendedAt) {
+      const timeSinceDefense = now - actor.defendedAt;
+      const COOLDOWN_MS = 2000; // 2 second attack cooldown
+      
+      if (timeSinceDefense < COOLDOWN_MS) {
+        console.warn('[Arena V2] Still in defensive stance! Cannot attack yet.');
+        return state; // Block the attack
+      }
+    }
+    
     // Create battle action
     const action: BattleAction = {
       id: generateUUID(),
@@ -278,6 +289,14 @@ export class ArenaCombatEngine {
     // Apply card effects
     this.applyCardEffects(card, actor, target, action);
     
+    // DEFENSIVE STANCE: Clear when attacking
+    if (card.type === 'strike' || card.type === 'combo' || card.type === 'finisher') {
+      if (actor.defenseActive) {
+        console.log(`[Arena V2] ${actor.holobotId} exited defensive stance to attack!`);
+      }
+      actor.defenseActive = false;
+    }
+    
     // Update last action time
     newState.lastActionTimestamp = now;
     actor.lastActionTime = now;
@@ -323,19 +342,39 @@ export class ArenaCombatEngine {
     defender: ArenaFighter,
     state: BattleState
   ): void {
-    // Check if defender is in defense mode
-    if (defender.isInDefenseMode) {
-      // Defense blocks or reduces damage
+    // Calculate base damage
+    const damageResult = this.calculateDamage(attacker, defender, action.card, false, action.comboLength || 0);
+    let finalDamage = damageResult.finalDamage;
+    
+    // PVP-STYLE DEFENSIVE STANCE: Check if defender used defense recently
+    if (defender.defenseActive && defender.defendedAt) {
+      const timeSinceDefense = Date.now() - defender.defendedAt;
+      const STANCE_DURATION = 3000; // 3 seconds
+      
+      if (timeSinceDefense < STANCE_DURATION) {
+        const defenderDEF = defender.defense || 10;
+        // Defense reduction: up to 70% based on DEF stat
+        const stanceReduction = Math.min(0.70, defenderDEF / 50);
+        finalDamage = Math.round(finalDamage * (1 - stanceReduction));
+        action.outcome = 'blocked';
+        
+        console.log(`[Arena V2] Defensive stance reduced damage by ${(stanceReduction * 100).toFixed(0)}% (DEF: ${defenderDEF})`);
+      } else {
+        action.outcome = 'hit';
+      }
+      
+      // Break defensive stance when hit
+      defender.defenseActive = false;
+    } else if (defender.isInDefenseMode) {
+      // Old defense mode (70% reduction)
+      finalDamage = Math.floor(finalDamage * 0.3);
       action.outcome = 'blocked';
-      action.damageDealt = Math.floor(action.card.baseDamage * 0.3); // 70% reduction
-      action.actualDamage = action.damageDealt;
     } else {
-      // Calculate full damage
-      const damageResult = this.calculateDamage(attacker, defender, action.card, false, action.comboLength || 0);
-      action.damageDealt = damageResult.rawDamage;
-      action.actualDamage = damageResult.finalDamage;
       action.outcome = 'hit';
     }
+    
+    action.damageDealt = damageResult.rawDamage;
+    action.actualDamage = finalDamage;
     
     // Apply damage
     defender.currentHP = Math.max(0, defender.currentHP - action.actualDamage);
@@ -350,7 +389,7 @@ export class ArenaCombatEngine {
     defender.specialMeter = Math.min(SPECIAL_METER_MAX, defender.specialMeter + defenderMeterGain);
     
     // Update combo counter
-    if (action.outcome === 'hit' && !defender.isInDefenseMode) {
+    if (action.outcome === 'hit' && !defender.isInDefenseMode && !defender.defenseActive) {
       attacker.comboCounter++;
     } else {
       attacker.comboCounter = 0;
@@ -371,50 +410,84 @@ export class ArenaCombatEngine {
     state: BattleState
   ): void {
     // Defense mode is temporary - exit it immediately after this action
-    // (The mode was used to allow this defense card to be played)
     defender.isInDefenseMode = false;
     
-    // ALL defense cards restore stamina (2-3 stamina)
-    const baseStaminaRestore = 2;
+    // BASE stamina restore
+    let staminaRestore = 2;
     
-    // Check if this was a perfect defense (timing-based)
-    // For now, simulate with a probability based on intelligence
-    const perfectDefenseChance = defender.intelligence / 200; // 0-0.5 range
-    const isPerfect = Math.random() < perfectDefenseChance;
+    // PVP-STYLE TACTICAL DEFENSE SYSTEM
+    // Speed + INT vs Attack + Speed determines counter/evade chance
+    const defenderSpeed = defender.speed || 10;
+    const defenderINT = defender.intelligence || 5;
+    const attackerATK = attacker.attack || 20;
+    const attackerSpeed = attacker.speed || 10;
     
-    if (isPerfect) {
-      action.outcome = 'perfect_defense';
-      action.perfectDefense = true;
+    // Defender Score: Speed × 3 + INT × 4 (INT is the secret sauce!)
+    // Attacker Score: Attack × 2 + Speed × 2
+    const defenderScore = (defenderSpeed * 3) + (defenderINT * 4);
+    const attackerScore = (attackerATK * 2) + (attackerSpeed * 2);
+    
+    console.log('[Arena V2 Defense] Tactical Check:', {
+      defender: { speed: defenderSpeed, int: defenderINT, score: defenderScore },
+      attacker: { atk: attackerATK, speed: attackerSpeed, score: attackerScore }
+    });
+    
+    let counterOccurred = false;
+    let evadeOccurred = false;
+    
+    // If defender has advantage, chance for COUNTER or EVADE
+    if (defenderScore > attackerScore) {
+      const scoreDiff = defenderScore - attackerScore;
+      const counterChance = Math.min(75, scoreDiff / 2); // Max 75% chance
+      const roll = Math.random() * 100;
       
-      // Perfect defense restores MORE stamina (3 instead of 2)
-      defender.stamina = Math.min(defender.maxStamina, defender.stamina + baseStaminaRestore + 1);
-      action.staminaChange = -action.card.staminaCost + baseStaminaRestore + 1;
+      console.log(`[Arena V2 Defense] Counter chance: ${counterChance.toFixed(1)}%, rolled: ${roll.toFixed(1)}`);
       
-      // Perfect defense gives MORE special meter (15)
-      const perfectMeterGain = 15;
-      action.specialMeterChange = perfectMeterGain;
-      defender.specialMeter = Math.min(SPECIAL_METER_MAX, defender.specialMeter + perfectMeterGain);
-      
-      // Open counter window for certain defense cards
-      if (action.card.name === 'Slip' || action.card.name === 'Parry' || action.card.name === 'Counter Stance') {
-        state.counterWindowOpen = true;
-        state.counterWindowTarget = defender.holobotId;
-        state.counterWindowEndsAt = Date.now() + defender.defenseTimingWindow;
-        action.openedCounterWindow = true;
+      if (roll < counterChance) {
+        // 50/50 chance: Counter Attack or Perfect Evade
+        const isCounter = Math.random() < 0.5;
+        
+        if (isCounter) {
+          // COUNTER ATTACK! Deal damage back
+          const counterDamage = Math.round(15 * (defenderSpeed / 20));
+          action.damageDealt = counterDamage;
+          action.actualDamage = counterDamage;
+          attacker.currentHP = Math.max(0, attacker.currentHP - counterDamage);
+          
+          staminaRestore += 1; // Bonus stamina for counter
+          action.outcome = 'counter';
+          counterOccurred = true;
+          
+          console.log('[Arena V2 Defense] 🥊 COUNTER ATTACK!', counterDamage, 'dmg');
+        } else {
+          // PERFECT EVADE! Extra stamina + special meter boost
+          staminaRestore += 2; // Extra stamina restore
+          evadeOccurred = true;
+          action.outcome = 'perfect_defense';
+          action.perfectDefense = true;
+          defender.perfectDefenses++;
+          
+          console.log('[Arena V2 Defense] 🌪️ PERFECT EVADE!');
+        }
       }
-      
-      // Stats
-      defender.perfectDefenses++;
-    } else {
+    }
+    
+    // Apply stamina restore
+    defender.stamina = Math.min(defender.maxStamina, defender.stamina + staminaRestore);
+    action.staminaChange = -action.card.staminaCost + staminaRestore;
+    
+    // Special meter gain
+    const meterGain = evadeOccurred ? 15 : (counterOccurred ? 10 : 8);
+    action.specialMeterChange = meterGain;
+    defender.specialMeter = Math.min(SPECIAL_METER_MAX, defender.specialMeter + meterGain);
+    
+    // DEFENSIVE STANCE: Activate damage reduction for 3 seconds
+    defender.defendedAt = Date.now();
+    defender.defenseActive = true;
+    
+    // Set outcome if not already set by counter/evade
+    if (!counterOccurred && !evadeOccurred) {
       action.outcome = 'blocked';
-      
-      // Normal defense still restores stamina (2) and gives some meter (8)
-      defender.stamina = Math.min(defender.maxStamina, defender.stamina + baseStaminaRestore);
-      action.staminaChange = -action.card.staminaCost + baseStaminaRestore;
-      
-      const normalMeterGain = 8;
-      action.specialMeterChange = normalMeterGain;
-      defender.specialMeter = Math.min(SPECIAL_METER_MAX, defender.specialMeter + normalMeterGain);
     }
     
     // Update stamina state
@@ -516,17 +589,26 @@ export class ArenaCombatEngine {
   ): DamageResult {
     const modifiers: DamageModifier[] = [];
     
-    // Base damage from card
-    let damage = card.baseDamage;
+    // NEW PvP-STYLE DAMAGE FORMULA
+    // baseDamage × (ATK / 20) × (30 / (30 + DEF))
+    // This makes ATK/DEF scale much more aggressively!
     
-    // Apply attack stat bonus
-    const attackBonus = attacker.attack * 0.1;
-    damage += attackBonus;
+    const attackMultiplier = (attacker.attack || 20) / 20;
+    const defenseReduction = 30 / (30 + (defender.defense || 10));
+    let damage = card.baseDamage * attackMultiplier * defenseReduction;
+    
     modifiers.push({
       source: 'Attack Stat',
-      type: 'add',
-      value: attackBonus,
-      description: `+${attackBonus.toFixed(1)} from ${attacker.attack} ATK`,
+      type: 'multiply',
+      value: attackMultiplier,
+      description: `×${attackMultiplier.toFixed(2)} from ${attacker.attack} ATK`,
+    });
+    
+    modifiers.push({
+      source: 'Defense Stat',
+      type: 'multiply',
+      value: defenseReduction,
+      description: `×${defenseReduction.toFixed(2)} against ${defender.defense} DEF`,
     });
     
     // Apply stamina state modifier
@@ -541,9 +623,9 @@ export class ArenaCombatEngine {
       });
     }
     
-    // Apply counter bonus
+    // Apply counter bonus (PvP style: Speed-based)
     if (isCounter) {
-      const counterBonus = attacker.counterDamageBonus;
+      const counterBonus = attacker.counterDamageBonus || 1.5;
       damage *= counterBonus;
       modifiers.push({
         source: 'Counter Strike',
@@ -576,23 +658,24 @@ export class ArenaCombatEngine {
       });
     }
     
+    // Finisher cards get 2x multiplier (like PvP!)
+    if (card.type === 'finisher') {
+      damage *= 2.0;
+      modifiers.push({
+        source: 'Finisher Bonus',
+        type: 'multiply',
+        value: 2.0,
+        description: '×2.0 finisher multiplier',
+      });
+    }
+    
     const rawDamage = Math.floor(damage);
-    
-    // Apply defense reduction
-    const defenseReduction = defender.defense * 0.05;
-    const finalDamage = Math.max(1, Math.floor(rawDamage - defenseReduction));
-    
-    modifiers.push({
-      source: 'Defense Stat',
-      type: 'subtract',
-      value: defenseReduction,
-      description: `-${defenseReduction.toFixed(1)} from ${defender.defense} DEF`,
-    });
+    const finalDamage = Math.max(1, rawDamage);
     
     return {
       rawDamage,
       finalDamage,
-      damageReduction: rawDamage - finalDamage,
+      damageReduction: 0, // Already factored into formula
       isCritical: false, // TODO: implement crit system
       modifiers,
     };

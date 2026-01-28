@@ -18,6 +18,8 @@ export interface UserHolobot {
   attributePoints?: number; // Add attributePoints for tracking available boost points
   receivedLegendaryBonus?: boolean; // Track if the holobot has received the one-time legendary bonus
   prestiged?: boolean; // Add prestiged property to track if holobot is prestiged
+  pvpWins?: number; // Track PvP wins for intelligence calculation
+  pvpLosses?: number; // Track PvP losses for intelligence calculation
 }
 
 export interface UserProfile {
