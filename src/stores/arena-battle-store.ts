@@ -403,13 +403,14 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
   
   distributeRewards: async (rewards, userId) => {
     try {
-      console.log('[Rewards] ========== STARTING DISTRIBUTION ==========');
-      console.log('[Rewards] User ID:', userId);
-      console.log('[Rewards] Rewards to distribute:', JSON.stringify(rewards, null, 2));
+      console.log('[Arena V2 Rewards] ========== STARTING DISTRIBUTION ==========');
+      console.log('[Arena V2 Rewards] User ID:', userId);
+      console.log('[Arena V2 Rewards] Rewards to distribute:', JSON.stringify(rewards, null, 2));
       
       // Import Firestore
       const { doc, updateDoc, increment, getDoc } = await import('firebase/firestore');
       const { db } = await import('@/lib/firestore');
+      const { updateHolobotExperience } = await import('@/lib/firebase');
       
       // Calculate updates
       const updates: any = {};
@@ -417,35 +418,36 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
       // Add currency rewards
       if (rewards.holos && rewards.holos > 0) {
         updates.holosTokens = increment(rewards.holos);
-        console.log('[Rewards] ✓ Adding HOLOS:', rewards.holos);
+        console.log('[Arena V2 Rewards] ✓ Adding HOLOS:', rewards.holos);
       }
       
       if (rewards.gachaTickets && rewards.gachaTickets > 0) {
         updates.gachaTickets = increment(rewards.gachaTickets);
-        console.log('[Rewards] ✓ Adding gacha tickets:', rewards.gachaTickets);
+        console.log('[Arena V2 Rewards] ✓ Adding gacha tickets:', rewards.gachaTickets);
       }
       
       if (rewards.boosterPackTickets && rewards.boosterPackTickets > 0) {
         updates.arena_passes = increment(rewards.boosterPackTickets);
-        console.log('[Rewards] ✓ Adding booster packs:', rewards.boosterPackTickets);
+        console.log('[Arena V2 Rewards] ✓ Adding booster packs:', rewards.boosterPackTickets);
       }
       
       // Get current user data to update blueprints and holobots
-      console.log('[Rewards] Fetching user data from Firestore...');
+      console.log('[Arena V2 Rewards] Fetching user data from Firestore...');
       const userRef = doc(db, 'users', userId);
       const userSnap = await getDoc(userRef);
       
       if (!userSnap.exists()) {
-        console.error('[Rewards] ❌ User not found in Firestore! userId:', userId);
+        console.error('[Arena V2 Rewards] ❌ User not found in Firestore! userId:', userId);
         return;
       }
       
       const userData = userSnap.data();
-      console.log('[Rewards] Current user blueprints:', userData.blueprints);
+      console.log('[Arena V2 Rewards] Current user data loaded');
+      console.log('[Arena V2 Rewards] Current holobots:', userData.holobots?.map((h: any) => `${h.name} (${h.experience || 0} XP)`));
       
       // Add blueprint pieces for ALL opponents
       if (rewards.blueprintRewards && rewards.blueprintRewards.length > 0) {
-        console.log('[Rewards] Processing', rewards.blueprintRewards.length, 'blueprint rewards...');
+        console.log('[Arena V2 Rewards] Processing', rewards.blueprintRewards.length, 'blueprint rewards...');
         const currentBlueprints = userData.blueprints || {};
         
         for (const blueprint of rewards.blueprintRewards) {
@@ -454,31 +456,73 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
           const newAmount = oldAmount + blueprint.amount;
           currentBlueprints[holobotKey] = newAmount;
           
-          console.log(`[Rewards] ✓ Blueprint: ${holobotKey} | Old: ${oldAmount} | +${blueprint.amount} | New: ${newAmount}`);
+          console.log(`[Arena V2 Rewards] ✓ Blueprint: ${holobotKey} | Old: ${oldAmount} | +${blueprint.amount} | New: ${newAmount}`);
         }
         
         updates.blueprints = currentBlueprints;
-        console.log('[Rewards] Final blueprint object:', currentBlueprints);
+        console.log('[Arena V2 Rewards] Final blueprint object:', currentBlueprints);
       } else {
-        console.log('[Rewards] ⚠️ No blueprint rewards to distribute');
+        console.log('[Arena V2 Rewards] ⚠️ No blueprint rewards to distribute');
       }
       
-      // Update experience for the holobot
-      if (rewards.exp && userData.holobots) {
-        const playerHolobotName = get().currentBattle?.player.name.toLowerCase();
-        const holobotIndex = userData.holobots.findIndex(
-          (h: any) => h.name.toLowerCase() === playerHolobotName
-        );
+      // Update experience for the holobot - USE THE SAME METHOD AS TRAINING
+      if (rewards.exp && userData.holobots && userData.holobots.length > 0) {
+        const currentBattle = get().currentBattle;
+        const playerHolobotName = currentBattle?.player.name;
         
-        if (holobotIndex !== -1) {
-          const updatedHolobots = [...userData.holobots];
-          updatedHolobots[holobotIndex] = {
-            ...updatedHolobots[holobotIndex],
-            experience: updatedHolobots[holobotIndex].experience + Math.floor(rewards.exp),
-          };
-          updates.holobots = updatedHolobots;
-          console.log('[Rewards] Adding XP to holobot:', Math.floor(rewards.exp));
+        if (!playerHolobotName) {
+          console.error('[Arena V2 Rewards] ❌ No player holobot name found in battle state!');
+        } else {
+          console.log('[Arena V2 Rewards] Looking for holobot:', playerHolobotName);
+          
+          // Find the holobot in the user's collection
+          const holobot = userData.holobots.find(
+            (h: any) => h.name.toLowerCase() === playerHolobotName.toLowerCase()
+          );
+          
+          if (!holobot) {
+            console.error('[Arena V2 Rewards] ❌ Holobot not found in user collection!');
+            console.error('[Arena V2 Rewards] Available holobots:', userData.holobots.map((h: any) => h.name));
+          } else {
+            const currentExperience = holobot.experience || 0;
+            const newExperience = currentExperience + Math.floor(rewards.exp);
+            const nextLevelExp = holobot.nextLevelExp || 100;
+            const currentLevel = holobot.level || 1;
+            
+            // Calculate new level (same as training)
+            let newLevel = currentLevel;
+            let tempExp = newExperience;
+            let tempNextExp = nextLevelExp;
+            
+            while (tempExp >= tempNextExp) {
+              newLevel += 1;
+              tempNextExp = Math.floor(100 * Math.pow(newLevel, 2)); // Base XP formula
+            }
+            
+            console.log('[Arena V2 Rewards] XP Update:', {
+              holobot: playerHolobotName,
+              currentExp: currentExperience,
+              expGained: Math.floor(rewards.exp),
+              newExp: newExperience,
+              currentLevel,
+              newLevel,
+              nextLevelExp: tempNextExp
+            });
+            
+            // Use the same helper function as training!
+            const updatedHolobots = updateHolobotExperience(
+              userData.holobots,
+              playerHolobotName,
+              newExperience,
+              newLevel
+            );
+            
+            updates.holobots = updatedHolobots;
+            console.log('[Arena V2 Rewards] ✅ Holobot experience updated using training method!');
+          }
         }
+      } else {
+        console.log('[Arena V2 Rewards] ⚠️ No experience to distribute or no holobots found');
       }
       
       // Apply updates to Firestore
