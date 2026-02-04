@@ -144,9 +144,8 @@ const BoosterPacks: React.FC = () => {
         });
       }
 
-      // Update pack history
-      const updatedPackHistory = [...(user.pack_history || []), result];
-      profileUpdates.pack_history = updatedPackHistory;
+      // Don't save pack history here - it will be saved when closing the animation
+      // to avoid duplicate entries
       
       if (Object.keys(profileUpdates).length > 0) {
         await updateUser(profileUpdates);

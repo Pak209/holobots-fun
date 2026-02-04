@@ -45,7 +45,8 @@ export function HolobotPartsEquipment({ holobotName }: HolobotPartsEquipmentProp
   const { 
     inventory, 
     getEquippedParts, 
-    getInventoryBySlot, 
+    getGroupedAvailableInventory,
+    getAvailableInventoryBySlot,
     equipPart, 
     unequipPart 
   } = useHolobotPartsStore();
@@ -59,12 +60,11 @@ export function HolobotPartsEquipment({ holobotName }: HolobotPartsEquipmentProp
 
   const handleEquipPart = async (part: Part) => {
     try {
-      // First update the local store
+      // Update the local store
       equipPart(holobotName, part);
       
       // Save equipped parts to database
       if (user) {
-        // Build the updated equipped parts state correctly
         const currentEquipment = user.equippedParts?.[holobotName] || {};
         const updatedEquipment = {
           ...currentEquipment,
@@ -83,6 +83,7 @@ export function HolobotPartsEquipment({ holobotName }: HolobotPartsEquipmentProp
       
       setIsEquipDialogOpen(false);
       setSelectedSlot(null);
+      
       toast({
         title: "Part Equipped!",
         description: `${part.name} has been equipped to ${holobotName}'s ${part.slot}.`,
@@ -134,7 +135,7 @@ export function HolobotPartsEquipment({ holobotName }: HolobotPartsEquipmentProp
     setIsEquipDialogOpen(true);
   };
 
-  const availablePartsForSlot = selectedSlot ? getInventoryBySlot(selectedSlot) : [];
+  const availablePartsForSlot = selectedSlot ? getGroupedAvailableInventory(selectedSlot) : [];
 
   const getTotalStatBonus = () => {
     const totals = { attack: 0, defense: 0, speed: 0, intelligence: 0 };
@@ -211,7 +212,7 @@ export function HolobotPartsEquipment({ holobotName }: HolobotPartsEquipmentProp
                   variant="ghost"
                   className="h-4 w-4 p-0 hover:bg-cyan-500/20"
                   onClick={() => openEquipDialog(slot)}
-                  disabled={getInventoryBySlot(slot).length === 0}
+                  disabled={getAvailableInventoryBySlot(slot).length === 0}
                 >
                   <Plus className="h-2 w-2 text-cyan-400" />
                 </Button>
@@ -254,9 +255,9 @@ export function HolobotPartsEquipment({ holobotName }: HolobotPartsEquipmentProp
           <div className="space-y-3">
             {availablePartsForSlot.length > 0 ? (
               <div className="space-y-2 max-h-60 overflow-y-auto">
-                {availablePartsForSlot.map(part => (
+                {availablePartsForSlot.map(({ part, quantity, partIds }) => (
                   <div 
-                    key={part.id} 
+                    key={partIds[0]} 
                     className="bg-black/40 rounded p-3 border border-gray-700 hover:border-cyan-500/50 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -268,6 +269,14 @@ export function HolobotPartsEquipment({ holobotName }: HolobotPartsEquipmentProp
                         >
                           {part.tier}
                         </Badge>
+                        {quantity > 1 && (
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs bg-gray-700/50 border-gray-500 text-gray-300"
+                          >
+                            x{quantity}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     
@@ -296,9 +305,9 @@ export function HolobotPartsEquipment({ holobotName }: HolobotPartsEquipmentProp
             ) : (
               <div className="text-center py-6 text-gray-400">
                 <Settings className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No {selectedSlot} parts available</p>
+                <p className="text-sm">No available {selectedSlot} parts</p>
                 <p className="text-xs mt-1">
-                  Purchase parts from the marketplace to equip them!
+                  All parts are equipped or purchase new ones from the marketplace!
                 </p>
               </div>
             )}

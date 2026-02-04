@@ -17,6 +17,32 @@ import {
 import { db } from './firebase';
 import { UserProfile, UserHolobot } from '@/types/user';
 
+// Helper function to recursively remove undefined values from objects and arrays
+function cleanUndefinedValues(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return null;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj
+      .filter(item => item !== undefined)
+      .map(item => cleanUndefinedValues(item));
+  }
+  
+  if (typeof obj === 'object' && !(obj instanceof Date) && !(obj instanceof Timestamp)) {
+    const cleaned: any = {};
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+      if (value !== undefined) {
+        cleaned[key] = cleanUndefinedValues(value);
+      }
+    });
+    return cleaned;
+  }
+  
+  return obj;
+}
+
 export const COLLECTIONS = {
   USERS: 'users',
   BOTS: 'bots',
@@ -139,18 +165,46 @@ export async function updateUserProfile(
   if (updates.exp_boosters !== undefined) firestoreUpdates.expBoosters = updates.exp_boosters;
   if (updates.energy_refills !== undefined) firestoreUpdates.energyRefills = updates.energy_refills;
   if (updates.rank_skips !== undefined) firestoreUpdates.rankSkips = updates.rank_skips;
-  if (updates.holobots !== undefined) firestoreUpdates.holobots = updates.holobots;
-  if (updates.blueprints !== undefined) firestoreUpdates.blueprints = updates.blueprints;
-  if (updates.parts !== undefined) firestoreUpdates.parts = updates.parts;
-  if (updates.equippedParts !== undefined) firestoreUpdates.equippedParts = updates.equippedParts;
-  if (updates.inventory !== undefined) firestoreUpdates.inventory = updates.inventory;
-  if (updates.pack_history !== undefined) firestoreUpdates.packHistory = updates.pack_history;
-  if (updates.rewardSystem !== undefined) firestoreUpdates.rewardSystem = updates.rewardSystem;
+  if (updates.holobots !== undefined) firestoreUpdates.holobots = cleanUndefinedValues(updates.holobots);
+  if (updates.blueprints !== undefined) firestoreUpdates.blueprints = cleanUndefinedValues(updates.blueprints);
+  if (updates.parts !== undefined) firestoreUpdates.parts = cleanUndefinedValues(updates.parts);
+  if (updates.equippedParts !== undefined) firestoreUpdates.equippedParts = cleanUndefinedValues(updates.equippedParts);
+  if (updates.inventory !== undefined) firestoreUpdates.inventory = cleanUndefinedValues(updates.inventory);
+  if (updates.pack_history !== undefined) {
+    // Serialize pack history to ensure Date objects are converted to ISO strings
+    const serializedHistory = updates.pack_history.map((pack: any) => ({
+      ...pack,
+      openedAt: pack.openedAt instanceof Date ? pack.openedAt.toISOString() : pack.openedAt
+    }));
+    firestoreUpdates.packHistory = cleanUndefinedValues(serializedHistory);
+  }
+  if (updates.rewardSystem !== undefined) firestoreUpdates.rewardSystem = cleanUndefinedValues(updates.rewardSystem);
   if (updates.isDevAccount !== undefined) firestoreUpdates.isDevAccount = updates.isDevAccount;
   if (updates.rental_holobots !== undefined) firestoreUpdates.rentalHolobots = updates.rental_holobots;
   if (updates.onboardingPath !== undefined) firestoreUpdates.onboardingPath = updates.onboardingPath;
+  if (updates.syncPoints !== undefined) firestoreUpdates.syncPoints = updates.syncPoints;
+  if (updates.prestigeCount !== undefined) firestoreUpdates.prestigeCount = updates.prestigeCount;
+  if (updates.lastDailyPull !== undefined) {
+    firestoreUpdates.lastDailyPull = typeof updates.lastDailyPull === 'string' 
+      ? Timestamp.fromDate(new Date(updates.lastDailyPull))
+      : Timestamp.fromDate(updates.lastDailyPull);
+  }
+  if (updates.async_battle_tickets !== undefined) firestoreUpdates.asyncBattleTickets = updates.async_battle_tickets;
+  if (updates.last_async_ticket_refresh !== undefined) {
+    firestoreUpdates.lastAsyncTicketRefresh = Timestamp.fromDate(new Date(updates.last_async_ticket_refresh));
+  }
   
-  await updateDoc(userRef, firestoreUpdates);
+  // Filter out any undefined values before sending to Firestore
+  Object.keys(firestoreUpdates).forEach(key => {
+    if (firestoreUpdates[key] === undefined) {
+      delete firestoreUpdates[key];
+    }
+  });
+  
+  // Only update if there are actual changes
+  if (Object.keys(firestoreUpdates).length > 0) {
+    await updateDoc(userRef, firestoreUpdates);
+  }
 }
 
 export async function searchPlayers(searchQuery: string, maxResults: number = 10): Promise<UserProfile[]> {

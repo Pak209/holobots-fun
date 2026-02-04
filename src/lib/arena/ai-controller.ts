@@ -53,7 +53,25 @@ export class ArenaAI {
       };
     }
     
-    // Check 1: Should enter defense mode?
+    // === CRITICAL: Stamina Management First ===
+    // Check if we need to recover stamina BEFORE we run out
+    const staminaBuffer = this.getStaminaBuffer();
+    const needsRecovery = this.needsStaminaRecovery(self, opponent, staminaBuffer);
+    
+    if (needsRecovery) {
+      const defenseCards = playableCards.filter(card => card.type === 'defense');
+      if (defenseCards.length > 0) {
+        return {
+          selectedCard: this.selectBestDefenseCard(defenseCards, self, opponent),
+          enterDefenseMode: true,
+          useSpecialAbility: false,
+          confidence: 0.95,
+          reasoning: `Stamina management: ${self.stamina}/${self.maxStamina} - recovering proactively`,
+        };
+      }
+    }
+    
+    // Check 1: Should enter defense mode? (Legacy check for exhausted state)
     if (this.shouldEnterDefenseMode(self, opponent)) {
       const defenseCards = playableCards.filter(card => card.type === 'defense');
       if (defenseCards.length > 0) {
@@ -172,6 +190,62 @@ export class ArenaAI {
   // Decision Logic
   // ============================================================================
   
+  /**
+   * NEW: Proactive stamina recovery system
+   * Prevents AI from exhausting itself by planning ahead
+   */
+  private needsStaminaRecovery(
+    self: ArenaFighter, 
+    opponent: ArenaFighter,
+    staminaBuffer: number
+  ): boolean {
+    // If we're exhausted or gassed, definitely recover
+    if (self.staminaState === 'exhausted') return true;
+    if (self.staminaState === 'gassed' && Math.random() < 0.85) return true;
+    
+    // Check if stamina is below buffer threshold
+    if (self.stamina <= staminaBuffer) {
+      // Don't recover if opponent is very low HP and we can finish them
+      if (opponent.currentHP < 25 && self.stamina >= 2) {
+        return false; // Go for the kill
+      }
+      return true;
+    }
+    
+    // Calculate "stamina sustainability" - can we afford our cheapest offensive card?
+    const offensiveCards = self.hand.filter(c => c.type !== 'defense');
+    if (offensiveCards.length > 0) {
+      const cheapestOffensive = Math.min(...offensiveCards.map(c => c.staminaCost));
+      // If we can't afford even our cheapest attack, recover
+      if (self.stamina < cheapestOffensive + 1) {
+        return true;
+      }
+    }
+    
+    // Adaptive recovery based on opponent aggression
+    // If opponent is also low on stamina, we can afford to recover
+    if (opponent.stamina <= 3 && self.stamina <= 4) {
+      return Math.random() < 0.6; // 60% chance to recover when both are low
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Get stamina buffer threshold (don't let stamina drop below this)
+   */
+  private getStaminaBuffer(): number {
+    const baseBuffer = this.personality.staminaConservation * 4; // 0-4 range
+    
+    // Adjust based on difficulty
+    switch (this.difficulty) {
+      case 'easy': return Math.max(2, baseBuffer);
+      case 'medium': return Math.max(3, baseBuffer);
+      case 'hard': return Math.max(4, baseBuffer);
+      case 'expert': return Math.max(4, baseBuffer + 1);
+    }
+  }
+  
   private shouldEnterDefenseMode(self: ArenaFighter, opponent: ArenaFighter): boolean {
     // Check stamina state
     if (self.staminaState === 'exhausted') return true;
@@ -223,9 +297,9 @@ export class ArenaAI {
     // Base score from damage
     score += card.baseDamage * 0.5;
     
-    // Efficiency: damage per stamina
+    // Efficiency: damage per stamina (MORE IMPORTANT NOW)
     const efficiency = card.baseDamage / Math.max(1, card.staminaCost);
-    score += efficiency * 10;
+    score += efficiency * 15; // Increased from 10
     
     // Speed modifier bonus
     score += card.speedModifier * 10;
@@ -233,25 +307,58 @@ export class ArenaAI {
     // Special meter gain potential
     score += (card.baseDamage * 0.3); // approximate meter gain
     
+    // === NEW: Stamina Sustainability Check ===
+    const staminaAfter = self.stamina - card.staminaCost;
+    const staminaBuffer = this.getStaminaBuffer();
+    
+    // HEAVY penalty if this move would put us below buffer
+    if (staminaAfter < staminaBuffer) {
+      score -= 60; // Make this very unattractive
+    }
+    
+    // SEVERE penalty if would leave us exhausted
+    if (staminaAfter <= 1) {
+      score -= 80; // Increased from 30
+    }
+    
+    // Moderate penalty if would leave us gassed
+    if (staminaAfter <= 2) {
+      score -= 40;
+    }
+    
+    // BONUS for sustainable plays (leaves us with good stamina)
+    if (staminaAfter >= 5) {
+      score += 25; // Reward sustainable aggression
+    }
+    
     // Type-specific scoring
     switch (card.type) {
       case 'strike':
-        // Prefer strikes when aggressive
-        score += this.personality.aggression * 20;
+        // Prefer strikes when aggressive AND have stamina
+        if (self.stamina >= 4) {
+          score += this.personality.aggression * 20;
+        } else {
+          score += this.personality.aggression * 5; // Much less when low stamina
+        }
         break;
       
       case 'defense':
         // Prefer defense when patient or low stamina
         score += this.personality.patience * 15;
-        if (self.stamina < 3) score += 30;
+        if (self.stamina < 4) score += 40; // Increased from 30
+        
+        // BONUS: Defense cards often restore stamina!
+        if (card.staminaCost === 0) {
+          score += 20; // Free cards are great
+        }
         break;
       
       case 'combo':
-        // Prefer combos when have stamina and combo preference
-        if (self.stamina >= card.staminaCost + 2) {
+        // Prefer combos when have PLENTY of stamina and combo preference
+        if (self.stamina >= card.staminaCost + 3) { // Increased buffer from 2 to 3
           score += this.personality.comboPreference * 25;
         } else {
-          score -= 20; // penalize if would leave us vulnerable
+          score -= 40; // Increased penalty from 20 to 40
         }
         break;
       
@@ -259,13 +366,9 @@ export class ArenaAI {
         // Finishers are high value but situational
         score += 100;
         if (opponent.currentHP < 30) score += 50; // bonus if likely to KO
+        // Only use finisher if we have enough stamina left
+        if (staminaAfter < 2) score -= 50;
         break;
-    }
-    
-    // Penalize if would leave us exhausted
-    const staminaAfter = self.stamina - card.staminaCost;
-    if (staminaAfter <= 1) {
-      score -= 30;
     }
     
     // Momentum-based adjustment
@@ -326,8 +429,8 @@ export class ArenaAI {
           preferredRange: 'mid',
           comboPreference: 0.2,
           defenseStyle: 'block',
-          staminaConservation: 0.3,
-          recoveryThreshold: 5,
+          staminaConservation: 0.5, // Increased from 0.3 - even easy AI manages stamina
+          recoveryThreshold: 4, // Decreased from 5 - recover earlier
           readOpponent: false,
           baitAndPunish: false,
           momentumBased: false,
@@ -342,8 +445,8 @@ export class ArenaAI {
           preferredRange: 'adaptive',
           comboPreference: 0.5,
           defenseStyle: 'mixed',
-          staminaConservation: 0.5,
-          recoveryThreshold: 4,
+          staminaConservation: 0.7, // Increased from 0.5 - better stamina management
+          recoveryThreshold: 4, // Keep at 4 - good balance
           readOpponent: false,
           baitAndPunish: false,
           momentumBased: true,
@@ -358,8 +461,8 @@ export class ArenaAI {
           preferredRange: 'adaptive',
           comboPreference: 0.7,
           defenseStyle: 'counter',
-          staminaConservation: 0.7,
-          recoveryThreshold: 3,
+          staminaConservation: 0.8, // Increased from 0.7 - very good stamina management
+          recoveryThreshold: 4, // Increased from 3 - recover slightly earlier
           readOpponent: true,
           baitAndPunish: true,
           momentumBased: true,
@@ -374,8 +477,8 @@ export class ArenaAI {
           preferredRange: 'adaptive',
           comboPreference: 0.8,
           defenseStyle: 'counter',
-          staminaConservation: 0.9,
-          recoveryThreshold: 3,
+          staminaConservation: 0.9, // Keep at 0.9 - expert stamina management
+          recoveryThreshold: 4, // Increased from 3 - even experts recover proactively
           readOpponent: true,
           baitAndPunish: true,
           momentumBased: true,

@@ -728,17 +728,33 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
     const actor = currentBattle.opponent;
     const availableCards = actor.hand;
     
-    console.log('[AI] Opponent hand:', availableCards.length, 'cards, stamina:', actor.stamina);
+    console.log('[AI Decision] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('[AI] Opponent state:', {
+      stamina: `${actor.stamina}/${actor.maxStamina}`,
+      staminaState: actor.staminaState,
+      hp: `${actor.currentHP}/${actor.maxHP}`,
+      handSize: availableCards.length,
+      specialMeter: actor.specialMeter,
+    });
     
     // Get AI decision
     const decision = aiController.selectAction(currentBattle, availableCards, false);
     
     if (!decision.selectedCard) {
-      console.log('[AI] No valid card selected. Reason:', decision.reasoning);
+      console.log('[AI] ❌ No valid card selected');
+      console.log('[AI] Reason:', decision.reasoning);
+      console.log('[AI Decision] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       return;
     }
     
-    console.log('[AI] Playing card:', decision.selectedCard.name, 'Cost:', decision.selectedCard.staminaCost);
+    console.log('[AI] ✅ Selected card:', decision.selectedCard.name);
+    console.log('[AI] Card type:', decision.selectedCard.type);
+    console.log('[AI] Stamina cost:', decision.selectedCard.staminaCost);
+    console.log('[AI] Damage:', decision.selectedCard.baseDamage || 0);
+    console.log('[AI] Confidence:', (decision.confidence * 100).toFixed(1) + '%');
+    console.log('[AI] Reasoning:', decision.reasoning);
+    console.log('[AI] Stamina after:', actor.stamina - decision.selectedCard.staminaCost);
+    console.log('[AI Decision] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
     // Execute AI's chosen action
     const newBattleState = ArenaCombatEngine.resolveAction(
@@ -782,12 +798,25 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
       // 2. AI attacks if it has stamina and enough time has passed since last action
       const now = Date.now();
       const timeSinceLastAI = now - get().lastAIActionTime;
-      const AI_COOLDOWN_MS = 1000; // 1 second between AI actions
       
-      if (regeneratedState.opponent.stamina >= 1 && timeSinceLastAI >= AI_COOLDOWN_MS) {
-        console.log('[Game Loop] Opponent has stamina:', regeneratedState.opponent.stamina, '- triggering AI turn');
+      // MORE STRATEGIC AI PACING:
+      // - Base cooldown: 1.2-1.8 seconds (more human-like)
+      // - Don't attack if stamina is very low (let it regenerate)
+      // - Add slight randomness to feel less robotic
+      const baseAICooldown = 1200; // 1.2 seconds base
+      const randomVariance = Math.random() * 600; // +0 to +0.6 seconds
+      const AI_COOLDOWN_MS = baseAICooldown + randomVariance;
+      
+      // Only let AI act if:
+      // 1. Enough time has passed
+      // 2. Has at least 2 stamina (so it has options)
+      // 3. Not in a defensive cooldown state
+      const canAct = regeneratedState.opponent.stamina >= 2 && timeSinceLastAI >= AI_COOLDOWN_MS;
+      
+      if (canAct) {
+        console.log('[Game Loop] Opponent ready to act - Stamina:', regeneratedState.opponent.stamina, '/', regeneratedState.opponent.maxStamina);
         set({ lastAIActionTime: now });
-        setTimeout(() => get().processAITurn(), 100);
+        setTimeout(() => get().processAITurn(), 150); // Slight delay for natural feel
       }
       
     }, 500); // Run every 500ms

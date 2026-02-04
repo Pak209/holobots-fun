@@ -53,6 +53,11 @@ export default function Gacha() {
     }
   }, [user?.parts, user?.equippedParts, loadPartsFromUser, loadEquippedPartsFromUser]);
 
+  // Deduplicate inventory to handle any duplicate parts from old bug
+  const deduplicatedInventory = inventory.filter((part, index, self) =>
+    index === self.findIndex((p) => p.id === part.id)
+  );
+
   // State for Holobot selection modal
   const [isHolobotSelectModalOpen, setIsHolobotSelectModalOpen] = useState(false);
   const [eligibleHolobotsForRankSkip, setEligibleHolobotsForRankSkip] = useState<UserHolobot[]>([]);
@@ -720,13 +725,13 @@ export default function Gacha() {
                   <Settings className="w-5 h-5 text-cyan-400 mr-2" />
                   <h3 className="text-xl font-bold text-white">Holobot Parts</h3>
                   <span className="ml-2 px-2 py-1 bg-cyan-500/20 text-cyan-400 text-sm rounded">
-                    {inventory.length} parts
+                    {deduplicatedInventory.length} parts
                   </span>
                 </div>
                 
-                {inventory.length > 0 ? (
+                {deduplicatedInventory.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                    {inventory.slice(0, 6).map(part => (
+                    {deduplicatedInventory.slice(0, 6).map(part => (
                       <div key={part.id} className="bg-[#1A1F2C] border border-holobots-border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-300 capitalize">
@@ -756,10 +761,10 @@ export default function Gacha() {
                         </div>
                       </div>
                     ))}
-                    {inventory.length > 6 && (
+                    {deduplicatedInventory.length > 6 && (
                       <div className="bg-[#1A1F2C] border border-holobots-border rounded-lg p-4 flex items-center justify-center">
                         <div className="text-center">
-                          <p className="text-gray-400 mb-2">+{inventory.length - 6} more parts</p>
+                          <p className="text-gray-400 mb-2">+{deduplicatedInventory.length - 6} more parts</p>
                           <p className="text-sm text-cyan-400">Visit Marketplace → My Inventory to see all</p>
                         </div>
                       </div>
