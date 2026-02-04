@@ -26,16 +26,17 @@ export const HolobotPartsScreen: React.FC<HolobotPartsScreenProps> = ({
   
   const {
     getEquippedParts,
-    getInventoryBySlot,
+    getGroupedAvailableInventory,
     equipPart,
     unequipPart,
   } = useHolobotPartsStore();
   
   const equippedParts = getEquippedParts(holobotId);
-  const inventoryParts = getInventoryBySlot(selectedSlot);
+  const inventoryParts = getGroupedAvailableInventory(selectedSlot);
   
   const handleEquipPart = async (part: Part) => {
     try {
+      // Update the local store
       equipPart(holobotId, part);
       
       // Save equipped parts to database
@@ -57,6 +58,7 @@ export const HolobotPartsScreen: React.FC<HolobotPartsScreenProps> = ({
       }
       
       setShowInventory(false);
+      
       toast({
         title: "Part Equipped!",
         description: `${part.name} has been equipped.`,
@@ -226,13 +228,19 @@ export const HolobotPartsScreen: React.FC<HolobotPartsScreenProps> = ({
           <div className="flex-1 overflow-y-auto p-4">
             {inventoryParts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {inventoryParts.map((part) => (
-                  <PartCard
-                    key={part.id}
-                    part={part}
-                    size="sm"
-                    onPress={() => handleEquipPart(part)}
-                  />
+                {inventoryParts.map(({ part, quantity, partIds }) => (
+                  <div key={partIds[0]} className="relative">
+                    <PartCard
+                      part={part}
+                      size="sm"
+                      onPress={() => handleEquipPart(part)}
+                    />
+                    {quantity > 1 && (
+                      <div className="absolute top-2 right-2 bg-gray-700/90 border border-gray-500 rounded-full px-2 py-0.5 text-xs font-bold text-white">
+                        x{quantity}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             ) : (
@@ -242,7 +250,13 @@ export const HolobotPartsScreen: React.FC<HolobotPartsScreenProps> = ({
                   'text-lg',
                   isDark ? 'text-gray-400' : 'text-gray-600'
                 )}>
-                  No {selectedSlot} parts in inventory
+                  No available {selectedSlot} parts
+                </p>
+                <p className={cn(
+                  'text-sm mt-2',
+                  isDark ? 'text-gray-500' : 'text-gray-500'
+                )}>
+                  All parts are equipped or purchase new ones
                 </p>
               </div>
             )}

@@ -231,7 +231,7 @@ export function createPartFromMarketplace(marketplacePart: MarketplacePart, tier
 
   const multiplier = tierMultiplier[tier];
   
-  return {
+  const part: Part = {
     id: `${marketplacePart.id}-${tier}-${Date.now()}`,
     slot: marketplacePart.slot,
     tier,
@@ -243,9 +243,21 @@ export function createPartFromMarketplace(marketplacePart: MarketplacePart, tier
       speed: Math.floor(marketplacePart.baseStats.speed * multiplier),
       intelligence: Math.floor(marketplacePart.baseStats.intelligence * multiplier),
     },
-    visualEffects: marketplacePart.visualEffects,
-    passiveTraits: marketplacePart.passiveTraits,
-    specialAttackVariant: marketplacePart.specialAttackVariant,
-    synergySet: marketplacePart.synergySet,
   };
+  
+  // Only include optional fields if they exist
+  if (marketplacePart.visualEffects) {
+    part.visualEffects = marketplacePart.visualEffects;
+  }
+  if (marketplacePart.passiveTraits) {
+    part.passiveTraits = marketplacePart.passiveTraits;
+  }
+  if (marketplacePart.specialAttackVariant) {
+    part.specialAttackVariant = marketplacePart.specialAttackVariant;
+  }
+  if (marketplacePart.synergySet) {
+    part.synergySet = marketplacePart.synergySet;
+  }
+  
+  return part;
 } 
