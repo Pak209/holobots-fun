@@ -1,57 +1,23 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { getHolobotImagePath } from "@/utils/holobotImageUtils";
-import { StatusBar } from "@/components/HealthBar";
-import { FitnessStat } from "@/components/fitness/FitnessStat";
-import { WorkoutRewards } from "@/components/fitness/WorkoutRewards";
-import { HolobotSelector } from "@/components/fitness/HolobotSelector";
-import { SyncPointsInput } from "@/components/fitness/SyncPointsInput";
-import { SyncPointsDashboard } from "@/components/fitness/SyncPointsDashboard";
-import { SyncTrainingInput } from "@/components/fitness/SyncTrainingInput";
-import { HolobotUpgradeSelector } from "@/components/fitness/HolobotUpgradeSelector";
-import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { useRewardTracking } from "@/hooks/useRewardTracking";
-import { DevAccessWrapper, DevSwitcher } from "@/components/DevAccessWrapper";
-import { useDevAccess } from "@/hooks/useDevAccess";
+import { DevAccessWrapper } from "@/components/DevAccessWrapper";
 
-interface HolobotRank {
-  name: string;
-  multiplier: number;
-}
-
-const HOLOBOT_RANKS: Record<string, HolobotRank> = {
-  "Champion": { name: "Champion", multiplier: 0.25 },
-  "Rare": { name: "Rare", multiplier: 0.5 },
-  "Elite": { name: "Elite", multiplier: 1 },
-  "Legendary": { name: "Legendary", multiplier: 2 }
-};
-
-const STEPS_PER_EXP = 10; // 10 steps = 1 EXP point (1000 steps = 100 EXP)
-const STEPS_PER_MILE = 2000; // Approximately 2000 steps per mile
-const HOLOS_PER_MILE = 250; // Base holos per mile
-const TARGET_DAILY_STEPS = 10000; // Target steps per day
-const TARGET_WORKOUT_TIME = 30 * 60; // 30 minutes workout in seconds
+const STEPS_PER_KM = 1250; // Approximately 1250 steps per kilometer
+const TARGET_DAILY_STEPS = 10000; // Target steps per day (8 km)
+const SYNC_POINTS_PER_KM = 135; // Sync points earned per kilometer
+const EXP_PER_KM = 250; // EXP earned per kilometer
+const SP_PER_KM = 10; // SP (Skill Points) per kilometer
 
 export default function Fitness() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
-  const { trackTrainingSession, trackFitnessGoal } = useRewardTracking();
-  const hasDevAccess = useDevAccess();
   const [selectedHolobot, setSelectedHolobot] = useState<string | null>(null);
   const [isTracking, setIsTracking] = useState(false);
-  const [workoutTime, setWorkoutTime] = useState(0);
   const [steps, setSteps] = useState(0);
   const [workoutSteps, setWorkoutSteps] = useState(0);
-  const [stamina, setStamina] = useState(100);
-  const [activeTab, setActiveTab] = useState<'steps' | 'training' | 'upgrades'>('steps'); // Default to steps for testing
-  const [rewards, setRewards] = useState({
-    exp: 0,
-    holos: 0,
-    attributeBoosts: 0,
-  });
+  const [needleRotation, setNeedleRotation] = useState(-90); // Start at 0 km/h
 
   // Set initial selected holobot from user's holobots
   useEffect(() => {
@@ -65,75 +31,44 @@ export default function Fitness() {
     h => h.name.toLowerCase() === selectedHolobot?.toLowerCase()
   );
 
-  // Determine the holobot's rank multiplier
-  const getHolobotRankMultiplier = (): number => {
-    if (!currentHolobot) return 1;
-    
-    const rank = currentHolobot.rank || "Champion";
-    return HOLOBOT_RANKS[rank]?.multiplier || 1;
-  };
+  // Calculate current progress
+  const kilometersCompleted = (steps / STEPS_PER_KM).toFixed(3);
+  const currentSpeed = isTracking ? Math.random() * 10 + 5 : 0; // Random speed between 5-15 km/h when tracking
+  const progressPercentage = Math.min((steps / TARGET_DAILY_STEPS) * 100, 100);
+  const syncPointsEarned = Math.floor((steps / STEPS_PER_KM) * SYNC_POINTS_PER_KM);
+  const expEarned = Math.floor((steps / STEPS_PER_KM) * EXP_PER_KM);
+  const spEarned = Math.floor((steps / STEPS_PER_KM) * SP_PER_KM);
 
-  // Reset steps at midnight
+  // Update needle rotation based on speed (0-20 km/h maps to -90deg to +90deg)
   useEffect(() => {
-    const checkMidnight = () => {
-      const now = new Date();
-      if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
-        setSteps(0);
-        toast({
-          title: "Daily Steps Reset",
-          description: "Your step counter has been reset for the new day.",
-        });
-      }
-    };
+    if (isTracking) {
+      const interval = setInterval(() => {
+        const speed = Math.random() * 10 + 5; // 5-15 km/h
+        const rotation = -90 + (speed / 20) * 180; // Map 0-20 km/h to -90 to +90 degrees
+        setNeedleRotation(rotation);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setNeedleRotation(-90); // Reset to 0
+    }
+  }, [isTracking]);
 
-    const interval = setInterval(checkMidnight, 1000);
-    return () => clearInterval(interval);
-  }, [toast]);
-
-  // Simulated workout tracking (in real app would use device sensors)
+  // Simulated step tracking
   useEffect(() => {
     let timer: number | null = null;
     
     if (isTracking) {
       timer = window.setInterval(() => {
-        // Increment workout time (in seconds)
-        setWorkoutTime(prev => prev + 1);
-        
-        // Simulate step counting (would use Health Kit in real app)
-        const stepsIncrement = Math.floor(Math.random() * 5) + 1; // 1-5 steps per second
-        
+        const stepsIncrement = Math.floor(Math.random() * 5) + 3; // 3-7 steps per second
         setSteps(prev => prev + stepsIncrement);
         setWorkoutSteps(prev => prev + stepsIncrement);
-        
-        // Decrease stamina over time
-        setStamina(prev => {
-          const newStamina = Math.max(0, prev - 0.2);
-          if (newStamina <= 0) {
-            // Auto-stop when stamina is depleted
-            setIsTracking(false);
-            completeWorkout();
-          }
-          return newStamina;
-        });
-        
-        // Calculate rewards based on steps and time
-        const expEarned = Math.floor(workoutSteps / STEPS_PER_EXP);
-        const milesCompleted = workoutSteps / STEPS_PER_MILE;
-        const rankMultiplier = getHolobotRankMultiplier();
-        const holosEarned = Math.floor(milesCompleted * HOLOS_PER_MILE * rankMultiplier);
-        
-        setRewards({
-          exp: expEarned,
-          holos: holosEarned,
-          attributeBoosts: Math.floor(expEarned / 100), // One boost point per 100 EXP
-        });
       }, 1000);
     }
     
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isTracking, workoutTime, workoutSteps]);
+  }, [isTracking]);
 
   const startWorkout = () => {
     if (!selectedHolobot) {
@@ -146,530 +81,239 @@ export default function Fitness() {
     }
 
     setIsTracking(true);
-    setWorkoutSteps(0); // Reset workout steps counter
+    setWorkoutSteps(0);
     toast({
       title: "Workout Started",
-      description: "Your workout session has begun!",
+      description: "Start moving to earn rewards!",
     });
   };
 
   const stopWorkout = () => {
     setIsTracking(false);
-    completeWorkout();
-  };
-
-  const completeWorkout = () => {
+    
     if (workoutSteps > 0 && user && selectedHolobot) {
-      // Track training session for rewards
-      trackTrainingSession();
+      // Update user with rewards
+      const finalSyncPoints = Math.floor((workoutSteps / STEPS_PER_KM) * SYNC_POINTS_PER_KM);
+      const finalExp = Math.floor((workoutSteps / STEPS_PER_KM) * EXP_PER_KM);
       
-      // Calculate final rewards
-      const expEarned = Math.floor(workoutSteps / STEPS_PER_EXP);
-      const milesCompleted = workoutSteps / STEPS_PER_MILE;
-      const rankMultiplier = getHolobotRankMultiplier();
-      const holosEarned = Math.floor(milesCompleted * HOLOS_PER_MILE * rankMultiplier);
+      updateUser({
+        holosTokens: user.holosTokens + finalSyncPoints,
+        holobots: user.holobots.map(bot => 
+          bot.name.toLowerCase() === selectedHolobot.toLowerCase()
+            ? { 
+                ...bot, 
+                experience: bot.experience + finalExp,
+              } 
+            : bot
+        )
+      });
       
-      // Track fitness goal achievement
-      trackFitnessGoal(steps);
+      setWorkoutSteps(0);
       
-      // Find the selected holobot
-      const selectedHolobotObj = user.holobots.find(
-        h => h.name.toLowerCase() === selectedHolobot.toLowerCase()
-      );
-      
-      if (selectedHolobotObj) {
-        // Update user with rewards
-        updateUser({
-          holosTokens: user.holosTokens + holosEarned,
-          // Update experience for the selected holobot
-          holobots: user.holobots.map(bot => 
-            bot.name.toLowerCase() === selectedHolobot.toLowerCase()
-              ? { 
-                  ...bot, 
-                  experience: bot.experience + expEarned,
-                  // Add attribute point for the workout (1 per workout completion)
-                  attributePoints: (bot.attributePoints || 0) + 1
-                } 
-              : bot
-          )
-        });
-        
-        // Reset tracking stats
-        setWorkoutTime(0);
-        setWorkoutSteps(0);
-        setStamina(100);
-        
-        toast({
-          title: "Workout Complete!",
-          description: `You earned ${holosEarned} Holos and ${expEarned} EXP! Training streak updated.`,
-        });
-      }
+      toast({
+        title: "Workout Complete!",
+        description: `You earned ${finalSyncPoints} Sync Points and ${finalExp} EXP!`,
+      });
     }
   };
 
-  // Format time as MM:SS
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
-    <div className="min-h-screen bg-[#1A1F2C] text-white p-4">
-      <div className="max-w-md mx-auto pt-16">
-        <h1 className="text-3xl font-bold text-center mb-6 text-cyan-400 font-orbitron italic">
-          FITNESS SYNC
-        </h1>
-        
-        <DevAccessWrapper
-          fallback={
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-bold text-cyan-400 mb-4">🚧 FITNESS SYNC - COMING SOON</h2>
-              <p className="text-gray-400 mb-6">
-                We're working hard to bring you the ultimate fitness experience.<br/>
-                The Sync Points system will help you train your Holobots using real-world activity!
-              </p>
-              <div className="bg-black/30 backdrop-blur-md rounded-xl border border-cyan-500/30 p-6">
-                <h3 className="text-lg font-bold text-cyan-300 mb-3">Coming Features:</h3>
-                <ul className="text-left text-gray-300 space-y-2">
-                  <li>🏃 Track your daily steps and workouts</li>
-                  <li>⚡ Earn Sync Points for every step you take</li>
-                  <li>🤖 Train and upgrade your Holobots with fitness activity</li>
-                  <li>🏆 Compete in fitness leaderboards</li>
-                  <li>🎁 Unlock exclusive rewards for staying active</li>
-                </ul>
-              </div>
+    <div className="min-h-screen bg-gradient-to-b from-[#F5C400] via-[#E5B800] to-[#D4A400] relative overflow-hidden">
+      <DevAccessWrapper
+        fallback={
+          <div className="text-center py-12 px-4">
+            <h2 className="text-2xl font-bold text-black mb-4">🚧 SYNC TRAINING - COMING SOON</h2>
+            <p className="text-black/80 mb-6">
+              We're working hard to bring you the ultimate fitness experience.
+            </p>
+          </div>
+        }
+      >
+        {/* Diagonal stripes background */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute h-full w-32 bg-gradient-to-r from-transparent via-[#D4A400] to-transparent transform -skew-x-12"
+              style={{ left: `${i * 8}%` }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 max-w-md mx-auto px-4 pb-24">
+          {/* 1. SYNC POINT ELEMENT - Top Header */}
+          <div className="relative mt-4 mb-4">
+            <img 
+              src="/icons/SyncPointElement.svg" 
+              alt="Sync Point Header"
+              className="w-full h-auto"
+            />
+            <div className="absolute inset-0 flex flex-col items-start justify-center pl-6">
+              <h2 className="text-white text-xl font-black uppercase tracking-wider">SYNC POINT</h2>
+              <p className="text-red-500 text-3xl font-black">+{syncPointsEarned}</p>
             </div>
-          }
-        >
-          {/* Tab Navigation */}
-          <div className="flex mb-6 bg-black/30 backdrop-blur-md rounded-lg p-1 border border-cyan-500/30">
-            <Button
-              onClick={() => setActiveTab('steps')}
-              className={cn(
-                "flex-1 text-xs font-medium",
-                activeTab === 'steps'
-                  ? "bg-green-500 text-white" 
-                  : "bg-transparent text-green-300 hover:bg-green-500/20"
-              )}
-            >
-              STEPS
-            </Button>
-            <Button
-              onClick={() => setActiveTab('training')}
-              className={cn(
-                "flex-1 text-xs font-medium",
-                activeTab === 'training'
-                  ? "bg-orange-500 text-white" 
-                  : "bg-transparent text-orange-300 hover:bg-orange-500/20"
-              )}
-            >
-              SYNC TRAINING
-            </Button>
-            <Button
-              onClick={() => setActiveTab('upgrades')}
-              className={cn(
-                "flex-1 text-xs font-medium",
-                activeTab === 'upgrades'
-                  ? "bg-cyan-500 text-white" 
-                  : "bg-transparent text-cyan-300 hover:bg-cyan-500/20"
-              )}
-            >
-              UPGRADES
-            </Button>
           </div>
 
-          {activeTab === 'steps' && (
-            /* Steps Input Mode */
-            <div className="space-y-6">
-              <SyncPointsInput />
-              <SyncPointsDashboard />
+          {/* 2. GOAL ELEMENT */}
+          <div className="relative mb-4">
+            <img 
+              src="/icons/GoalElement.svg" 
+              alt="Goal Progress"
+              className="w-full h-auto"
+            />
+            <div className="absolute inset-0 flex items-center justify-between px-8">
+              <div className="flex items-center gap-4">
+                <span className="text-white text-2xl font-black uppercase">GOAL</span>
+                <span className="text-white text-2xl font-black">{steps}/{TARGET_DAILY_STEPS}</span>
+              </div>
             </div>
-          )}
+          </div>
 
-          {activeTab === 'training' && (
-            /* Sync Training Mode */
-            <div className="space-y-6">
-              <SyncTrainingInput />
-            
-            {/* Original Fitness Interface */}
-            <div>
-              {/* Holobot selector */}
-              <HolobotSelector 
-                holobots={user?.holobots || []}
-                selectedHolobot={selectedHolobot}
-                onSelect={setSelectedHolobot}
+          {/* 3. MECH DETAIL ELEMENT - Left side */}
+          <div className="relative mb-4 flex items-start gap-4">
+            <div className="relative w-1/2">
+              <img 
+                src="/icons/MechDetailElement.svg" 
+                alt="Mecha Details"
+                className="w-full h-auto"
               />
+              <div className="absolute inset-0 flex flex-col justify-center pl-4">
+                <p className="text-white text-xs font-bold">{currentHolobot?.name || "MEcha No001"}</p>
+                <div className="bg-[#F5C400] h-1 w-3/4 mt-1 mb-1"></div>
+                <p className="text-white text-sm font-black">Lv {currentHolobot?.level || 14}</p>
+              </div>
+            </div>
 
-              {/* Main workout interface */}
-              <div className="bg-black/30 backdrop-blur-md rounded-xl border border-cyan-500/30 shadow-[0_0_15px_rgba(0,255,255,0.15)] p-4 mb-6">
-                {/* Selected Holobot Display */}
-                <div className="relative flex justify-center mb-6">
-                  {selectedHolobot && (
-                    <>
-                      {/* Circular platform effect */}
-                      <div className="absolute bottom-0 w-40 h-10 bg-cyan-500/20 rounded-full blur-md"></div>
-                      
-                      {/* Holobot image */}
-                      <img 
-                        src={getHolobotImagePath(selectedHolobot)} 
-                        alt={selectedHolobot}
-                        className="h-60 object-contain z-10"
-                      />
-                      
-                      {/* Energy ring around holobot */}
-                      <div className={cn(
-                        "absolute bottom-0 w-40 h-40 rounded-full border-2 border-cyan-400/50",
-                        "flex items-center justify-center",
-                        isTracking ? "animate-pulse" : ""
-                      )}>
-                        <div className="w-36 h-36 rounded-full border border-cyan-300/30"></div>
-                      </div>
-                    </>
-                  )}
-                </div>
-                
-                {/* Workout stats */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <FitnessStat 
-                    icon="steps" 
-                    label="STEPS"
-                    value={`${steps.toLocaleString()}`} 
-                    subValue={`TARGET: ${TARGET_DAILY_STEPS.toLocaleString()}`}
-                    progress={steps / TARGET_DAILY_STEPS * 100}
-                  />
-                  
-                  <FitnessStat 
-                    icon="time" 
-                    label="WORKOUT"
-                    value={formatTime(workoutTime)} 
-                    subValue="TARGET: 30:00"
-                    progress={workoutTime / TARGET_WORKOUT_TIME * 100}
-                  />
-                </div>
-                
-                {/* Stamina bar */}
-                <div className="mb-6">
-                  <div className="flex justify-between mb-1">
-                    <span className="text-xs text-cyan-400">STAMINA</span>
-                    <span className="text-xs text-cyan-400">{stamina.toFixed(0)}%</span>
-                  </div>
-                  <StatusBar 
-                    current={stamina} 
-                    max={100} 
-                    type="health" 
-                    isLeft={true}
-                  />
-                </div>
-                
-                {/* Workout rewards */}
-                <WorkoutRewards rewards={rewards} />
-                
-                {/* Holobot rank multiplier indicator */}
-                {currentHolobot && (
-                  <div className="mt-4 bg-black/40 rounded-lg p-3 border border-purple-500/20">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-purple-400">RANK BONUS</span>
-                      <span className="text-sm font-bold text-purple-400">
-                        {currentHolobot.rank || "Champion"} (×{getHolobotRankMultiplier()})
-                      </span>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Action button */}
-                <div className="flex justify-center mt-8">
-                  <Button
-                    onClick={isTracking ? stopWorkout : startWorkout}
-                    className={cn(
-                      "w-40 h-14 rounded-full font-bold text-lg",
-                      isTracking 
-                        ? "bg-red-500 hover:bg-red-600" 
-                        : "bg-cyan-500 hover:bg-cyan-600"
-                    )}
-                  >
-                    {isTracking ? "STOP" : "START"}
-                  </Button>
-                </div>
+            {/* CHANGE MECHA Button - Right side */}
+            <div className="w-1/2 flex items-center justify-end">
+              <button
+                onClick={() => {
+                  // Cycle through holobots
+                  const holobots = user?.holobots || [];
+                  if (holobots.length > 0) {
+                    const currentIndex = holobots.findIndex(h => h.name === selectedHolobot);
+                    const nextIndex = (currentIndex + 1) % holobots.length;
+                    setSelectedHolobot(holobots[nextIndex].name);
+                  }
+                }}
+                className="bg-black text-[#F5C400] font-black uppercase text-sm px-6 py-3 border-4 border-[#F5C400] hover:bg-[#F5C400] hover:text-black transition-all flex items-center gap-2"
+                style={{
+                  clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                }}
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M21 12a9 9 0 11-9-9 9 9 0 019 9z" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+                CHANGE MECHA
+              </button>
+            </div>
+          </div>
+
+          {/* 4 & 5. SPEEDOMETER + NEEDLE */}
+          <div className="relative w-full flex justify-center mb-6">
+            <div className="relative w-80 h-40">
+              {/* Speedometer base */}
+              <img 
+                src="/icons/Speedometer.svg" 
+                alt="Speedometer"
+                className="absolute inset-0 w-full h-full object-contain"
+              />
+              
+              {/* Needle */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img 
+                  src="/icons/needle.svg" 
+                  alt="Speed Needle"
+                  className="absolute w-32 h-32 transition-transform duration-500 ease-out"
+                  style={{
+                    transform: `rotate(${needleRotation}deg)`,
+                    transformOrigin: 'center bottom'
+                  }}
+                />
               </div>
               
-              {/* Attributes section */}
-              <div className="bg-black/30 backdrop-blur-md rounded-xl border border-purple-500/30 shadow-[0_0_15px_rgba(128,0,255,0.15)] p-4 mb-6">
-                <h2 className="text-lg font-bold mb-4 text-purple-400">ATTRIBUTES</h2>
-                
-                {selectedHolobot && user?.holobots ? (
-                  <div className="space-y-4">
-                    {/* Find the selected holobot's data */}
-                    {user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes && (
-                      <>
-                        <div className="space-y-1">
-                          <div className="flex justify-between">
-                            <span className="text-xs">ATTACK</span>
-                            <span className="text-xs">
-                              +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.attack || 0}
-                            </span>
-                          </div>
-                          <Progress 
-                            value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.attack || 0} 
-                            max={100}
-                            className="h-1.5 bg-gray-800"
-                          />
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <div className="flex justify-between">
-                            <span className="text-xs">DEFENSE</span>
-                            <span className="text-xs">
-                              +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.defense || 0}
-                            </span>
-                          </div>
-                          <Progress 
-                            value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.defense || 0} 
-                            max={100}
-                            className="h-1.5 bg-gray-800"
-                          />
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <div className="flex justify-between">
-                            <span className="text-xs">SPEED</span>
-                            <span className="text-xs">
-                              +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.speed || 0}
-                            </span>
-                          </div>
-                          <Progress 
-                            value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.speed || 0} 
-                            max={100}
-                            className="h-1.5 bg-gray-800"
-                          />
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <div className="flex justify-between">
-                            <span className="text-xs">HEALTH</span>
-                            <span className="text-xs">
-                              +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.health || 0}
-                            </span>
-                          </div>
-                          <Progress 
-                            value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.health || 0} 
-                            max={100}
-                            className="h-1.5 bg-gray-800"
-                          />
-                        </div>
-                        
-                        {/* Show available attribute points */}
-                        <div className="mt-4 pt-4 border-t border-purple-500/20">
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs text-purple-400">AVAILABLE POINTS</span>
-                            <span className="text-sm font-bold text-yellow-400">
-                              {user.holobots.find(bot => bot.name === selectedHolobot)?.attributePoints || 0}
-                            </span>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-center text-sm text-gray-500">No Holobot selected</p>
-                )}
+              {/* Speed text overlay */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pt-8">
+                <p className="text-white text-4xl font-black">{currentSpeed.toFixed(0)} km/h</p>
+                <p className="text-white text-xs uppercase tracking-wider">Movement speed</p>
               </div>
             </div>
           </div>
-        )}
 
-        {activeTab === 'upgrades' && (
-          /* Attribute Upgrades Mode */
-          <HolobotUpgradeSelector />
-        )}
-
-        {/* Original Sync Training Mode (hidden, preserved for reference) */}
-        {false && (
-          <>
-            {/* Holobot selector */}
-            <HolobotSelector 
-              holobots={user?.holobots || []}
-              selectedHolobot={selectedHolobot}
-              onSelect={setSelectedHolobot}
+          {/* 6. DISTANCE ELEMENT */}
+          <div className="relative mb-4">
+            <img 
+              src="/icons/DistanceElement.svg" 
+              alt="Distance Traveled"
+              className="w-full h-auto"
             />
+            <div className="absolute inset-0 flex items-center justify-center gap-4">
+              <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13.5 5.5c1.09 0 2-.89 2-2 0-1.1-.91-2-2-2s-2 .9-2 2c0 1.11.91 2 2 2zm-1.5 7.5v6h3v-6h3l-4.5-7-4.5 7h3z"/>
+              </svg>
+              <div>
+                <p className="text-white text-5xl font-black">{kilometersCompleted}</p>
+                <p className="text-white text-sm uppercase tracking-wider">Kilometers</p>
+              </div>
+            </div>
+          </div>
 
-        {/* Main workout interface */}
-        <div className="bg-black/30 backdrop-blur-md rounded-xl border border-cyan-500/30 shadow-[0_0_15px_rgba(0,255,255,0.15)] p-4 mb-6">
-          {/* Selected Holobot Display */}
-          <div className="relative flex justify-center mb-6">
-            {selectedHolobot && (
-              <>
-                {/* Circular platform effect */}
-                <div className="absolute bottom-0 w-40 h-10 bg-cyan-500/20 rounded-full blur-md"></div>
-                
-                {/* Holobot image */}
-                <img 
-                  src={getHolobotImagePath(selectedHolobot)} 
-                  alt={selectedHolobot}
-                  className="h-60 object-contain z-10"
-                />
-                
-                {/* Energy ring around holobot */}
-                <div className={cn(
-                  "absolute bottom-0 w-40 h-40 rounded-full border-2 border-cyan-400/50",
-                  "flex items-center justify-center",
-                  isTracking ? "animate-pulse" : ""
-                )}>
-                  <div className="w-36 h-36 rounded-full border border-cyan-300/30"></div>
+          {/* 7. BOTTOM ELEMENT - Rewards */}
+          <div className="relative mb-4">
+            <img 
+              src="/icons/BottomElement.svg" 
+              alt="Rewards"
+              className="w-full h-auto"
+            />
+            <div className="absolute inset-0 flex items-center justify-center gap-8">
+              {/* Sync Points */}
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-[#F5C400] border-2 border-black flex items-center justify-center" style={{
+                  clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)'
+                }}>
+                  <span className="text-black text-xs font-black">SP</span>
                 </div>
-              </>
-            )}
-          </div>
-          
-          {/* Workout stats */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <FitnessStat 
-              icon="steps" 
-              label="STEPS"
-              value={`${steps.toLocaleString()}`} 
-              subValue={`TARGET: ${TARGET_DAILY_STEPS.toLocaleString()}`}
-              progress={steps / TARGET_DAILY_STEPS * 100}
-            />
-            
-            <FitnessStat 
-              icon="time" 
-              label="WORKOUT"
-              value={formatTime(workoutTime)} 
-              subValue="TARGET: 30:00"
-              progress={workoutTime / TARGET_WORKOUT_TIME * 100}
-            />
-          </div>
-          
-          {/* Stamina bar */}
-          <div className="mb-6">
-            <div className="flex justify-between mb-1">
-              <span className="text-xs text-cyan-400">STAMINA</span>
-              <span className="text-xs text-cyan-400">{stamina.toFixed(0)}%</span>
-            </div>
-            <StatusBar 
-              current={stamina} 
-              max={100} 
-              type="health" 
-              isLeft={true}
-            />
-          </div>
-          
-          {/* Workout rewards */}
-          <WorkoutRewards rewards={rewards} />
-          
-          {/* Holobot rank multiplier indicator */}
-          {currentHolobot && (
-            <div className="mt-4 bg-black/40 rounded-lg p-3 border border-purple-500/20">
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-purple-400">RANK BONUS</span>
-                <span className="text-sm font-bold text-purple-400">
-                  {currentHolobot.rank || "Champion"} (×{getHolobotRankMultiplier()})
-                </span>
+                <span className="text-[#F5C400] text-2xl font-black">+{syncPointsEarned}</span>
+              </div>
+
+              {/* SP (Skill Points) */}
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-cyan-400 border-2 border-black rounded-full flex items-center justify-center">
+                  <span className="text-black text-xs font-black">S</span>
+                </div>
+                <span className="text-cyan-400 text-2xl font-black">+{spEarned}</span>
+              </div>
+
+              {/* EXP */}
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-[#F5C400] border-2 border-black rounded-full flex items-center justify-center">
+                  <span className="text-black text-xs font-black">EXP</span>
+                </div>
+                <span className="text-[#F5C400] text-2xl font-black">+{expEarned}</span>
               </div>
             </div>
-          )}
-          
-          {/* Action button */}
-          <div className="flex justify-center mt-8">
-            <Button
+          </div>
+
+          {/* 8. GO BUTTON */}
+          <div className="relative">
+            <img 
+              src="/icons/GoButton.svg" 
+              alt="Go Button"
+              className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
               onClick={isTracking ? stopWorkout : startWorkout}
-              className={cn(
-                "w-40 h-14 rounded-full font-bold text-lg",
-                isTracking 
-                  ? "bg-red-500 hover:bg-red-600" 
-                  : "bg-cyan-500 hover:bg-cyan-600"
-              )}
-            >
-              {isTracking ? "STOP" : "START"}
-            </Button>
+            />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <span className={cn(
+                "text-6xl font-black uppercase tracking-widest",
+                isTracking ? "text-red-500" : "text-[#F5C400]"
+              )}>
+                {isTracking ? "STOP" : "GO"}
+              </span>
+            </div>
           </div>
         </div>
-        
-        {/* Attributes section */}
-        <div className="bg-black/30 backdrop-blur-md rounded-xl border border-purple-500/30 shadow-[0_0_15px_rgba(128,0,255,0.15)] p-4 mb-6">
-          <h2 className="text-lg font-bold mb-4 text-purple-400">ATTRIBUTES</h2>
-          
-          {selectedHolobot && user?.holobots ? (
-            <div className="space-y-4">
-              {/* Find the selected holobot's data */}
-              {user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes && (
-                <>
-                  <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-xs">ATTACK</span>
-                      <span className="text-xs">
-                        +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.attack || 0}
-                      </span>
-                    </div>
-                    <Progress 
-                      value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.attack || 0} 
-                      max={100}
-                      className="h-1.5 bg-gray-800"
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-xs">DEFENSE</span>
-                      <span className="text-xs">
-                        +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.defense || 0}
-                      </span>
-                    </div>
-                    <Progress 
-                      value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.defense || 0} 
-                      max={100}
-                      className="h-1.5 bg-gray-800"
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-xs">SPEED</span>
-                      <span className="text-xs">
-                        +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.speed || 0}
-                      </span>
-                    </div>
-                    <Progress 
-                      value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.speed || 0} 
-                      max={100}
-                      className="h-1.5 bg-gray-800"
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-xs">HEALTH</span>
-                      <span className="text-xs">
-                        +{user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.health || 0}
-                      </span>
-                    </div>
-                    <Progress 
-                      value={user.holobots.find(bot => bot.name === selectedHolobot)?.boostedAttributes?.health || 0} 
-                      max={100}
-                      className="h-1.5 bg-gray-800"
-                    />
-                  </div>
-                  
-                  {/* Show available attribute points */}
-                  <div className="mt-4 pt-4 border-t border-purple-500/20">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-purple-400">AVAILABLE POINTS</span>
-                      <span className="text-sm font-bold text-yellow-400">
-                        {user.holobots.find(bot => bot.name === selectedHolobot)?.attributePoints || 0}
-                      </span>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <p className="text-center text-sm text-gray-500">No Holobot selected</p>
-          )}
-        </div>
-          </>
-        )}
       </DevAccessWrapper>
-      </div>
     </div>
   );
 }
