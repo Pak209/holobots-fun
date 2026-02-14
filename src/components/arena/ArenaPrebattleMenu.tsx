@@ -190,19 +190,25 @@ export const ArenaPrebattleMenu = ({
   const getUserHolobotByKey = (key: string) => userHolobots.find(h => getHolobotKeyByName(h.name) === key);
 
   return (
-    <Card className="border border-holobots-border bg-[#1A1F2C]">
-      <CardHeader className="py-3 sm:py-4 md:py-6">
-        <CardTitle className="text-center text-lg sm:text-xl md:text-2xl text-white font-orbitron italic">Arena Battle</CardTitle>
+    <Card className="border-4 border-[#F5C400] bg-black relative z-20 shadow-[0_0_30px_rgba(245,196,0,0.3)]" style={{
+      clipPath: 'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)'
+    }}>
+      <CardHeader className="py-2 sm:py-3 bg-gradient-to-r from-[#F5C400] to-[#D4A400] relative" style={{
+        clipPath: 'polygon(15px 0, 100% 0, 100% 100%, 0 100%, 0 15px)'
+      }}>
+        <CardTitle className="text-center text-lg sm:text-xl md:text-2xl text-black font-bold tracking-widest uppercase">Arena Battle</CardTitle>
       </CardHeader>
-      <CardContent className="p-3 sm:p-4 md:p-6">
-        <div className="flex flex-col space-y-3 sm:space-y-4 md:space-y-6">
+      <CardContent className="p-2 sm:p-3 md:p-4 bg-gradient-to-b from-black via-gray-900 to-black">
+        <div className="flex flex-col space-y-2 sm:space-y-3">
           {/* First Row: Holobot Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
             {/* User Holobot Selection */}
             <div className="flex flex-col">
-              <h3 className="text-red-400 mb-1 sm:mb-1.5 md:mb-2 text-center md:text-left font-orbitron italic text-sm sm:text-base">Select Your Holobot</h3>
+              <h3 className="text-[#F5C400] mb-1.5 sm:mb-2 text-center md:text-left font-bold tracking-wider uppercase text-xs sm:text-sm border-b-2 border-[#F5C400] pb-1">Select Your Holobot</h3>
               <Select value={selectedHolobot || undefined} onValueChange={handleHolobotSelect}>
-                <SelectTrigger className="w-full bg-[#1A1F2C] text-white border-holobots-border">
+                <SelectTrigger className="w-full bg-black text-white border-2 border-[#F5C400]/50 hover:border-[#F5C400] transition-colors" style={{
+                  clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                }}>
                   {selectedHolobot ? (
                     (() => {
                       const userHolobot = getUserHolobotByKey(selectedHolobot);
@@ -268,11 +274,11 @@ export const ArenaPrebattleMenu = ({
                     <SelectValue placeholder="Choose your Holobot" />
                   )}
                 </SelectTrigger>
-                <SelectContent className="bg-holobots-card border-holobots-border">
+                <SelectContent className="bg-black border-3 border-[#F5C400] shadow-[0_0_20px_rgba(245,196,0,0.4)]">
                   {userHolobots.map((holobot, index) => {
                     const holobotKey = getHolobotKeyByName(holobot.name);
                     return (
-                      <SelectItem key={holobotKey} value={holobotKey} className="flex items-center gap-2">
+                      <SelectItem key={holobotKey} value={holobotKey} className="flex items-center gap-2 text-white hover:bg-[#F5C400]/20 hover:text-[#F5C400] focus:bg-[#F5C400]/20 focus:text-[#F5C400] font-bold">
                         <Avatar className="h-6 w-6 mr-2 border border-cyan-400">
                           <AvatarImage src={getHolobotImagePath(holobot.name)} alt={holobot.name} />
                           <AvatarFallback>{holobot.name.slice(0,2).toUpperCase()}</AvatarFallback>
@@ -287,142 +293,179 @@ export const ArenaPrebattleMenu = ({
 
             {/* Opponents Header */}
             <div className="flex flex-col">
-              <h4 className="text-red-400 mb-1 sm:mb-1.5 md:mb-2 text-center md:text-left font-orbitron italic text-sm sm:text-base">Your Opponents</h4>
+              <h4 className="text-[#F5C400] mb-1.5 sm:mb-2 text-center md:text-left font-bold tracking-wider uppercase text-xs sm:text-sm border-b-2 border-[#F5C400] pb-1">Your Opponents</h4>
             </div>
           </div>
 
-          {/* Second Row: Battle Preview with VS in the middle */}
-          <div className="flex flex-row items-center justify-between">
+          {/* Second Row: Battle Preview with VS in the middle - More Compact */}
+          <div className="flex flex-row items-center justify-between bg-gradient-to-r from-gray-900 via-black to-gray-900 p-2 sm:p-3 md:p-4 border-2 border-gray-700" style={{
+            clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
+          }}>
             {/* User's Holobot */}
             <div className="flex-1 flex justify-center">
               {selectedHolobot && (
                 <div className="flex flex-col items-center">
-                  <Avatar className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 border-2 sm:border-3 md:border-4 border-cyan-400 shadow-lg">
-                    <AvatarImage src={getHolobotImagePath(getUserHolobotByKey(selectedHolobot)?.name || selectedHolobot)} alt={getUserHolobotByKey(selectedHolobot)?.name || selectedHolobot} />
-                    <AvatarFallback>{getUserHolobotByKey(selectedHolobot)?.name?.slice(0,2).toUpperCase() || "??"}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-center text-xs sm:text-sm md:text-base text-holobots-accent mt-0.5 sm:mt-1 font-semibold">
-                    {getUserHolobotByKey(selectedHolobot)?.name} <span className="hidden sm:inline">(Lv.{getUserHolobotByKey(selectedHolobot)?.level})</span>
+                  <div className="relative">
+                    <Avatar className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 border-3 border-[#F5C400] shadow-[0_0_15px_rgba(245,196,0,0.5)] bg-black">
+                      <AvatarImage src={getHolobotImagePath(getUserHolobotByKey(selectedHolobot)?.name || selectedHolobot)} alt={getUserHolobotByKey(selectedHolobot)?.name || selectedHolobot} />
+                      <AvatarFallback className="bg-gray-900 text-[#F5C400] font-bold text-xs">{getUserHolobotByKey(selectedHolobot)?.name?.slice(0,2).toUpperCase() || "??"}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div className="text-center text-[10px] sm:text-xs text-[#F5C400] mt-1 font-bold uppercase">
+                    {getUserHolobotByKey(selectedHolobot)?.name}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* VS Component */}
-            <div className="flex flex-col items-center mx-2 sm:mx-3 md:mx-4">
-              <div className="text-holobots-accent font-bold text-base sm:text-lg md:text-xl">VS</div>
-              <div className="text-[10px] sm:text-xs md:text-sm text-gray-400">3 Rounds</div>
+            {/* VS Component - Smaller */}
+            <div className="flex flex-col items-center mx-2 sm:mx-3 bg-[#F5C400] text-black px-3 py-1.5 sm:px-4 sm:py-2 border-2 border-black shadow-[0_0_10px_rgba(245,196,0,0.6)]" style={{
+              clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+            }}>
+              <div className="font-black text-lg sm:text-xl md:text-2xl tracking-widest">VS</div>
+              <div className="text-[8px] sm:text-[9px] font-bold uppercase">3 Rounds</div>
             </div>
 
-            {/* Opponents */}
+            {/* Opponents - Smaller */}
             <div className="flex-1 flex justify-center">
-              <div className="flex flex-col items-center">
-                <div className="flex gap-1 sm:gap-1.5 md:gap-2 justify-center">
-                  {opponentHolobots.map((opponentKey, idx) => (
-                    <div key={idx} className="flex flex-col items-center">
-                      <Avatar className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border border-red-400 sm:border-2">
-                        <AvatarImage src={getHolobotImagePath(HOLOBOT_STATS[opponentKey].name)} alt={HOLOBOT_STATS[opponentKey].name} />
-                        <AvatarFallback>{HOLOBOT_STATS[opponentKey].name.slice(0,2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div className="text-center text-[9px] sm:text-[10px] md:text-xs text-red-400 mt-0.5 sm:mt-1">R{idx + 1}</div>
+              <div className="flex gap-1 sm:gap-2 justify-center">
+                {opponentHolobots.map((opponentKey, idx) => (
+                  <div key={idx} className="relative">
+                    <Avatar className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-2 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] bg-black">
+                      <AvatarImage src={getHolobotImagePath(HOLOBOT_STATS[opponentKey].name)} alt={HOLOBOT_STATS[opponentKey].name} />
+                      <AvatarFallback className="bg-gray-900 text-red-500 font-bold text-[10px]">{HOLOBOT_STATS[opponentKey].name.slice(0,2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-[8px] sm:text-[9px] font-bold rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center border border-black">
+                      R{idx + 1}
                     </div>
-                  ))}
-                </div>
-                <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-400 text-center mt-0.5 sm:mt-1 hidden sm:block">Face a new random Holobot each round</div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Third Row: Payment Options */}
-          <div className="flex flex-col md:flex-row gap-2 sm:gap-3 md:gap-4 w-full border-t border-gray-700 pt-2 sm:pt-3 md:pt-4">
-            <div className="flex-1">
-              <p className="text-[#8E9196] mb-1 text-center text-xs sm:text-sm">Entry fee: {ARENA_TIERS[selectedTier].entryFee} Holos</p>
-              <p className="text-[#8E9196] mb-2 sm:mb-3 md:mb-4 text-center text-xs sm:text-sm">Balance: {user?.holosTokens || 0} Holos</p>
+          {/* Third Row: Payment Options - More Compact */}
+          <div className="flex flex-col md:flex-row gap-2 sm:gap-3 w-full">
+            <div className="flex-1 bg-gradient-to-br from-gray-900 to-black border-2 border-[#F5C400]/50 p-2 sm:p-3" style={{
+              clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+            }}>
+              <div className="text-[#F5C400] mb-1 text-center text-[10px] font-bold uppercase tracking-wider">Entry Fee</div>
+              <div className="text-white text-center text-xl sm:text-2xl font-black mb-0.5">
+                <Gem className="inline h-4 w-4 sm:h-5 sm:w-5 text-[#F5C400] mr-1" />
+                {ARENA_TIERS[selectedTier].entryFee}
+              </div>
+              <div className="text-gray-400 text-center text-[10px] uppercase">Balance: <span className="text-white font-bold">{user?.holosTokens || 0}</span></div>
             </div>
             
-            <div className="border-t md:border-t-0 md:border-l border-gray-700 md:pl-4 pt-2 md:pt-0 flex-1">
-              <p className="text-[#8E9196] mb-1 sm:mb-2 text-center text-xs sm:text-sm">Arena Passes: {user?.arena_passes || 0}</p>
+            <div className="flex-1 bg-gradient-to-br from-gray-900 to-black border-2 border-[#F5C400]/50 p-2 sm:p-3" style={{
+              clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+            }}>
+              <div className="text-[#F5C400] mb-1 text-center text-[10px] font-bold uppercase tracking-wider">Arena Passes</div>
+              <div className="text-white text-center text-xl sm:text-2xl font-black mb-0.5">
+                <Award className="inline h-4 w-4 sm:h-5 sm:w-5 text-[#F5C400] mr-1" />
+                {user?.arena_passes || 0}
+              </div>
+              <div className="text-gray-400 text-center text-[10px] uppercase">Available</div>
             </div>
           </div>
           
-          {/* Payment Buttons Row */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4">
+          {/* Payment Buttons Row - More Compact */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Button 
               onClick={handlePayWithTokens}
               disabled={!user || user.holosTokens < ARENA_TIERS[selectedTier].entryFee || !selectedHolobot}
-              className="flex-1 bg-holobots-accent hover:bg-holobots-hover text-white py-2 text-sm sm:text-base"
+              className="flex-1 bg-[#F5C400] hover:bg-[#D4A400] disabled:bg-gray-700 disabled:text-gray-500 text-black font-black py-3 sm:py-4 text-sm sm:text-base uppercase tracking-widest border-3 border-black shadow-[0_0_15px_rgba(245,196,0,0.5)] hover:shadow-[0_0_20px_rgba(245,196,0,0.8)] transition-all disabled:shadow-none"
+              style={{
+                clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
+              }}
             >
-              <Gem className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              <Gem className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
               Pay Entry Fee
             </Button>
             
             <Button
               onClick={handleUseArenaPass}
               disabled={!user || !user.arena_passes || user.arena_passes <= 0 || !selectedHolobot}
-              className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-2 text-sm sm:text-base"
+              className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 disabled:from-gray-700 disabled:to-gray-800 disabled:text-gray-500 text-white font-black py-3 sm:py-4 text-sm sm:text-base uppercase tracking-widest border-3 border-black shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:shadow-[0_0_20px_rgba(168,85,247,0.8)] transition-all disabled:shadow-none"
+              style={{
+                clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
+              }}
             >
-              <Award className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              <Award className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
               Use Arena Pass
             </Button>
           </div>
 
-          {/* Fourth Row: Tier Selection - Compact Version */}
-          <div className="border-t border-gray-700 pt-2 sm:pt-3 md:pt-4">
-            <h3 className="text-holobots-accent mb-1 sm:mb-1.5 md:mb-2 text-center font-orbitron text-sm sm:text-base">Select Arena Tier</h3>
-            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+          {/* Fourth Row: Tier Selection - Horizontal Scrollable */}
+          <div className="border-t-2 border-[#F5C400]/30 pt-2 sm:pt-3">
+            <h3 className="text-[#F5C400] mb-2 text-center font-black text-sm sm:text-base uppercase tracking-widest">Select Arena Tier</h3>
+            <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#F5C400] scrollbar-track-gray-800">
               {(Object.entries(ARENA_TIERS) as [keyof typeof ARENA_TIERS, typeof ARENA_TIERS[keyof typeof ARENA_TIERS]][]).map(([key, tier]) => (
                 <div 
                   key={key}
                   className={`
-                    flex justify-between items-center p-1.5 sm:p-2 rounded-lg cursor-pointer border
+                    flex-shrink-0 w-40 sm:w-48 flex flex-col justify-between p-2 sm:p-3 cursor-pointer border-2 transition-all
                     ${selectedTier === key 
-                      ? 'bg-holobots-accent bg-opacity-20 border-holobots-accent' 
-                      : 'bg-black/40 border-holobots-border hover:border-holobots-accent/50'}
+                      ? 'bg-gradient-to-br from-[#F5C400]/20 to-[#F5C400]/10 border-[#F5C400] shadow-[0_0_12px_rgba(245,196,0,0.4)]' 
+                      : 'bg-gradient-to-br from-gray-900 to-black border-gray-700 hover:border-gray-500'}
                   `}
+                  style={{
+                    clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                  }}
                   onClick={() => setSelectedTier(key)}
                 >
-                  {/* Tier Info */}
-                  <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
+                  {/* Tier Header */}
+                  <div className="flex items-center gap-2 mb-2">
                     <div className={`
-                      p-1 sm:p-1.5 rounded-full 
-                      ${selectedTier === key ? 'bg-holobots-accent text-white' : 'bg-gray-800 text-holobots-accent'}
-                    `}>
-                      <Trophy className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5" />
+                      p-1.5 
+                      ${selectedTier === key ? 'bg-[#F5C400] text-black' : 'bg-gray-800 text-gray-400'}
+                    `} style={{
+                      clipPath: 'polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px)'
+                    }}>
+                      <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </div>
                     <div>
-                      <h4 className="text-xs sm:text-sm font-semibold text-white capitalize">{key}</h4>
-                      <div className="flex items-center gap-0.5 sm:gap-1">
-                        <span className="text-[9px] sm:text-[10px] md:text-xs text-gray-400">Lv.{tier.level}+</span>
-                        <span className="text-[9px] sm:text-[10px] md:text-xs font-medium text-yellow-400">{tier.entryFee} Holos</span>
+                      <h4 className={`text-xs sm:text-sm font-black uppercase ${selectedTier === key ? 'text-[#F5C400]' : 'text-white'}`}>{key}</h4>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase">Lv.{tier.level}+</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Tier Rewards - Compact */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] md:text-xs">
+                  {/* Entry Fee */}
+                  <div className="mb-2">
+                    <div className="flex items-center gap-1">
+                      <Gem className="h-3 w-3 text-[#F5C400]" />
+                      <span className="text-sm sm:text-base font-bold text-[#F5C400]">{tier.entryFee}</span>
+                      <span className="text-[9px] text-gray-400">Holos</span>
+                    </div>
+                  </div>
+
+                  {/* Tier Rewards */}
+                  <div className="flex flex-wrap gap-1 text-[9px] sm:text-[10px]">
                     {'holosTokens' in tier.rewards && tier.rewards.holosTokens && tier.rewards.holosTokens > 0 && (
-                      <div className="flex items-center mr-0.5 sm:mr-1">
-                        <Gem className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 text-yellow-400 mr-0.5" />
-                        <span className="text-yellow-400 font-medium">{tier.rewards.holosTokens}</span>
+                      <div className="flex items-center bg-[#F5C400]/10 px-1.5 py-0.5 rounded">
+                        <Gem className="h-2.5 w-2.5 text-[#F5C400] mr-0.5" />
+                        <span className="text-[#F5C400] font-bold">{tier.rewards.holosTokens}</span>
                       </div>
                     )}
                     {tier.rewards.items.energy_refills > 0 && (
-                    <div className="flex items-center mr-0.5 sm:mr-1">
-                      <Star className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 text-white mr-0.5" /> {/* Assuming Energy Refill is common display */}
-                      <span className="text-white">ER x{tier.rewards.items.energy_refills}</span>
-                    </div>
+                      <div className="flex items-center bg-white/10 px-1.5 py-0.5 rounded">
+                        <Star className="h-2.5 w-2.5 text-white mr-0.5" />
+                        <span className="text-white">ER×{tier.rewards.items.energy_refills}</span>
+                      </div>
                     )}
                     {tier.rewards.items.exp_boosters > 0 && (
-                    <div className="flex items-center mr-0.5 sm:mr-1">
-                      <Star className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 text-blue-400 mr-0.5" /> {/* Assuming EXP Booster is rare display */}
-                      <span className="text-blue-400">EB x{tier.rewards.items.exp_boosters}</span>
-                    </div>
+                      <div className="flex items-center bg-blue-400/10 px-1.5 py-0.5 rounded">
+                        <Star className="h-2.5 w-2.5 text-blue-400 mr-0.5" />
+                        <span className="text-blue-400">EB×{tier.rewards.items.exp_boosters}</span>
+                      </div>
                     )}
                     {tier.rewards.items.rank_skips > 0 && (
-                    <div className="flex items-center">
-                      <Star className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 text-purple-400 mr-0.5" /> {/* Assuming Rank Skip is legendary display */}
-                      <span className="text-purple-400">RS x{tier.rewards.items.rank_skips}</span>
-                    </div>
+                      <div className="flex items-center bg-purple-400/10 px-1.5 py-0.5 rounded">
+                        <Star className="h-2.5 w-2.5 text-purple-400 mr-0.5" />
+                        <span className="text-purple-400">RS×{tier.rewards.items.rank_skips}</span>
+                      </div>
                     )}
                   </div>
                 </div>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Shield, Zap, Sparkles, Infinity, Trophy, Wallet, Mail } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/auth";
 
@@ -117,10 +117,12 @@ export default function Auth() {
   // Show loading state if auth is still being initialized
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-holobots-accent mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Initializing...</p>
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="text-center bg-black border-4 border-[#F5C400] p-8 shadow-[0_0_30px_rgba(245,196,0,0.5)]" style={{
+          clipPath: 'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)'
+        }}>
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-[#F5C400] mb-4" />
+          <p className="text-[#F5C400] font-black uppercase tracking-widest">Initializing...</p>
         </div>
       </div>
     );
@@ -129,52 +131,60 @@ export default function Auth() {
   // Initial Onboarding Choice Screen
   if (isSignUp && !onboardingPath) {
     return (
-      <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
-        <div className="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700">
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl bg-black border-4 border-[#F5C400] shadow-[0_0_30px_rgba(245,196,0,0.5)] p-6 sm:p-8" style={{
+          clipPath: 'polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)'
+        }}>
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#F5C400] to-[#D4A400] p-4 mb-8" style={{
+            clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+          }}>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-black mb-2 uppercase tracking-widest text-center">
               Choose Your Path
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-400">
+            <p className="text-base sm:text-lg text-black font-bold uppercase tracking-wide text-center">
               Start your journey in the Holobots universe
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-6">
             {/* Path A: Owner Path */}
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-holobots-accent to-purple-600 rounded-xl blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative flex flex-col h-full bg-white dark:bg-gray-900 p-8 rounded-xl border border-gray-100 dark:border-gray-800">
-                <div className="mb-6 bg-blue-50 dark:bg-blue-900/30 p-4 rounded-full w-fit">
-                  <Shield className="h-10 w-10 text-holobots-accent" />
+            <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-[#F5C400] p-6 hover:shadow-[0_0_25px_rgba(245,196,0,0.6)] transition-all duration-300" style={{
+              clipPath: 'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)'
+            }}>
+              <div className="flex flex-col h-full">
+                <div className="mb-4 bg-[#F5C400]/20 p-3 w-fit border-2 border-[#F5C400]" style={{
+                  clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                }}>
+                  <Shield className="h-8 w-8 text-[#F5C400]" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Own Your Holobot</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6 flex-grow">
+                <h3 className="text-xl sm:text-2xl font-black text-[#F5C400] mb-2 uppercase tracking-wider">Own Your Holobot</h3>
+                <p className="text-gray-300 text-sm mb-6 flex-grow">
                   For players ready to commit and own assets. Mint a unique Genesis Holobot NFT on-chain.
                 </p>
                 
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Zap className="h-4 w-4 text-yellow-500 mr-2" />
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center text-xs sm:text-sm text-white">
+                    <Zap className="h-4 w-4 text-[#F5C400] mr-2 flex-shrink-0" />
                     <span>True on-chain ownership (Base)</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Sparkles className="h-4 w-4 text-purple-500 mr-2" />
+                  <div className="flex items-center text-xs sm:text-sm text-white">
+                    <Sparkles className="h-4 w-4 text-[#F5C400] mr-2 flex-shrink-0" />
                     <span>Eligible for Genesis-only rewards</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Infinity className="h-4 w-4 text-green-500 mr-2" />
+                  <div className="flex items-center text-xs sm:text-sm text-white">
+                    <Infinity className="h-4 w-4 text-[#F5C400] mr-2 flex-shrink-0" />
                     <span>Season carryover & permanence</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Trophy className="h-4 w-4 text-blue-500 mr-2" />
+                  <div className="flex items-center text-xs sm:text-sm text-white">
+                    <Trophy className="h-4 w-4 text-[#F5C400] mr-2 flex-shrink-0" />
                     <span>Full marketplace trading</span>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Requirements</p>
-                  <div className="flex items-center text-xs text-gray-500">
+                <div className="space-y-2 mb-6 border-t-2 border-[#F5C400]/30 pt-4">
+                  <p className="text-xs font-black text-[#F5C400] uppercase tracking-wider mb-2">Requirements</p>
+                  <div className="flex items-center text-xs text-gray-400">
                     <Wallet className="h-3 w-3 mr-2" />
                     <span>Wallet connection (Base / EVM)</span>
                   </div>
@@ -182,7 +192,10 @@ export default function Auth() {
 
                 <Button 
                   onClick={() => setOnboardingPath('owner')}
-                  className="mt-8 w-full bg-holobots-accent hover:bg-holobots-hover text-white font-bold py-4 rounded-lg shadow-lg transform transition active:scale-95"
+                  className="mt-auto w-full bg-[#F5C400] hover:bg-[#D4A400] text-black font-black py-3 uppercase tracking-widest border-3 border-black shadow-[0_0_15px_rgba(245,196,0,0.5)] transition-all"
+                  style={{
+                    clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                  }}
                 >
                   Choose Owner Path
                 </Button>
@@ -190,39 +203,42 @@ export default function Auth() {
             </div>
 
             {/* Path B: Rental Path */}
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative flex flex-col h-full bg-white dark:bg-gray-900 p-8 rounded-xl border border-gray-100 dark:border-gray-800">
-                <div className="mb-6 bg-green-50 dark:bg-green-900/30 p-4 rounded-full w-fit">
-                  <Mail className="h-10 w-10 text-green-500" />
+            <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-green-500 p-6 hover:shadow-[0_0_25px_rgba(34,197,94,0.6)] transition-all duration-300" style={{
+              clipPath: 'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)'
+            }}>
+              <div className="flex flex-col h-full">
+                <div className="mb-4 bg-green-500/20 p-3 w-fit border-2 border-green-500" style={{
+                  clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                }}>
+                  <Mail className="h-8 w-8 text-green-500" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Play Free Forever</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6 flex-grow">
+                <h3 className="text-xl sm:text-2xl font-black text-green-400 mb-2 uppercase tracking-wider">Play Free Forever</h3>
+                <p className="text-gray-300 text-sm mb-6 flex-grow">
                   Play immediately with no wallet required. Get a permanent in-game rental asset you can upgrade.
                 </p>
 
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Infinity className="h-4 w-4 text-green-500 mr-2" />
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center text-xs sm:text-sm text-white">
+                    <Infinity className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
                     <span>1 Permanent Rental Holobot</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Zap className="h-4 w-4 text-yellow-500 mr-2" />
+                  <div className="flex items-center text-xs sm:text-sm text-white">
+                    <Zap className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
                     <span>Fully playable & upgradeable</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Trophy className="h-4 w-4 text-blue-500 mr-2" />
+                  <div className="flex items-center text-xs sm:text-sm text-white">
+                    <Trophy className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
                     <span>Convert to NFT later for free</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Sparkles className="h-4 w-4 text-purple-500 mr-2" />
+                  <div className="flex items-center text-xs sm:text-sm text-white">
+                    <Sparkles className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
                     <span>Seasonal persistence (No expiry)</span>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Requirements</p>
-                  <div className="flex items-center text-xs text-gray-500">
+                <div className="space-y-2 mb-6 border-t-2 border-green-500/30 pt-4">
+                  <p className="text-xs font-black text-green-400 uppercase tracking-wider mb-2">Requirements</p>
+                  <div className="flex items-center text-xs text-gray-400">
                     <Mail className="h-3 w-3 mr-2" />
                     <span>Email / OAuth only</span>
                   </div>
@@ -230,8 +246,10 @@ export default function Auth() {
 
                 <Button 
                   onClick={() => setOnboardingPath('rental')}
-                  variant="outline"
-                  className="mt-8 w-full border-2 border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 font-bold py-4 rounded-lg shadow-md transform transition active:scale-95"
+                  className="mt-auto w-full bg-green-600/80 hover:bg-green-700 text-white font-black py-3 uppercase tracking-widest border-3 border-green-800 shadow-[0_0_15px_rgba(34,197,94,0.5)] transition-all"
+                  style={{
+                    clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                  }}
                 >
                   Choose Free Path
                 </Button>
@@ -239,17 +257,16 @@ export default function Auth() {
             </div>
           </div>
 
-          <div className="mt-8 text-center">
-            <Button
-              variant="link"
+          <div className="mt-6 text-center">
+            <button
               onClick={() => {
                 setIsSignUp(false);
                 setAuthError(null);
               }}
-              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              className="text-[#F5C400] hover:text-white font-bold uppercase tracking-wide text-sm transition-colors"
             >
               Already have an account? Sign In
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -257,21 +274,28 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {isSignUp ? "Create Your Account" : "Welcome Back"}
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-black border-4 border-[#F5C400] shadow-[0_0_30px_rgba(245,196,0,0.5)] p-6" style={{
+        clipPath: 'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)'
+      }}>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-[#F5C400] to-[#D4A400] p-4 mb-6" style={{
+          clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
+        }}>
+          <h1 className="text-2xl sm:text-3xl font-black text-black uppercase tracking-widest text-center">
+            {isSignUp ? "Create Account" : "Welcome Back"}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {isSignUp ? "Sign up to start playing Holobots for free" : "Sign in to continue"}
+          <p className="text-black font-bold uppercase tracking-wide text-center text-sm">
+            {isSignUp ? "Start playing Holobots for free" : "Sign in to continue"}
           </p>
         </div>
 
         {authError && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 mb-4 flex items-start">
-            <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-red-600 dark:text-red-300">{authError}</p>
+          <div className="bg-red-900/30 border-2 border-red-500 p-3 mb-4 flex items-start" style={{
+            clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+          }}>
+            <AlertCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-red-300">{authError}</p>
           </div>
         )}
 
@@ -279,14 +303,17 @@ export default function Auth() {
         <form onSubmit={handleAuth} className="space-y-4">
           {isSignUp && (
             <div>
-              <Label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</Label>
+              <Label htmlFor="username" className="block text-sm font-black text-[#F5C400] mb-2 uppercase tracking-wider">Username</Label>
               <Input
                 id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required={isSignUp}
-                className="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-black border-2 border-[#F5C400] text-white placeholder-gray-500 focus:ring-[#F5C400] focus:border-[#D4A400] p-3"
+                style={{
+                  clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                }}
                 placeholder="Choose a username"
                 disabled={loading}
               />
@@ -294,28 +321,34 @@ export default function Auth() {
           )}
 
           <div>
-            <Label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</Label>
+            <Label htmlFor="email" className="block text-sm font-black text-[#F5C400] mb-2 uppercase tracking-wider">Email</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full bg-black border-2 border-[#F5C400] text-white placeholder-gray-500 focus:ring-[#F5C400] focus:border-[#D4A400] p-3"
+              style={{
+                clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+              }}
               placeholder="Enter your email"
               disabled={loading}
             />
           </div>
 
           <div>
-            <Label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</Label>
+            <Label htmlFor="password" className="block text-sm font-black text-[#F5C400] mb-2 uppercase tracking-wider">Password</Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full bg-black border-2 border-[#F5C400] text-white placeholder-gray-500 focus:ring-[#F5C400] focus:border-[#D4A400] p-3"
+              style={{
+                clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+              }}
               placeholder="Enter your password"
               minLength={6}
               disabled={loading}
@@ -332,10 +365,11 @@ export default function Auth() {
                     setRememberMe(checked);
                   }
                 }}
+                className="border-[#F5C400] data-[state=checked]:bg-[#F5C400] data-[state=checked]:text-black"
               />
               <Label 
                 htmlFor="rememberMe" 
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-gray-700 dark:text-gray-300"
+                className="text-sm font-bold leading-none cursor-pointer text-white uppercase tracking-wide"
               >
                 Remember me
               </Label>
@@ -344,39 +378,41 @@ export default function Auth() {
 
           <Button
             type="submit"
-            className="w-full bg-holobots-accent hover:bg-holobots-hover text-white py-2 rounded-md"
+            className="w-full bg-[#F5C400] hover:bg-[#D4A400] text-black font-black py-4 uppercase tracking-widest border-3 border-black shadow-[0_0_15px_rgba(245,196,0,0.5)] transition-all mt-6"
+            style={{
+              clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
+            }}
             disabled={loading}
           >
             {loading ? (
               <div className="flex items-center justify-center">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 <span>Processing...</span>
               </div>
             ) : isSignUp ? "Create Account" : "Sign In"}
           </Button>
         </form>
 
-        <div className="mt-4 text-center">
-          <Button
-            variant="link"
+        <div className="mt-6 text-center">
+          <button
             onClick={() => {
               setIsSignUp(!isSignUp);
               // Keep onboardingPath as 'rental' for free-to-play
               setOnboardingPath('rental');
               setAuthError(null);
             }}
-            className="text-blue-600 dark:text-holobots-accent hover:underline"
+            className="text-[#F5C400] hover:text-white font-bold uppercase tracking-wide text-sm transition-colors"
             disabled={loading}
           >
             {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
-          </Button>
+          </button>
         </div>
         
         {import.meta.env.MODE === 'development' && (
-          <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
-            <details className="text-xs text-gray-500">
-              <summary className="cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">Debug Info</summary>
-              <div className="mt-2 bg-gray-50 dark:bg-gray-900 p-2 rounded overflow-auto">
+          <div className="mt-6 border-t-2 border-[#F5C400]/30 pt-4">
+            <details className="text-xs text-gray-400">
+              <summary className="cursor-pointer hover:text-[#F5C400] font-bold uppercase tracking-wide">Debug Info</summary>
+              <div className="mt-2 bg-gray-900/50 border border-[#F5C400]/30 p-2 overflow-auto font-mono">
                 <p>Current Path: {location.pathname}</p>
                 <p>Redirect After Login: {from}</p>
                 <p>Auth Loading: {authLoading ? 'true' : 'false'}</p>

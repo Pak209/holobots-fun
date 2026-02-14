@@ -198,13 +198,13 @@ const BoosterPacks: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0A0B14] text-white">
+    <div className="text-gray-900">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Package className="h-8 w-8 text-purple-400 mr-3" />
-            <h1 className="text-4xl font-bold text-white tracking-wide">
+            <Package className="h-8 w-8 text-[#DAA520] mr-3" />
+            <h1 className="text-4xl font-bold text-black tracking-wide font-orbitron">
               BOOSTER PACKS
             </h1>
           </div>
@@ -244,7 +244,7 @@ const BoosterPacks: React.FC = () => {
 
         {/* Main Content */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-black/20 border border-white/10">
+          <TabsList className="grid w-full grid-cols-2 bg-black/20 border border-white/10">
             <TabsTrigger value="packs" className="flex items-center space-x-2">
               <Package className="w-4 h-4" />
               <span>Packs</span>
@@ -252,10 +252,6 @@ const BoosterPacks: React.FC = () => {
             <TabsTrigger value="history" className="flex items-center space-x-2">
               <History className="w-4 h-4" />
               <span>History</span>
-            </TabsTrigger>
-            <TabsTrigger value="gacha" className="flex items-center space-x-2">
-              <Gem className="w-4 h-4" />
-              <span>Gacha</span>
             </TabsTrigger>
           </TabsList>
 
@@ -306,54 +302,73 @@ const BoosterPacks: React.FC = () => {
                             <Badge variant="secondary">{pack.items.length} Items</Badge>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                            {pack.items.map((item) => (
-                              <div key={item.id} className="flex items-center space-x-2 p-2 bg-gray-700/50 rounded">
-                                <span className="text-lg">{
-                                  item.type === 'part' ? '⚙️' :
-                                  item.type === 'blueprint' ? '📋' :
-                                  item.type === 'currency' ? (item.holosTokens ? '🪙' : '🎫') :
-                                  '🎁'
-                                }</span>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold truncate">{item.name}</p>
-                                  <Badge variant="outline" className={`text-xs ${
-                                    item.tier === 'legendary' ? 'border-yellow-400 text-yellow-400' :
-                                    item.tier === 'epic' ? 'border-purple-400 text-purple-400' :
-                                    item.tier === 'rare' ? 'border-blue-400 text-blue-400' :
-                                    'border-gray-400 text-gray-400'
-                                  }`}>
-                                    {item.tier}
-                                  </Badge>
+                            {pack.items.map((item) => {
+                              // Get the appropriate image for the item
+                              let itemImage = '🎁'; // fallback
+                              
+                              if (item.type === 'part' && item.part) {
+                                // Remove tier suffix if present
+                                const basePartName = item.part.name.replace(/\s*\([^)]*\)\s*$/i, '').trim();
+                                const partImageMap: Record<string, string> = {
+                                  'Plasma Cannon': '/src/assets/icons/ArmPartPlasmaCannon.png',
+                                  'Plasma Cannons': '/src/assets/icons/ArmPartPlasmaCannon.png',
+                                  'Boxer Gloves': '/src/assets/icons/ArmsPartBoxer.png',
+                                  'Inferno Claws': '/src/assets/icons/ArmsPartInfernoClaws.png',
+                                  'Combat Mask': '/src/assets/icons/HeadPartCombatMask.png',
+                                  'Void Mask': '/src/assets/icons/HeadPartVoidMask.png',
+                                  'Advanced Scanner': '/src/assets/icons/HeadPartCombatMask.png',
+                                  'Titanium Torso': '/src/assets/icons/TorsoPart.png',
+                                  'Steel Torso': '/src/assets/icons/TorsoPart.png',
+                                  'Reinforced Chassis': '/src/assets/icons/TorsoPart.png',
+                                  'Power Legs': '/src/assets/icons/LegPart.png',
+                                  'Speed Legs': '/src/assets/icons/LegPart.png',
+                                  'Turbo Boosters': '/src/assets/icons/LegPart.png',
+                                  'Energy Core': '/src/assets/icons/CorePart.png',
+                                  'Power Core': '/src/assets/icons/CorePart.png',
+                                  'Quantum Core': '/src/assets/icons/CorePart.png',
+                                };
+                                itemImage = partImageMap[basePartName] || '⚙️';
+                              } else if (item.type === 'item' && item.itemType) {
+                                const itemImageMap: Record<string, string> = {
+                                  'arena_pass': '/src/assets/icons/ArenaPass.jpeg',
+                                  'energy_refill': '/src/assets/icons/EnergyRefill.jpeg',
+                                  'exp_booster': '/src/assets/icons/EXPboost.jpeg',
+                                  'rank_skip': '/src/assets/icons/RankSkip.jpeg',
+                                };
+                                itemImage = itemImageMap[item.itemType] || '🎁';
+                              } else if (item.type === 'blueprint') {
+                                itemImage = '/src/assets/icons/Blueprint.png';
+                              } else if (item.type === 'currency') {
+                                itemImage = item.holosTokens ? '🪙' : '🎫';
+                              }
+                              
+                              return (
+                                <div key={item.id} className="flex items-center space-x-2 p-2 bg-gray-700/50 rounded">
+                                  {typeof itemImage === 'string' && itemImage.startsWith('/') ? (
+                                    <img src={itemImage} alt={item.name} className="w-8 h-8 object-contain" />
+                                  ) : (
+                                    <span className="text-lg">{itemImage}</span>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold truncate">{item.name}</p>
+                                    <Badge variant="outline" className={`text-xs ${
+                                      item.tier === 'legendary' ? 'border-yellow-400 text-yellow-400' :
+                                      item.tier === 'epic' ? 'border-purple-400 text-purple-400' :
+                                      item.tier === 'rare' ? 'border-blue-400 text-blue-400' :
+                                      'border-gray-400 text-gray-400'
+                                    }`}>
+                                      {item.tier}
+                                    </Badge>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </CardContent>
                       </Card>
                     ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Gacha Tab - Navigate to existing Gacha page */}
-          <TabsContent value="gacha" className="mt-8">
-            <Card className="bg-black/20 border-white/10">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Gem className="w-5 h-5" />
-                  <span>Gacha System</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Gem className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                  <p className="text-gray-300 text-lg mb-4">Explore the Gacha system for more ways to collect items!</p>
-                  <Button onClick={() => navigate('/gacha')} className="bg-purple-600 hover:bg-purple-700">
-                    Go to Gacha Page
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>

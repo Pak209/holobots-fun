@@ -233,13 +233,18 @@ const Training = () => {
   opponentBoostedStats = scaleOpponentStats(opponentBoostedStats, difficultyLevel);
 
   return (
-    <div className="min-h-screen bg-[#1A1F2C] text-white">
-      <div className="max-w-7xl mx-auto pt-16 px-4">
+    <div className="min-h-screen bg-black text-white">
+      <div className="max-w-7xl mx-auto pt-16 px-4 pb-16">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-cyan-400 mb-4 animate-pulse font-orbitron italic">
-            TRAINING GROUNDS
-          </h1>
-          <p className="text-gray-400 text-sm mb-4">
+          {/* Header */}
+          <div className="relative mb-6 inline-block">
+            <div className="bg-gradient-to-r from-[#F5C400] via-[#F5C400] to-transparent p-4 pr-24 border-4 border-[#F5C400] shadow-[0_0_30px_rgba(245,196,0,0.6)]" style={{
+              clipPath: 'polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%)'
+            }}>
+              <h1 className="text-3xl sm:text-4xl font-black text-black uppercase tracking-widest">TRAINING GROUNDS</h1>
+            </div>
+          </div>
+          <p className="text-gray-400 text-sm mb-4 uppercase tracking-wide">
             Train your Holobots and gain experience
           </p>
         </div>
@@ -247,9 +252,13 @@ const Training = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* Player Holobot Selection */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-red-400 mb-4 font-orbitron italic">
-              Select Your Holobot
-            </h2>
+            <div className="bg-gradient-to-r from-[#F5C400] to-transparent p-2 border-2 border-[#F5C400]/50 mb-4" style={{
+              clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)'
+            }}>
+              <h2 className="text-lg font-black text-black uppercase tracking-widest">
+                Select Your Holobot
+              </h2>
+            </div>
             
             <Select
               value={selectedHolobot}
@@ -293,9 +302,13 @@ const Training = () => {
           
           {/* Opponent Holobot Selection */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-red-400 mb-4 font-orbitron italic">
-              Select Opponent
-            </h2>
+            <div className="bg-gradient-to-r from-[#F5C400] to-transparent p-2 border-2 border-[#F5C400]/50 mb-4" style={{
+              clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)'
+            }}>
+              <h2 className="text-lg font-black text-black uppercase tracking-widest">
+                Select Opponent
+              </h2>
+            </div>
             
             <Select
               value={selectedOpponent}
@@ -329,50 +342,59 @@ const Training = () => {
         </div>
         
         {/* Difficulty Selection */}
-        <Card className="p-6 mb-8 bg-[#1A1F2C] border border-holobots-border">
-          <h3 className="text-lg font-bold text-cyan-400 mb-4 font-orbitron italic">Select Difficulty</h3>
+        <div className="p-6 mb-8 bg-gradient-to-br from-gray-900 to-black border-4 border-[#F5C400] shadow-[0_0_20px_rgba(245,196,0,0.4)]" style={{
+          clipPath: 'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)'
+        }}>
+          <div className="bg-gradient-to-r from-[#F5C400] to-transparent p-2 border-2 border-[#F5C400]/50 mb-4 inline-block" style={{
+            clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%)'
+          }}>
+            <h3 className="text-base font-black text-black uppercase tracking-widest">Select Difficulty</h3>
+          </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Object.entries(DIFFICULTY_LEVELS).map(([key, { level, xpMultiplier, energyCost }]) => (
-              <Button
+              <button
                 key={key}
-                variant={selectedDifficulty === key ? "default" : "outline"}
-                className={`p-4 h-auto flex flex-col items-center gap-2 ${
+                className={`p-4 h-auto flex flex-col items-center gap-2 border-3 transition-all ${
                   selectedDifficulty === key 
-                    ? 'bg-cyan-400/20 border-cyan-400 text-white' 
-                    : 'bg-black/20 border-holobots-border text-gray-300'
+                    ? 'bg-[#F5C400] border-[#F5C400] text-black shadow-[0_0_15px_rgba(245,196,0,0.6)]' 
+                    : 'bg-black/50 border-gray-700 text-gray-300 hover:border-[#F5C400]/50'
                 }`}
+                style={{
+                  clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                }}
                 onClick={() => setSelectedDifficulty(key as keyof typeof DIFFICULTY_LEVELS)}
               >
-                <span className="font-bold capitalize">{key}</span>
-                <div className="text-xs flex flex-col">
+                <span className="font-black capitalize uppercase tracking-wide">{key}</span>
+                <div className="text-xs flex flex-col font-bold">
                   <span>Level {level}</span>
-                  <span className="text-cyan-400">x{xpMultiplier} XP</span>
-                  <span className="text-green-400">{energyCost} Energy</span>
+                  <span className={selectedDifficulty === key ? 'text-black' : 'text-cyan-400'}>x{xpMultiplier} XP</span>
+                  <span className={selectedDifficulty === key ? 'text-black' : 'text-green-400'}>{energyCost} Energy</span>
                 </div>
-              </Button>
+              </button>
             ))}
           </div>
-        </Card>
+        </div>
         
         {/* Battle Controls */}
         <div className="flex justify-center mb-8">
-          <Button
-            size="lg"
-            variant="default"
+          <button
             disabled={!selectedHolobot || !selectedOpponent || isBattling}
             onClick={handleStartTraining}
-            className="bg-red-500 hover:bg-red-600 text-white px-8 py-6 text-lg h-auto"
+            className="bg-[#F5C400] hover:bg-[#D4A400] disabled:bg-gray-600 disabled:opacity-50 text-black font-black px-12 py-4 text-xl uppercase tracking-widest border-4 border-black shadow-[0_0_20px_rgba(245,196,0,0.6)] transition-all"
+            style={{
+              clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+            }}
           >
             {isBattling ? (
               <>Processing...</>
             ) : (
               <>
-                <Swords className="mr-2 h-6 w-6" /> 
+                <Swords className="inline-block mr-2 h-6 w-6" /> 
                 Start Training
               </>
             )}
-          </Button>
+          </button>
         </div>
         
         {/* Battle Result */}

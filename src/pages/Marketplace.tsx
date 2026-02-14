@@ -11,13 +11,16 @@ import {
   ShoppingBag, 
   Plus,
   Search,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Package,
+  Zap
 } from "lucide-react";
 import { HOLOBOT_IMAGE_MAPPING } from "@/utils/holobotImageUtils";
 import { UserHolobot } from "@/types/user";
 import { MARKETPLACE_PARTS, MarketplacePart, createPartFromMarketplace } from "@/data/marketplaceParts";
 import { useHolobotPartsStore } from "@/stores/holobotPartsStore";
 import { Part } from "@/types/holobotParts";
+import { cn } from "@/lib/utils";
 
 const MARKETPLACE_ITEMS = [
   // Holobots
@@ -139,7 +142,7 @@ const MARKETPLACE_ITEMS = [
   {
     id: "i5",
     type: "item",
-    itemType: "gacha-ticket" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "async-battle-ticket",
+    itemType: "gacha-ticket" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip",
     name: "Gacha Ticket",
     description: "Can be used for one pull in the Gacha system",
     rarity: "rare" as "common" | "rare" | "extremely-rare",
@@ -147,18 +150,6 @@ const MARKETPLACE_ITEMS = [
     seller: "GameShop",
     quantity: 1,
     createdAt: new Date('2023-07-16')
-  },
-  {
-    id: "i6",
-    type: "item",
-    itemType: "async-battle-ticket" as "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "async-battle-ticket",
-    name: "Async Battle Ticket",
-    description: "Grants entry to one async battle in PvE leagues or PvP pools",
-    rarity: "common" as "common" | "rare" | "extremely-rare",
-    price: 50,  
-    seller: "GameShop",
-    quantity: 1,
-    createdAt: new Date('2023-07-20')
   }
 ];
 
@@ -183,7 +174,7 @@ interface MarketplaceBlueprintItem extends MarketplaceItemBase {
   tier: number;
 }
 
-export type ItemTypeKey = "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip" | "async-battle-ticket";
+export type ItemTypeKey = "arena-pass" | "gacha-ticket" | "energy-refill" | "exp-booster" | "rank-skip";
 
 interface MarketplaceConsumableItem extends MarketplaceItemBase {
   type: "item";
@@ -195,12 +186,17 @@ interface MarketplaceConsumableItem extends MarketplaceItemBase {
 
 export type AnyMarketplaceItem = MarketplaceHolobotItem | MarketplaceBlueprintItem | MarketplaceConsumableItem;
 
-const Marketplace = () => {
+interface MarketplaceProps {
+  hideHeader?: boolean;
+}
+
+const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const [filteredItems, setFilteredItems] = useState(MARKETPLACE_ITEMS as AnyMarketplaceItem[]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isBuying, setIsBuying] = useState(false);
+  const [activeShopTab, setActiveShopTab] = useState<'items' | 'parts'>('items');
   const { addPart, inventory, loadPartsFromUser, loadEquippedPartsFromUser } = useHolobotPartsStore();
 
   // Clean up invalid blueprint entries
@@ -332,9 +328,6 @@ const Marketplace = () => {
           case "rank-skip":
             updatedUserProfileFields.rank_skips = (user.rank_skips || 0) + 1;
             break;
-          case "async-battle-ticket":
-            updatedUserProfileFields.async_battle_tickets = (user.async_battle_tickets || 0) + 1;
-            break;
           default:
             throw new Error(`Unknown item type: ${itemToBuy.itemType}`);
         }
@@ -434,180 +427,305 @@ const Marketplace = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#111520] text-white">
-      <div className="container mx-auto pt-16 px-4 pb-16">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-cyan-400 font-orbitron italic">
-            HOLOBOT MARKETPLACE
-          </h1>
-          <p className="text-gray-200 text-sm max-w-md mx-auto">
-            Buy and sell Holobots, Blueprints, and Items
-          </p>
+    <div className={hideHeader ? "" : "text-gray-900"}>
+      <div className={hideHeader ? "" : "container mx-auto px-4 pb-16"}>
+        {!hideHeader && (
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-black font-orbitron italic">
+              HOLOBOT MARKETPLACE
+            </h1>
+            <p className="text-gray-800 text-sm max-w-md mx-auto">
+              Buy and sell Holobots, Blueprints, and Items
+            </p>
+          </div>
+        )}
+
+        {/* Shop Tab Selector */}
+        <div className="px-4 py-4 relative z-10 mb-6">
+          <div className="flex items-center justify-center">
+            <div className="relative bg-black/60 rounded-lg p-1 border border-cyan-500/30">
+              <div
+                className={cn(
+                  "absolute top-1 bottom-1 rounded-md transition-all duration-300 ease-out",
+                  "bg-gradient-to-r shadow-lg",
+                  activeShopTab === 'items'
+                    ? "left-1 w-1/2 from-yellow-500/40 to-orange-600/40 border border-yellow-400/50"
+                    : "left-1/2 right-1 from-cyan-500/40 to-cyan-600/40 border border-cyan-400/50"
+                )}
+              />
+              <div className="relative flex gap-3">
+                <button
+                  onClick={() => setActiveShopTab('items')}
+                  className={cn(
+                    "px-8 py-4 text-sm font-bold tracking-wider transition-all duration-200 relative z-10 uppercase",
+                    "flex items-center justify-center gap-3",
+                    "border-4 clip-path-diagonal",
+                    activeShopTab === 'items'
+                      ? "bg-[#F5C400] border-[#F5C400] text-black shadow-[0_0_20px_rgba(245,196,0,0.6)]"
+                      : "bg-black/80 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200"
+                  )}
+                  style={{
+                    clipPath: activeShopTab === 'items'
+                      ? 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                      : 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                  }}
+                >
+                  <Package className="h-5 w-5" />
+                  SHOP ITEMS
+                </button>
+                <button
+                  onClick={() => setActiveShopTab('parts')}
+                  className={cn(
+                    "px-8 py-4 text-sm font-bold tracking-wider transition-all duration-200 relative z-10 uppercase",
+                    "flex items-center justify-center gap-3",
+                    "border-4 clip-path-diagonal",
+                    activeShopTab === 'parts'
+                      ? "bg-[#F5C400] border-[#F5C400] text-black shadow-[0_0_20px_rgba(245,196,0,0.6)]"
+                      : "bg-black/80 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200"
+                  )}
+                  style={{
+                    clipPath: activeShopTab === 'parts'
+                      ? 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                      : 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                  }}
+                >
+                  <Zap className="h-5 w-5" />
+                  SHOP PARTS
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Main Content */}
         <div className="grid grid-cols-1 gap-4">
-          {/* Top Row: Search and Balance */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            {/* Search Bar */}
-            <div className="md:col-span-2 bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="text"
-                  placeholder="Search marketplace..."
-                  className="w-full py-2 pl-10 pr-4 rounded-md bg-black/40 border border-cyan-900/30 text-white"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <button className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <SlidersHorizontal className="h-5 w-5 text-gray-400" />
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2 mt-3">
-                <select className="bg-black/40 border border-cyan-900/30 rounded-md px-3 py-2 text-gray-200">
-                  <option>All Items</option>
-                  <option>Holobots</option>
-                  <option>Blueprints</option>
-                  <option>Items</option>
-                </select>
-                <select className="bg-black/40 border border-cyan-900/30 rounded-md px-3 py-2 text-gray-200">
-                  <option>Newest First</option>
-                  <option>Oldest First</option>
-                  <option>Price: Low to High</option>
-                  <option>Price: High to Low</option>
-                </select>
-              </div>
-            </div>
-            
-            {/* Balance */}
-            <div className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
-              <h3 className="text-lg font-bold text-red-400 mb-2 font-orbitron">Balance</h3>
-              <div className="flex items-center text-cyan-400 text-xl font-bold mb-3">
-                <div className="w-3 h-3 mr-2 bg-yellow-400 rounded-full"></div>
-                {user.holosTokens} HOLOS
-              </div>
-              
-              <div className="mt-2">
-                <h4 className="text-sm font-bold mb-1 text-red-400">Need more HOLOS?</h4>
-                <Button 
-                  className="w-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Buy Tokens
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Parts Section */}
-          <div>
-            <div className="flex items-center mb-3">
-              <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
-              <h2 className="text-xl font-bold text-white">Holobot Parts</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {MARKETPLACE_PARTS.map(part => (
-                <MarketplacePartCard
-                  key={part.id}
-                  part={part}
-                  onBuy={handleBuyPart}
-                  isBuying={isBuying}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Items Section */}
-          <div>
-            <div className="flex items-center mb-3">
-              <div className="w-4 h-4 bg-cyan-400 rounded-full mr-2"></div>
-              <h2 className="text-xl font-bold text-white">Items</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {itemItems.map(item => (
-                <div key={item.id} className="bg-[#1A1F2C] rounded-lg border border-cyan-900/30 p-4">
-                  <div className="flex gap-4 mb-4">
-                    <div className={`
-                      h-24 w-20 rounded-lg flex items-center justify-center
-                      ${item.itemType === 'energy-refill' ? 'bg-blue-900/30' : 
-                        item.itemType === 'gacha-ticket' ? 'bg-amber-900/30' : 
-                        item.itemType === 'exp-booster' ? 'bg-green-900/30' : 
-                        item.itemType === 'arena-pass' ? 'bg-purple-900/30' : 
-                        item.itemType === 'async-battle-ticket' ? 'bg-cyan-900/30' : 'bg-red-900/30'}
-                    `}>
-                      {item.itemType === 'energy-refill' && (
-                        <div className="text-blue-400 text-4xl">⚡</div>
-                      )}
-                      {item.itemType === 'gacha-ticket' && (
-                        <div className="text-amber-400 text-4xl">🎫</div>
-                      )}
-                      {item.itemType === 'exp-booster' && (
-                        <div className="text-green-400 text-4xl">▶▶</div>
-                      )}
-                      {item.itemType === 'arena-pass' && (
-                        <div className="text-purple-400 text-4xl">🏆</div>
-                      )}
-                      {item.itemType === 'async-battle-ticket' && (
-                        <div className="text-cyan-400 text-4xl">⚔️</div>
-                      )}
-                      {item.itemType === 'rank-skip' && (
-                        <div className="text-red-400 text-4xl">⏫</div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className={`
-                            font-bold text-lg
-                            ${item.itemType === 'energy-refill' ? 'text-blue-400' : 
-                              item.itemType === 'gacha-ticket' ? 'text-purple-400' : 
-                              item.itemType === 'exp-booster' ? 'text-green-400' : 
-                              item.itemType === 'arena-pass' ? 'text-purple-400' : 
-                              item.itemType === 'async-battle-ticket' ? 'text-cyan-400' : 'text-yellow-400'}
-                          `}>
-                            {item.name.split(' ').slice(0,2).join(' ')}
-                          </h3>
-                          <h4 className="text-white">
-                            {item.name.split(' ').slice(2).join(' ')}
-                          </h4>
-                        </div>
-                        <span className={`
-                          text-xs px-2 py-0.5 h-fit rounded-full border
-                          ${item.rarity === 'common' ? 'border-gray-400 text-gray-400' : 
-                            item.rarity === 'rare' ? 'border-purple-400 text-purple-400' : 
-                            'border-yellow-400 text-yellow-400 bg-yellow-400/10'}
-                        `}>
-                          {item.rarity === 'common' ? 'Common' : 
-                           item.rarity === 'rare' ? 'Rare' : 
-                           'Extremely-Rare'}
-                        </span>
-                      </div>
-                      <p className="text-gray-200 text-sm mt-1">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="border-t border-cyan-900/30 pt-3 flex justify-between items-center">
-                    <div className="text-sm text-gray-400">
-                      Seller: {item.seller} 
-                      {item.quantity > 1 && <span className="text-cyan-400 ml-2">x{item.quantity}</span>}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-yellow-400 font-bold">{item.price} HOLOS</span>
-                      <Button 
-                        className="bg-cyan-500 hover:bg-cyan-600 text-white"
-                        onClick={() => handleBuy(item.id)}
-                      >
-                        Buy
-                      </Button>
-                    </div>
-                  </div>
+          {/* Shop Items Tab */}
+          {activeShopTab === 'items' && (
+            <div>
+              {/* SHOP ITEM Header */}
+              <div className="relative mb-6 w-fit">
+                <div className="bg-gradient-to-r from-[#F5C400] to-transparent p-3 pr-16 border-4 border-[#F5C400] shadow-[0_0_20px_rgba(245,196,0,0.4)]" style={{
+                  clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)'
+                }}>
+                  <h2 className="text-xl sm:text-2xl font-black text-black uppercase tracking-widest">SHOP ITEM</h2>
                 </div>
-              ))}
+              </div>
+
+              <div className="space-y-4">
+                {itemItems.map(item => {
+                // Get the appropriate icon path
+                const getItemIcon = (itemType: string) => {
+                  switch(itemType) {
+                    case 'arena-pass':
+                      return '/src/assets/icons/ArenaPass.jpeg';
+                    case 'gacha-ticket':
+                      return '/src/assets/icons/GachaTicket.jpeg';
+                    case 'energy-refill':
+                      return '/src/assets/icons/EnergyRefill.jpeg';
+                    case 'exp-booster':
+                      return '/src/assets/icons/EXPboost.jpeg';
+                    case 'rank-skip':
+                      return '/src/assets/icons/RankSkip.jpeg';
+                    default:
+                      return null;
+                  }
+                };
+
+                const iconPath = getItemIcon(item.itemType);
+
+                return (
+                  <div 
+                    key={item.id} 
+                    className="relative bg-gradient-to-r from-gray-900 via-black to-transparent border-4 border-[#F5C400] shadow-[0_0_15px_rgba(245,196,0,0.3)] hover:shadow-[0_0_25px_rgba(245,196,0,0.5)] transition-all"
+                    style={{
+                      clipPath: 'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)'
+                    }}
+                  >
+                    <div className="flex items-center gap-4 p-4">
+                      {/* Icon */}
+                      {iconPath && (
+                        <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center bg-black/50 border-2 border-[#F5C400]/50 p-2" style={{
+                          clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                        }}>
+                          <img 
+                            src={iconPath} 
+                            alt={item.name}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider mb-1">
+                          {item.name}
+                        </h3>
+                        <div className="h-1 w-full bg-gray-700 mb-2" style={{
+                          clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 0 100%)'
+                        }}></div>
+                        <p className="text-gray-400 text-xs sm:text-sm mb-2">
+                          {item.description}
+                        </p>
+                      </div>
+
+                      {/* Price Section */}
+                      <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                        <div className="flex items-center gap-2 bg-black/70 border-2 border-cyan-400 px-4 py-2" style={{
+                          clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                        }}>
+                          <span className="text-2xl sm:text-3xl font-black text-white">{item.price}</span>
+                          <img 
+                            src="/src/assets/icons/HOlos.svg" 
+                            alt="HOLOS"
+                            className="w-6 h-6 sm:w-8 sm:h-8"
+                          />
+                        </div>
+                        <Button 
+                          className="bg-[#F5C400] hover:bg-[#D4A400] text-black font-black uppercase tracking-widest text-sm px-6 py-2 border-2 border-black shadow-[0_0_10px_rgba(245,196,0,0.5)] transition-all"
+                          style={{
+                            clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                          }}
+                          onClick={() => handleBuy(item.id)}
+                          disabled={isBuying}
+                        >
+                          Buy
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
+          )}
+
+          {/* Shop Parts Tab */}
+          {activeShopTab === 'parts' && (
+            <div>
+              {/* HOLOBOT PARTS Header */}
+              <div className="relative mb-6 w-fit">
+                <div className="bg-gradient-to-r from-[#F5C400] to-transparent p-3 pr-16 border-4 border-[#F5C400] shadow-[0_0_20px_rgba(245,196,0,0.4)]" style={{
+                  clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)'
+                }}>
+                  <h2 className="text-xl sm:text-2xl font-black text-black uppercase tracking-widest">HOLOBOT PARTS</h2>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {MARKETPLACE_PARTS.map(part => {
+                  // Get the appropriate icon path for parts
+                  const getPartIcon = (partName: string, slot: string) => {
+                    // Map by part name
+                    const partNameMap: Record<string, string> = {
+                      'Plasma Cannons': '/src/assets/icons/ArmPartPlasmaCannon.png',
+                      'Advanced Scanner': '/src/assets/icons/HeadPartCombatMask.png',
+                      'Reinforced Chassis': '/src/assets/icons/TorsoPart.png',
+                      'Turbo Boosters': '/src/assets/icons/LegPart.png',
+                      'Quantum Core': '/src/assets/icons/CorePart.png',
+                    };
+                    
+                    // Try to get by name first
+                    if (partNameMap[partName]) {
+                      return partNameMap[partName];
+                    }
+                    
+                    // Fallback to slot-based mapping
+                    const slotMap: Record<string, string> = {
+                      'arms': '/src/assets/icons/ArmPartPlasmaCannon.png',
+                      'head': '/src/assets/icons/HeadPartCombatMask.png',
+                      'torso': '/src/assets/icons/TorsoPart.png',
+                      'legs': '/src/assets/icons/LegPart.png',
+                      'core': '/src/assets/icons/CorePart.png',
+                    };
+                    
+                    return slotMap[slot] || null;
+                  };
+
+                  const iconPath = getPartIcon(part.name, part.slot);
+
+                  return (
+                    <div 
+                      key={part.id} 
+                      className="relative bg-gradient-to-r from-gray-900 via-black to-transparent border-4 border-[#F5C400] shadow-[0_0_15px_rgba(245,196,0,0.3)] hover:shadow-[0_0_25px_rgba(245,196,0,0.5)] transition-all"
+                      style={{
+                        clipPath: 'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)'
+                      }}
+                    >
+                      <div className="flex items-center gap-4 p-4">
+                        {/* Icon */}
+                        {iconPath && (
+                          <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center bg-black/50 border-2 border-[#F5C400]/50 p-2" style={{
+                            clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                          }}>
+                            <img 
+                              src={iconPath} 
+                              alt={part.name}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider">
+                              {part.name}
+                            </h3>
+                            <span className="text-xs uppercase font-bold px-2 py-1 bg-cyan-500/30 text-cyan-400 border border-cyan-400/50 rounded">
+                              {part.slot}
+                            </span>
+                          </div>
+                          <div className="h-1 w-full bg-gray-700 mb-2" style={{
+                            clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 0 100%)'
+                          }}></div>
+                          <p className="text-gray-400 text-xs sm:text-sm mb-3">
+                            {part.description}
+                          </p>
+                          
+                          {/* Tier Selection */}
+                          <div className="flex flex-wrap gap-2">
+                            {part.tiers.map((tierData) => {
+                              const getTierColor = (tier: string) => {
+                                switch(tier) {
+                                  case 'mythic': return 'border-pink-500 text-pink-400 hover:bg-pink-500/20';
+                                  case 'legendary': return 'border-orange-500 text-orange-400 hover:bg-orange-500/20';
+                                  case 'epic': return 'border-purple-500 text-purple-400 hover:bg-purple-500/20';
+                                  case 'rare': return 'border-blue-500 text-blue-400 hover:bg-blue-500/20';
+                                  default: return 'border-gray-500 text-gray-400 hover:bg-gray-500/20';
+                                }
+                              };
+
+                              return (
+                                <Button
+                                  key={tierData.tier}
+                                  className={cn(
+                                    "text-xs font-bold uppercase px-3 py-1 bg-black/50 border-2 transition-all",
+                                    getTierColor(tierData.tier)
+                                  )}
+                                  style={{
+                                    clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)'
+                                  }}
+                                  onClick={() => handleBuyPart(part.id, tierData.tier)}
+                                  disabled={isBuying}
+                                >
+                                  {tierData.tier}: {tierData.price}
+                                  <img 
+                                    src="/src/assets/icons/HOlos.svg" 
+                                    alt="HOLOS"
+                                    className="w-3 h-3 ml-1 inline"
+                                  />
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

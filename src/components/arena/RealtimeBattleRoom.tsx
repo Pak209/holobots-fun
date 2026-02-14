@@ -311,7 +311,7 @@ export function RealtimeBattleRoom() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 p-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 p-4 relative z-20">
       {/* Compact Header */}
       <div className="flex justify-between items-center mb-4 px-2">
         <div className="flex items-center gap-2">

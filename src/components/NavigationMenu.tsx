@@ -5,10 +5,6 @@ import {
   Trophy,
   Battery,
   Coins,
-  ShoppingBag,
-  Database,
-  BarChart4,
-  Package,
   Zap
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -108,101 +104,101 @@ export const NavigationMenu = () => {
           <ChevronDown className="h-3 w-3 text-gray-200" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 bg-[#1A1F2C] border-[#374151] text-gray-300">
-        <DropdownMenuSeparator className="border-[#374151]" />
-        
-        <div className="p-2 space-y-2">
+      <DropdownMenuContent align="end" className="w-72 bg-black border-4 border-[#F5C400] text-white shadow-[0_0_30px_rgba(245,196,0,0.5)] p-0" style={{
+        clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+      }}>
+        <div className="p-3 space-y-2">
           <PlayerRankCard user={user} />
           
-          <div className="flex items-center justify-between px-2 py-1">
-            <div className="flex items-center gap-2">
-              <Battery className="h-4 w-4 text-[#33C3F0]" />
-              <span>Daily Energy:</span>
+          {/* Daily Energy */}
+          <div className="bg-gradient-to-r from-gray-900 to-black border-2 border-[#F5C400]/50 p-2" style={{
+            clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+          }}>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <Battery className="h-4 w-4 text-[#F5C400]" />
+                <span className="text-sm font-bold uppercase tracking-wide">Daily Energy:</span>
+              </div>
+              <span className="font-black text-[#F5C400]">{user.dailyEnergy}/{user.maxDailyEnergy}</span>
             </div>
-            <span className="font-semibold">{user.dailyEnergy}/{user.maxDailyEnergy}</span>
+            
+            <div className="flex items-center justify-between pl-6">
+              <span className="text-xs text-gray-400">Refills: {user.energy_refills || 0}</span>
+              <Button
+                size="sm"
+                className="bg-[#F5C400] hover:bg-[#D4A400] text-black font-black px-3 py-1 text-xs uppercase tracking-wider disabled:opacity-50 border-2 border-black"
+                style={{
+                  clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)'
+                }}
+                onClick={handleRefill}
+                disabled={isRefilling || (user.energy_refills || 0) <= 0 || user.dailyEnergy === user.maxDailyEnergy}
+                aria-label="Refill Daily Energy"
+              >
+                {isRefilling ? (
+                  <>
+                    <Zap className="h-3 w-3 mr-1 animate-pulse" />
+                    Refilling...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-3 w-3 mr-1" />
+                    Quick Refill
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           
-          <div className="flex items-center justify-between px-2 py-1 pl-7">
-            <span className="text-xs text-gray-400">Available Refills: {user.energy_refills || 0}</span>
-            <Button
-              size="sm"
-              className="ml-2 bg-[#33C3F0] hover:bg-[#0FA0CE] text-black font-semibold px-2 py-0.5 rounded disabled:opacity-50"
-              onClick={handleRefill}
-              disabled={isRefilling || (user.energy_refills || 0) <= 0 || user.dailyEnergy === user.maxDailyEnergy}
-              aria-label="Refill Daily Energy"
-            >
-              {isRefilling ? (
-                <>
-                  <Zap className="h-3 w-3 mr-1 animate-pulse" />
-                  Refilling...
-                </>
-              ) : (
-                <>
-                  <Zap className="h-3 w-3 mr-1" />
-                  Quick Refill
-                </>
-              )}
-            </Button>
+          {/* Holos Tokens */}
+          <div className="bg-gradient-to-r from-gray-900 to-black border-2 border-[#F5C400]/50 p-2 flex items-center justify-between" style={{
+            clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+          }}>
+            <div className="flex items-center gap-2">
+              <img src="/src/assets/icons/HOlos.svg" alt="HOLOS" className="h-5 w-5" />
+              <span className="text-sm font-bold uppercase tracking-wide">Holos Tokens:</span>
+            </div>
+            <span className="font-black text-[#F5C400] text-lg">{user.holosTokens}</span>
           </div>
           
-          <div className="flex items-center justify-between px-2 py-1">
+          {/* Sync Points */}
+          <div className="bg-gradient-to-r from-gray-900 to-black border-2 border-[#F5C400]/50 p-2 flex items-center justify-between" style={{
+            clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+          }}>
             <div className="flex items-center gap-2">
-              <Coins className="h-4 w-4 text-[#33C3F0]" />
-              <span>Holos Tokens:</span>
+              <img src="/src/assets/icons/SyncPoint.svg" alt="SP" className="h-5 w-5" />
+              <span className="text-sm font-bold uppercase tracking-wide">Sync Points:</span>
             </div>
-            <span className="font-semibold">{user.holosTokens}</span>
+            <span className="font-black text-[#F5C400] text-lg">{getAvailableSyncPoints()}</span>
           </div>
           
-          <div className="flex items-center justify-between px-2 py-1">
+          {/* Win/Loss */}
+          <div className="bg-gradient-to-r from-gray-900 to-black border-2 border-[#F5C400]/50 p-2 flex items-center justify-between" style={{
+            clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+          }}>
             <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-[#33C3F0]" />
-              <span>Sync Points:</span>
+              <Trophy className="h-4 w-4 text-[#F5C400]" />
+              <span className="text-sm font-bold uppercase tracking-wide">Win/Loss:</span>
             </div>
-            <span className="font-semibold">{getAvailableSyncPoints()}</span>
-          </div>
-          
-          <div className="flex items-center justify-between px-2 py-1">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-[#33C3F0]" />
-              <span>Win/Loss:</span>
-            </div>
-            <span className="font-semibold">{user.stats.wins}/{user.stats.losses}</span>
+            <span className="font-black text-[#F5C400]">{user.stats.wins}/{user.stats.losses}</span>
           </div>
         </div>
         
-        <DropdownMenuSeparator className="border-[#374151]" />
-        
-        <Link to="/holobots-info">
-          <DropdownMenuItem className="cursor-pointer focus:bg-[#374151] focus:text-[#33C3F0]">
-            <Database className="mr-2 h-4 w-4" />
-            <span>Holobots Info</span>
-          </DropdownMenuItem>
-        </Link>
-        
-        <Link to="/gacha?tab=items">
-          <DropdownMenuItem className="cursor-pointer focus:bg-[#374151] focus:text-[#33C3F0]">
-            <Package className="mr-2 h-4 w-4" />
-            <span>Your Items</span>
-          </DropdownMenuItem>
-        </Link>
-        
-        <Link to="/booster-packs">
-          <DropdownMenuItem className="cursor-pointer focus:bg-[#374151] focus:text-[#33C3F0]">
-            <ShoppingBag className="mr-2 h-4 w-4" />
-            <span>Booster Packs</span>
-          </DropdownMenuItem>
-        </Link>
+        <div className="h-1 bg-[#F5C400]/30 mx-2"></div>
         
         <Link to="/leaderboard">
-          <DropdownMenuItem className="cursor-pointer focus:bg-[#374151] focus:text-[#33C3F0]">
-            <BarChart4 className="mr-2 h-4 w-4" />
+          <DropdownMenuItem className="cursor-pointer hover:bg-[#F5C400]/20 focus:bg-[#F5C400]/20 text-white font-bold uppercase tracking-wide mx-2 my-1" style={{
+            clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)'
+          }}>
+            <Trophy className="mr-2 h-4 w-4 text-[#F5C400]" />
             <span>Leaderboard</span>
           </DropdownMenuItem>
         </Link>
         
-        <DropdownMenuSeparator className="border-[#374151]" />
+        <div className="h-1 bg-[#F5C400]/30 mx-2"></div>
         
-        <DropdownMenuItem onClick={handleLogout} className="text-red-400 cursor-pointer focus:bg-red-900/50 focus:text-red-300">
+        <DropdownMenuItem onClick={handleLogout} className="text-red-400 cursor-pointer hover:bg-red-900/50 focus:bg-red-900/50 font-bold uppercase tracking-wide mx-2 my-1 mb-2" style={{
+          clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)'
+        }}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Logout</span>
         </DropdownMenuItem>

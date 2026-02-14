@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/auth";
 import { HOLOBOT_STATS } from "@/types/holobot";
-import { HolobotInfoCard } from "@/components/holobots/HolobotInfoCard";
+import { HolobotFlipCard } from "@/components/holobots/HolobotFlipCard";
 import { BlueprintSection } from "@/components/holobots/BlueprintSection";
 import { LevelUpModal } from "@/components/holobots/LevelUpModal";
 import { useMintHolobot } from "@/hooks/use-mint-holobot";
@@ -317,34 +317,33 @@ const HolobotsInfo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1A1F2C] text-[#F9FAFB] p-4">
-      <div className="max-w-7xl mx-auto pt-16">
-        <h1 className="text-3xl font-bold text-center mb-8 text-[#33C3F0]">
-          HOLOBOTS INFO
+    <>
+      {/* Header with sci-fi HUD style */}
+      <div className="bg-gradient-to-r from-[#F5C400] to-[#D4A400] p-3 mb-6 border-b-4 border-black" style={{
+        clipPath: 'polygon(15px 0, 100% 0, 100% 100%, 0 100%, 0 15px)'
+      }}>
+        <h1 className="text-2xl sm:text-3xl font-black text-black uppercase tracking-widest text-center">
+          Holobots Collection
         </h1>
-        
-        <div className="grid grid-cols-1 gap-6">
+      </div>
+      
+      {/* Horizontal Scrolling Holobot Cards */}
+      <div className="w-full overflow-x-auto pb-4" style={{ minHeight: '600px' }}>
+        <div className="flex gap-6 px-2 h-full">
           {Object.entries(HOLOBOT_STATS).map(([key, holobot]) => {
             const userHolobot = findUserHolobot(holobot.name);
             
             return (
-              <div key={key} className="space-y-4">
-                <HolobotInfoCard 
-                  holobotKey={key}
-                  holobot={holobot}
-                  userHolobot={userHolobot}
-                  userTokens={user?.holosTokens || 0}
-                  isMinting={isMinting === holobot.name}
-                  justMinted={justMinted === holobot.name}
-                  onMint={handleMintHolobot}
-                />
-                
-                {/* Add Blueprint Section */}
-                <BlueprintSection 
-                  holobotKey={key}
-                  holobotName={holobot.name}
-                />
-              </div>
+              <HolobotFlipCard
+                key={key}
+                holobotKey={key}
+                holobot={holobot}
+                userHolobot={userHolobot}
+                userTokens={user?.holosTokens || 0}
+                isMinting={isMinting === holobot.name}
+                justMinted={justMinted === holobot.name}
+                onMint={handleMintHolobot}
+              />
             );
           })}
         </div>
@@ -362,7 +361,7 @@ const HolobotsInfo = () => {
           onClose={() => setLevelUpHolobot(null)}
         />
       )}
-    </div>
+    </>
   );
 };
 

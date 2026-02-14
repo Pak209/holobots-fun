@@ -19,21 +19,21 @@ export function ActionCardComponent({ card, onPlay, disabled = false }: ActionCa
 
   const canPlay = !disabled && canPlayCard(card.id);
 
-  // Card type colors
+  // Card type colors (HUD style)
   const getCardTypeColor = (type: string) => {
     switch (type) {
       case 'strike':
-        return 'bg-gradient-to-br from-red-600 to-red-800';
+        return 'from-red-700 to-red-900 border-red-500';
       case 'defense':
-        return 'bg-gradient-to-br from-blue-600 to-blue-800';
+        return 'from-blue-700 to-blue-900 border-blue-400';
       case 'combo':
-        return 'bg-gradient-to-br from-orange-600 to-orange-800';
+        return 'from-yellow-600 to-yellow-800 border-[#F5C400]';
       case 'finisher':
-        return 'bg-gradient-to-br from-purple-600 to-purple-900';
+        return 'from-purple-700 to-purple-900 border-purple-500';
       case 'special':
-        return 'bg-gradient-to-br from-cyan-600 to-cyan-800';
+        return 'from-cyan-700 to-cyan-900 border-cyan-400';
       default:
-        return 'bg-gradient-to-br from-gray-600 to-gray-800';
+        return 'from-gray-700 to-gray-900 border-gray-500';
     }
   };
 
@@ -44,25 +44,32 @@ export function ActionCardComponent({ card, onPlay, disabled = false }: ActionCa
       onMouseLeave={() => setIsHovered(false)}
       disabled={!canPlay}
       className={`
-        relative w-20 h-28 sm:w-24 sm:h-36 md:w-28 md:h-40 rounded-lg p-1.5 sm:p-2 shrink-0
+        relative w-24 h-32 sm:w-28 sm:h-40 md:w-32 md:h-44 p-2 sm:p-2.5 shrink-0
         flex flex-col items-center justify-between
-        border-2 transition-all duration-200
+        border-3 transition-all duration-200 bg-gradient-to-br
         ${getCardTypeColor(card.type)}
         ${canPlay
-          ? 'cursor-pointer hover:scale-105 hover:-translate-y-2 border-yellow-400 hover:shadow-lg hover:shadow-yellow-400/50'
-          : 'opacity-50 cursor-not-allowed border-gray-600'
+          ? 'cursor-pointer hover:scale-105 hover:-translate-y-2 hover:shadow-[0_0_20px_rgba(245,196,0,0.7)]'
+          : 'opacity-40 cursor-not-allowed border-gray-700'
         }
         ${isHovered && canPlay ? 'z-10' : ''}
       `}
+      style={{
+        clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+      }}
     >
       {/* Card Type Badge */}
-      <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-black/70 text-white text-[8px] sm:text-[10px] md:text-xs px-1.5 sm:px-2 py-0.5 rounded-full uppercase">
+      <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-black border-2 border-[#F5C400] text-[#F5C400] text-[9px] sm:text-[10px] px-2 py-0.5 uppercase font-black tracking-wide" style={{
+        clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)'
+      }}>
         {card.type}
       </div>
 
       {/* Card Icon/Visual */}
-      <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-white/10 rounded-full flex items-center justify-center mt-1 sm:mt-2">
-        <span className="text-xl sm:text-2xl md:text-3xl">
+      <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-black/50 border-2 border-white/20 flex items-center justify-center mt-1" style={{
+        clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)'
+      }}>
+        <span className="text-2xl sm:text-3xl md:text-4xl">
           {card.type === 'strike' && '👊'}
           {card.type === 'defense' && '🛡️'}
           {card.type === 'combo' && '⚡'}
@@ -72,18 +79,22 @@ export function ActionCardComponent({ card, onPlay, disabled = false }: ActionCa
       </div>
 
       {/* Card Name */}
-      <span className="text-[9px] sm:text-[10px] md:text-xs font-bold text-white text-center leading-tight">
+      <span className="text-[10px] sm:text-xs font-black text-white text-center leading-tight uppercase tracking-wide">
         {card.name}
       </span>
 
       {/* Stamina Cost */}
-      <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 bg-black/80 rounded-full flex items-center justify-center border border-yellow-400">
-        <span className="text-[9px] sm:text-[10px] md:text-xs text-yellow-400 font-bold">{card.staminaCost}</span>
+      <div className="absolute bottom-2 right-2 w-6 h-6 sm:w-7 sm:h-7 bg-black border-2 border-[#F5C400] flex items-center justify-center" style={{
+        clipPath: 'polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px)'
+      }}>
+        <span className="text-[10px] sm:text-xs text-[#F5C400] font-black">LV {card.staminaCost}</span>
       </div>
 
       {/* Damage (for strike cards) */}
       {card.baseDamage > 0 && (
-        <div className="absolute bottom-1.5 sm:bottom-2 left-1.5 sm:left-2 px-1.5 sm:px-2 py-0.5 bg-red-600 rounded text-[9px] sm:text-[10px] md:text-xs text-white font-bold">
+        <div className="absolute bottom-2 left-2 px-2 py-1 bg-red-600 border-2 border-black text-[10px] sm:text-xs text-white font-black" style={{
+          clipPath: 'polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px)'
+        }}>
           {card.baseDamage}
         </div>
       )}

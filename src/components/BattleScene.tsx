@@ -707,8 +707,8 @@ export const BattleScene = ({
   }, [isBattleStarted, selectedLeftHolobot, selectedRightHolobot, leftLevel, rightLevel, leftFatigue, rightFatigue, leftHealth, rightHealth, isDefenseMode, leftXp, displayLeftXp, leftComboChain, rightComboChain, leftStats, rightStats, leftSpecial, rightSpecial]);
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2 mb-1 bg-holobots-card p-2 md:p-4 rounded-lg border border-holobots-border shadow-neon">
+    <div className="flex flex-col gap-1 relative z-20">
+      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2 mb-1 bg-holobots-card p-2 md:p-4 rounded-lg border border-holobots-border shadow-neon relative z-20">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
           <BattleControls
             onStartBattle={handleStartBattle}

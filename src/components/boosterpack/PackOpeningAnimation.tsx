@@ -87,6 +87,62 @@ const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
   };
 
   const getItemIcon = (item: BoosterPackItem) => {
+    // For parts, show the actual part image if available
+    if (item.type === 'part' && item.part) {
+      // Remove tier suffix if present
+      const basePartName = item.part.name.replace(/\s*\([^)]*\)\s*$/i, '').trim();
+      
+      const partImageMap: Record<string, string> = {
+        // Arms parts
+        'Plasma Cannon': '/src/assets/icons/ArmPartPlasmaCannon.png',
+        'Plasma Cannons': '/src/assets/icons/ArmPartPlasmaCannon.png',
+        'Boxer Gloves': '/src/assets/icons/ArmsPartBoxer.png',
+        'Inferno Claws': '/src/assets/icons/ArmsPartInfernoClaws.png',
+        // Head parts
+        'Combat Mask': '/src/assets/icons/HeadPartCombatMask.png',
+        'Void Mask': '/src/assets/icons/HeadPartVoidMask.png',
+        'Advanced Scanner': '/src/assets/icons/HeadPartCombatMask.png',
+        // Torso parts
+        'Titanium Torso': '/src/assets/icons/TorsoPart.png',
+        'Steel Torso': '/src/assets/icons/TorsoPart.png',
+        'Reinforced Chassis': '/src/assets/icons/TorsoPart.png',
+        // Legs parts
+        'Power Legs': '/src/assets/icons/LegPart.png',
+        'Speed Legs': '/src/assets/icons/LegPart.png',
+        'Turbo Boosters': '/src/assets/icons/LegPart.png',
+        // Core parts
+        'Energy Core': '/src/assets/icons/CorePart.png',
+        'Power Core': '/src/assets/icons/CorePart.png',
+        'Quantum Core': '/src/assets/icons/CorePart.png',
+      };
+      
+      const imagePath = partImageMap[basePartName];
+      if (imagePath) {
+        return <img src={imagePath} alt={item.part.name} className="w-full h-full object-contain" />;
+      }
+    }
+    
+    // For blueprints, show the Blueprint.png
+    if (item.type === 'blueprint') {
+      return <img src="/src/assets/icons/Blueprint.png" alt="Blueprint" className="w-full h-full object-contain" />;
+    }
+    
+    // For items, show the actual item images
+    if (item.type === 'item' && item.itemType) {
+      const itemImageMap: Record<string, string> = {
+        'arena_pass': '/src/assets/icons/ArenaPass.jpeg',
+        'energy_refill': '/src/assets/icons/EnergyRefill.jpeg',
+        'exp_booster': '/src/assets/icons/EXPboost.jpeg',
+        'rank_skip': '/src/assets/icons/RankSkip.jpeg',
+      };
+      
+      const imagePath = itemImageMap[item.itemType];
+      if (imagePath) {
+        return <img src={imagePath} alt={item.name} className="w-full h-full object-contain" />;
+      }
+    }
+    
+    // Fallback to emojis for other types
     switch (item.type) {
       case 'part': return '⚙️';
       case 'blueprint': return '📋';

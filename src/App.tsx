@@ -18,6 +18,7 @@ import HolobotsInfo from "@/pages/HolobotsInfo";
 import Gacha from "@/pages/Gacha";
 import UserItems from "@/pages/UserItems";
 import Marketplace from "@/pages/Marketplace";
+import MarketplaceTabs from "@/pages/MarketplaceTabs";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import Leaderboard from "@/pages/Leaderboard";
@@ -28,6 +29,8 @@ import MintGenesisPage from "@/pages/MintGenesis";
 import Fitness from "@/pages/Fitness";
 import BoosterPacks from "@/pages/BoosterPacks";
 import ArenaV2Screen from "@/pages/ArenaV2Screen";
+import Sync from "@/pages/Sync";
+import Inventory from "@/pages/Inventory";
 
 // Create a client for React Query
 const queryClient = new QueryClient();
@@ -61,6 +64,26 @@ function App() {
                 </MobileLayout>
               </ProtectedRoute>
             } />
+            
+            {/* Inventory route - consolidates Holobots Info and User Items */}
+            <Route path="/inventory" element={
+              <ProtectedRoute>
+                <MobileLayout>
+                  <Inventory />
+                </MobileLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* New Sync route - consolidates Fitness, Quests, and Training */}
+            <Route path="/sync" element={
+              <ProtectedRoute>
+                <MobileLayout>
+                  <Sync />
+                </MobileLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Arena/Battle Mode Selection */}
             <Route path="/app" element={
               <ProtectedRoute>
                 <MobileLayout>
@@ -68,20 +91,12 @@ function App() {
                 </MobileLayout>
               </ProtectedRoute>
             } />
-            <Route path="/training" element={
-              <ProtectedRoute>
-                <MobileLayout>
-                  <Training />
-                </MobileLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/quests" element={
-              <ProtectedRoute>
-                <MobileLayout>
-                  <Quests />
-                </MobileLayout>
-              </ProtectedRoute>
-            } />
+            
+            {/* Redirect legacy routes to consolidated Sync page */}
+            <Route path="/training" element={<Navigate to="/sync" replace />} />
+            <Route path="/quests" element={<Navigate to="/sync" replace />} />
+            <Route path="/fitness" element={<Navigate to="/sync" replace />} />
+            
             <Route path="/holos-farm" element={
               <ProtectedRoute>
                 <MobileLayout>
@@ -113,7 +128,7 @@ function App() {
             <Route path="/marketplace" element={
               <ProtectedRoute>
                 <MobileLayout>
-                  <Marketplace />
+                  <MarketplaceTabs />
                 </MobileLayout>
               </ProtectedRoute>
             } />
@@ -121,13 +136,6 @@ function App() {
               <ProtectedRoute>
                 <MobileLayout>
                   <Leaderboard />
-                </MobileLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/fitness" element={
-              <ProtectedRoute>
-                <MobileLayout>
-                  <Fitness />
                 </MobileLayout>
               </ProtectedRoute>
             } />
