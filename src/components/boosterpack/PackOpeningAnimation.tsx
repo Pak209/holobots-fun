@@ -94,26 +94,26 @@ const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
       
       const partImageMap: Record<string, string> = {
         // Arms parts
-        'Plasma Cannon': '/src/assets/icons/ArmPartPlasmaCannon.png',
-        'Plasma Cannons': '/src/assets/icons/ArmPartPlasmaCannon.png',
-        'Boxer Gloves': '/src/assets/icons/ArmsPartBoxer.png',
-        'Inferno Claws': '/src/assets/icons/ArmsPartInfernoClaws.png',
+        'Plasma Cannon': '/icons/ArmPartPlasmaCannon.png',
+        'Plasma Cannons': '/icons/ArmPartPlasmaCannon.png',
+        'Boxer Gloves': '/icons/ArmsPartBoxer.png',
+        'Inferno Claws': '/icons/ArmsPartInfernoClaws.png',
         // Head parts
-        'Combat Mask': '/src/assets/icons/HeadPartCombatMask.png',
-        'Void Mask': '/src/assets/icons/HeadPartVoidMask.png',
-        'Advanced Scanner': '/src/assets/icons/HeadPartCombatMask.png',
+        'Combat Mask': '/icons/HeadPartCombatMask.png',
+        'Void Mask': '/icons/HeadPartVoidMask.png',
+        'Advanced Scanner': '/icons/HeadPartCombatMask.png',
         // Torso parts
-        'Titanium Torso': '/src/assets/icons/TorsoPart.png',
-        'Steel Torso': '/src/assets/icons/TorsoPart.png',
-        'Reinforced Chassis': '/src/assets/icons/TorsoPart.png',
+        'Titanium Torso': '/icons/TorsoPart.png',
+        'Steel Torso': '/icons/TorsoPart.png',
+        'Reinforced Chassis': '/icons/TorsoPart.png',
         // Legs parts
-        'Power Legs': '/src/assets/icons/LegPart.png',
-        'Speed Legs': '/src/assets/icons/LegPart.png',
-        'Turbo Boosters': '/src/assets/icons/LegPart.png',
+        'Power Legs': '/icons/LegPart.png',
+        'Speed Legs': '/icons/LegPart.png',
+        'Turbo Boosters': '/icons/LegPart.png',
         // Core parts
-        'Energy Core': '/src/assets/icons/CorePart.png',
-        'Power Core': '/src/assets/icons/CorePart.png',
-        'Quantum Core': '/src/assets/icons/CorePart.png',
+        'Energy Core': '/icons/CorePart.png',
+        'Power Core': '/icons/CorePart.png',
+        'Quantum Core': '/icons/CorePart.png',
       };
       
       const imagePath = partImageMap[basePartName];
@@ -124,16 +124,16 @@ const PackOpeningAnimation: React.FC<PackOpeningAnimationProps> = ({
     
     // For blueprints, show the Blueprint.png
     if (item.type === 'blueprint') {
-      return <img src="/src/assets/icons/Blueprint.png" alt="Blueprint" className="w-full h-full object-contain" />;
+      return <img src="/icons/Blueprint.png" alt="Blueprint" className="w-full h-full object-contain" />;
     }
     
     // For items, show the actual item images
     if (item.type === 'item' && item.itemType) {
       const itemImageMap: Record<string, string> = {
-        'arena_pass': '/src/assets/icons/ArenaPass.jpeg',
-        'energy_refill': '/src/assets/icons/EnergyRefill.jpeg',
-        'exp_booster': '/src/assets/icons/EXPboost.jpeg',
-        'rank_skip': '/src/assets/icons/RankSkip.jpeg',
+        'arena_pass': '/icons/ArenaPass.jpeg',
+        'energy_refill': '/icons/EnergyRefill.jpeg',
+        'exp_booster': '/icons/EXPboost.jpeg',
+        'rank_skip': '/icons/RankSkip.jpeg',
       };
       
       const imagePath = itemImageMap[item.itemType];

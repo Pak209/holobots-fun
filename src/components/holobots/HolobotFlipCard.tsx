@@ -157,26 +157,26 @@ export const HolobotFlipCard = ({
     
     const partImages: Record<string, string> = {
       // Arms parts
-      'Plasma Cannon': '/src/assets/icons/ArmPartPlasmaCannon.png',
-      'Plasma Cannons': '/src/assets/icons/ArmPartPlasmaCannon.png',
-      'Boxer Gloves': '/src/assets/icons/ArmsPartBoxer.png',
-      'Inferno Claws': '/src/assets/icons/ArmsPartInfernoClaws.png',
+      'Plasma Cannon': '/icons/ArmPartPlasmaCannon.png',
+      'Plasma Cannons': '/icons/ArmPartPlasmaCannon.png',
+      'Boxer Gloves': '/icons/ArmsPartBoxer.png',
+      'Inferno Claws': '/icons/ArmsPartInfernoClaws.png',
       // Head parts
-      'Combat Mask': '/src/assets/icons/HeadPartCombatMask.png',
-      'Void Mask': '/src/assets/icons/HeadPartVoidMask.png',
-      'Advanced Scanner': '/src/assets/icons/HeadPartCombatMask.png',
+      'Combat Mask': '/icons/HeadPartCombatMask.png',
+      'Void Mask': '/icons/HeadPartVoidMask.png',
+      'Advanced Scanner': '/icons/HeadPartCombatMask.png',
       // Torso parts
-      'Titanium Torso': '/src/assets/icons/TorsoPart.png',
-      'Steel Torso': '/src/assets/icons/TorsoPart.png',
-      'Reinforced Chassis': '/src/assets/icons/TorsoPart.png',
+      'Titanium Torso': '/icons/TorsoPart.png',
+      'Steel Torso': '/icons/TorsoPart.png',
+      'Reinforced Chassis': '/icons/TorsoPart.png',
       // Legs parts
-      'Power Legs': '/src/assets/icons/LegPart.png',
-      'Speed Legs': '/src/assets/icons/LegPart.png',
-      'Turbo Boosters': '/src/assets/icons/LegPart.png',
+      'Power Legs': '/icons/LegPart.png',
+      'Speed Legs': '/icons/LegPart.png',
+      'Turbo Boosters': '/icons/LegPart.png',
       // Core parts
-      'Energy Core': '/src/assets/icons/CorePart.png',
-      'Power Core': '/src/assets/icons/CorePart.png',
-      'Quantum Core': '/src/assets/icons/CorePart.png',
+      'Energy Core': '/icons/CorePart.png',
+      'Power Core': '/icons/CorePart.png',
+      'Quantum Core': '/icons/CorePart.png',
     };
     
     return partImages[basePartName] || null;
@@ -322,7 +322,7 @@ export const HolobotFlipCard = ({
                   >
                     {/* Background SVG */}
                     <img 
-                      src="/src/assets/icons/PartsBackground1.svg" 
+                      src="/icons/PartsBackground1.svg" 
                       alt="Part Slot" 
                       className="absolute inset-0 w-full h-full"
                     />
@@ -336,7 +336,7 @@ export const HolobotFlipCard = ({
                       />
                     ) : (
                       <img 
-                        src="/src/assets/icons/PartsDetail1.svg" 
+                        src="/icons/PartsDetail1.svg" 
                         alt="Part Detail" 
                         className="absolute inset-0 w-full h-full opacity-50"
                       />

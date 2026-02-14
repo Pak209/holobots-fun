@@ -517,15 +517,15 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
                 const getItemIcon = (itemType: string) => {
                   switch(itemType) {
                     case 'arena-pass':
-                      return '/src/assets/icons/ArenaPass.jpeg';
+                      return '/icons/ArenaPass.jpeg';
                     case 'gacha-ticket':
-                      return '/src/assets/icons/GachaTicket.jpeg';
+                      return '/icons/GachaTicket.jpeg';
                     case 'energy-refill':
-                      return '/src/assets/icons/EnergyRefill.jpeg';
+                      return '/icons/EnergyRefill.jpeg';
                     case 'exp-booster':
-                      return '/src/assets/icons/EXPboost.jpeg';
+                      return '/icons/EXPboost.jpeg';
                     case 'rank-skip':
-                      return '/src/assets/icons/RankSkip.jpeg';
+                      return '/icons/RankSkip.jpeg';
                     default:
                       return null;
                   }
@@ -575,7 +575,7 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
                         }}>
                           <span className="text-2xl sm:text-3xl font-black text-white">{item.price}</span>
                           <img 
-                            src="/src/assets/icons/HOlos.svg" 
+                            src="/icons/HOlos.svg" 
                             alt="HOLOS"
                             className="w-6 h-6 sm:w-8 sm:h-8"
                           />
@@ -617,11 +617,11 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
                   const getPartIcon = (partName: string, slot: string) => {
                     // Map by part name
                     const partNameMap: Record<string, string> = {
-                      'Plasma Cannons': '/src/assets/icons/ArmPartPlasmaCannon.png',
-                      'Advanced Scanner': '/src/assets/icons/HeadPartCombatMask.png',
-                      'Reinforced Chassis': '/src/assets/icons/TorsoPart.png',
-                      'Turbo Boosters': '/src/assets/icons/LegPart.png',
-                      'Quantum Core': '/src/assets/icons/CorePart.png',
+                      'Plasma Cannons': '/icons/ArmPartPlasmaCannon.png',
+                      'Advanced Scanner': '/icons/HeadPartCombatMask.png',
+                      'Reinforced Chassis': '/icons/TorsoPart.png',
+                      'Turbo Boosters': '/icons/LegPart.png',
+                      'Quantum Core': '/icons/CorePart.png',
                     };
                     
                     // Try to get by name first
@@ -631,11 +631,11 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
                     
                     // Fallback to slot-based mapping
                     const slotMap: Record<string, string> = {
-                      'arms': '/src/assets/icons/ArmPartPlasmaCannon.png',
-                      'head': '/src/assets/icons/HeadPartCombatMask.png',
-                      'torso': '/src/assets/icons/TorsoPart.png',
-                      'legs': '/src/assets/icons/LegPart.png',
-                      'core': '/src/assets/icons/CorePart.png',
+                      'arms': '/icons/ArmPartPlasmaCannon.png',
+                      'head': '/icons/HeadPartCombatMask.png',
+                      'torso': '/icons/TorsoPart.png',
+                      'legs': '/icons/LegPart.png',
+                      'core': '/icons/CorePart.png',
                     };
                     
                     return slotMap[slot] || null;
@@ -710,7 +710,7 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
                                 >
                                   {tierData.tier}: {tierData.price}
                                   <img 
-                                    src="/src/assets/icons/HOlos.svg" 
+                                    src="/icons/HOlos.svg" 
                                     alt="HOLOS"
                                     className="w-3 h-3 ml-1 inline"
                                   />

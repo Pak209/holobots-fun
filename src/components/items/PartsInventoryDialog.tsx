@@ -11,26 +11,26 @@ interface PartsInventoryDialogProps {
 // Mapping of part slots to their PNG images
 const PART_IMAGES: Record<string, string> = {
   // Arms parts
-  'Plasma Cannon': '/src/assets/icons/ArmPartPlasmaCannon.png',
-  'Plasma Cannons': '/src/assets/icons/ArmPartPlasmaCannon.png',
-  'Boxer Gloves': '/src/assets/icons/ArmsPartBoxer.png',
-  'Inferno Claws': '/src/assets/icons/ArmsPartInfernoClaws.png',
+  'Plasma Cannon': '/icons/ArmPartPlasmaCannon.png',
+  'Plasma Cannons': '/icons/ArmPartPlasmaCannon.png',
+  'Boxer Gloves': '/icons/ArmsPartBoxer.png',
+  'Inferno Claws': '/icons/ArmsPartInfernoClaws.png',
   // Head parts
-  'Combat Mask': '/src/assets/icons/HeadPartCombatMask.png',
-  'Void Mask': '/src/assets/icons/HeadPartVoidMask.png',
-  'Advanced Scanner': '/src/assets/icons/HeadPartCombatMask.png',
+  'Combat Mask': '/icons/HeadPartCombatMask.png',
+  'Void Mask': '/icons/HeadPartVoidMask.png',
+  'Advanced Scanner': '/icons/HeadPartCombatMask.png',
   // Torso parts
-  'Titanium Torso': '/src/assets/icons/TorsoPart.png',
-  'Steel Torso': '/src/assets/icons/TorsoPart.png',
-  'Reinforced Chassis': '/src/assets/icons/TorsoPart.png',
+  'Titanium Torso': '/icons/TorsoPart.png',
+  'Steel Torso': '/icons/TorsoPart.png',
+  'Reinforced Chassis': '/icons/TorsoPart.png',
   // Legs parts
-  'Power Legs': '/src/assets/icons/LegPart.png',
-  'Speed Legs': '/src/assets/icons/LegPart.png',
-  'Turbo Boosters': '/src/assets/icons/LegPart.png',
+  'Power Legs': '/icons/LegPart.png',
+  'Speed Legs': '/icons/LegPart.png',
+  'Turbo Boosters': '/icons/LegPart.png',
   // Core parts
-  'Energy Core': '/src/assets/icons/CorePart.png',
-  'Power Core': '/src/assets/icons/CorePart.png',
-  'Quantum Core': '/src/assets/icons/CorePart.png',
+  'Energy Core': '/icons/CorePart.png',
+  'Power Core': '/icons/CorePart.png',
+  'Quantum Core': '/icons/CorePart.png',
 };
 
 const SLOT_NAMES: Record<PartSlot, string> = {
@@ -65,7 +65,7 @@ export function PartsInventoryDialog({ open, onOpenChange }: PartsInventoryDialo
   const getPartImage = (partName: string): string => {
     // Remove tier suffix if present (e.g., "Quantum Core (Epic)" -> "Quantum Core")
     const basePartName = partName.replace(/\s*\([^)]*\)\s*$/i, '').trim();
-    return PART_IMAGES[basePartName] || '/src/assets/icons/PartsBackground1.svg';
+    return PART_IMAGES[basePartName] || '/icons/PartsBackground1.svg';
   };
 
   const getTierColor = (tier: string) => {

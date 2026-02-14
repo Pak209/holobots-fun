@@ -154,7 +154,7 @@ export const NavigationMenu = () => {
             clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
           }}>
             <div className="flex items-center gap-2">
-              <img src="/src/assets/icons/HOlos.svg" alt="HOLOS" className="h-5 w-5" />
+              <img src="/icons/HOlos.svg" alt="HOLOS" className="h-5 w-5" />
               <span className="text-sm font-bold uppercase tracking-wide">Holos Tokens:</span>
             </div>
             <span className="font-black text-[#F5C400] text-lg">{user.holosTokens}</span>
@@ -165,7 +165,7 @@ export const NavigationMenu = () => {
             clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
           }}>
             <div className="flex items-center gap-2">
-              <img src="/src/assets/icons/SyncPoint.svg" alt="SP" className="h-5 w-5" />
+              <img src="/icons/SyncPoint.svg" alt="SP" className="h-5 w-5" />
               <span className="text-sm font-bold uppercase tracking-wide">Sync Points:</span>
             </div>
             <span className="font-black text-[#F5C400] text-lg">{getAvailableSyncPoints()}</span>
