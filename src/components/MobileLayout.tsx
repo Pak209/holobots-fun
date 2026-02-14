@@ -1,10 +1,11 @@
 import { useLocation, Link } from "react-router-dom";
-import { Home, Dumbbell, Trophy, Bot, Gem, ShoppingBag, Activity } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { DevModeToggle } from "@/components/DevModeToggle";
+import { NavIcon } from "@/components/icons/NavIcon";
+import BackgroundDetail from "@/assets/icons/BackgroundDetail.svg";
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -18,90 +19,129 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
     return location.pathname === path;
   };
 
+  // Check if user is on any arena-related page
+  const isArenaActive = () => {
+    return location.pathname === "/app" || 
+           location.pathname === "/arena-v2" || 
+           location.pathname.startsWith("/arena");
+  };
+
   return (
-    <div className="relative flex flex-col w-full min-h-screen bg-[#1A1F2C]">
+    <div className="relative flex flex-col w-full min-h-screen bg-gradient-to-br from-[#DAA520] via-[#D4AF37] to-[#B8860B] overflow-hidden">
+      {/* Background Detail Pattern */}
+      <div 
+        className="fixed inset-0 z-0 opacity-20 pointer-events-none"
+        style={{
+          backgroundImage: `url(${BackgroundDetail})`,
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      />
+      
       {/* Header */}
-      <header className="fixed top-0 w-full z-50 px-4 py-3 bg-[#1A1F2C]/95 backdrop-blur-md border-b border-cyan-900/30">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <Link to="/dashboard" className="text-xl font-bold italic tracking-wider text-cyan-400 font-orbitron hover:text-cyan-300 transition-colors">
+      <header className="fixed top-0 w-full z-50 h-20 relative">
+        {/* Background SVG - Top Left Corner Only - Condensed */}
+        <div className="absolute top-0 left-0 h-full max-w-xs pointer-events-none">
+          <img 
+            src="/src/assets/icons/TopBackgroundComponent.svg" 
+            alt="" 
+            className="h-full w-auto object-cover scale-75 origin-left"
+          />
+          
+          {/* HOLOBOTS Text - Navigation Link to Dashboard */}
+          <div className="absolute inset-0 flex items-start pt-4 pl-8 pointer-events-auto">
+            <Link to="/dashboard" className="relative z-10 text-2xl font-black italic tracking-wider text-white font-orbitron hover:text-gray-200 transition-colors drop-shadow-lg cursor-pointer">
               HOLOBOTS
             </Link>
-            <DevModeToggle />
           </div>
-          <NavigationMenu />
+        </div>
+        
+        {/* Content */}
+        <div className="relative h-full flex items-center justify-end px-4">
+          <div className="flex items-center gap-4">
+            <DevModeToggle />
+            <NavigationMenu />
+          </div>
         </div>
       </header>
 
       {/* Main Content with padding for header and footer */}
-      <main className="flex-1 pt-14 pb-16 w-full overflow-y-auto">
+      <main className="relative z-10 flex-1 pt-20 pb-20 w-full overflow-y-auto">
         {children}
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full h-16 flex justify-around items-center bg-[#111520] border-t border-cyan-900/30 z-50">
-        <Link to="/app" className="flex flex-col items-center justify-center flex-1">
+      {/* Bottom Navigation - Updated with 4 items and custom icons */}
+      <nav className="fixed bottom-0 w-full h-20 flex justify-around items-center bg-black/90 backdrop-blur-sm border-t-4 border-[#DAA520] z-50 shadow-2xl">
+        {/* Arena */}
+        <Link to="/app" className="flex flex-col items-center justify-center flex-1 gap-1">
           <div className={cn(
-            "h-10 w-10 rounded-full flex items-center justify-center", 
-            isActive("/app") ? "bg-cyan-500 text-white" : "text-gray-400"
+            "flex items-center justify-center", 
+            isArenaActive() ? "scale-110" : ""
           )}>
-            <Home className="h-5 w-5" />
+            <NavIcon 
+              iconName="arena" 
+              isActive={isArenaActive()}
+              className="h-14 w-20 object-contain"
+            />
           </div>
           <span className={cn(
-            "text-[10px] mt-0.5",
-            isActive("/app") ? "text-white" : "text-gray-400"
-          )}>Battle</span>
+            "text-[10px] font-medium font-orbitron",
+            isArenaActive() ? "text-[#DAA520]" : "text-gray-400"
+          )}>Arena</span>
         </Link>
         
-        <Link to="/training" className="flex flex-col items-center justify-center flex-1">
+        {/* Inventory */}
+        <Link to="/inventory" className="flex flex-col items-center justify-center flex-1 gap-1">
           <div className={cn(
-            "h-10 w-10 rounded-full flex items-center justify-center", 
-            isActive("/training") ? "bg-cyan-500 text-white" : "text-gray-400"
+            "flex items-center justify-center", 
+            isActive("/inventory") ? "scale-110" : ""
           )}>
-            <Dumbbell className="h-5 w-5" />
+            <NavIcon 
+              iconName="dashboard" 
+              isActive={isActive("/inventory")}
+              className="h-12 w-12"
+            />
           </div>
           <span className={cn(
-            "text-[10px] mt-0.5",
-            isActive("/training") ? "text-white" : "text-gray-400"
-          )}>Train</span>
+            "text-[10px] font-medium font-orbitron",
+            isActive("/inventory") ? "text-[#DAA520]" : "text-gray-400"
+          )}>Inventory</span>
         </Link>
         
-        <Link to="/quests" className="flex flex-col items-center justify-center flex-1">
+        {/* Sync */}
+        <Link to="/sync" className="flex flex-col items-center justify-center flex-1 gap-1">
           <div className={cn(
-            "h-10 w-10 rounded-full flex items-center justify-center", 
-            isActive("/quests") ? "bg-cyan-500 text-white" : "text-gray-400"
+            "flex items-center justify-center", 
+            isActive("/sync") ? "scale-110" : ""
           )}>
-            <Trophy className="h-5 w-5" />
+            <NavIcon 
+              iconName="sync" 
+              isActive={isActive("/sync")}
+              className="h-12 w-12"
+            />
           </div>
           <span className={cn(
-            "text-[10px] mt-0.5",
-            isActive("/quests") ? "text-white" : "text-gray-400"
-          )}>Quests</span>
+            "text-[10px] font-medium font-orbitron",
+            isActive("/sync") ? "text-[#DAA520]" : "text-gray-400"
+          )}>Sync</span>
         </Link>
         
-        <Link to="/fitness" className="flex flex-col items-center justify-center flex-1">
+        {/* Marketplace */}
+        <Link to="/marketplace" className="flex flex-col items-center justify-center flex-1 gap-1">
           <div className={cn(
-            "h-10 w-10 rounded-full flex items-center justify-center", 
-            isActive("/fitness") ? "bg-cyan-500 text-white" : "text-gray-400"
+            "flex items-center justify-center", 
+            isActive("/marketplace") ? "scale-110" : ""
           )}>
-            <Activity className="h-5 w-5" />
+            <NavIcon 
+              iconName="marketplace" 
+              isActive={isActive("/marketplace")}
+              className="h-12 w-12"
+            />
           </div>
           <span className={cn(
-            "text-[10px] mt-0.5",
-            isActive("/fitness") ? "text-white" : "text-gray-400"
-          )}>Fitness</span>
-        </Link>
-        
-        <Link to="/marketplace" className="flex flex-col items-center justify-center flex-1">
-          <div className={cn(
-            "h-10 w-10 rounded-full flex items-center justify-center", 
-            isActive("/marketplace") ? "bg-cyan-500 text-white" : "text-gray-400"
-          )}>
-            <ShoppingBag className="h-5 w-5" />
-          </div>
-          <span className={cn(
-            "text-[10px] mt-0.5",
-            isActive("/marketplace") ? "text-white" : "text-gray-400"
+            "text-[10px] font-medium font-orbitron",
+            isActive("/marketplace") ? "text-[#DAA520]" : "text-gray-400"
           )}>Market</span>
         </Link>
       </nav>

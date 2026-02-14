@@ -22,16 +22,18 @@ export function ActionCardHand({ cards, onCardSelect, disabled = false }: Action
   }
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur rounded-lg p-2 sm:p-3 md:p-4">
-      <div className="flex items-center justify-between mb-1 sm:mb-1.5 md:mb-2">
-        <h3 className="text-xs sm:text-sm font-bold text-white">YOUR HAND</h3>
-        <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
-          <span className="text-[9px] sm:text-[10px] md:text-xs text-gray-400">{cards.length} cards</span>
-          <span className="hidden md:inline-block text-xs text-cyan-400">⌨️ S•Strike | D•Defend | C•Combo | F•Finisher</span>
+    <div className="bg-black border-3 border-[#F5C400]/50 p-3 sm:p-4" style={{
+      clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+    }}>
+      <div className="flex items-center justify-between mb-2 sm:mb-3 border-b-2 border-[#F5C400]/30 pb-2">
+        <h3 className="text-sm sm:text-base font-black text-[#F5C400] uppercase tracking-widest">Your Hand</h3>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="text-[10px] sm:text-xs text-white font-bold">{cards.length} cards</span>
+          <span className="hidden md:inline-block text-[10px] text-gray-400 uppercase">S:Strike | D:Defend | C:Combo | F:Finisher</span>
         </div>
       </div>
 
-      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-2">
+      <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2">
         {cards.map((card) => (
           <ActionCardComponent
             key={card.id}

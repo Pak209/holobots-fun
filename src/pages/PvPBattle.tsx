@@ -8,7 +8,7 @@ const PvPBattle = () => {
   const defaultRightHolobot = 'kuma';
 
   return (
-    <div className="min-h-screen bg-holobots-background dark:bg-holobots-dark-background text-holobots-text dark:text-holobots-dark-text">
+    <div className="min-h-screen text-gray-900">
       <NavigationMenu />
       <div className="container mx-auto p-4 pt-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

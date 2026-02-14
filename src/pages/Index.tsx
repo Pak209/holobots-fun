@@ -283,7 +283,7 @@ const ArenaV2Wrapper = () => {
   // Show prebattle menu before battle
   if (showPrebattleMenu || !currentBattle) {
     return (
-      <div className="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-5">
+      <div className="px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-5 relative z-20">
         <ArenaPrebattleMenu 
           onHolobotSelect={handleHolobotSelect}
           onEntryFeeMethod={handleEntryFeeMethod}
@@ -652,7 +652,7 @@ const Index = () => {
 
   // Arena content when entry fee not paid
   const renderArenaPreBattle = () => (
-    <div className="px-4 py-5">
+    <div className="px-4 py-5 relative z-20">
       <ArenaPrebattleMenu 
         onHolobotSelect={handleHolobotSelect}
         onEntryFeeMethod={handleEntryFeeMethod}
@@ -666,8 +666,8 @@ const Index = () => {
     const currentOpponentKey = arenaLineup[currentRound - 1];
 
     return (
-      <div className="px-2 py-3">
-        <div className="mb-4 bg-[#1A1F2C] rounded-lg p-3">
+      <div className="px-2 py-3 relative z-20">
+        <div className="mb-4 bg-[#1A1F2C] rounded-lg p-3 relative z-20">
           <div className="text-center mb-2 text-lg font-bold bg-gradient-to-r from-holobots-accent to-holobots-hover bg-clip-text text-transparent">
             ARENA MODE
           </div>
@@ -736,11 +736,11 @@ const Index = () => {
     }) : 'Rookie';
     
     return (
-      <div className="min-h-screen bg-[#0A0B14] text-white pb-20">
+      <div className="min-h-screen bg-[#0A0B14] text-white pb-20 relative z-20">
         <div className="container mx-auto px-4 py-6">
           {/* Free Daily Tickets Section */}
           <div className="mb-6">
-            <Card className="bg-black/60 border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/20">
+            <Card className="bg-black/60 border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/20 relative z-20">
               <CardContent className="p-6 text-center bg-gradient-to-b from-cyan-500/20 to-cyan-500/5">
                 <div className="flex items-center justify-center mb-3">
                   <Ticket className="h-6 w-6 text-cyan-400 mr-2" />
@@ -882,77 +882,105 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1A1F2C] text-white">
-      {/* Battle Mode Toggle */}
-      <div className="bg-black/40 border-b border-cyan-500/20 px-4 py-4">
-        <div className="flex items-center justify-center">
-          <div className="relative bg-black/60 rounded-lg p-1 border border-cyan-500/30">
-            <div 
-              className={cn(
-                "absolute top-1 bottom-1 rounded-md transition-all duration-300 ease-out",
-                "bg-gradient-to-r shadow-lg",
-                battleMode === 'arena' 
-                  ? "left-1 w-1/3 from-cyan-500/40 to-cyan-600/40 border border-cyan-400/50" 
-                  : battleMode === 'arena-v2'
-                  ? "left-1/3 w-1/3 from-yellow-500/40 to-orange-600/40 border border-yellow-400/50"
-                  : "left-2/3 right-1 from-purple-500/40 to-fuchsia-600/40 border border-purple-400/50"
-              )}
-            />
-            <div className="relative flex">
+    <div className="min-h-screen text-gray-900">
+      {/* Battle Mode Toggle - Hidden during active battle */}
+      {!hasEntryFee && (
+        <div className="px-4 py-4 relative z-10">
+          <div className="flex items-center justify-center">
+            <div className="relative bg-black/60 rounded-lg p-1 border border-cyan-500/30">
+              <div 
+                className={cn(
+                  "absolute top-1 bottom-1 rounded-md transition-all duration-300 ease-out",
+                  "bg-gradient-to-r shadow-lg",
+                  battleMode === 'arena' 
+                    ? "left-1 w-1/3 from-cyan-500/40 to-cyan-600/40 border border-cyan-400/50" 
+                    : battleMode === 'arena-v2'
+                    ? "left-1/3 w-1/3 from-yellow-500/40 to-orange-600/40 border border-yellow-400/50"
+                    : "left-2/3 right-1 from-purple-500/40 to-fuchsia-600/40 border border-purple-400/50"
+                )}
+              />
+              <div className="relative flex gap-3">
               <button
                 onClick={() => setBattleMode('arena')}
                 className={cn(
-                  "px-6 py-3 text-sm font-medium transition-all duration-200 rounded-md relative z-10",
-                  "flex items-center justify-center gap-2",
+                  "px-8 py-4 text-sm font-bold tracking-wider transition-all duration-200 relative z-10 uppercase",
+                  "flex items-center justify-center gap-3",
+                  "border-4 clip-path-diagonal",
                   battleMode === 'arena'
-                    ? "text-cyan-100 font-bold"
-                    : "text-gray-400 hover:text-gray-300"
+                    ? "bg-[#F5C400] border-[#F5C400] text-black shadow-[0_0_20px_rgba(245,196,0,0.6)]"
+                    : "bg-black/80 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200"
                 )}
+                style={{
+                  clipPath: battleMode === 'arena' 
+                    ? 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                    : 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                }}
               >
-                <Sword className="h-4 w-4" />
+                <Sword className="h-5 w-5" />
                 CLASSIC
               </button>
               <button
                 onClick={() => setBattleMode('arena-v2')}
                 className={cn(
-                  "px-6 py-3 text-sm font-medium transition-all duration-200 rounded-md relative z-10",
-                  "flex items-center justify-center gap-2",
+                  "px-8 py-4 text-sm font-bold tracking-wider transition-all duration-200 relative z-10 uppercase",
+                  "flex items-center justify-center gap-3",
+                  "border-4 clip-path-diagonal",
                   battleMode === 'arena-v2'
-                    ? "text-yellow-100 font-bold"
-                    : "text-gray-400 hover:text-gray-300"
+                    ? "bg-[#F5C400] border-[#F5C400] text-black shadow-[0_0_20px_rgba(245,196,0,0.6)]"
+                    : "bg-black/80 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200"
                 )}
+                style={{
+                  clipPath: battleMode === 'arena-v2' 
+                    ? 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                    : 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                }}
               >
-                <Activity className="h-4 w-4" />
+                <Activity className="h-5 w-5" />
                 ARENA V2
-                <Badge className="ml-1 bg-yellow-500/20 text-yellow-300 text-xs">NEW</Badge>
+                <Badge className={cn(
+                  "ml-1 text-[10px] font-bold px-2 py-0.5",
+                  battleMode === 'arena-v2' ? "bg-black text-[#F5C400]" : "bg-yellow-500/20 text-yellow-300"
+                )}>NEW</Badge>
               </button>
               <button
                 onClick={() => setBattleMode('pvp')}
                 className={cn(
-                  "px-6 py-3 text-sm font-medium transition-all duration-200 rounded-md relative z-10",
-                  "flex items-center justify-center gap-2",
+                  "px-8 py-4 text-sm font-bold tracking-wider transition-all duration-200 relative z-10 uppercase",
+                  "flex items-center justify-center gap-3",
+                  "border-4 clip-path-diagonal",
                   battleMode === 'pvp'
-                    ? "text-purple-100 font-bold"
-                    : "text-gray-400 hover:text-gray-300"
+                    ? "bg-[#F5C400] border-[#F5C400] text-black shadow-[0_0_20px_rgba(245,196,0,0.6)]"
+                    : "bg-black/80 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200"
                 )}
+                style={{
+                  clipPath: battleMode === 'pvp' 
+                    ? 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
+                    : 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                }}
               >
-                <Users className="h-4 w-4" />
-                PvP
-                <Badge className="ml-1 bg-purple-500/20 text-purple-300 text-xs">LIVE</Badge>
+                <Users className="h-5 w-5" />
+                PVP
+                <Badge className={cn(
+                  "ml-1 text-[10px] font-bold px-2 py-0.5",
+                  battleMode === 'pvp' ? "bg-black text-[#F5C400]" : "bg-purple-500/20 text-purple-300"
+                )}>LIVE</Badge>
               </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Content based on battle mode */}
-      {battleMode === 'arena' ? (
-        hasEntryFee ? renderArenaBattle() : renderArenaPreBattle()
-      ) : battleMode === 'arena-v2' ? (
-        <ArenaV2Wrapper />
-      ) : (
-        <RealtimeBattleRoom />
-      )}
+      <div className="relative z-20">
+        {battleMode === 'arena' ? (
+          hasEntryFee ? renderArenaBattle() : renderArenaPreBattle()
+        ) : battleMode === 'arena-v2' ? (
+          <ArenaV2Wrapper />
+        ) : (
+          <RealtimeBattleRoom />
+        )}
+      </div>
     </div>
   );
 };

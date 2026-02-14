@@ -409,17 +409,17 @@ const Leaderboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1A1F2C] p-4">
+    <div className="min-h-screen p-4">
       <div className="max-w-7xl mx-auto pt-16">
-        <h1 className="text-3xl font-bold text-center mb-6 text-[#33C3F0]">
+        <h1 className="text-3xl font-bold text-center mb-6 text-black font-orbitron">
           LEADERBOARDS
         </h1>
         
         <Tabs defaultValue="battle" className="w-full" onValueChange={setCurrentTab}>
-          <TabsList className="bg-[#374151] p-1 text-gray-300 mb-6">
-            <TabsTrigger value="battle" className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">Battle</TabsTrigger>
-            <TabsTrigger value="tokens" className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">Tokens</TabsTrigger>
-            <TabsTrigger value="level" className="data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-[#33C3F0]">Level</TabsTrigger>
+          <TabsList className="bg-black/80 p-1 text-white mb-6 border-2 border-[#DAA520]">
+            <TabsTrigger value="battle" className="data-[state=active]:bg-[#DAA520] data-[state=active]:text-black font-orbitron">Battle</TabsTrigger>
+            <TabsTrigger value="tokens" className="data-[state=active]:bg-[#DAA520] data-[state=active]:text-black font-orbitron">Tokens</TabsTrigger>
+            <TabsTrigger value="level" className="data-[state=active]:bg-[#DAA520] data-[state=active]:text-black font-orbitron">Level</TabsTrigger>
           </TabsList>
           
           {/* Show user's position at the top */}

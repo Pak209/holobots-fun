@@ -10,8 +10,11 @@ import { ActionCardHand } from './ActionCardHand';
 import { BattleControls } from './BattleControls';
 import { BattlefieldCenter } from './BattlefieldCenter';
 import { Button } from '@/components/ui/button';
-import { Trophy, Skull, Coins, Zap, RotateCcw } from 'lucide-react';
+import { Trophy, Skull, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import HolosIcon from '@/assets/icons/HOlos.svg';
+import ExpIcon from '@/assets/icons/EXP.svg';
+import SyncPointIcon from '@/assets/icons/SyncPoint.svg';
 
 export function BattleArenaView() {
   const [showStats, setShowStats] = useState(false);
@@ -160,75 +163,50 @@ export function BattleArenaView() {
 
                 {/* Rewards Section */}
                 {isVictory && rewards && (
-                  <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-2 sm:p-3 md:p-4 rounded-lg">
-                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                      <h2 className="text-sm sm:text-base md:text-lg font-bold text-white flex items-center gap-1">
-                        <Trophy className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-yellow-400" />
+                  <div className="bg-black border-3 border-[#F5C400] p-3 sm:p-4 md:p-5" style={{
+                    clipPath: 'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)'
+                  }}>
+                    <div className="flex items-center justify-between mb-3 sm:mb-4 border-b-2 border-[#F5C400]/30 pb-2">
+                      <h2 className="text-base sm:text-lg md:text-xl font-black text-[#F5C400] uppercase tracking-widest flex items-center gap-2">
+                        <Trophy className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                         Rewards
                       </h2>
-                      <button className="text-[10px] sm:text-xs text-cyan-400 flex items-center gap-1">
+                      <button className="text-[10px] sm:text-xs text-white/70 hover:text-white flex items-center gap-1 uppercase tracking-wide">
                         <RotateCcw className="w-3 h-3" />
-                        View Stats
+                        Stats
                       </button>
                     </div>
-                    <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-                      {rewards.exp && (
-                        <div className="flex items-center gap-1 bg-blue-500/20 p-1.5 sm:p-2 rounded">
-                          <Zap className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-[9px] sm:text-[10px] text-gray-300">XP</p>
-                            <p className="text-xs sm:text-sm font-bold text-blue-400 truncate">+{Math.floor(rewards.exp)}</p>
+                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                      {rewards.holos && rewards.holos > 0 && (
+                        <div className="flex items-center justify-between bg-gradient-to-r from-gray-900 to-black p-3 sm:p-4 border-2 border-[#F5C400]/50" style={{
+                          clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
+                        }}>
+                          <img src={HolosIcon} alt="Holos" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0" />
+                          <div className="flex items-center gap-2">
+                            <span className="text-white/70 text-xs sm:text-sm uppercase tracking-wider">+</span>
+                            <span className="text-2xl sm:text-3xl md:text-4xl font-black text-[#F5C400]">{rewards.holos}</span>
                           </div>
                         </div>
                       )}
                       {rewards.syncPoints && (
-                        <div className="flex items-center gap-1 bg-purple-500/20 p-1.5 sm:p-2 rounded">
-                          <Zap className="w-3 h-3 text-purple-400 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-[9px] sm:text-[10px] text-gray-300">SP</p>
-                            <p className="text-xs sm:text-sm font-bold text-purple-400 truncate">+{Math.floor(rewards.syncPoints)}</p>
+                        <div className="flex items-center justify-between bg-gradient-to-r from-gray-900 to-black p-3 sm:p-4 border-2 border-cyan-500/50" style={{
+                          clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
+                        }}>
+                          <img src={SyncPointIcon} alt="Sync Points" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0" />
+                          <div className="flex items-center gap-2">
+                            <span className="text-white/70 text-xs sm:text-sm uppercase tracking-wider">+</span>
+                            <span className="text-2xl sm:text-3xl md:text-4xl font-black text-cyan-400">{Math.floor(rewards.syncPoints)}</span>
                           </div>
                         </div>
                       )}
-                      {rewards.gachaTickets && rewards.gachaTickets > 0 && (
-                        <div className="flex items-center gap-1 bg-pink-500/20 p-1.5 sm:p-2 rounded">
-                          <Trophy className="w-3 h-3 text-pink-400 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-[9px] sm:text-[10px] text-gray-300">Gacha</p>
-                            <p className="text-xs sm:text-sm font-bold text-pink-400 truncate">+{rewards.gachaTickets}</p>
-                          </div>
-                        </div>
-                      )}
-                      {rewards.boosterPackTickets && rewards.boosterPackTickets > 0 && (
-                        <div className="flex items-center gap-1 bg-orange-500/20 p-1.5 sm:p-2 rounded">
-                          <Trophy className="w-3 h-3 text-orange-400 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-[9px] sm:text-[10px] text-gray-300">Booster</p>
-                            <p className="text-xs sm:text-sm font-bold text-orange-400 truncate">+{rewards.boosterPackTickets}</p>
-                          </div>
-                        </div>
-                      )}
-                      {rewards.holos && rewards.holos > 0 && (
-                        <div className="flex items-center gap-1 bg-green-500/20 p-1.5 sm:p-2 rounded">
-                          <Coins className="w-3 h-3 text-green-400 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-[9px] sm:text-[10px] text-gray-300">HOLOS</p>
-                            <p className="text-xs sm:text-sm font-bold text-green-400 truncate">+{rewards.holos}</p>
-                          </div>
-                        </div>
-                      )}
-                      {rewards.blueprintRewards && rewards.blueprintRewards.length > 0 && (
-                        <div className="col-span-2">
-                          <p className="text-[9px] sm:text-[10px] text-gray-400 mb-1">Blueprints:</p>
-                          <div className="space-y-1">
-                            {rewards.blueprintRewards.map((blueprint, index) => (
-                              <div key={index} className="flex items-center gap-1 bg-cyan-500/20 p-1.5 rounded">
-                                <Trophy className="w-3 h-3 text-cyan-400 flex-shrink-0" />
-                                <p className="text-xs font-bold text-cyan-400 truncate">
-                                  +{blueprint.amount} {blueprint.holobotKey.toUpperCase()}
-                                </p>
-                              </div>
-                            ))}
+                      {rewards.exp && (
+                        <div className="flex items-center justify-between bg-gradient-to-r from-gray-900 to-black p-3 sm:p-4 border-2 border-orange-500/50" style={{
+                          clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
+                        }}>
+                          <img src={ExpIcon} alt="Experience" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0" />
+                          <div className="flex items-center gap-2">
+                            <span className="text-white/70 text-xs sm:text-sm uppercase tracking-wider">+</span>
+                            <span className="text-2xl sm:text-3xl md:text-4xl font-black text-orange-400">{Math.floor(rewards.exp)}</span>
                           </div>
                         </div>
                       )}
@@ -374,15 +352,23 @@ export function BattleArenaView() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 overflow-hidden pb-0">
-      {/* Arena Header - Ultra Compact */}
-      <div className="p-1 sm:p-2 text-center border-b border-purple-500/30">
-        <h1 className="text-sm sm:text-lg md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">
-          ARENA V2
-        </h1>
-        <p className="text-[9px] sm:text-[10px] text-gray-400">
-          R{currentBattle.currentRound}/{currentBattle.totalRounds} • W:{currentBattle.roundsWon}
-        </p>
+    <div className="flex flex-col min-h-screen bg-black relative z-20 pb-safe">
+      {/* Arena Header - HUD Style */}
+      <div className="px-3 py-2 sm:px-4 sm:py-3 bg-gradient-to-r from-[#F5C400] to-[#D4A400] border-b-4 border-black relative" style={{
+        clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)'
+      }}>
+        <div className="flex items-center justify-between">
+          <h1 className="text-base sm:text-xl md:text-2xl font-black text-black uppercase tracking-widest">
+            ARENA V2
+          </h1>
+          <div className="bg-black px-3 py-1 border-2 border-[#F5C400]" style={{
+            clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+          }}>
+            <p className="text-[10px] sm:text-xs text-[#F5C400] font-bold uppercase tracking-wide">
+              R{currentBattle.currentRound}/{currentBattle.totalRounds} • W:{currentBattle.roundsWon}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Opponent (Top) - Minimal Padding */}
@@ -395,12 +381,12 @@ export function BattleArenaView() {
       </div>
 
       {/* Battlefield Center - Minimal Height */}
-      <div className="relative overflow-hidden" style={{ minHeight: '80px', maxHeight: '120px' }}>
+      <div className="relative overflow-hidden flex-shrink-0" style={{ minHeight: '80px', maxHeight: '120px' }}>
         <BattlefieldCenter battle={currentBattle} />
       </div>
 
-      {/* Player (Bottom) - Minimal Padding */}
-      <div className="p-1 sm:p-2 space-y-1 sm:space-y-1.5">
+      {/* Player (Bottom) - Minimal Padding with bottom spacing for visibility */}
+      <div className="p-1 sm:p-2 space-y-1 sm:space-y-1.5 pb-4 sm:pb-6">
         <FighterDisplay
           fighter={player}
           position="bottom"
