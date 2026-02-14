@@ -44,7 +44,7 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
         {/* Background SVG - Top Left Corner Only - Condensed */}
         <div className="absolute top-0 left-0 h-full max-w-xs pointer-events-none">
           <img 
-            src="/src/assets/icons/TopBackgroundComponent.svg" 
+            src="/icons/TopBackgroundComponent.svg" 
             alt="" 
             className="h-full w-auto object-cover scale-75 origin-left"
           />

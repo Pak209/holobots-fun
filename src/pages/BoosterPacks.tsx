@@ -310,34 +310,34 @@ const BoosterPacks: React.FC = () => {
                                 // Remove tier suffix if present
                                 const basePartName = item.part.name.replace(/\s*\([^)]*\)\s*$/i, '').trim();
                                 const partImageMap: Record<string, string> = {
-                                  'Plasma Cannon': '/src/assets/icons/ArmPartPlasmaCannon.png',
-                                  'Plasma Cannons': '/src/assets/icons/ArmPartPlasmaCannon.png',
-                                  'Boxer Gloves': '/src/assets/icons/ArmsPartBoxer.png',
-                                  'Inferno Claws': '/src/assets/icons/ArmsPartInfernoClaws.png',
-                                  'Combat Mask': '/src/assets/icons/HeadPartCombatMask.png',
-                                  'Void Mask': '/src/assets/icons/HeadPartVoidMask.png',
-                                  'Advanced Scanner': '/src/assets/icons/HeadPartCombatMask.png',
-                                  'Titanium Torso': '/src/assets/icons/TorsoPart.png',
-                                  'Steel Torso': '/src/assets/icons/TorsoPart.png',
-                                  'Reinforced Chassis': '/src/assets/icons/TorsoPart.png',
-                                  'Power Legs': '/src/assets/icons/LegPart.png',
-                                  'Speed Legs': '/src/assets/icons/LegPart.png',
-                                  'Turbo Boosters': '/src/assets/icons/LegPart.png',
-                                  'Energy Core': '/src/assets/icons/CorePart.png',
-                                  'Power Core': '/src/assets/icons/CorePart.png',
-                                  'Quantum Core': '/src/assets/icons/CorePart.png',
+                                  'Plasma Cannon': '/icons/ArmPartPlasmaCannon.png',
+                                  'Plasma Cannons': '/icons/ArmPartPlasmaCannon.png',
+                                  'Boxer Gloves': '/icons/ArmsPartBoxer.png',
+                                  'Inferno Claws': '/icons/ArmsPartInfernoClaws.png',
+                                  'Combat Mask': '/icons/HeadPartCombatMask.png',
+                                  'Void Mask': '/icons/HeadPartVoidMask.png',
+                                  'Advanced Scanner': '/icons/HeadPartCombatMask.png',
+                                  'Titanium Torso': '/icons/TorsoPart.png',
+                                  'Steel Torso': '/icons/TorsoPart.png',
+                                  'Reinforced Chassis': '/icons/TorsoPart.png',
+                                  'Power Legs': '/icons/LegPart.png',
+                                  'Speed Legs': '/icons/LegPart.png',
+                                  'Turbo Boosters': '/icons/LegPart.png',
+                                  'Energy Core': '/icons/CorePart.png',
+                                  'Power Core': '/icons/CorePart.png',
+                                  'Quantum Core': '/icons/CorePart.png',
                                 };
                                 itemImage = partImageMap[basePartName] || '⚙️';
                               } else if (item.type === 'item' && item.itemType) {
                                 const itemImageMap: Record<string, string> = {
-                                  'arena_pass': '/src/assets/icons/ArenaPass.jpeg',
-                                  'energy_refill': '/src/assets/icons/EnergyRefill.jpeg',
-                                  'exp_booster': '/src/assets/icons/EXPboost.jpeg',
-                                  'rank_skip': '/src/assets/icons/RankSkip.jpeg',
+                                  'arena_pass': '/icons/ArenaPass.jpeg',
+                                  'energy_refill': '/icons/EnergyRefill.jpeg',
+                                  'exp_booster': '/icons/EXPboost.jpeg',
+                                  'rank_skip': '/icons/RankSkip.jpeg',
                                 };
                                 itemImage = itemImageMap[item.itemType] || '🎁';
                               } else if (item.type === 'blueprint') {
-                                itemImage = '/src/assets/icons/Blueprint.png';
+                                itemImage = '/icons/Blueprint.png';
                               } else if (item.type === 'currency') {
                                 itemImage = item.holosTokens ? '🪙' : '🎫';
                               }

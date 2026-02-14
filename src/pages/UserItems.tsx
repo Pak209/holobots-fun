@@ -74,17 +74,17 @@ export default function UserItems() {
   const getItemIcon = (itemType: string) => {
     switch(itemType) {
       case 'arena-pass':
-        return '/src/assets/icons/ArenaPass.jpeg';
+        return '/icons/ArenaPass.jpeg';
       case 'gacha-ticket':
-        return '/src/assets/icons/GachaTicket.jpeg';
+        return '/icons/GachaTicket.jpeg';
       case 'energy-refill':
-        return '/src/assets/icons/EnergyRefill.jpeg';
+        return '/icons/EnergyRefill.jpeg';
       case 'exp-booster':
-        return '/src/assets/icons/EXPboost.jpeg';
+        return '/icons/EXPboost.jpeg';
       case 'rank-skip':
-        return '/src/assets/icons/RankSkip.jpeg';
+        return '/icons/RankSkip.jpeg';
       case 'holobot-parts':
-        return '/src/assets/icons/CorePart.png'; // Use a part image as icon
+        return '/icons/CorePart.png'; // Use a part image as icon
       default:
         return null;
     }
