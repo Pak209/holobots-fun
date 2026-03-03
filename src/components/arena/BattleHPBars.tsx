@@ -56,19 +56,19 @@ export function BattleHPBars({ player, opponent }: BattleHPBarsProps) {
   };
 
   return (
-    <div className="w-full bg-black border-3 border-[#F5C400] p-2 sm:p-3" style={{
+    <div className="w-full min-w-0 bg-black border-3 border-[#F5C400] p-2 sm:p-3 overflow-hidden" style={{
       clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
     }}>
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {/* Player (Left) */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 min-w-0">
           {/* Player Card */}
-          <div className="w-24 sm:w-32 flex-shrink-0">
+          <div className="w-24 sm:w-28 md:w-32 flex-shrink-0">
             <HolobotCard stats={playerStats} variant="blue" />
           </div>
-          
+
           {/* Stats Container */}
-          <div className="flex-1 space-y-1">
+          <div className="flex-1 min-w-0 space-y-1">
 
             {/* HP Bar */}
             <div>
@@ -126,14 +126,14 @@ export function BattleHPBars({ player, opponent }: BattleHPBarsProps) {
         </div>
 
         {/* Opponent (Right) */}
-        <div className="flex gap-2 flex-row-reverse">
+        <div className="flex gap-2 flex-row-reverse min-w-0">
           {/* Opponent Card */}
-          <div className="w-24 sm:w-32 flex-shrink-0">
+          <div className="w-24 sm:w-28 md:w-32 flex-shrink-0">
             <HolobotCard stats={opponentStats} variant="red" />
           </div>
-          
+
           {/* Stats Container */}
-          <div className="flex-1 space-y-1">
+          <div className="flex-1 min-w-0 space-y-1">
 
             {/* HP Bar */}
             <div>

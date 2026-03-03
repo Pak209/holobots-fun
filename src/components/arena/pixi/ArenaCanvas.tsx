@@ -5,7 +5,6 @@
 
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { BattleScene } from './BattleScene';
-import battleBg from '@/assets/icons/LandingPageBackground.png';
 import type {
   BattleSceneConfig,
   FighterSpriteData,
@@ -44,7 +43,6 @@ export const ArenaCanvas = forwardRef<ArenaCanvasHandle, ArenaCanvasProps>(
         height,
         backgroundColor: 0x0a0a0f,
         pixelated: true,
-        backgroundImageUrl: battleBg,
       };
 
       const scene = new BattleScene(canvasRef.current, config);

@@ -3,11 +3,9 @@
 // Main battle visualization component
 // ============================================================================
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useArenaBattleStore } from '@/stores/arena-battle-store';
 import { BattleHPBars } from './BattleHPBars';
-import { ArenaCanvas, type ArenaCanvasHandle } from './pixi/ArenaCanvas';
-import type { AnimationEvent, AttackAnimationParams } from './pixi/types';
 import { BattleLogDisplay } from './BattleLogDisplay';
 import { ActionCardHand } from './ActionCardHand';
 import { EquippedParts } from './EquippedParts';
@@ -22,8 +20,7 @@ import SyncPointIcon from '@/assets/icons/SyncPoint.svg';
 
 export function BattleArenaView() {
   const [showStats, setShowStats] = useState(false);
-  const arenaCanvasRef = useRef<ArenaCanvasHandle>(null);
-  
+
   const {
     currentBattle,
     uiState,
@@ -33,26 +30,6 @@ export function BattleArenaView() {
     useSpecialAttack,
     abandonBattle,
   } = useArenaBattleStore();
-
-  // Handle animation events from Pixi
-  const handleAnimationEvent = useCallback((event: AnimationEvent) => {
-    console.log('[BattleArenaView] Animation event:', event.type, event.data);
-    
-    switch (event.type) {
-      case 'attackStarted':
-        // Optional: pause UI updates during animation
-        break;
-      case 'hitLanded':
-        // Optional: trigger sound effects
-        break;
-      case 'animationComplete':
-        // Resume game logic, continue turn
-        break;
-      case 'koTriggered':
-        // Handle KO state
-        break;
-    }
-  }, []);
 
   // Hide bottom nav during battle
   useEffect(() => {
@@ -71,28 +48,9 @@ export function BattleArenaView() {
   
   const navigate = useNavigate();
 
-  // Handle card play with Pixi animation
-  const handleCardPlay = useCallback(async (cardId: string) => {
+  const handleCardPlay = useCallback((cardId: string) => {
     if (!currentBattle) return;
-    
-    // Find the card being played
-    const card = currentBattle.player.hand.find(c => c.id === cardId);
-    if (!card) return;
-    
-    // Play the card in game logic
     playCard(cardId);
-    
-    // Trigger Pixi animation
-    if (arenaCanvasRef.current && card.type !== 'defense') {
-      const attackParams: AttackAnimationParams = {
-        attackerId: 'player',
-        defenderId: 'opponent',
-        damageAmount: card.baseDamage,
-        attackType: card.type as 'strike' | 'combo' | 'special' | 'finisher',
-      };
-      
-      await arenaCanvasRef.current.playAttack(attackParams);
-    }
   }, [currentBattle, playCard]);
 
   // Keyboard shortcuts for battle cards
@@ -475,32 +433,33 @@ export function BattleArenaView() {
       </div>
 
       {/* Battle Layout Container */}
-      <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3">
-        {/* HP & Stamina Bars - Side by Side */}
-        <BattleHPBars player={player} opponent={opponent} />
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden p-2 sm:p-3 space-y-2 sm:space-y-3 flex flex-col">
+        {/* HP & Stamina Bars - Side by Side on sm+, stacked on mobile */}
+        <div className="flex-shrink-0 min-w-0">
+          <BattleHPBars player={player} opponent={opponent} />
+        </div>
 
-        {/* PixiJS Battle Canvas */}
-        <ArenaCanvas
-          ref={arenaCanvasRef}
-          width={640}
-          height={360}
-          onAnimationEvent={handleAnimationEvent}
-        />
-
-        {/* Player Hand - Moved above Battle Log */}
-        <ActionCardHand
+        {/* Player Hand */}
+        <div className="flex-shrink-0 min-w-0">
+          <ActionCardHand
           cards={player.hand}
           onCardSelect={handleCardPlay}
           disabled={currentBattle.status !== 'active'}
         />
+        </div>
 
         {/* Battle Log - Moved below Player Hand */}
+        <div className="flex-shrink-0 min-w-0">
         <BattleLogDisplay battle={currentBattle} />
+        </div>
 
         {/* Equipped Parts */}
+        <div className="flex-shrink-0 min-w-0">
         <EquippedParts fighter={player} />
+        </div>
 
         {/* Battle Controls */}
+        <div className="flex-shrink-0 min-w-0">
         <BattleControls
           onDefenseMode={enterDefenseMode}
           onHack={useHack}
@@ -508,6 +467,7 @@ export function BattleArenaView() {
           hackUsed={currentBattle.hackUsed}
           canUseSpecial={player.specialMeter >= 100}
         />
+        </div>
       </div>
     </div>
   );
