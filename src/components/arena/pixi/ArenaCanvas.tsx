@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { BattleScene } from './BattleScene';
-import battleBg from '@/assets/icons/battlescreenBG.png';
+import battleBg from '@/assets/icons/LandingPageBackground.png';
 import type {
   BattleSceneConfig,
   FighterSpriteData,
