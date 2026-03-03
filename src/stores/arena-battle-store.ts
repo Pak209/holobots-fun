@@ -360,11 +360,22 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
     const playerWonArena = battle.roundsWon === battle.totalRounds;
     console.log('[Arena End] Player won arena?', playerWonArena);
     
+    // Track Arena V2 battle for daily missions
+    try {
+      const { useRewardStore } = await import('@/stores/rewardStore');
+      const { updateMissionProgress, updateArenaStreak } = useRewardStore.getState();
+      updateMissionProgress('arena_v2_battle', 1);
+      updateArenaStreak(playerWonArena);
+      console.log('[Arena End] ✅ Tracked Arena V2 battle for daily missions');
+    } catch (error) {
+      console.error('[Arena End] Failed to track arena battle:', error);
+    }
+    
     // Calculate final rewards based on rounds won
     const winType = playerWonArena ? 'ko' : 'forfeit';
     const rewards = ArenaCombatEngine.calculateFinalRewards(battle, battle.player.holobotId, winType);
     
-    // Scale rewards by rounds won
+    // Scale rewards by rounds won (but NOT blueprints - those are already per-opponent)
     const rewardMultiplier = battle.roundsWon / battle.totalRounds;
     console.log('[Arena End] Reward multiplier:', rewardMultiplier);
     
@@ -374,7 +385,9 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
     if (rewards.boosterPackTickets) rewards.boosterPackTickets = Math.floor(rewards.boosterPackTickets * rewardMultiplier);
     if (rewards.holos) rewards.holos = Math.floor(rewards.holos * rewardMultiplier);
     
+    // Blueprint rewards are already calculated per-opponent, don't scale them
     console.log('[Arena End] Final rewards:', rewards);
+    console.log('[Arena End] Blueprint rewards:', rewards.blueprintRewards);
     
     // Update battle state
     const finalBattle: BattleState = {
@@ -465,10 +478,12 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
         console.log('[Arena V2 Rewards] ⚠️ No blueprint rewards to distribute');
       }
       
+      // Get player holobot name early for use later
+      const currentBattle = get().currentBattle;
+      const playerHolobotName = currentBattle?.player.name;
+      
       // Update experience for the holobot - USE THE SAME METHOD AS TRAINING
-      if (rewards.exp && userData.holobots && userData.holobots.length > 0) {
-        const currentBattle = get().currentBattle;
-        const playerHolobotName = currentBattle?.player.name;
+      if (rewards.exp && userData.holobots && userData.holobots.length > 0 && playerHolobotName) {
         
         if (!playerHolobotName) {
           console.error('[Arena V2 Rewards] ❌ No player holobot name found in battle state!');
@@ -493,9 +508,11 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
             let newLevel = currentLevel;
             let tempExp = newExperience;
             let tempNextExp = nextLevelExp;
+            let levelsGained = 0;
             
             while (tempExp >= tempNextExp) {
               newLevel += 1;
+              levelsGained += 1;
               tempNextExp = Math.floor(100 * Math.pow(newLevel, 2)); // Base XP formula
             }
             
@@ -506,19 +523,39 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
               newExp: newExperience,
               currentLevel,
               newLevel,
+              levelsGained,
               nextLevelExp: tempNextExp
             });
             
             // Use the same helper function as training!
-            const updatedHolobots = updateHolobotExperience(
+            let updatedHolobots = updateHolobotExperience(
               userData.holobots,
               playerHolobotName,
               newExperience,
               newLevel
             );
             
+            // IMPORTANT: Add attribute points for levels gained!
+            if (levelsGained > 0) {
+              console.log(`[Arena V2 Rewards] 🎉 ${playerHolobotName} gained ${levelsGained} level(s)! Adding ${levelsGained} attribute points`);
+              updatedHolobots = updatedHolobots.map((h: any) => {
+                if (h.name.toLowerCase() === playerHolobotName.toLowerCase()) {
+                  const currentAttributePoints = h.attributePoints || 0;
+                  const newAttributePoints = currentAttributePoints + levelsGained;
+                  console.log(`[Arena V2 Rewards] Attribute Points: ${currentAttributePoints} → ${newAttributePoints}`);
+                  return {
+                    ...h,
+                    attributePoints: newAttributePoints,
+                    boostedAttributes: h.boostedAttributes || {}
+                  };
+                }
+                return h;
+              });
+            }
+            
             updates.holobots = updatedHolobots;
             console.log('[Arena V2 Rewards] ✅ Holobot experience updated using training method!');
+            console.log('[Arena V2 Rewards] Updated holobots array:', JSON.stringify(updatedHolobots, null, 2));
           }
         }
       } else {
@@ -527,11 +564,23 @@ export const useArenaBattleStore = create<ArenaBattleStore>((set, get) => ({
       
       // Apply updates to Firestore
       if (Object.keys(updates).length > 0) {
-        console.log('[Rewards] Applying updates to Firestore...');
-        console.log('[Rewards] Updates object:', JSON.stringify(updates, null, 2));
+        console.log('[Rewards] ========== APPLYING UPDATES TO FIRESTORE ==========');
+        console.log('[Rewards] User ID:', userId);
+        console.log('[Rewards] Updates object keys:', Object.keys(updates));
+        console.log('[Rewards] Holobots being saved:', updates.holobots ? 'YES' : 'NO');
         
-        await updateDoc(userRef, updates);
-        console.log('[Rewards] ✅ Successfully saved to Firebase!');
+        if (updates.holobots) {
+          console.log('[Rewards] Holobots array length:', updates.holobots.length);
+          console.log('[Rewards] Updated holobot:', updates.holobots.find((h: any) => h.name.toLowerCase() === playerHolobotName?.toLowerCase()));
+        }
+        
+        try {
+          await updateDoc(userRef, updates);
+          console.log('[Rewards] ✅ Successfully saved to Firebase!');
+        } catch (error) {
+          console.error('[Rewards] ❌ FAILED TO SAVE TO FIREBASE:', error);
+          throw error;
+        }
         
         // Also update the local auth state
         console.log('[Rewards] Refreshing local auth state...');

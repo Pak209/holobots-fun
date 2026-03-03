@@ -26,11 +26,12 @@ import { MobileLayout } from "@/components/MobileLayout";
 import Bytepaper from "./pages/Bytepaper";
 import Mint from "@/pages/Mint";
 import MintGenesisPage from "@/pages/MintGenesis";
-import Fitness from "@/pages/Fitness";
 import BoosterPacks from "@/pages/BoosterPacks";
 import ArenaV2Screen from "@/pages/ArenaV2Screen";
 import Sync from "@/pages/Sync";
 import Inventory from "@/pages/Inventory";
+import { InstallPWA } from "@/components/pwa/InstallPWA";
+import { UpdateNotification } from "@/components/pwa/UpdateNotification";
 
 // Create a client for React Query
 const queryClient = new QueryClient();
@@ -95,6 +96,7 @@ function App() {
             {/* Redirect legacy routes to consolidated Sync page */}
             <Route path="/training" element={<Navigate to="/sync" replace />} />
             <Route path="/quests" element={<Navigate to="/sync" replace />} />
+            {/* Fitness moved to mobile app - redirect to Sync page */}
             <Route path="/fitness" element={<Navigate to="/sync" replace />} />
             
             <Route path="/holos-farm" element={
@@ -159,6 +161,8 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
                 <Toaster />
+                <InstallPWA />
+                <UpdateNotification />
               </AuthProvider>
             </Router>
           </RainbowKitProvider>

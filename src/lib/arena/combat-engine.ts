@@ -63,6 +63,9 @@ export class ArenaCombatEngine {
       player,
       opponent,
       
+      playerDefenseCooldownUntil: 0, // No cooldown at start
+      opponentDefenseCooldownUntil: 0, // No cooldown at start
+      
       playerCardPool,
       opponentCardPool,
       
@@ -195,6 +198,15 @@ export class ArenaCombatEngine {
     const isPlayerAction = actorId === state.player.holobotId;
     const actor = isPlayerAction ? newState.player : newState.opponent;
     const target = isPlayerAction ? newState.opponent : newState.player;
+    
+    // Check defense cooldown for defense cards
+    if (card.type === 'defense') {
+      const cooldownUntil = isPlayerAction ? newState.playerDefenseCooldownUntil : newState.opponentDefenseCooldownUntil;
+      if (now < cooldownUntil) {
+        console.log(`[Combat] Defense card on cooldown (${Math.ceil((cooldownUntil - now) / 1000)}s remaining)`);
+        return newState; // Cannot use defense yet
+      }
+    }
     
     // Check if action is legal
     if (!this.canPlayCard(card, actor, newState)) {
@@ -409,6 +421,19 @@ export class ArenaCombatEngine {
     attacker: ArenaFighter,
     state: BattleState
   ): void {
+    // Set 2-second defense cooldown
+    const isPlayerDefending = defender.holobotId === state.player.holobotId;
+    const cooldownDuration = 2000; // 2 seconds
+    const now = Date.now();
+    
+    if (isPlayerDefending) {
+      state.playerDefenseCooldownUntil = now + cooldownDuration;
+      console.log('[Combat] Player defense cooldown set for 2 seconds');
+    } else {
+      state.opponentDefenseCooldownUntil = now + cooldownDuration;
+      console.log('[Combat] Opponent defense cooldown set for 2 seconds');
+    }
+    
     // Defense mode is temporary - exit it immediately after this action
     defender.isInDefenseMode = false;
     

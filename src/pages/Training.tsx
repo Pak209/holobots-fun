@@ -233,9 +233,9 @@ const Training = () => {
   opponentBoostedStats = scaleOpponentStats(opponentBoostedStats, difficultyLevel);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-slate-900 to-black text-white">
       <div className="max-w-7xl mx-auto pt-16 px-4 pb-16">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           {/* Header */}
           <div className="relative mb-6 inline-block">
             <div className="bg-gradient-to-r from-[#F5C400] via-[#F5C400] to-transparent p-4 pr-24 border-4 border-[#F5C400] shadow-[0_0_30px_rgba(245,196,0,0.6)]" style={{

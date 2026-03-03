@@ -3,8 +3,9 @@ export type DailyMissionType =
   | 'complete_quest'
   | 'train_holobot'
   | 'arena_battle'
+  | 'arena_v2_battle'
+  | 'pvp_battle'
   | 'open_booster_pack'
-  | 'sync_fitness'
   | 'level_up_holobot';
 
 export interface DailyMission {
@@ -82,21 +83,27 @@ export const DAILY_MISSION_CONFIGS: Record<DailyMissionType, {
   },
   arena_battle: {
     name: 'Arena Fighter',
-    description: 'Participate in arena battles',
+    description: 'Participate in arena battles (Classic)',
     baseTarget: 3,
     baseReward: { gachaTickets: 2, holosTokens: 100 }
+  },
+  arena_v2_battle: {
+    name: 'Arena V2 Warrior',
+    description: 'Complete Arena V2 battles',
+    baseTarget: 3,
+    baseReward: { gachaTickets: 2, holosTokens: 100 }
+  },
+  pvp_battle: {
+    name: 'PvP Champion',
+    description: 'Challenge other players in PvP',
+    baseTarget: 2,
+    baseReward: { gachaTickets: 3, holosTokens: 150 }
   },
   open_booster_pack: {
     name: 'Pack Collector',
     description: 'Open booster packs',
     baseTarget: 1,
     baseReward: { gachaTickets: 1 }
-  },
-  sync_fitness: {
-    name: 'Fitness Sync',
-    description: 'Reach your daily step goal',
-    baseTarget: 10000,
-    baseReward: { gachaTickets: 10, holosTokens: 200 }
   },
   level_up_holobot: {
     name: 'Level Master',

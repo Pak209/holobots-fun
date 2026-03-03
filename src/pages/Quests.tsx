@@ -7,8 +7,8 @@ const Quests = () => {
   const { user } = useAuth();
   
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="container mx-auto pt-16 px-4 pb-16">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-slate-900 to-black text-white">
+      <div className="container mx-auto pt-16 px-4 pb-20">
         <div className="text-center mb-8">
           {/* Header */}
           <div className="relative mb-6 inline-block">

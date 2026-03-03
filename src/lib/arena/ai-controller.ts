@@ -53,56 +53,38 @@ export class ArenaAI {
       };
     }
     
-    // === CRITICAL: Stamina Management First ===
-    // Check if we need to recover stamina BEFORE we run out
-    const staminaBuffer = this.getStaminaBuffer();
-    const needsRecovery = this.needsStaminaRecovery(self, opponent, staminaBuffer);
-    
-    if (needsRecovery) {
-      const defenseCards = playableCards.filter(card => card.type === 'defense');
-      if (defenseCards.length > 0) {
-        return {
-          selectedCard: this.selectBestDefenseCard(defenseCards, self, opponent),
-          enterDefenseMode: true,
-          useSpecialAbility: false,
-          confidence: 0.95,
-          reasoning: `Stamina management: ${self.stamina}/${self.maxStamina} - recovering proactively`,
-        };
-      }
-    }
-    
-    // Check 1: Should enter defense mode? (Legacy check for exhausted state)
-    if (this.shouldEnterDefenseMode(self, opponent)) {
-      const defenseCards = playableCards.filter(card => card.type === 'defense');
-      if (defenseCards.length > 0) {
-        return {
-          selectedCard: this.selectBestDefenseCard(defenseCards, self, opponent),
-          enterDefenseMode: true,
-          useSpecialAbility: false,
-          confidence: 0.9,
-          reasoning: 'Low stamina - recovering via defense',
-        };
-      }
-    }
-    
-    // Check 2: Can use finisher?
+    // Check 1: Can use finisher? (HIGHEST PRIORITY)
     if (this.canAndShouldUseFinisher(self, opponent, state)) {
       const finishers = playableCards.filter(card => card.type === 'finisher');
       if (finishers.length > 0) {
-        const shouldUse = Math.random() < (this.personality.riskTolerance * 0.8 + 0.2);
-        if (shouldUse) {
-          return {
-            selectedCard: finishers[0],
-            enterDefenseMode: false,
-            useSpecialAbility: true,
-            confidence: 0.95,
-            reasoning: 'Finisher available and opponent vulnerable',
-          };
-        }
+        console.log('[AI] 🔥 FINISHER AVAILABLE! Special Meter:', self.specialMeter);
+        return {
+          selectedCard: finishers[0],
+          enterDefenseMode: false,
+          useSpecialAbility: true,
+          confidence: 0.98,
+          reasoning: `Finisher ready! Special Meter: ${self.specialMeter}/100`,
+        };
       }
     }
     
-    // Check 3: Opponent in defense mode? Be aggressive
+    // Check 2: Are we CRITICALLY low on stamina? (Only defend if exhausted/gassed)
+    if (self.staminaState === 'exhausted' || (self.staminaState === 'gassed' && self.stamina <= 1)) {
+      const defenseCards = playableCards.filter(card => card.type === 'defense');
+      if (defenseCards.length > 0) {
+        return {
+          selectedCard: this.selectBestDefenseCard(defenseCards, self, opponent),
+          enterDefenseMode: true,
+          useSpecialAbility: false,
+          confidence: 0.85,
+          reasoning: `CRITICAL stamina (${self.stamina}/${self.maxStamina}) - must recover`,
+        };
+      }
+    }
+    
+    // Check 3: Can use finisher?
+    
+    // Check 4: Opponent in defense mode? Be aggressive
     if (opponent.isInDefenseMode) {
       const aggressive = Math.random() < this.personality.aggression;
       if (aggressive) {
@@ -122,15 +104,15 @@ export class ArenaAI {
       }
     }
     
-    // Check 4: Am I winning? Play safer
+    // Check 5: Am I winning? Play safely but still aggressive
     const hpAdvantage = self.currentHP - opponent.currentHP;
-    if (hpAdvantage > 30) {
+    if (hpAdvantage > 30 && self.stamina >= 3) {
       const safePlay = Math.random() < (1 - this.personality.riskTolerance);
       if (safePlay) {
-        // Choose balanced/defensive cards
+        // Choose balanced offensive cards (strikes only, no defense!)
         const safeCards = playableCards
-          .filter(card => card.type === 'strike' || card.type === 'defense')
-          .sort((a, b) => a.staminaCost - b.staminaCost); // prefer low cost
+          .filter(card => card.type === 'strike')
+          .sort((a, b) => a.staminaCost - b.staminaCost);
         
         if (safeCards.length > 0) {
           return {
@@ -138,14 +120,14 @@ export class ArenaAI {
             enterDefenseMode: false,
             useSpecialAbility: false,
             confidence: 0.7,
-            reasoning: 'Large HP lead - playing conservatively',
+            reasoning: 'Large HP lead - playing conservatively with strikes',
           };
         }
       }
     }
     
-    // Check 5: Am I losing badly? Take risks
-    if (hpAdvantage < -30) {
+    // Check 6: Am I losing badly? Take risks with combos
+    if (hpAdvantage < -30 && self.stamina >= 3) {
       const riskPlay = Math.random() < this.personality.riskTolerance;
       if (riskPlay) {
         // Go for combos or high-damage strikes
@@ -159,7 +141,7 @@ export class ArenaAI {
             enterDefenseMode: false,
             useSpecialAbility: false,
             confidence: 0.75,
-            reasoning: 'Behind on HP - taking calculated risk',
+            reasoning: 'Behind on HP - aggressive combo play',
           };
         }
       }
@@ -190,96 +172,28 @@ export class ArenaAI {
   // Decision Logic
   // ============================================================================
   
-  /**
-   * NEW: Proactive stamina recovery system
-   * Prevents AI from exhausting itself by planning ahead
-   */
-  private needsStaminaRecovery(
-    self: ArenaFighter, 
-    opponent: ArenaFighter,
-    staminaBuffer: number
-  ): boolean {
-    // If we're exhausted or gassed, definitely recover
-    if (self.staminaState === 'exhausted') return true;
-    if (self.staminaState === 'gassed' && Math.random() < 0.85) return true;
-    
-    // Check if stamina is below buffer threshold
-    if (self.stamina <= staminaBuffer) {
-      // Don't recover if opponent is very low HP and we can finish them
-      if (opponent.currentHP < 25 && self.stamina >= 2) {
-        return false; // Go for the kill
-      }
-      return true;
-    }
-    
-    // Calculate "stamina sustainability" - can we afford our cheapest offensive card?
-    const offensiveCards = self.hand.filter(c => c.type !== 'defense');
-    if (offensiveCards.length > 0) {
-      const cheapestOffensive = Math.min(...offensiveCards.map(c => c.staminaCost));
-      // If we can't afford even our cheapest attack, recover
-      if (self.stamina < cheapestOffensive + 1) {
-        return true;
-      }
-    }
-    
-    // Adaptive recovery based on opponent aggression
-    // If opponent is also low on stamina, we can afford to recover
-    if (opponent.stamina <= 3 && self.stamina <= 4) {
-      return Math.random() < 0.6; // 60% chance to recover when both are low
-    }
-    
-    return false;
-  }
-  
-  /**
-   * Get stamina buffer threshold (don't let stamina drop below this)
-   */
-  private getStaminaBuffer(): number {
-    const baseBuffer = this.personality.staminaConservation * 4; // 0-4 range
-    
-    // Adjust based on difficulty
-    switch (this.difficulty) {
-      case 'easy': return Math.max(2, baseBuffer);
-      case 'medium': return Math.max(3, baseBuffer);
-      case 'hard': return Math.max(4, baseBuffer);
-      case 'expert': return Math.max(4, baseBuffer + 1);
-    }
-  }
-  
-  private shouldEnterDefenseMode(self: ArenaFighter, opponent: ArenaFighter): boolean {
-    // Check stamina state
-    if (self.staminaState === 'exhausted') return true;
-    if (self.staminaState === 'gassed') {
-      return Math.random() < 0.8; // 80% chance when gassed
-    }
-    
-    // Check HP differential
-    const hpPercent = self.currentHP / self.maxHP;
-    if (hpPercent < 0.3 && self.stamina < 4) {
-      return Math.random() < 0.7; // 70% chance when low HP and stamina
-    }
-    
-    // Personality-based
-    const defenseThreshold = this.personality.recoveryThreshold;
-    return self.stamina <= defenseThreshold;
-  }
   
   private canAndShouldUseFinisher(
     self: ArenaFighter,
     opponent: ArenaFighter,
     state: BattleState
   ): boolean {
-    // Check if finisher is possible
+    // Check if finisher is possible (special meter >= 100)
     if (!ArenaCombatEngine.canUseFinisher(self, opponent)) {
       return false;
     }
     
-    // Always use if opponent has very low HP
-    if (opponent.currentHP < 20) return true;
+    // Always use if opponent has low HP (can KO)
+    if (opponent.currentHP < 30) return true;
     
-    // Risk tolerance affects willingness to use finisher
-    const useThreshold = 1 - this.personality.riskTolerance;
-    return Math.random() > useThreshold;
+    // Use if we have good stamina and special meter is ready
+    if (self.stamina >= 3) return true;
+    
+    // Use if we're behind and need a big play
+    if (self.currentHP < opponent.currentHP - 20) return true;
+    
+    // Otherwise, use based on personality (but bias toward using it)
+    return Math.random() < (0.7 + this.personality.riskTolerance * 0.3);
   }
   
   // ============================================================================
@@ -294,80 +208,81 @@ export class ArenaAI {
   ): number {
     let score = 0;
     
-    // Base score from damage
-    score += card.baseDamage * 0.5;
+    // HUGE base score from damage (prioritize offense!)
+    score += card.baseDamage * 2.0; // Increased from 0.5
     
-    // Efficiency: damage per stamina (MORE IMPORTANT NOW)
+    // Efficiency: damage per stamina
     const efficiency = card.baseDamage / Math.max(1, card.staminaCost);
-    score += efficiency * 15; // Increased from 10
+    score += efficiency * 20; // Increased from 15
     
     // Speed modifier bonus
     score += card.speedModifier * 10;
     
     // Special meter gain potential
-    score += (card.baseDamage * 0.3); // approximate meter gain
+    score += (card.baseDamage * 0.5);
     
-    // === NEW: Stamina Sustainability Check ===
+    // Stamina check
     const staminaAfter = self.stamina - card.staminaCost;
-    const staminaBuffer = this.getStaminaBuffer();
     
-    // HEAVY penalty if this move would put us below buffer
-    if (staminaAfter < staminaBuffer) {
-      score -= 60; // Make this very unattractive
+    // Only penalize if would leave us with 0-1 stamina
+    if (staminaAfter <= 0) {
+      score -= 100; // Can't afford it
+    } else if (staminaAfter === 1) {
+      score -= 30; // Risky but sometimes worth it
     }
     
-    // SEVERE penalty if would leave us exhausted
-    if (staminaAfter <= 1) {
-      score -= 80; // Increased from 30
-    }
-    
-    // Moderate penalty if would leave us gassed
-    if (staminaAfter <= 2) {
-      score -= 40;
-    }
-    
-    // BONUS for sustainable plays (leaves us with good stamina)
-    if (staminaAfter >= 5) {
-      score += 25; // Reward sustainable aggression
+    // BONUS for having good stamina after
+    if (staminaAfter >= 4) {
+      score += 15;
     }
     
     // Type-specific scoring
     switch (card.type) {
       case 'strike':
-        // Prefer strikes when aggressive AND have stamina
-        if (self.stamina >= 4) {
-          score += this.personality.aggression * 20;
-        } else {
-          score += this.personality.aggression * 5; // Much less when low stamina
+        // Always prefer strikes! They're the bread and butter
+        score += 50; // Big base bonus for strikes
+        score += this.personality.aggression * 30; // Increased from 20
+        
+        // Extra bonus if we have good stamina
+        if (self.stamina >= 3) {
+          score += 20;
         }
         break;
       
       case 'defense':
-        // Prefer defense when patient or low stamina
-        score += this.personality.patience * 15;
-        if (self.stamina < 4) score += 40; // Increased from 30
+        // Defense should ONLY be used when truly needed
+        // Base score is now VERY low
+        score -= 30; // Start with penalty!
         
-        // BONUS: Defense cards often restore stamina!
-        if (card.staminaCost === 0) {
-          score += 20; // Free cards are great
+        // Only make it attractive if we're in dire straits
+        if (self.staminaState === 'exhausted') {
+          score += 80; // Make it worth it when exhausted
+        } else if (self.stamina <= 1) {
+          score += 50; // Moderate bonus when very low
+        } else {
+          // Otherwise keep it unattractive
+          score -= 20;
         }
         break;
       
       case 'combo':
-        // Prefer combos when have PLENTY of stamina and combo preference
-        if (self.stamina >= card.staminaCost + 3) { // Increased buffer from 2 to 3
-          score += this.personality.comboPreference * 25;
-        } else {
-          score -= 40; // Increased penalty from 20 to 40
+        // Combos are great when we can afford them!
+        score += 40; // Good base bonus
+        score += this.personality.comboPreference * 30; // Increased from 25
+        
+        // Prefer combos when we have stamina
+        if (self.stamina >= card.staminaCost + 2) {
+          score += 25;
+        } else if (self.stamina < card.staminaCost + 1) {
+          score -= 20; // Slight penalty if we'd be left with nothing
         }
         break;
       
       case 'finisher':
-        // Finishers are high value but situational
-        score += 100;
-        if (opponent.currentHP < 30) score += 50; // bonus if likely to KO
-        // Only use finisher if we have enough stamina left
-        if (staminaAfter < 2) score -= 50;
+        // Finishers are ALWAYS high priority when available
+        score += 150; // Huge bonus!
+        if (opponent.currentHP < 40) score += 75; // Even better if can KO
+        if (opponent.currentHP < 25) score += 100; // Almost guaranteed KO
         break;
     }
     

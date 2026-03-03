@@ -83,28 +83,14 @@ const generateDailyMissions = (): DailyMission[] => {
     resetDaily: true
   });
   
-  // Always include fitness sync mission (core to sync points system)
-  missions.push({
-    id: `sync_fitness_${Date.now()}`,
-    type: 'sync_fitness',
-    name: DAILY_MISSION_CONFIGS.sync_fitness.name,
-    description: DAILY_MISSION_CONFIGS.sync_fitness.description,
-    target: DAILY_MISSION_CONFIGS.sync_fitness.baseTarget,
-    progress: 0,
-    completed: false,
-    claimed: false,
-    reward: DAILY_MISSION_CONFIGS.sync_fitness.baseReward,
-    resetDaily: true
-  });
-  
-  // Randomly select 1-2 additional missions from remaining types
+  // Randomly select 2-3 additional missions (excluding daily_login)
   const availableMissions = Object.keys(DAILY_MISSION_CONFIGS).filter(
-    type => type !== 'daily_login' && type !== 'sync_fitness'
+    type => type !== 'daily_login'
   ) as DailyMissionType[];
   
   const selectedMissions = availableMissions
     .sort(() => Math.random() - 0.5)
-    .slice(0, Math.floor(Math.random() * 2) + 1); // 1-2 additional missions
+    .slice(0, Math.floor(Math.random() * 2) + 2); // 2-3 additional missions
   
   selectedMissions.forEach(type => {
     const config = DAILY_MISSION_CONFIGS[type];

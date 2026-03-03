@@ -3,21 +3,26 @@
 // Main battle visualization component
 // ============================================================================
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useArenaBattleStore } from '@/stores/arena-battle-store';
-import { FighterDisplay } from './FighterDisplay';
+import { BattleHPBars } from './BattleHPBars';
+import { ArenaCanvas, type ArenaCanvasHandle } from './pixi/ArenaCanvas';
+import type { AnimationEvent, AttackAnimationParams } from './pixi/types';
+import { BattleLogDisplay } from './BattleLogDisplay';
 import { ActionCardHand } from './ActionCardHand';
+import { EquippedParts } from './EquippedParts';
 import { BattleControls } from './BattleControls';
-import { BattlefieldCenter } from './BattlefieldCenter';
 import { Button } from '@/components/ui/button';
-import { Trophy, Skull, RotateCcw } from 'lucide-react';
+import { Trophy, Skull, RotateCcw, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getHolobotImagePath } from '@/utils/holobotImageUtils';
 import HolosIcon from '@/assets/icons/HOlos.svg';
 import ExpIcon from '@/assets/icons/EXP.svg';
 import SyncPointIcon from '@/assets/icons/SyncPoint.svg';
 
 export function BattleArenaView() {
   const [showStats, setShowStats] = useState(false);
+  const arenaCanvasRef = useRef<ArenaCanvasHandle>(null);
   
   const {
     currentBattle,
@@ -28,6 +33,26 @@ export function BattleArenaView() {
     useSpecialAttack,
     abandonBattle,
   } = useArenaBattleStore();
+
+  // Handle animation events from Pixi
+  const handleAnimationEvent = useCallback((event: AnimationEvent) => {
+    console.log('[BattleArenaView] Animation event:', event.type, event.data);
+    
+    switch (event.type) {
+      case 'attackStarted':
+        // Optional: pause UI updates during animation
+        break;
+      case 'hitLanded':
+        // Optional: trigger sound effects
+        break;
+      case 'animationComplete':
+        // Resume game logic, continue turn
+        break;
+      case 'koTriggered':
+        // Handle KO state
+        break;
+    }
+  }, []);
 
   // Hide bottom nav during battle
   useEffect(() => {
@@ -45,6 +70,30 @@ export function BattleArenaView() {
   }, []);
   
   const navigate = useNavigate();
+
+  // Handle card play with Pixi animation
+  const handleCardPlay = useCallback(async (cardId: string) => {
+    if (!currentBattle) return;
+    
+    // Find the card being played
+    const card = currentBattle.player.hand.find(c => c.id === cardId);
+    if (!card) return;
+    
+    // Play the card in game logic
+    playCard(cardId);
+    
+    // Trigger Pixi animation
+    if (arenaCanvasRef.current && card.type !== 'defense') {
+      const attackParams: AttackAnimationParams = {
+        attackerId: 'player',
+        defenderId: 'opponent',
+        damageAmount: card.baseDamage,
+        attackType: card.type as 'strike' | 'combo' | 'special' | 'finisher',
+      };
+      
+      await arenaCanvasRef.current.playAttack(attackParams);
+    }
+  }, [currentBattle, playCard]);
 
   // Keyboard shortcuts for battle cards
   useEffect(() => {
@@ -68,28 +117,28 @@ export function BattleArenaView() {
         case 's': // Strike
           const strikeCard = player.hand.find(c => c.type === 'strike');
           if (strikeCard && player.stamina >= strikeCard.staminaCost) {
-            playCard(strikeCard.id);
+            handleCardPlay(strikeCard.id);
           }
           break;
 
         case 'd': // Defend
           const defendCard = player.hand.find(c => c.type === 'defense');
           if (defendCard && player.stamina >= defendCard.staminaCost) {
-            playCard(defendCard.id);
+            handleCardPlay(defendCard.id);
           }
           break;
 
         case 'c': // Combo
           const comboCard = player.hand.find(c => c.type === 'combo');
           if (comboCard && player.stamina >= comboCard.staminaCost) {
-            playCard(comboCard.id);
+            handleCardPlay(comboCard.id);
           }
           break;
 
         case 'f': // Finisher
           const finisherCard = player.hand.find(c => c.type === 'finisher');
           if (finisherCard && player.stamina >= finisherCard.staminaCost && player.specialMeter >= 100) {
-            playCard(finisherCard.id);
+            handleCardPlay(finisherCard.id);
           }
           break;
       }
@@ -97,7 +146,7 @@ export function BattleArenaView() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentBattle, uiState, playCard]);
+  }, [currentBattle, uiState, handleCardPlay]);
 
   if (!currentBattle) return null;
 
@@ -211,6 +260,60 @@ export function BattleArenaView() {
                         </div>
                       )}
                     </div>
+                    
+                    {/* Blueprint Rewards */}
+                    {rewards.blueprintRewards && rewards.blueprintRewards.length > 0 && (
+                      <div className="mt-3 sm:mt-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FileText className="w-4 h-4 text-purple-400" />
+                          <h3 className="text-xs sm:text-sm font-bold text-purple-400 uppercase tracking-wide">
+                            Blueprint Pieces
+                          </h3>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          {rewards.blueprintRewards.map((blueprint, idx) => (
+                            <div 
+                              key={idx}
+                              className="flex items-center justify-between bg-gradient-to-r from-purple-900/30 to-indigo-900/30 p-2 sm:p-3 border border-purple-500/30 rounded-lg"
+                            >
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="relative w-10 h-10 sm:w-12 sm:h-12">
+                                  <img 
+                                    src={getHolobotImagePath(blueprint.holobotKey)} 
+                                    alt={blueprint.holobotKey}
+                                    className="w-full h-full object-cover rounded-lg border-2 border-purple-500/50"
+                                    onError={(e) => {
+                                      // Fallback to icon if image fails to load
+                                      e.currentTarget.style.display = 'none';
+                                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                      if (fallback) fallback.style.display = 'flex';
+                                    }}
+                                  />
+                                  <div className="hidden w-full h-full bg-purple-500/20 rounded-lg items-center justify-center border-2 border-purple-500/50">
+                                    <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-purple-300" />
+                                  </div>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-xs sm:text-sm font-bold text-white uppercase">
+                                    {blueprint.holobotKey}
+                                  </span>
+                                  <span className="text-[9px] sm:text-[10px] text-purple-300 uppercase tracking-wider">
+                                    Blueprint
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-white/70 text-xs">+</span>
+                                <span className="text-xl sm:text-2xl font-black text-purple-400">
+                                  {blueprint.amount}
+                                </span>
+                                <span className="text-[9px] sm:text-[10px] text-purple-300 ml-0.5">pieces</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     
                     {/* Bonus Rewards - Compact */}
                     {(rewards.perfectDefenseBonus || rewards.comboBonus || rewards.speedBonus) && (
@@ -352,7 +455,7 @@ export function BattleArenaView() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-black relative z-20 pb-safe">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 via-slate-900 to-black relative z-20 pb-safe">
       {/* Arena Header - HUD Style */}
       <div className="px-3 py-2 sm:px-4 sm:py-3 bg-gradient-to-r from-[#F5C400] to-[#D4A400] border-b-4 border-black relative" style={{
         clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)'
@@ -371,34 +474,31 @@ export function BattleArenaView() {
         </div>
       </div>
 
-      {/* Opponent (Top) - Minimal Padding */}
-      <div className="p-1 sm:p-2">
-        <FighterDisplay
-          fighter={opponent}
-          position="top"
-          isActive={false}
-        />
-      </div>
+      {/* Battle Layout Container */}
+      <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3">
+        {/* HP & Stamina Bars - Side by Side */}
+        <BattleHPBars player={player} opponent={opponent} />
 
-      {/* Battlefield Center - Minimal Height */}
-      <div className="relative overflow-hidden flex-shrink-0" style={{ minHeight: '80px', maxHeight: '120px' }}>
-        <BattlefieldCenter battle={currentBattle} />
-      </div>
-
-      {/* Player (Bottom) - Minimal Padding with bottom spacing for visibility */}
-      <div className="p-1 sm:p-2 space-y-1 sm:space-y-1.5 pb-4 sm:pb-6">
-        <FighterDisplay
-          fighter={player}
-          position="bottom"
-          isActive={true}
+        {/* PixiJS Battle Canvas */}
+        <ArenaCanvas
+          ref={arenaCanvasRef}
+          width={640}
+          height={360}
+          onAnimationEvent={handleAnimationEvent}
         />
 
-        {/* Player Hand */}
+        {/* Player Hand - Moved above Battle Log */}
         <ActionCardHand
           cards={player.hand}
-          onCardSelect={playCard}
+          onCardSelect={handleCardPlay}
           disabled={currentBattle.status !== 'active'}
         />
+
+        {/* Battle Log - Moved below Player Hand */}
+        <BattleLogDisplay battle={currentBattle} />
+
+        {/* Equipped Parts */}
+        <EquippedParts fighter={player} />
 
         {/* Battle Controls */}
         <BattleControls

@@ -563,13 +563,17 @@ export default function Gacha() {
   ];
 
   return (
-    <div className="text-gray-900">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-slate-900 to-black text-white">
+      <div className="container mx-auto px-4 py-8 pb-20">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-black mb-2 font-orbitron italic">
-            GACHA SYSTEM
-          </h1>
-          <p className="text-gray-800 text-sm mx-auto max-w-md">
+          <div className="relative mb-6 inline-block">
+            <div className="bg-gradient-to-r from-[#F5C400] via-[#F5C400] to-transparent p-4 pr-24 border-4 border-[#F5C400] shadow-[0_0_30px_rgba(245,196,0,0.6)]" style={{
+              clipPath: 'polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%)'
+            }}>
+              <h1 className="text-3xl sm:text-4xl font-black text-black uppercase tracking-widest">GACHA SYSTEM</h1>
+            </div>
+          </div>
+          <p className="text-sm text-gray-400 max-w-md mx-auto uppercase tracking-wide">
             Spend HOLOS tokens for a chance to win powerful items and boosts
           </p>
         </div>

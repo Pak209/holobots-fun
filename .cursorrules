@@ -1,0 +1,50 @@
+# Holobots Platform Rules
+
+This project uses a **hybrid PWA + Mobile App architecture** with Firebase as the shared backend.
+
+## 📱 Current Status
+- ✅ **PWA Ready** - Full Progressive Web App with offline support
+- 🚧 **Mobile App** - Planned (React Native with step tracking)
+
+For detailed development guidelines, see:
+- **Primary Rule**: `.cursor/rules/pwa-mobile-hybrid.md` - Comprehensive guide for both platforms
+- **PWA Setup**: `PWA_SETUP_COMPLETE.md` - PWA configuration and testing
+- **Icon Guide**: `PWA_ICON_GUIDE.md` - Generate required PWA icons
+
+## Quick Reference
+
+### 🎯 Platform Responsibilities
+- **PWA (Web)**: ✅ Battles, Marketplace, Trading, Gacha, Installable, Offline
+- **Mobile App** (Future): Auto step tracking (HealthKit/Google Fit), Fitness, optional battles
+
+### 🔥 Firebase = Single Source of Truth
+All game state syncs through Firestore in real-time. Both platforms use `onSnapshot()` listeners.
+
+### 📊 Data Flow
+```
+Mobile tracks steps → Firebase updates → PWA sees instantly
+PWA battle results → Firebase updates → Mobile sees instantly
+```
+
+### 🔧 Tech Stack
+- **Shared**: TypeScript, Firebase Firestore, Zustand
+- **PWA**: Vite + React + Tailwind + PWA Plugin (installed!)
+- **Mobile**: React Native + NativeWind + HealthKit/Google Fit (planned)
+
+### 💡 Core Principles
+1. Firebase is the single source of truth
+2. Real-time sync everywhere (`onSnapshot`)
+3. Share types, utilities, and game logic
+4. Platform-specific UI and native features
+5. Atomic updates (use `increment()`, `serverTimestamp()`)
+6. PWA-first approach with offline support
+
+### 🚀 PWA Features (Active)
+- ✅ Service worker with caching
+- ✅ Install prompt (custom UI)
+- ✅ Update notifications
+- ✅ Offline support
+- ✅ App-like experience
+- ⚠️ Needs PWA icons (see PWA_ICON_GUIDE.md)
+
+For full implementation details, code patterns, and examples, consult the main rule file.

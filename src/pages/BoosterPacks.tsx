@@ -198,17 +198,21 @@ const BoosterPacks: React.FC = () => {
   ];
 
   return (
-    <div className="text-gray-900">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-slate-900 to-black text-white">
+      <div className="container mx-auto px-4 py-8 pb-20">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Package className="h-8 w-8 text-[#DAA520] mr-3" />
-            <h1 className="text-4xl font-bold text-black tracking-wide font-orbitron">
-              BOOSTER PACKS
-            </h1>
+          <div className="relative mb-6 inline-block">
+            <div className="bg-gradient-to-r from-[#F5C400] via-[#F5C400] to-transparent p-4 pr-24 border-4 border-[#F5C400] shadow-[0_0_30px_rgba(245,196,0,0.6)]" style={{
+              clipPath: 'polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%)'
+            }}>
+              <h1 className="text-3xl sm:text-4xl font-black text-black uppercase tracking-widest flex items-center gap-3">
+                <Package className="h-8 w-8" />
+                BOOSTER PACKS
+              </h1>
+            </div>
           </div>
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed mb-4">
+          <p className="text-sm text-gray-400 max-w-2xl mx-auto uppercase tracking-wide mb-4">
             Open collectible packs to discover rare Holobot parts, blueprint fragments, and valuable items!
           </p>
           
@@ -257,16 +261,17 @@ const BoosterPacks: React.FC = () => {
 
           {/* Packs Tab */}
           <TabsContent value="packs" className="mt-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex overflow-x-auto gap-6 pb-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-[#F5C400] scrollbar-track-gray-800">
               {Object.keys(BOOSTER_PACK_TYPES).map((packType) => (
-                <BoosterPackCard
-                  key={packType}
-                  packType={packType as BoosterPackType}
-                  onPurchase={handlePurchasePack}
-                  disabled={isOpening}
-                  userHolos={user?.holosTokens || 0}
-                  userTickets={user?.gachaTickets || 0}
-                />
+                <div key={packType} className="flex-shrink-0 snap-start w-80">
+                  <BoosterPackCard
+                    packType={packType as BoosterPackType}
+                    onPurchase={handlePurchasePack}
+                    disabled={isOpening}
+                    userHolos={user?.holosTokens || 0}
+                    userTickets={user?.gachaTickets || 0}
+                  />
+                </div>
               ))}
             </div>
           </TabsContent>

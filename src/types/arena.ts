@@ -147,6 +147,10 @@ export interface BattleState {
   player: ArenaFighter;
   opponent: ArenaFighter;
   
+  // Defense Cooldown Trackers (2-second cooldown after defense)
+  playerDefenseCooldownUntil: number; // timestamp when defense becomes available again
+  opponentDefenseCooldownUntil: number; // timestamp when defense becomes available again
+  
   // Card Pools (for drawing new cards)
   playerCardPool: CardPool;
   opponentCardPool: CardPool;

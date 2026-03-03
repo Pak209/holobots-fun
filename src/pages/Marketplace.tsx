@@ -427,14 +427,18 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
   };
 
   return (
-    <div className={hideHeader ? "" : "text-gray-900"}>
-      <div className={hideHeader ? "" : "container mx-auto px-4 pb-16"}>
+    <div className={hideHeader ? "" : "min-h-screen bg-gradient-to-b from-gray-900 via-slate-900 to-black text-white"}>
+      <div className={hideHeader ? "" : "container mx-auto px-4 py-8 pb-20"}>
         {!hideHeader && (
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-black font-orbitron italic">
-              HOLOBOT MARKETPLACE
-            </h1>
-            <p className="text-gray-800 text-sm max-w-md mx-auto">
+          <div className="text-center mb-8">
+            <div className="relative mb-6 inline-block">
+              <div className="bg-gradient-to-r from-[#F5C400] via-[#F5C400] to-transparent p-4 pr-24 border-4 border-[#F5C400] shadow-[0_0_30px_rgba(245,196,0,0.6)]" style={{
+                clipPath: 'polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%)'
+              }}>
+                <h1 className="text-3xl sm:text-4xl font-black text-black uppercase tracking-widest">MARKETPLACE</h1>
+              </div>
+            </div>
+            <p className="text-sm text-gray-400 max-w-md mx-auto uppercase tracking-wide">
               Buy and sell Holobots, Blueprints, and Items
             </p>
           </div>
@@ -443,7 +447,9 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
         {/* Shop Tab Selector */}
         <div className="px-4 py-4 relative z-10 mb-6">
           <div className="flex items-center justify-center">
-            <div className="relative bg-black/60 rounded-lg p-1 border border-cyan-500/30">
+            <div className="relative bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 p-1 border-4 border-[#F5C400]/50 shadow-[0_0_15px_rgba(245,196,0,0.2)]" style={{
+              clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
+            }}>
               <div
                 className={cn(
                   "absolute top-1 bottom-1 rounded-md transition-all duration-300 ease-out",
@@ -462,7 +468,7 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
                     "border-4 clip-path-diagonal",
                     activeShopTab === 'items'
                       ? "bg-[#F5C400] border-[#F5C400] text-black shadow-[0_0_20px_rgba(245,196,0,0.6)]"
-                      : "bg-black/80 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200"
+                      : "bg-gray-900/80 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200"
                   )}
                   style={{
                     clipPath: activeShopTab === 'items'
@@ -481,7 +487,7 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
                     "border-4 clip-path-diagonal",
                     activeShopTab === 'parts'
                       ? "bg-[#F5C400] border-[#F5C400] text-black shadow-[0_0_20px_rgba(245,196,0,0.6)]"
-                      : "bg-black/80 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200"
+                      : "bg-gray-900/80 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200"
                   )}
                   style={{
                     clipPath: activeShopTab === 'parts'
@@ -544,7 +550,7 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
                     <div className="flex items-center gap-4 p-4">
                       {/* Icon */}
                       {iconPath && (
-                        <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center bg-black/50 border-2 border-[#F5C400]/50 p-2" style={{
+                        <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center bg-gradient-to-br from-gray-900 to-slate-900 border-2 border-[#F5C400]/50 p-2" style={{
                           clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
                         }}>
                           <img 
@@ -570,7 +576,7 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
 
                       {/* Price Section */}
                       <div className="flex-shrink-0 flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-2 bg-black/70 border-2 border-cyan-400 px-4 py-2" style={{
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-gray-900 to-slate-900 border-2 border-cyan-400 px-4 py-2" style={{
                           clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
                         }}>
                           <span className="text-2xl sm:text-3xl font-black text-white">{item.price}</span>
@@ -654,7 +660,7 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
                       <div className="flex items-center gap-4 p-4">
                         {/* Icon */}
                         {iconPath && (
-                          <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center bg-black/50 border-2 border-[#F5C400]/50 p-2" style={{
+                          <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center bg-gradient-to-br from-gray-900 to-slate-900 border-2 border-[#F5C400]/50 p-2" style={{
                             clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
                           }}>
                             <img 
@@ -699,7 +705,7 @@ const Marketplace = ({ hideHeader = false }: MarketplaceProps = {}) => {
                                 <Button
                                   key={tierData.tier}
                                   className={cn(
-                                    "text-xs font-bold uppercase px-3 py-1 bg-black/50 border-2 transition-all",
+                                    "text-xs font-bold uppercase px-3 py-1 bg-gray-900/70 border-2 transition-all",
                                     getTierColor(tierData.tier)
                                   )}
                                   style={{
