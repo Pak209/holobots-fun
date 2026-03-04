@@ -19,7 +19,7 @@ const DIFFICULTY_LEVELS = {
   expert: { level: 35, xpMultiplier: 4, energyCost: 20 }
 };
 
-const Training = () => {
+const Training = ({ initialCompanionName }: { initialCompanionName?: string }) => {
   const [selectedHolobot, setSelectedHolobot] = useState<string>('');
   const [selectedOpponent, setSelectedOpponent] = useState<string>('');
   const [selectedDifficulty, setSelectedDifficulty] = useState<keyof typeof DIFFICULTY_LEVELS>('easy');
@@ -35,6 +35,26 @@ const Training = () => {
   const { getEquippedParts } = useHolobotPartsStore();
   const { trackTrainingSession } = useRewardTracking();
 
+  // Get the holobot key from HOLOBOT_STATS based on name
+  const getHolobotKeyByName = (name: string): string => {
+    const lowerName = name.toLowerCase();
+    const key = Object.keys(HOLOBOT_STATS).find(
+      k => HOLOBOT_STATS[k].name.toLowerCase() === lowerName
+    );
+    return key || Object.keys(HOLOBOT_STATS)[0]; // fallback to first holobot if not found
+  };
+
+  // Preselect companion when arriving from Companion screen (e.g. ?tab=training&companion=KUMA)
+  useEffect(() => {
+    if (!initialCompanionName?.trim() || !user?.holobots?.length) return;
+    const match = user.holobots.find(
+      (h) => h.name?.toLowerCase() === initialCompanionName.trim().toLowerCase()
+    );
+    if (match) {
+      setSelectedHolobot(getHolobotKeyByName(match.name));
+    }
+  }, [initialCompanionName, user?.holobots]);
+
   // Reset battle result when selections change
   useEffect(() => {
     setBattleResult(null);
@@ -44,15 +64,6 @@ const Training = () => {
   const getSelectedHolobotObject = () => {
     if (!user?.holobots || !selectedHolobot) return null;
     return user.holobots.find(h => h.name.toLowerCase() === HOLOBOT_STATS[selectedHolobot].name.toLowerCase());
-  };
-
-  // Get the holobot key from HOLOBOT_STATS based on name
-  const getHolobotKeyByName = (name: string): string => {
-    const lowerName = name.toLowerCase();
-    const key = Object.keys(HOLOBOT_STATS).find(
-      k => HOLOBOT_STATS[k].name.toLowerCase() === lowerName
-    );
-    return key || Object.keys(HOLOBOT_STATS)[0]; // fallback to first holobot if not found
   };
 
   // Apply attribute boosts and parts bonuses from user's holobot

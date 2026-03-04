@@ -5,6 +5,7 @@ import { HolobotCard } from "@/components/HolobotCard";
 import { HOLOBOT_STATS } from "@/types/holobot";
 import { DailyMissionsPanel } from "@/components/rewards/DailyMissionsPanel";
 import { SeasonalRentalCard } from "@/components/rental/SeasonalRentalCard";
+import CompanionScreen from "@/pages/CompanionScreen";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -31,6 +32,13 @@ const Dashboard = () => {
       </div>
 
       <div className="flex flex-col gap-5 px-4 py-4">
+        {/* Companion – first thing users see */}
+        <section className="bg-gradient-to-b from-gray-900 via-slate-900 to-black rounded-xl border-4 border-[#F5C400] overflow-hidden shadow-[0_0_20px_rgba(245,196,0,0.2)]" style={{
+          clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+        }}>
+          <CompanionScreen embedded />
+        </section>
+
         {/* Daily Missions Section */}
         <div className="bg-black border-4 border-[#F5C400] p-4 shadow-[0_0_20px_rgba(245,196,0,0.3)]" style={{
           clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'

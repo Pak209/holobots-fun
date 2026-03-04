@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Quests from "./Quests";
 import Training from "./Training";
@@ -9,7 +10,12 @@ import { Trophy, Sword, Smartphone } from "lucide-react";
  * Note: Fitness tracking moved to Mobile App for automatic step tracking
  */
 const Sync = () => {
-  const [activeTab, setActiveTab] = useState<string>("quests");
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const companionParam = searchParams.get("companion");
+  const [activeTab, setActiveTab] = useState<string>(() =>
+    tabParam === "training" ? "training" : "quests"
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-slate-900 to-black text-white">
@@ -84,7 +90,7 @@ const Sync = () => {
         {/* Tab Content */}
         <div>
           {activeTab === "quests" && <Quests />}
-          {activeTab === "training" && <Training />}
+          {activeTab === "training" && <Training initialCompanionName={companionParam ?? undefined} />}
         </div>
       </div>
     </div>

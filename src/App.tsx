@@ -28,6 +28,7 @@ import Mint from "@/pages/Mint";
 import MintGenesisPage from "@/pages/MintGenesis";
 import BoosterPacks from "@/pages/BoosterPacks";
 import ArenaV2Screen from "@/pages/ArenaV2Screen";
+import CompanionScreen from "@/pages/CompanionScreen";
 import Sync from "@/pages/Sync";
 import Inventory from "@/pages/Inventory";
 import { InstallPWA } from "@/components/pwa/InstallPWA";
@@ -84,11 +85,11 @@ function App() {
               </ProtectedRoute>
             } />
             
-            {/* Arena/Battle Mode Selection */}
+            {/* Companion = default app landing; Arena = competitive layer */}
             <Route path="/app" element={
               <ProtectedRoute>
                 <MobileLayout>
-                  <Index />
+                  <CompanionScreen />
                 </MobileLayout>
               </ProtectedRoute>
             } />
@@ -152,6 +153,15 @@ function App() {
               <ProtectedRoute>
                 <MobileLayout>
                   <ArenaV2Screen />
+                </MobileLayout>
+              </ProtectedRoute>
+            } />
+
+            {/* Legacy battle mode selection (Classic / Arena V2 / PvP) - optional entry */}
+            <Route path="/app/battle" element={
+              <ProtectedRoute>
+                <MobileLayout>
+                  <Index />
                 </MobileLayout>
               </ProtectedRoute>
             } />

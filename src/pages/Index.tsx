@@ -1,5 +1,6 @@
 import { BattleScene } from "@/components/BattleScene";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Trophy, Ticket, Gem, Award, Sword, Users, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ interface ArenaSpecificItemRewards {
 }
 
 // Arena V2 Wrapper Component
-const ArenaV2Wrapper = () => {
+const ArenaV2Wrapper = ({ preselectedCompanion }: { preselectedCompanion?: string }) => {
   const { 
     currentBattle,
     isLoading,
@@ -288,6 +289,7 @@ const ArenaV2Wrapper = () => {
           onHolobotSelect={handleHolobotSelect}
           onEntryFeeMethod={handleEntryFeeMethod}
           entryFee={50}
+          initialCompanionName={preselectedCompanion}
         />
       </div>
     );
@@ -298,6 +300,7 @@ const ArenaV2Wrapper = () => {
 };
 
 const Index = () => {
+  const [searchParams] = useSearchParams();
   // Battle Mode State (Arena, Arena V2, or PvP)
   const [battleMode, setBattleMode] = useState<'arena' | 'arena-v2' | 'pvp'>('arena');
   
@@ -348,6 +351,14 @@ const Index = () => {
       trackDailyLogin();
     }
   }, [user, trackDailyLogin]);
+
+  // Open Arena V2 prebattle when arriving with ?mode=arena-v2&companion=...
+  useEffect(() => {
+    const mode = searchParams.get('mode');
+    if (mode === 'arena-v2') {
+      setBattleMode('arena-v2');
+    }
+  }, [searchParams]);
 
   const handleDailyTicketRefresh = async () => {
     if (!user || !updateUser) return;
@@ -976,7 +987,7 @@ const Index = () => {
         {battleMode === 'arena' ? (
           hasEntryFee ? renderArenaBattle() : renderArenaPreBattle()
         ) : battleMode === 'arena-v2' ? (
-          <ArenaV2Wrapper />
+          <ArenaV2Wrapper preselectedCompanion={searchParams.get('companion') ?? undefined} />
         ) : (
           <RealtimeBattleRoom />
         )}

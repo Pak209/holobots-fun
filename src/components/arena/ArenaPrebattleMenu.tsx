@@ -87,12 +87,15 @@ interface ArenaPrebattleMenuProps {
     specificItemRewards: ArenaSpecificItemRewards
   ) => void;
   entryFee: number;
+  /** When set (e.g. from Companion screen), preselect this Holobot by name if user owns it */
+  initialCompanionName?: string | null;
 }
 
 export const ArenaPrebattleMenu = ({
   onHolobotSelect,
   onEntryFeeMethod,
-  entryFee
+  entryFee,
+  initialCompanionName,
 }: ArenaPrebattleMenuProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -107,16 +110,24 @@ export const ArenaPrebattleMenu = ({
   useEffect(() => {
     if (user?.holobots && Array.isArray(user.holobots)) {
       setUserHolobots(user.holobots);
-      
-      // Auto-select the first holobot if available
+
       if (user.holobots.length > 0 && !selectedHolobot) {
-        const firstHolobot = user.holobots[0];
-        const holobotKey = getHolobotKeyByName(firstHolobot.name);
-        setSelectedHolobot(holobotKey);
-        onHolobotSelect(holobotKey);
+        let keyToSelect: string | null = null;
+        if (initialCompanionName?.trim()) {
+          const match = user.holobots.find(
+            (h) => h.name?.toLowerCase() === initialCompanionName.trim().toLowerCase()
+          );
+          if (match) keyToSelect = getHolobotKeyByName(match.name);
+        }
+        if (!keyToSelect) {
+          const firstHolobot = user.holobots[0];
+          keyToSelect = getHolobotKeyByName(firstHolobot.name);
+        }
+        setSelectedHolobot(keyToSelect);
+        onHolobotSelect(keyToSelect);
       }
     }
-  }, [user, selectedHolobot, onHolobotSelect]);
+  }, [user, initialCompanionName, onHolobotSelect]);
 
   // Generate random opponent for each round
   useEffect(() => {
