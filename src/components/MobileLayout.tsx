@@ -19,11 +19,9 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
     return location.pathname === path;
   };
 
-  const isCompanionActive = () => location.pathname === "/app";
-
-  // Check if user is on any arena-related page
+  // Check if user is on arena prebattle or battle (Arena tab highlights)
   const isArenaActive = () => {
-    return location.pathname === "/arena-v2" || location.pathname.startsWith("/arena");
+    return location.pathname === "/app/battle" || location.pathname === "/arena-v2" || location.pathname.startsWith("/arena");
   };
 
   return (
@@ -71,28 +69,10 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
         {children}
       </main>
 
-      {/* Bottom Navigation - Companion (default) + Arena + Inventory + Sync + Market */}
+      {/* Bottom Navigation - Arena, Inventory, Sync, Marketplace (4 links) */}
       <nav className="fixed bottom-0 w-full h-20 flex justify-around items-center bg-black/90 backdrop-blur-sm border-t-4 border-[#DAA520] z-50 shadow-2xl">
-        {/* Companion - default app landing */}
-        <Link to="/app" className="flex flex-col items-center justify-center flex-1 gap-1">
-          <div className={cn(
-            "flex items-center justify-center",
-            isCompanionActive() ? "scale-110" : ""
-          )}>
-            <NavIcon
-              iconName="dashboard"
-              isActive={isCompanionActive()}
-              className="h-12 w-12"
-            />
-          </div>
-          <span className={cn(
-            "text-[10px] font-medium font-orbitron",
-            isCompanionActive() ? "text-[#DAA520]" : "text-gray-400"
-          )}>Companion</span>
-        </Link>
-
-        {/* Arena */}
-        <Link to="/arena-v2" className="flex flex-col items-center justify-center flex-1 gap-1">
+        {/* Arena - goes to prebattle menu (select Holobot, pay entry, then battle) */}
+        <Link to="/app/battle?mode=arena-v2" className="flex flex-col items-center justify-center flex-1 gap-1">
           <div className={cn(
             "flex items-center justify-center", 
             isArenaActive() ? "scale-110" : ""
