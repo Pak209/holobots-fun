@@ -22,6 +22,8 @@ import MarketplaceTabs from "@/pages/MarketplaceTabs";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import Leaderboard from "@/pages/Leaderboard";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
 import { MobileLayout } from "@/components/MobileLayout";
 import Bytepaper from "./pages/Bytepaper";
 import Mint from "@/pages/Mint";
@@ -50,6 +52,8 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/bytepaper" element={<Bytepaper />} />
             <Route path="/mint-genesis" element={<MintGenesisPage />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             
             {/* Protected Routes with Mobile Layout */}
             <Route path="/mint" element={
