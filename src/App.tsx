@@ -24,6 +24,7 @@ import Dashboard from "@/pages/Dashboard";
 import Leaderboard from "@/pages/Leaderboard";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import DeleteAccount from "@/pages/DeleteAccount";
 import { MobileLayout } from "@/components/MobileLayout";
 import Bytepaper from "./pages/Bytepaper";
 import Mint from "@/pages/Mint";
@@ -54,6 +55,7 @@ function App() {
             <Route path="/mint-genesis" element={<MintGenesisPage />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/delete-account" element={<DeleteAccount />} />
             
             {/* Protected Routes with Mobile Layout */}
             <Route path="/mint" element={
