@@ -59,6 +59,18 @@ const Privacy = () => {
 
               <div>
                 <h3 className="font-bold text-white">
+                  Purchase Information
+                </h3>
+                <p className="text-gray-200 leading-relaxed mt-2 text-sm sm:text-base">
+                  If you make an in-app purchase, payment is processed by Apple.
+                  We do not receive or store your payment card details. We keep
+                  a record of your purchases and subscription status so we can
+                  unlock what you bought and restore it on your devices.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-white">
                   Fitness and Activity Information
                 </h3>
                 <p className="text-gray-200 leading-relaxed mt-2 text-sm sm:text-base">
@@ -176,6 +188,12 @@ const Privacy = () => {
               <p className="text-gray-200 leading-relaxed text-sm sm:text-base">
                 Holobots uses Firebase and related cloud services to store
                 account data, game progress, and PvP synchronization data.
+              </p>
+              <p className="text-gray-200 leading-relaxed text-sm sm:text-base">
+                In-app purchases are processed by Apple. Holobots uses
+                RevenueCat, a purchase-management service, to validate purchase
+                receipts and manage purchase history and subscription status so
+                purchases can be delivered and restored.
               </p>
               <p className="text-gray-200 leading-relaxed text-sm sm:text-base">
                 We may also disclose information if required by law, legal
